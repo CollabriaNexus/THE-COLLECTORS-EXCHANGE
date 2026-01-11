@@ -1,27 +1,39 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive } from 'lucide-react';
+import heroBackground from '../assets/hero-background.png';
 
 const Home = () => {
     return (
         <div className="flex flex-col">
             {/* Hero Section */}
-            <section className="bg-primary-bg py-20 md:py-32 px-6 text-center border-b border-gray-100">
-                <div className="container mx-auto max-w-4xl">
+            <section
+                className="relative py-24 md:py-40 px-6 text-center overflow-hidden"
+                style={{
+                    backgroundImage: `url(${heroBackground})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                }}
+            >
+                {/* Dark overlay for text readability */}
+                <div className="absolute inset-0 bg-black/50"></div>
+
+                <div className="container mx-auto max-w-4xl relative z-10">
                     <h5 className="text-luxury-gold tracking-[0.2em] font-sans text-sm font-semibold uppercase mb-4">
                         Authorized & Premium
                     </h5>
-                    <h1 className="text-5xl md:text-7xl font-serif text-text-main font-bold mb-6 leading-tight">
-                        A Marketplace for Authentic <span className="italic">Collectibles</span> & Timeless Antiques
+                    <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">
+                        A Marketplace for Authentic <span className="italic text-luxury-gold">Collectibles</span> & Timeless Antiques
                     </h1>
-                    <p className="text-xl text-gray-600 font-sans font-light mb-10 max-w-2xl mx-auto">
+                    <p className="text-xl text-gray-200 font-sans font-light mb-10 max-w-2xl mx-auto">
                         Verified. Original. Limited. Discover a curated world of rare finds and verified sellers.
                     </p>
                     <div className="flex flex-col md:flex-row justify-center gap-6">
-                        <Link to="/category" className="bg-black text-white px-8 py-4 font-sans text-sm tracking-widest hover:bg-luxury-gold transition-colors duration-300">
-                            EXPLORE CATEGORIES
+                        <Link to="/THE-COLLECTORS-EXCHANGE/category" className="bg-luxury-gold text-black px-8 py-4 font-sans text-sm tracking-widest hover:bg-white transition-colors duration-300">
+                            EXPLORE THE EXCHANGE
                         </Link>
-                        <Link to="/auction" className="bg-white text-black border border-black px-8 py-4 font-sans text-sm tracking-widest hover:bg-black hover:text-white transition-colors duration-300">
+                        <Link to="/THE-COLLECTORS-EXCHANGE/auction" className="bg-transparent text-white border border-white px-8 py-4 font-sans text-sm tracking-widest hover:bg-white hover:text-black transition-colors duration-300">
                             VIEW AUCTIONS
                         </Link>
                     </div>

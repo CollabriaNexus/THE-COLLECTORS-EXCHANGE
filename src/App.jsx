@@ -8,23 +8,32 @@ import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
 import About from './pages/About';
 import Vision from './pages/Vision';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import FoundersNote from './pages/FoundersNote';
+import ProductDetail from './pages/ProductDetail';
+import GalleryPage from './pages/GalleryPage';
+import GalleryDetail from './pages/GalleryDetail';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/THE-COLLECTORS-EXCHANGE" element={<Layout />}>
+        <Route path="/THE-COLLECTORS-EXCHANGE/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="about" element={<About />} />
-          <Route path="category" element={<Category />} />
-          <Route path="auction" element={<Auction />} />
-          <Route path="vision" element={<Vision />} />
-          <Route path="wishlist" element={<Wishlist />} />
-          <Route path="account" element={<Account />} />
-          <Route path="cart" element={<Cart />} />
-          <Route path="privacy" element={<div className="container mx-auto py-12 px-6 text-center font-serif text-2xl">Privacy Policy (Coming Soon)</div>} />
-          <Route path="terms" element={<div className="container mx-auto py-12 px-6 text-center font-serif text-2xl">Terms and Conditions (Coming Soon)</div>} />
-          <Route path="founders-note" element={<div className="container mx-auto py-12 px-6 text-center font-serif text-2xl">Founders Note (Coming Soon)</div>} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/about" element={<About />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/category" element={<Category />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/auction" element={<Auction />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/vision" element={<Vision />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/wishlist" element={<Wishlist />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/account" element={<Account />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/cart" element={<Cart />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/privacy" element={<Privacy />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/terms" element={<Terms />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/founders-note" element={<FoundersNote />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/product/:id" element={<ProductDetail />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/gallery" element={<GalleryPage />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/gallery/:id" element={<GalleryDetail />} />
           <Route path="*" element={<div className="container mx-auto py-12 px-6 text-center font-serif text-2xl">404 - Not Found</div>} />
         </Route>
       </Routes>

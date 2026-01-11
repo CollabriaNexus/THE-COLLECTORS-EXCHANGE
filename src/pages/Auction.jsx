@@ -1,56 +1,57 @@
 import React from 'react';
-import AuctionCard from '../components/AuctionCard';
-import { Gavel, AlertCircle } from 'lucide-react';
-
-const MOCK_AUCTIONS = [
-    { id: 1, name: 'Rare 1940s Typewriter', category: 'Antiques', currentBid: 350, endTime: new Date(Date.now() + 50000000), image: 'https://images.unsplash.com/photo-1519709042457-347528e57978?auto=format&fit=crop&q=80&w=1000' },
-    { id: 2, name: 'Signed First Edition Book', category: 'Collectibles', currentBid: 1200, endTime: new Date(Date.now() + 120000000), image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=1000' },
-    { id: 3, name: 'Vintage Leica Camera', category: 'Limited Editions', currentBid: 2800, endTime: new Date(Date.now() + 9000000), image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=1000' },
-];
+import { Instagram } from 'lucide-react';
 
 const Auction = () => {
     return (
-        <div className="container mx-auto py-12 px-6">
-            <div className="text-center mb-16">
-                <h1 className="text-4xl md:text-5xl font-serif mb-4">Live Auctions</h1>
-                <p className="text-gray-500 font-light max-w-2xl mx-auto">
-                    Participate in real-time bidding for exclusive items. All items are verified for authenticity before listing.
-                </p>
+        <div className="relative min-h-screen flex flex-col items-center justify-center text-white overflow-hidden">
+            {/* Background Image */}
+            <div
+                className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                    backgroundImage: "url('https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=2500&auto=format&fit=crop')"
+                }}
+            >
+                {/* Dark Overlay */}
+                <div className="absolute inset-0 bg-black/70"></div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-                {MOCK_AUCTIONS.map(auction => (
-                    <AuctionCard key={auction.id} auction={auction} />
-                ))}
-            </div>
-
-            {/* Auction Rules */}
-            <div className="bg-white border border-gray-200 p-8 md:p-12">
-                <div className="flex items-center gap-3 mb-6">
-                    <Gavel className="text-luxury-gold" size={32} />
-                    <h2 className="text-2xl font-serif">Auction Rules & Guidelines</h2>
+            {/* Content */}
+            <div className="relative z-10 px-6 max-w-3xl mx-auto text-center">
+                {/* Label */}
+                <div className="mb-8">
+                    <span className="text-luxury-gold uppercase tracking-[0.2em] font-bold text-sm md:text-base">
+                        Coming Soon
+                    </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-gray-600">
-                    <div className="space-y-4">
-                        <div className="flex gap-3">
-                            <AlertCircle size={20} className="text-gray-400 flex-shrink-0" />
-                            <p><strong>Bid Increments:</strong> Bids must increase by a minimum of 5% of the current bid value.</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <AlertCircle size={20} className="text-gray-400 flex-shrink-0" />
-                            <p><strong>Payment:</strong> Winning bidders have 24 hours to complete payment, otherwise the item goes to the next highest bidder.</p>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="flex gap-3">
-                            <AlertCircle size={20} className="text-gray-400 flex-shrink-0" />
-                            <p><strong>Authenticity Guarantee:</strong> All auction items are pre-verified. Certificates correspond to the winning bidder.</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <AlertCircle size={20} className="text-gray-400 flex-shrink-0" />
-                            <p><strong>Buyer's Premium:</strong> A standard 15% platform fee is added to the final hammer price.</p>
-                        </div>
-                    </div>
+
+                {/* Title */}
+                <h1 className="text-4xl md:text-6xl font-serif mb-8 leading-tight">
+                    Auctions by <br /> The Collectors’ Exchange
+                </h1>
+
+                {/* Description */}
+                <p className="text-gray-300 text-lg md:text-xl font-light leading-relaxed mb-12 max-w-2xl mx-auto">
+                    Our auction house is being carefully prepared to honour rarity, provenance, and timeless value.
+                    <br className="hidden md:block" />
+                    We will be launching this experience soon.
+                    <br /><br />
+                    Until then, follow us to stay connected with our journey.
+                </p>
+
+                {/* CTA */}
+                <a
+                    href="https://www.instagram.com/the_collectors_exchange/?utm_source=ig_web_button_share_sheet"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-3 px-8 py-4 border border-luxury-gold text-white hover:bg-luxury-gold hover:text-black transition-all duration-300 uppercase tracking-widest text-sm font-medium"
+                >
+                    <Instagram size={20} />
+                    Follow us on Instagram
+                </a>
+
+                {/* Footer Note */}
+                <div className="mt-20 opacity-60 font-serif italic text-sm">
+                    A legacy takes time. Thank you for your patience.
                 </div>
             </div>
         </div>

@@ -1,162 +1,653 @@
-import React, { useState } from 'react';
-import { User, FileText, Package, Heart, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info } from 'lucide-react';
+import { getUser, setUser, clearUser, addProduct, getProductsByUser } from '../utils/storage';
+
+const CATEGORIES = ['Timepieces', 'Sneakers', 'Collectables', 'Currencies', 'Pop Collection', 'Toys', 'Antiques', 'Limited Editions'];
+const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
 
 const Account = () => {
     const [activeTab, setActiveTab] = useState('profile');
-    const [sellerType, setSellerType] = useState('individual'); // 'individual' or 'company'
-    const [kycStatus, setKycStatus] = useState('pending'); // 'none', 'pending', 'verified'
+    const [user, setUserState] = useState(null);
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [userProducts, setUserProducts] = useState([]);
+
+    // Registration form state
+    const [regForm, setRegForm] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        type: 'individual',
+    });
+
+    // KYC form state
+    const [kycForm, setKycForm] = useState({
+        aadhaar: '',
+        pan: '',
+        companyName: '',
+        gst: '',
+        founderName: '',
+    });
+
+    // Enhanced Product listing form state
+    const [productForm, setProductForm] = useState({
+        title: '',
+        category: CATEGORIES[0],
+        description: '',
+        condition: 'Good',
+        price: '',
+        imageUrls: [''], // Start with one empty field
+        keywords: '',
+    });
+
+    useEffect(() => {
+        const storedUser = getUser();
+        if (storedUser) {
+            setUserState(storedUser);
+            const products = getProductsByUser(storedUser.id);
+            setUserProducts(products);
+        }
+    }, []);
+
+    const handleRegister = (e) => {
+        e.preventDefault();
+        const newUser = {
+            id: Date.now().toString(),
+            ...regForm,
+            kycStatus: 'none',
+            kycData: {},
+            createdAt: new Date().toISOString(),
+        };
+        setUser(newUser);
+        setUserState(newUser);
+        setIsRegistering(false);
+    };
+
+    const handleKycSubmit = (e) => {
+        e.preventDefault();
+        const updatedUser = {
+            ...user,
+            kycStatus: 'verified',
+            kycData: user.type === 'individual'
+                ? { aadhaar: kycForm.aadhaar, pan: kycForm.pan }
+                : { companyName: kycForm.companyName, gst: kycForm.gst, founderName: kycForm.founderName },
+        };
+        setUser(updatedUser);
+        setUserState(updatedUser);
+    };
+
+    // Image URL handling
+    const handleImageUrlChange = (index, value) => {
+        const newUrls = [...productForm.imageUrls];
+        newUrls[index] = value;
+        setProductForm({ ...productForm, imageUrls: newUrls });
+    };
+
+    const addImageField = () => {
+        if (productForm.imageUrls.length < 10) {
+            setProductForm({ ...productForm, imageUrls: [...productForm.imageUrls, ''] });
+        }
+    };
+
+    const removeImageField = (index) => {
+        const newUrls = productForm.imageUrls.filter((_, i) => i !== index);
+        setProductForm({ ...productForm, imageUrls: newUrls });
+    };
+
+    const handleProductSubmit = (e) => {
+        e.preventDefault();
+
+        // 1. Validate User Type Limit
+        if (user.type === 'individual' && userProducts.length >= 5) {
+            alert('Individual sellers are limited to 5 products. Please upgrade to a Company account for unlimited listings.');
+            return;
+        }
+
+        // 2. Validate Images (Min 4)
+        const validImages = productForm.imageUrls.filter(url => url.trim() !== '');
+        if (validImages.length < 4) {
+            alert('Authenticity Requirement: Please provide at least 4 high-quality images of the item.');
+            return;
+        }
+
+        // 3. Process Keywords
+        const keywordsArray = productForm.keywords.split(',').map(k => k.trim()).filter(k => k !== '');
+        if (keywordsArray.length === 0) {
+            alert('Please provide at least one keyword for categorization.');
+            return;
+        }
+
+        const newProduct = addProduct({
+            title: productForm.title,
+            category: productForm.category,
+            description: productForm.description,
+            condition: productForm.condition,
+            price: parseFloat(productForm.price),
+            sellerId: user.id,
+            sellerName: user.name,
+            images: validImages,
+            image: validImages[0], // Primary image
+            keywords: keywordsArray,
+        });
+
+        setUserProducts([...userProducts, newProduct]);
+        setProductForm({
+            title: '',
+            category: CATEGORIES[0],
+            description: '',
+            condition: 'Good',
+            price: '',
+            imageUrls: [''],
+            keywords: '',
+        });
+        alert('Product listed successfully! Your item is now live in The Exchange.');
+    };
+
+    const handleLogout = () => {
+        clearUser();
+        setUserState(null);
+        setActiveTab('profile');
+    };
+
+    if (!user) {
+        return (
+            <div className="container mx-auto py-20 px-6 max-w-xl">
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl font-serif mb-4">{isRegistering ? 'Membership Application' : 'Welcome Back'}</h1>
+                    <p className="text-gray-500 font-light">Access The Collectors' Exchange secure portal.</p>
+                </div>
+
+                {isRegistering ? (
+                    <form onSubmit={handleRegister} className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
+                            <input
+                                type="text"
+                                required
+                                value={regForm.name}
+                                onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
+                                className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
+                            <input
+                                type="email"
+                                required
+                                value={regForm.email}
+                                onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+                                className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone Number</label>
+                            <input
+                                type="tel"
+                                required
+                                value={regForm.phone}
+                                onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
+                                className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Account Type</label>
+                            <div className="grid grid-cols-2 gap-4">
+                                <label className={`cursor-pointer p-4 border transition-all ${regForm.type === 'individual' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200'}`}>
+                                    <input
+                                        type="radio"
+                                        name="type"
+                                        value="individual"
+                                        checked={regForm.type === 'individual'}
+                                        onChange={(e) => setRegForm({ ...regForm, type: e.target.value })}
+                                        className="hidden"
+                                    />
+                                    <div className="font-serif font-medium">Individual</div>
+                                    <div className="text-xs text-gray-500 mt-1">For private collectors</div>
+                                </label>
+                                <label className={`cursor-pointer p-4 border transition-all ${regForm.type === 'company' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200'}`}>
+                                    <input
+                                        type="radio"
+                                        name="type"
+                                        value="company"
+                                        checked={regForm.type === 'company'}
+                                        onChange={(e) => setRegForm({ ...regForm, type: e.target.value })}
+                                        className="hidden"
+                                    />
+                                    <div className="font-serif font-medium">Company</div>
+                                    <div className="text-xs text-gray-500 mt-1">For businesses</div>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300">
+                            Create Account
+                        </button>
+                        <p className="text-center text-gray-500 text-sm">
+                            Already a member?{' '}
+                            <button type="button" onClick={() => setIsRegistering(false)} className="text-luxury-gold hover:underline font-semibold">
+                                Sign In
+                            </button>
+                        </p>
+                    </form>
+                ) : (
+                    <div className="bg-white p-10 shadow-heritage border border-gray-100 text-center">
+                        <User size={48} strokeWidth={1} className="mx-auto text-luxury-gold mb-6" />
+                        <h3 className="font-serif text-xl mb-2">Private Access</h3>
+                        <p className="text-gray-500 mb-8 font-light">Join the community of verified collectors and sellers.</p>
+                        <button
+                            onClick={() => setIsRegistering(true)}
+                            className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300"
+                        >
+                            Apply for Membership
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     const renderContent = () => {
         switch (activeTab) {
             case 'profile':
                 return (
-                    <div className="bg-white p-8 shadow-sm border border-gray-100">
-                        <h3 className="text-2xl font-serif mb-6">Profile Information</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white p-10 shadow-sm border border-gray-100">
+                        <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">Collector Profile</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
-                                <input type="text" defaultValue="John Doe" className="w-full p-3 border border-gray-300 focus:outline-none focus:border-luxury-gold" />
+                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
+                                <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 font-serif">{user.name}</div>
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                                <input type="email" defaultValue="john@example.com" className="w-full p-3 border border-gray-300 focus:outline-none focus:border-luxury-gold" />
+                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
+                                <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800">{user.email}</div>
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                                <input type="tel" defaultValue="+1 234 567 8900" className="w-full p-3 border border-gray-300 focus:outline-none focus:border-luxury-gold" />
+                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
+                                <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800">{user.phone}</div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Membership Type</label>
+                                <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 capitalize flex items-center gap-2">
+                                    {user.type}
+                                    {user.kycStatus === 'verified' && <ShieldCheck size={16} className="text-luxury-gold" />}
+                                </div>
                             </div>
                         </div>
-                        <button className="mt-6 bg-black text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors">
-                            Save Changes
-                        </button>
                     </div>
                 );
+
             case 'seller':
                 return (
-                    <div className="bg-white p-8 shadow-sm border border-gray-100">
-                        <h3 className="text-2xl font-serif mb-6">Seller Verification</h3>
+                    <div className="bg-white p-10 shadow-sm border border-gray-100">
+                        <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">Identity Verification</h3>
 
-                        {kycStatus === 'verified' && (
-                            <div className="bg-green-50 text-green-700 p-4 border border-green-200 mb-6">
-                                Your seller account is verified. You can now list products.
+                        {user.kycStatus === 'verified' ? (
+                            <div className="bg-green-50 text-green-800 p-6 border border-green-100 flex items-start gap-4">
+                                <ShieldCheck size={32} className="text-green-600 mt-1" />
+                                <div>
+                                    <h4 className="font-serif text-lg font-medium mb-1">Verified Status: Active</h4>
+                                    <p className="text-sm opacity-80">Your identity has been verified. You have full access to list items on The Exchange.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="max-w-2xl">
+                                <p className="text-gray-500 mb-8 font-light">
+                                    To maintain the integrity of our marketplace, all sellers must complete improved verification.
+                                    Your data is encrypted and permanently deleted after verification.
+                                </p>
+                                <form onSubmit={handleKycSubmit} className="space-y-6">
+                                    {user.type === 'individual' ? (
+                                        <>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Aadhaar Number</label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={kycForm.aadhaar}
+                                                    onChange={(e) => setKycForm({ ...kycForm, aadhaar: e.target.value })}
+                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">PAN Number</label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={kycForm.pan}
+                                                    onChange={(e) => setKycForm({ ...kycForm, pan: e.target.value })}
+                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Registered Company Name</label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={kycForm.companyName}
+                                                    onChange={(e) => setKycForm({ ...kycForm, companyName: e.target.value })}
+                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">GST Number</label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={kycForm.gst}
+                                                    onChange={(e) => setKycForm({ ...kycForm, gst: e.target.value })}
+                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Founder / Director Name</label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={kycForm.founderName}
+                                                    onChange={(e) => setKycForm({ ...kycForm, founderName: e.target.value })}
+                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                    <button type="submit" className="bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors">
+                                        Submit Verification Documents
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
+                );
+
+            case 'listings':
+                return (
+                    <div className="space-y-12">
+                        {/* Add New Product Form */}
+                        {user.kycStatus === 'verified' && (
+                            <div className="bg-white p-10 shadow-sm border border-gray-100">
+                                <div className="mb-8 pb-8 border-b border-gray-100">
+                                    <h3 className="text-3xl font-serif mb-2 text-heritage-charcoal">Broker a New Item</h3>
+                                    <p className="text-gray-500 font-light text-sm">
+                                        All listings are subject to administrator approval. Please provide accurate, detailed information to ensure swift verification.
+                                    </p>
+                                </div>
+
+                                <form onSubmit={handleProductSubmit} className="space-y-8">
+                                    {/* Essential Details */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="col-span-1 md:col-span-2">
+                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                                Item Title <span className="text-luxury-gold">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="e.g., 1950s Hans Wegner Papa Bear Chair"
+                                                value={productForm.title}
+                                                onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
+                                                className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold font-serif text-lg"
+                                            />
+                                            <p className="text-xs text-gray-400 mt-2">Use the official name or a factual description. No decorative adjectives in title.</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                                Primary Category <span className="text-luxury-gold">*</span>
+                                            </label>
+                                            <select
+                                                value={productForm.category}
+                                                onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                                                className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold bg-white"
+                                            >
+                                                {CATEGORIES.map(cat => (
+                                                    <option key={cat} value={cat}>{cat}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                                Listing Price (USD) <span className="text-luxury-gold">*</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                required
+                                                min="1"
+                                                value={productForm.price}
+                                                onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                                                className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Story & Provenance */}
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                            Provenance & Description <span className="text-luxury-gold">*</span>
+                                        </label>
+                                        <textarea
+                                            required
+                                            rows={6}
+                                            placeholder="Describe the history, condition, and provenance of the item. This text will be displayed as the main storytelling element on the product page."
+                                            value={productForm.description}
+                                            onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                                            className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold leading-relaxed"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                                Condition Grade <span className="text-luxury-gold">*</span>
+                                            </label>
+                                            <select
+                                                value={productForm.condition}
+                                                onChange={(e) => setProductForm({ ...productForm, condition: e.target.value })}
+                                                className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold bg-white"
+                                            >
+                                                {CONDITIONS.map(cond => (
+                                                    <option key={cond} value={cond}>{cond}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                                Keywords / Tags <span className="text-luxury-gold">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    placeholder="Separate with commas (e.g., vintage, gold, 1980s)"
+                                                    value={productForm.keywords}
+                                                    onChange={(e) => setProductForm({ ...productForm, keywords: e.target.value })}
+                                                    className="w-full p-4 pl-10 border border-gray-200 focus:outline-none focus:border-luxury-gold"
+                                                />
+                                                <Tag size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Image Upload Section */}
+                                    <div className="bg-gray-50 p-6 border border-gray-100 rounded-sm">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-600">
+                                                Image Gallery (Min 4 Required) <span className="text-luxury-gold">*</span>
+                                            </label>
+                                            <span className="text-xs text-gray-500">{productForm.imageUrls.filter(u => u).length} / 10 Images</span>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {productForm.imageUrls.map((url, index) => (
+                                                <div key={index} className="flex gap-4 items-center">
+                                                    <div className="w-8 text-xs text-gray-400 font-mono text-center">
+                                                        {index === 0 ? 'MAIN' : `#${index + 1}`}
+                                                    </div>
+                                                    <div className="flex-grow relative">
+                                                        <input
+                                                            type="url"
+                                                            placeholder={index === 0 ? "Primary image URL..." : "Additional image URL..."}
+                                                            value={url}
+                                                            onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                                                            className="w-full p-3 pl-10 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
+                                                        />
+                                                        <ImageIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                    </div>
+                                                    {productForm.imageUrls.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeImageField(index)}
+                                                            className="text-gray-400 hover:text-red-500 p-2"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {productForm.imageUrls.length < 10 && (
+                                            <button
+                                                type="button"
+                                                onClick={addImageField}
+                                                className="mt-4 flex items-center gap-2 text-sm text-luxury-gold font-semibold hover:underline"
+                                            >
+                                                <Plus size={16} /> Add Another Image
+                                            </button>
+                                        )}
+
+                                        <div className="mt-4 flex items-start gap-2 text-xs text-gray-400 bg-white p-3 border border-gray-100">
+                                            <Info size={14} className="mt-0.5 flex-shrink-0" />
+                                            <p>Use direct image URLs (e.g., from Unsplash or hosted assets). The first image will be the primary detailed view and card thumbnail.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-gray-100 flex justify-end">
+                                        <button
+                                            type="submit"
+                                            className="bg-heritage-charcoal text-white px-12 py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg"
+                                        >
+                                            Submit for Brokerage
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         )}
 
-                        <div className="flex gap-6 mb-8 border-b border-gray-200 pb-2">
-                            <button
-                                onClick={() => setSellerType('individual')}
-                                className={`text-sm uppercase tracking-widest pb-2 ${sellerType === 'individual' ? 'border-b-2 border-black font-semibold' : 'text-gray-400'}`}
-                            >
-                                Individual Seller
-                            </button>
-                            <button
-                                onClick={() => setSellerType('company')}
-                                className={`text-sm uppercase tracking-widest pb-2 ${sellerType === 'company' ? 'border-b-2 border-black font-semibold' : 'text-gray-400'}`}
-                            >
-                                Company Seller
-                            </button>
-                        </div>
-
-                        <form className="space-y-6">
-                            {sellerType === 'individual' ? (
-                                <>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Aadhaar / ID Number</label>
-                                        <input type="text" placeholder="Enter ID Number" className="w-full p-3 border border-gray-300 focus:outline-none focus:border-luxury-gold" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Upload PAN Card</label>
-                                        <input type="file" className="w-full p-2 border border-gray-300" />
-                                    </div>
-                                    <p className="text-xs text-gray-500">Individual sellers are limited to 5 active listings.</p>
-                                </>
+                        {/* User's Listings */}
+                        <div className="bg-white p-10 shadow-sm border border-gray-100">
+                            <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">My Collection</h3>
+                            {userProducts.length > 0 ? (
+                                <div className="space-y-6">
+                                    {userProducts.map(product => (
+                                        <div key={product.id} className="border border-gray-100 p-6 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow">
+                                            <img
+                                                src={product.image || 'https://via.placeholder.com/150'}
+                                                alt={product.title}
+                                                className="w-full md:w-40 h-40 object-cover bg-gray-50"
+                                            />
+                                            <div className="flex-grow">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <h4 className="font-serif text-xl mb-2">{product.title}</h4>
+                                                        <div className="flex items-center gap-4 text-xs text-gray-500 uppercase tracking-wider mb-4">
+                                                            <span>{product.category}</span>
+                                                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                                            <span>{product.condition}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-serif text-lg font-medium">${product.price?.toLocaleString()}</p>
+                                                        {product.authenticityStatus === 'Verified' ? (
+                                                            <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-1 mt-2">
+                                                                <ShieldCheck size={12} /> Authenticated
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-1 mt-2">
+                                                                Pending Review
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
+                                                    {product.description}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Company Name</label>
-                                        <input type="text" placeholder="Registered Company Name" className="w-full p-3 border border-gray-300 focus:outline-none focus:border-luxury-gold" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">GST Number</label>
-                                        <input type="text" placeholder="GST Number" className="w-full p-3 border border-gray-300 focus:outline-none focus:border-luxury-gold" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Incorporation Certificate</label>
-                                        <input type="file" className="w-full p-2 border border-gray-300" />
-                                    </div>
-                                    <p className="text-xs text-gray-500">Company sellers must be approved before listing limitless items.</p>
-                                </>
+                                <div className="text-center py-16 bg-gray-50 border border-gray-100 border-dashed">
+                                    <Package size={48} className="mx-auto text-gray-300 mb-4" />
+                                    <p className="text-gray-500 font-serif text-lg">Your portfolio is empty.</p>
+                                    <p className="text-gray-400 text-sm mt-1">List items to see them appear here.</p>
+                                    {user.kycStatus !== 'verified' && (
+                                        <button
+                                            onClick={() => setActiveTab('seller')}
+                                            className="text-luxury-gold font-semibold hover:underline mt-4 text-sm uppercase tracking-widest"
+                                        >
+                                            Complete Verification to List Items
+                                        </button>
+                                    )}
+                                </div>
                             )}
-                            <button className="bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors">
-                                Submit for Verification
-                            </button>
-                        </form>
+                        </div>
                     </div>
                 );
-            case 'listings':
-                return (
-                    <div className="bg-white p-8 shadow-sm border border-gray-100 text-center py-20">
-                        <Package size={48} className="mx-auto text-gray-300 mb-4" />
-                        <h3 className="text-xl font-serif text-gray-600">No Active Listings</h3>
-                        <p className="text-gray-400 mb-6">Complete verification to start selling.</p>
-                        <button
-                            onClick={() => setActiveTab('seller')}
-                            className="text-luxury-gold font-semibold hover:underline"
-                        >
-                            Go to Verification
-                        </button>
-                    </div>
-                );
+
             default:
                 return null;
         }
     };
 
     return (
-        <div className="container mx-auto py-12 px-6">
-            <h1 className="text-4xl font-serif mb-8">My Account</h1>
-            <div className="flex flex-col md:flex-row gap-8">
-                {/* Sidebar */}
-                <div className="w-full md:w-1/4 bg-white shadow-sm border border-gray-100 h-fit">
-                    <div className="p-6 border-b border-gray-100">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <User size={20} />
+        <div className="min-h-screen bg-secondary-bg">
+            <div className="container mx-auto py-16 px-6">
+                <div className="flex flex-col lg:flex-row gap-12">
+                    {/* Sidebar */}
+                    <div className="w-full lg:w-1/4">
+                        <div className="bg-white shadow-sm border border-gray-100 sticky top-24">
+                            <div className="p-8 border-b border-gray-100 text-center">
+                                <div className="w-20 h-20 rounded-full bg-heritage-cream mx-auto flex items-center justify-center mb-4 text-heritage-bronze">
+                                    <User size={32} />
+                                </div>
+                                <h2 className="font-serif text-xl mb-1">{user.name}</h2>
+                                <p className="text-xs text-gray-500 uppercase tracking-widest border px-2 py-0.5 inline-block rounded-sm border-gray-200">{user.type}</p>
                             </div>
-                            <div>
-                                <p className="font-semibold">John Doe</p>
-                                <p className="text-xs text-gray-500">Individual</p>
-                            </div>
+                            <nav className="p-4 space-y-1">
+                                <button
+                                    onClick={() => setActiveTab('profile')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'profile' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <User size={18} /> Profile
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('seller')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'seller' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <FileText size={18} /> Verification
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('listings')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'listings' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <Package size={18} /> Portfolio
+                                </button>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-4 w-full p-4 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors mt-8 border-t border-gray-100"
+                                >
+                                    <LogOut size={18} /> Sign Out
+                                </button>
+                            </nav>
                         </div>
                     </div>
-                    <nav className="p-4">
-                        <button
-                            onClick={() => setActiveTab('profile')}
-                            className={`flex items-center gap-3 w-full p-3 rounded-md text-left transition-colors ${activeTab === 'profile' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-                        >
-                            <User size={18} /> Profile
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('seller')}
-                            className={`flex items-center gap-3 w-full p-3 rounded-md text-left transition-colors ${activeTab === 'seller' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-                        >
-                            <FileText size={18} /> Verification
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('listings')}
-                            className={`flex items-center gap-3 w-full p-3 rounded-md text-left transition-colors ${activeTab === 'listings' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-                        >
-                            <Package size={18} /> My Listings
-                        </button>
-                        <button className="flex items-center gap-3 w-full p-3 rounded-md text-left text-red-500 hover:bg-red-50 transition-colors mt-4">
-                            <LogOut size={18} /> Logout
-                        </button>
-                    </nav>
-                </div>
 
-                {/* Main Content */}
-                <div className="w-full md:w-3/4">
-                    {renderContent()}
+                    {/* Main Content */}
+                    <div className="w-full lg:w-3/4">
+                        {renderContent()}
+                    </div>
                 </div>
             </div>
         </div>
