@@ -13,10 +13,11 @@ export const UserSchema = z.object({
 });
 
 export const UserRegistrationSchema = z.object({
-    name: z.string().min(1),
+    name: z.string().optional(),
     email: z.string().email(),
-    phone: z.string().min(10),
-    type: z.enum(['individual', 'company']),
+    phone: z.string().optional(),
+    type: z.enum(['individual', 'company']).default('individual'),
+    supabaseId: z.string().optional(),
 });
 
 export const UserKycSchema = z.object({

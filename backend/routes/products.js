@@ -33,7 +33,7 @@ export default async function productRoutes(fastify) {
     });
 
     // Add new product
-    fastify.post('/', async (request, reply) => {
+    fastify.post('/', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const productData = ProductSchema.parse(request.body);
         const newProduct = await prisma.product.create({
             data: {

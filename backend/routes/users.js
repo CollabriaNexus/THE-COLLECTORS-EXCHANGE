@@ -7,15 +7,41 @@ import { UserRegistrationSchema, UserKycSchema } from '../schemas/user.js';
 export default async function userRoutes(fastify) {
     const { prisma } = fastify;
 
-    // Register user
-    fastify.post('/register', async (request, reply) => {
+    // Register or Sync user
+    fastify.post('/register', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const userData = UserRegistrationSchema.parse(request.body);
 
-        // Simple mock password for now since we don't have auth yet
+        // request.user will contain the decoded Supabase JWT payload (sub is the userId)
+        const supabaseId = request.user.sub;
+
+        // Find existing user by email or supabaseId
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: userData.email },
+                    { supabaseId }
+                ]
+            }
+        });
+
+        if (existingUser) {
+            // Update existing user with supabaseId if missing
+            const updatedUser = await prisma.user.update({
+                where: { id: existingUser.id },
+                data: {
+                    supabaseId: supabaseId,
+                    name: userData.name || existingUser.name,
+                }
+            });
+            return updatedUser;
+        }
+
+        // Create new user
         const newUser = await prisma.user.create({
             data: {
                 ...userData,
-                password: 'temp_password', // Should be hashed in prod
+                supabaseId: supabaseId,
+                password: null, // No local password needed if using Supabase
             },
         });
 
@@ -23,7 +49,7 @@ export default async function userRoutes(fastify) {
     });
 
     // Get user by ID
-    fastify.get('/:id', async (request, reply) => {
+    fastify.get('/:id', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { id } = request.params;
         const user = await prisma.user.findUnique({
             where: { id },
@@ -42,14 +68,14 @@ export default async function userRoutes(fastify) {
     });
 
     // Submit KYC
-    fastify.post('/kyc', async (request, reply) => {
+    fastify.post('/kyc', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { userId, kycData } = UserKycSchema.parse(request.body);
 
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: {
                 kycData,
-                kycStatus: 'verified', // Auto-verify for now
+                kycStatus: 'pending', // Pending manual review
             },
         });
 

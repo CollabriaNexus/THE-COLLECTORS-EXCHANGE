@@ -7,7 +7,17 @@ import galleryRoutes from './routes/gallery.js';
 import cartRoutes from './routes/cart.js';
 import userRoutes from './routes/users.js';
 
+import { createRemoteJWKSet, jwtVerify } from 'jose';
+
 dotenv.config();
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+if (!SUPABASE_URL) {
+    console.error('Missing SUPABASE_URL environment variable');
+    process.exit(1);
+}
+
+const JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
 
 const fastify = Fastify({
     logger: true,
@@ -15,9 +25,25 @@ const fastify = Fastify({
 
 // Register Plugins
 fastify.register(cors, {
-    origin: true, // In production, this should be the specific frontend URL
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 });
+
+fastify.decorate("authenticate", async function (request, reply) {
+    try {
+        const token = request.headers.authorization?.split(' ')[1];
+        if (!token) {
+            throw new Error('No token provided');
+        }
+
+        const { payload } = await jwtVerify(token, JWKS);
+        request.user = payload;
+    } catch (err) {
+        request.log.error(err);
+        reply.code(401).send({ error: 'Unauthorized', message: err.message });
+    }
+});
+
 fastify.register(prismaPlugin);
 
 // Register Routes
