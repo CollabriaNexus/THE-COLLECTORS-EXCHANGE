@@ -1,78 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info } from 'lucide-react';
-import { getUser, setUser, clearUser, addProduct, getProductsByUser } from '../utils/storage';
+import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2 } from 'lucide-react';
+import { getUser, setUser as setLocalUser, clearUser } from '../utils/storage';
+import { useUser, useRegisterUser, useSubmitKyc } from '../hooks/api/useUser';
+import { useAddProduct } from '../hooks/api/useProducts';
 
 const CATEGORIES = ['Timepieces', 'Sneakers', 'Collectables', 'Currencies', 'Pop Collection', 'Toys', 'Antiques', 'Limited Editions'];
 const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
 
 const Account = () => {
     const [activeTab, setActiveTab] = useState('profile');
-    const [user, setUserState] = useState(null);
+    const [localUser, setLocalUserState] = useState(null);
     const [isRegistering, setIsRegistering] = useState(false);
-    const [userProducts, setUserProducts] = useState([]);
 
-    // Registration form state
-    const [regForm, setRegForm] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        type: 'individual',
-    });
-
-    // KYC form state
-    const [kycForm, setKycForm] = useState({
-        aadhaar: '',
-        pan: '',
-        companyName: '',
-        gst: '',
-        founderName: '',
-    });
-
-    // Enhanced Product listing form state
-    const [productForm, setProductForm] = useState({
-        title: '',
-        category: CATEGORIES[0],
-        description: '',
-        condition: 'Good',
-        price: '',
-        imageUrls: [''], // Start with one empty field
-        keywords: '',
-    });
+    // API Hooks
+    const { data: user, isLoading: isUserLoading } = useUser(localUser?.id);
+    const registerMutation = useRegisterUser();
+    const kycMutation = useSubmitKyc();
+    const addProductMutation = useAddProduct();
 
     useEffect(() => {
         const storedUser = getUser();
         if (storedUser) {
-            setUserState(storedUser);
-            const products = getProductsByUser(storedUser.id);
-            setUserProducts(products);
+            setLocalUserState(storedUser);
         }
     }, []);
 
-    const handleRegister = (e) => {
+    const userProducts = user?.products || [];
+
+    const handleRegister = async (e) => {
         e.preventDefault();
-        const newUser = {
-            id: Date.now().toString(),
-            ...regForm,
-            kycStatus: 'none',
-            kycData: {},
-            createdAt: new Date().toISOString(),
-        };
-        setUser(newUser);
-        setUserState(newUser);
-        setIsRegistering(false);
+        try {
+            const newUser = await registerMutation.mutateAsync(regForm);
+            setLocalUser(newUser);
+            setLocalUserState(newUser);
+            setIsRegistering(false);
+        } catch (error) {
+            alert('Registration failed. Please try again.');
+        }
     };
 
-    const handleKycSubmit = (e) => {
+    const handleKycSubmit = async (e) => {
         e.preventDefault();
-        const updatedUser = {
-            ...user,
-            kycStatus: 'verified',
-            kycData: user.type === 'individual'
-                ? { aadhaar: kycForm.aadhaar, pan: kycForm.pan }
-                : { companyName: kycForm.companyName, gst: kycForm.gst, founderName: kycForm.founderName },
-        };
-        setUser(updatedUser);
-        setUserState(updatedUser);
+        const kycData = user.type === 'individual'
+            ? { aadhaar: kycForm.aadhaar, pan: kycForm.pan }
+            : { companyName: kycForm.companyName, gst: kycForm.gst, founderName: kycForm.founderName };
+
+        try {
+            await kycMutation.mutateAsync({ userId: user.id, kycData });
+            alert('Verification documents submitted successfully!');
+        } catch (error) {
+            alert('KYC submission failed.');
+        }
     };
 
     // Image URL handling
@@ -93,7 +70,7 @@ const Account = () => {
         setProductForm({ ...productForm, imageUrls: newUrls });
     };
 
-    const handleProductSubmit = (e) => {
+    const handleProductSubmit = async (e) => {
         e.preventDefault();
 
         // 1. Validate User Type Limit
@@ -116,39 +93,50 @@ const Account = () => {
             return;
         }
 
-        const newProduct = addProduct({
-            title: productForm.title,
-            category: productForm.category,
-            description: productForm.description,
-            condition: productForm.condition,
-            price: parseFloat(productForm.price),
-            sellerId: user.id,
-            sellerName: user.name,
-            images: validImages,
-            image: validImages[0], // Primary image
-            keywords: keywordsArray,
-        });
+        try {
+            await addProductMutation.mutateAsync({
+                title: productForm.title,
+                category: productForm.category,
+                description: productForm.description,
+                condition: productForm.condition,
+                price: parseFloat(productForm.price),
+                sellerId: user.id,
+                images: validImages,
+                image: validImages[0],
+                keywords: keywordsArray,
+            });
 
-        setUserProducts([...userProducts, newProduct]);
-        setProductForm({
-            title: '',
-            category: CATEGORIES[0],
-            description: '',
-            condition: 'Good',
-            price: '',
-            imageUrls: [''],
-            keywords: '',
-        });
-        alert('Product listed successfully! Your item is now live in The Exchange.');
+            setProductForm({
+                title: '',
+                category: CATEGORIES[0],
+                description: '',
+                condition: 'Good',
+                price: '',
+                imageUrls: [''],
+                keywords: '',
+            });
+            alert('Product listed successfully! Your item is now live in The Exchange.');
+        } catch (error) {
+            alert('Failed to list product.');
+        }
     };
 
     const handleLogout = () => {
         clearUser();
-        setUserState(null);
+        setLocalUserState(null);
         setActiveTab('profile');
     };
 
-    if (!user) {
+    if (isUserLoading && localUser) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-secondary-bg">
+                <Loader2 className="animate-spin text-luxury-gold mb-4" size={64} />
+                <p className="text-gray-500 font-serif text-xl italic">Authenticating Profile...</p>
+            </div>
+        );
+    }
+
+    if (!localUser) {
         return (
             <div className="container mx-auto py-20 px-6 max-w-xl">
                 <div className="text-center mb-12">
@@ -217,7 +205,12 @@ const Account = () => {
                                 </label>
                             </div>
                         </div>
-                        <button type="submit" className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300">
+                        <button
+                            type="submit"
+                            disabled={registerMutation.isPending}
+                            className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-2"
+                        >
+                            {registerMutation.isPending && <Loader2 size={16} className="animate-spin" />}
                             Create Account
                         </button>
                         <p className="text-center text-gray-500 text-sm">
@@ -351,7 +344,12 @@ const Account = () => {
                                             </div>
                                         </>
                                     )}
-                                    <button type="submit" className="bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors">
+                                    <button
+                                        type="submit"
+                                        disabled={kycMutation.isPending}
+                                        className="bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        {kycMutation.isPending && <Loader2 size={16} className="animate-spin" />}
                                         Submit Verification Documents
                                     </button>
                                 </form>
@@ -526,8 +524,10 @@ const Account = () => {
                                     <div className="pt-4 border-t border-gray-100 flex justify-end">
                                         <button
                                             type="submit"
-                                            className="bg-heritage-charcoal text-white px-12 py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg"
+                                            disabled={addProductMutation.isPending}
+                                            className="bg-heritage-charcoal text-white px-12 py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg flex items-center justify-center gap-2"
                                         >
+                                            {addProductMutation.isPending && <Loader2 size={16} className="animate-spin" />}
                                             Submit for Brokerage
                                         </button>
                                     </div>

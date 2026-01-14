@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, Heart, ShoppingBag, ChevronRight, Tag, Share2, Info } from 'lucide-react';
-import { getProductById, addToCart, isInCart, addToWishlist, removeFromWishlist, isInWishlist } from '../utils/storage';
+import { ShieldCheck, Heart, ShoppingBag, ChevronRight, Tag, Share2, Info, Loader2 } from 'lucide-react';
+import { useProduct } from '../hooks/api/useProducts';
+import { addToCart, isInCart, addToWishlist, removeFromWishlist, isInWishlist } from '../utils/storage';
 
 const ProductDetail = () => {
     const { id } = useParams();
-    const [product, setProduct] = useState(null);
+    const { data: product, isLoading } = useProduct(id);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [inCart, setInCartState] = useState(false);
     const [inWishlist, setInWishlistState] = useState(false);
 
     useEffect(() => {
-        const foundProduct = getProductById(id);
-        if (foundProduct) {
-            setProduct(foundProduct);
-            setInCartState(isInCart(foundProduct.id));
-            setInWishlistState(isInWishlist(foundProduct.id));
+        if (product) {
+            setInCartState(isInCart(product.id));
+            setInWishlistState(isInWishlist(product.id));
         }
-    }, [id]);
+    }, [product]);
 
     const handleAddToCart = () => {
         if (!product) return;
@@ -35,6 +34,15 @@ const ProductDetail = () => {
             setInWishlistState(true);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+                <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
+                <p className="text-gray-500 font-serif text-xl italic">Retrieving Item Records...</p>
+            </div>
+        );
+    }
 
     if (!product) {
         return (
@@ -157,8 +165,8 @@ const ProductDetail = () => {
                                     onClick={handleAddToCart}
                                     disabled={inCart}
                                     className={`flex-1 py-5 text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-3 ${inCart
-                                            ? 'bg-gray-100 text-gray-400 cursor-default'
-                                            : 'bg-heritage-charcoal text-white hover:bg-heritage-brown shadow-lg'
+                                        ? 'bg-gray-100 text-gray-400 cursor-default'
+                                        : 'bg-heritage-charcoal text-white hover:bg-heritage-brown shadow-lg'
                                         }`}
                                 >
                                     <ShoppingBag size={18} />
@@ -167,8 +175,8 @@ const ProductDetail = () => {
                                 <button
                                     onClick={handleWishlistToggle}
                                     className={`px-6 border transition-colors ${inWishlist
-                                            ? 'border-red-200 bg-red-50 text-red-600'
-                                            : 'border-gray-200 hover:border-heritage-charcoal text-gray-500 hover:text-heritage-charcoal'
+                                        ? 'border-red-200 bg-red-50 text-red-600'
+                                        : 'border-gray-200 hover:border-heritage-charcoal text-gray-500 hover:text-heritage-charcoal'
                                         }`}
                                 >
                                     <Heart size={20} fill={inWishlist ? 'currentColor' : 'none'} />

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Watch, Gem, Landmark, Footprints, Gamepad2, Archive, ShieldCheck, Award, Heart, ShoppingBag } from 'lucide-react';
-import { getProducts, getProductsByCategory, addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
+import { Watch, Gem, Landmark, Footprints, Gamepad2, Archive, ShieldCheck, Award, Heart, ShoppingBag, Loader2 } from 'lucide-react';
+import { useProducts } from '../hooks/api/useProducts';
+import { addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
 
 const CATEGORIES = [
     {
@@ -221,25 +222,15 @@ const ArchiveProductCard = ({ product, onUpdate }) => {
 
 const Category = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [products, setProducts] = useState([]);
-    const [featuredProducts, setFeaturedProducts] = useState([]);
+    const { data: allProducts = [], isLoading } = useProducts(selectedCategory);
 
-    useEffect(() => {
-        loadProducts();
-    }, [selectedCategory]);
+    // Get top 3 most expensive as "Most Rare" featured products
+    const featuredProducts = [...allProducts]
+        .sort((a, b) => (b.price || 0) - (a.price || 0))
+        .slice(0, 3);
 
     const loadProducts = () => {
-        let allProducts;
-        if (selectedCategory) {
-            allProducts = getProductsByCategory(selectedCategory);
-        } else {
-            allProducts = getProducts();
-        }
-        setProducts(allProducts);
-
-        // Get top 3 most expensive as "Most Rare" featured products
-        const sorted = [...allProducts].sort((a, b) => (b.price || 0) - (a.price || 0));
-        setFeaturedProducts(sorted.slice(0, 3));
+        // This is now handled by TanStack Query invalidation if needed
     };
 
     return (
@@ -339,7 +330,7 @@ const Category = () => {
                                 {selectedCategory || 'All Listings'}
                             </h2>
                             <p className="text-heritage-bronze/60 text-sm font-sans mt-1">
-                                {products.length} {products.length === 1 ? 'item' : 'items'} in archive
+                                {allProducts.length} {allProducts.length === 1 ? 'item' : 'items'} in archive
                             </p>
                         </div>
 
@@ -353,9 +344,14 @@ const Category = () => {
                         )}
                     </div>
 
-                    {products.length > 0 ? (
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-24">
+                            <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
+                            <p className="text-gray-500 font-serif text-lg italic">Accessing The Archive...</p>
+                        </div>
+                    ) : allProducts.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                            {products.map((product) => (
+                            {allProducts.map((product) => (
                                 <ArchiveProductCard key={product.id} product={product} onUpdate={loadProducts} />
                             ))}
                         </div>

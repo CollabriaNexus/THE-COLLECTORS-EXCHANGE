@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  phone     String?
+  type      String   @default("individual") // "individual", "company"
+  role      String   @default("user") // "user", "admin", "curator"
+  kycStatus String   @default("none") // "none", "pending", "verified"
+  kycData   Json?    @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products  Product[]
+  cart      CartItem[]
+  wishlist  WishlistItem[]
+}
+
+model Product {
+  id                 String   @id @default(cuid())
+  title              String
+  category           String
+  description        String
+  condition          String
+  price              Float
+  image              String
+  images             String[]
+  keywords           String[]
+  isVerified         Boolean  @default(false)
+  authenticityStatus String   @default("Pending")
+  sellerId           String
+  seller             User     @relation(fields: [sellerId], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model GalleryItem {
+  id           String   @id @default(cuid())
+  title        String
+  teaser       String
+  description  String
+  images       String[]
+  origin       String
+  timePeriod   String
+  institution  String
+  significance String
+  theme        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

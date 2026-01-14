@@ -1,21 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Landmark, Compass, History, Info, ChevronLeft, ChevronRight, Share2, Printer } from 'lucide-react';
-import { getGalleryItemById } from '../utils/galleryStorage';
+import { Landmark, Compass, History, Info, ChevronLeft, ChevronRight, Share2, Printer, Loader2 } from 'lucide-react';
+import { useGalleryItem } from '../hooks/api/useGallery';
 
 const GalleryDetail = () => {
     const { id } = useParams();
-    const [item, setItem] = useState(null);
+    const { data: item, isLoading } = useGalleryItem(id);
     const [activeImage, setActiveImage] = useState(0);
 
     useEffect(() => {
-        const found = getGalleryItemById(id);
-        if (found) {
-            setItem(found);
+        if (item) {
             setActiveImage(0);
         }
         window.scrollTo(0, 0);
-    }, [id]);
+    }, [item]);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#F9F7F5] flex flex-col items-center justify-center p-6">
+                <Loader2 className="animate-spin text-amber-800 mb-4" size={48} />
+                <p className="text-gray-500 font-serif text-xl italic">Unrolling The Manuscript...</p>
+            </div>
+        );
+    }
 
     if (!item) {
         return (

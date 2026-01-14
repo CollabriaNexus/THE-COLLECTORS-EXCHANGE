@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, User, Heart, Menu, X } from 'lucide-react';
-import { getCart, getWishlist } from '../utils/storage';
+import { getUser, getWishlist } from '../utils/storage';
+import { useCart } from '../hooks/api/useCart';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [cartCount, setCartCount] = useState(0);
+    const user = getUser();
+    const { data: cartItems = [] } = useCart(user?.id);
     const [wishlistCount, setWishlistCount] = useState(0);
 
     useEffect(() => {
         const updateCounts = () => {
-            setCartCount(getCart().length);
             setWishlistCount(getWishlist().length);
         };
         updateCounts();
@@ -64,9 +65,9 @@ const Header = () => {
                     </Link>
                     <Link to="/THE-COLLECTORS-EXCHANGE/cart" className="relative hover:text-luxury-gold transition-colors" aria-label="Cart">
                         <ShoppingBag size={20} />
-                        {cartCount > 0 && (
+                        {cartItems.length > 0 && (
                             <span className="absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                {cartCount}
+                                {cartItems.length}
                             </span>
                         )}
                     </Link>
