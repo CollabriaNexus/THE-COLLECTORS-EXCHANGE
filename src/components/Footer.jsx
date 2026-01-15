@@ -6,12 +6,12 @@ const Footer = () => {
     return (
         <footer className="bg-black text-white pt-20 pb-10 border-t border-gray-900">
             <div className="container mx-auto px-6 md:px-12 lg:px-24">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-8">
 
                     {/* Column 1: Company (Left) */}
-                    <div className="flex flex-col space-y-6 text-left">
-                        <h3 className="text-xl font-serif font-semibold text-luxury-gold uppercase tracking-wider">Company</h3>
-                        <div className="flex flex-col space-y-3 font-light text-gray-400">
+                    <div className="flex flex-col space-y-6 text-left order-2 lg:order-1">
+                        <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Company</h3>
+                        <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
                             <Link to="/THE-COLLECTORS-EXCHANGE/about" className="hover:text-white transition-colors duration-300">About Us</Link>
                             <Link to="/THE-COLLECTORS-EXCHANGE/vision" className="hover:text-white transition-colors duration-300">Our Vision</Link>
                             <Link to="/THE-COLLECTORS-EXCHANGE/founders-note" className="hover:text-white transition-colors duration-300">Founder’s Note</Link>
@@ -21,32 +21,32 @@ const Footer = () => {
                     </div>
 
                     {/* Column 2: Brand (Center) */}
-                    <div className="flex flex-col space-y-6 text-center items-center">
+                    <div className="flex flex-col space-y-6 text-center items-center col-span-1 sm:col-span-2 lg:col-span-1 order-1 lg:order-2 mb-12 lg:mb-0">
                         <div>
-                            <h2 className="text-2xl font-serif font-bold tracking-widest mb-2">THE COLLECTORS EXCHANGE</h2>
+                            <h2 className="text-lg sm:text-2xl font-serif font-bold tracking-tight sm:tracking-widest mb-2">THE COLLECTORS EXCHANGE</h2>
                             <div className="w-16 h-0.5 bg-luxury-gold mx-auto opacity-70"></div>
                         </div>
 
-                        <p className="text-gray-400 font-light leading-relaxed max-w-xs mx-auto">
+                        <p className="text-gray-400 font-light leading-relaxed max-w-xs mx-auto text-sm">
                             A curated marketplace for verified pre-owned collectibles, antiques, and limited pieces.
                         </p>
 
-                        <p className="font-serif italic text-white text-lg">
+                        <p className="font-serif italic text-white text-base lg:text-lg">
                             Preserving Value. Celebrating Authenticity.
                         </p>
 
                         <div className="pt-4">
-                            <p className="text-xs uppercase tracking-widest text-luxury-gold mb-2">Contact Us</p>
-                            <a href="mailto:support@collectorsexchange.com" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                                <Mail size={16} />
+                            <p className="text-[10px] uppercase tracking-widest text-luxury-gold mb-2">Contact Us</p>
+                            <a href="mailto:support@collectorsexchange.com" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
+                                <Mail size={14} />
                                 support@collectorsexchange.com
                             </a>
                         </div>
                     </div>
 
                     {/* Column 3: Follow Us (Right) */}
-                    <div className="flex flex-col space-y-6 md:text-right md:items-end">
-                        <h3 className="text-xl font-serif font-semibold text-luxury-gold uppercase tracking-wider">Follow Us</h3>
+                    <div className="flex flex-col space-y-6 sm:text-right sm:items-end order-3">
+                        <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Follow Us</h3>
 
                         <div className="flex gap-6">
                             <a href="https://www.instagram.com/the_collectors_exchange/?utm_source=ig_web_button_share_sheet" target="_blank" rel="noopener noreferrer" className="text-white hover:text-luxury-gold transition-colors duration-300">
