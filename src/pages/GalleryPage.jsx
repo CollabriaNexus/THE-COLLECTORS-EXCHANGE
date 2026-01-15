@@ -45,13 +45,20 @@ const GalleryCard = ({ item }) => {
         >
             {/* The Frame */}
             <div className="p-4 flex flex-col items-center">
-                <div className="relative aspect-square w-full overflow-hidden bg-black/20 rounded-sm shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] border border-black/40 group-hover:border-[#C9A962]/20 transition-colors duration-700">
-                    <img
-                        src={item.images[0]}
-                        alt={item.title}
-                        className="w-full h-full object-contain p-4 transition-transform duration-1000 group-hover:scale-105"
-                    />
-                </div>
+                {(() => {
+                    const currentImg = item.images[0]?.toString() || '';
+                    const isScene = currentImg.includes('OpIndia') || currentImg.includes('unsplash') || currentImg.includes('context') || currentImg.includes('Tiger') || currentImg.includes('rosetta');
+
+                    return (
+                        <div className={`relative aspect-square w-full overflow-hidden rounded-sm shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] border border-black/40 group-hover:border-[#C9A962]/20 transition-all duration-700 ${isScene ? 'bg-black/20 p-0' : 'bg-[#e2e0d9] p-0'}`}>
+                            <img
+                                src={item.images[0]}
+                                alt={item.title}
+                                className={`w-full h-full transition-transform duration-1000 group-hover:scale-110 ${isScene ? 'object-cover' : 'object-contain mix-blend-multiply brightness-[1.1] contrast-[1.1]'}`}
+                            />
+                        </div>
+                    );
+                })()}
 
                 {/* Understated Title Label */}
                 <div className="mt-4 text-center w-full px-2">
@@ -81,7 +88,7 @@ const GalleryPage = () => {
             <div className="relative z-10 pb-24">
                 {/* Gallery Hero Section */}
                 <section
-                    className="relative h-[80vh] flex items-center justify-center overflow-hidden"
+                    className="relative h-[65vh] flex items-center justify-center overflow-hidden"
                     style={{
                         backgroundImage: `url(${galleryHero})`,
                         backgroundSize: 'cover',
@@ -107,7 +114,7 @@ const GalleryPage = () => {
                 </section>
 
                 {/* Gallery Statement */}
-                <section className="py-24 px-6 border-b border-[#3D352F]/30">
+                <section className="py-12 px-6 border-b border-[#3D352F]/30">
                     <div className="container mx-auto max-w-4xl text-center">
                         <div className="flex justify-center mb-8">
                             <div className="w-12 h-px bg-[#C9A962]/20"></div>
@@ -124,7 +131,7 @@ const GalleryPage = () => {
                 </section>
 
                 {/* Theme-Based Sections */}
-                <div className="space-y-32">
+                <div className="space-y-16">
                     {THEMES.map((theme) => {
                         const items = getGalleryItemsByTheme(theme.name);
                         if (items.length === 0) return null;
@@ -160,7 +167,7 @@ const GalleryPage = () => {
                 </div>
 
                 {/* Empty States / Missing Theme Handling */}
-                <section className="mt-32 pt-32 border-t border-[#3D352F]/30 container mx-auto px-6 text-center">
+                <section className="mt-16 pt-16 border-t border-[#3D352F]/30 container mx-auto px-6 text-center">
                     <Info size={24} strokeWidth={1} className="mx-auto text-[#C9A962]/20 mb-6" />
                     <h3 className="text-lg font-serif text-[#9C8B7E]/60 mb-2 tracking-wide">Archives in Expansion</h3>
                     <p className="text-xs text-[#9C8B7E]/40 font-light italic">

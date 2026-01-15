@@ -58,13 +58,20 @@ const GalleryDetail = () => {
 
                     {/* Image Section */}
                     <div className="w-full lg:w-3/5 space-y-8">
-                        <div className="relative aspect-[4/3] bg-white shadow-2xl overflow-hidden flex items-center justify-center p-8 border border-gray-100">
-                            <img
-                                src={item.images[activeImage]}
-                                alt={item.title}
-                                className="max-w-full max-h-full object-contain mix-blend-multiply"
-                            />
-                        </div>
+                        {(() => {
+                            const currentImg = item.images[activeImage]?.toString() || '';
+                            const isScene = currentImg.includes('OpIndia') || currentImg.includes('unsplash') || currentImg.includes('context') || currentImg.includes('Tiger') || currentImg.includes('rosetta');
+
+                            return (
+                                <div className={`relative aspect-square bg-[#fdfdfd] bg-[radial-gradient(circle,_#ffffff_0%,_#f8f8f8_100%)] shadow-2xl overflow-hidden flex items-center justify-center border border-gray-100/50 rounded-sm transition-all duration-500 ${isScene ? 'p-0' : 'p-6'}`}>
+                                    <img
+                                        src={item.images[activeImage]}
+                                        alt={item.title}
+                                        className={`max-w-full max-h-full transition-all duration-700 hover:scale-[1.02] ${isScene ? 'w-full h-full object-cover' : 'object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)]'}`}
+                                    />
+                                </div>
+                            );
+                        })()}
 
                         {item.images.length > 1 && (
                             <div className="flex gap-4 overflow-x-auto pb-4">
@@ -72,9 +79,9 @@ const GalleryDetail = () => {
                                     <button
                                         key={idx}
                                         onClick={() => setActiveImage(idx)}
-                                        className={`w-24 h-24 flex-shrink-0 bg-white border p-2 transition-all ${activeImage === idx ? 'border-amber-800 opacity-100 shadow-md' : 'border-gray-200 opacity-60 hover:opacity-100'}`}
+                                        className={`w-24 h-24 flex-shrink-0 bg-[#fdfdfd] border p-3 transition-all ${activeImage === idx ? 'border-amber-800 ring-1 ring-amber-800/20 opacity-100 shadow-md scale-95' : 'border-gray-200 opacity-60 hover:opacity-100 hover:border-gray-300'}`}
                                     >
-                                        <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover mix-blend-multiply" />
+                                        <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-contain drop-shadow-sm" />
                                     </button>
                                 ))}
                             </div>
