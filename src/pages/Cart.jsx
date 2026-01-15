@@ -1,28 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Trash2, ShoppingBag } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { getCart, removeFromCart, getProducts, clearCart } from '../utils/storage';
+import { Trash2, ShoppingBag, Loader2 } from 'lucide-react';
+import { useCart, useRemoveFromCart } from '../hooks/api/useCart';
+import { getUser } from '../utils/storage';
 
 const Cart = () => {
-    const [cartItems, setCartItems] = useState([]);
+    const user = getUser();
+    const { data: cartItems = [], isLoading } = useCart(user?.id);
+    const removeMutation = useRemoveFromCart();
 
-    useEffect(() => {
-        loadCart();
-    }, []);
-
-    const loadCart = () => {
-        const cartIds = getCart();
-        const allProducts = getProducts();
-        const items = allProducts.filter(p => cartIds.includes(p.id));
-        setCartItems(items);
+    const handleRemove = async (productId) => {
+        if (!user) return;
+        try {
+            await removeMutation.mutateAsync({ userId: user.id, productId });
+        } catch (error) {
+            alert('Failed to remove item from cart.');
+        }
     };
 
-    const handleRemove = (productId) => {
-        removeFromCart(productId);
-        loadCart();
-    };
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center">
+                <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
+                <p className="text-gray-500 font-serif text-xl italic">Loading Your Collection...</p>
+            </div>
+        );
+    }
 
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
+    const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price || 0), 0);
     const platformFee = subtotal * 0.05; // 5% fee
     const total = subtotal + platformFee;
 
@@ -38,19 +41,19 @@ const Cart = () => {
                             {cartItems.map(item => (
                                 <div key={item.id} className="flex gap-6 p-6 border-b border-gray-100 last:border-0 items-center">
                                     <img
-                                        src={item.image || 'https://via.placeholder.com/100'}
-                                        alt={item.title}
+                                        src={item.product.image || 'https://via.placeholder.com/100'}
+                                        alt={item.product.title}
                                         className="w-24 h-24 object-cover"
                                     />
                                     <div className="flex-grow">
-                                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">{item.category}</p>
-                                        <h3 className="font-serif text-lg font-medium">{item.title}</h3>
-                                        <p className="text-sm text-gray-500 mt-1">{item.condition}</p>
+                                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">{item.product.category}</p>
+                                        <h3 className="font-serif text-lg font-medium">{item.product.title}</h3>
+                                        <p className="text-sm text-gray-500 mt-1">{item.product.condition}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-sans font-semibold mb-2">${item.price?.toLocaleString()}</p>
+                                        <p className="font-sans font-semibold mb-2">${item.product.price?.toLocaleString()}</p>
                                         <button
-                                            onClick={() => handleRemove(item.id)}
+                                            onClick={() => handleRemove(item.product.id)}
                                             className="text-red-500 hover:text-red-700 transition-colors"
                                         >
                                             <Trash2 size={18} />
