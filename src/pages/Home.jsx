@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive } from 'lucide-react';
+import Bullet from '../components/Bullet';
 import heroBackground from '../assets/hero-background.png';
 import heroVideo from '../assets/hero_section.mp4';
 import verificationAuthenticity from '../assets/verification_authenticity.png';
@@ -80,15 +81,15 @@ const Home = () => {
                         </p>
                         <ul className="space-y-4 font-sans text-gray-700">
                             <li className="flex items-center gap-4">
-                                <div className="w-2 h-2 bg-luxury-gold rounded-full"></div>
+                                <Bullet className="text-luxury-gold" />
                                 Direct verification with respective brands
                             </li>
                             <li className="flex items-center gap-4">
-                                <div className="w-2 h-2 bg-luxury-gold rounded-full"></div>
+                                <Bullet className="text-luxury-gold" />
                                 Expert appraisal for antiques
                             </li>
                             <li className="flex items-center gap-4">
-                                <div className="w-2 h-2 bg-luxury-gold rounded-full"></div>
+                                <Bullet className="text-luxury-gold" />
                                 Transparent history and provenance
                             </li>
                         </ul>
@@ -111,17 +112,35 @@ const Home = () => {
                         <div>
                             <h4 className="text-xl font-serif text-luxury-gold mb-2">Individual Sellers</h4>
                             <ul className="text-gray-400 space-y-2 text-sm">
-                                <li>• Mandatory KYC (Aadhaar/PAN)</li>
-                                <li>• Limit of 5 listings per account</li>
-                                <li>• Strict manual approval</li>
+                                <li className="flex items-start gap-2">
+                                    <Bullet className="text-luxury-gold mt-1 w-2 h-2" />
+                                    Mandatory KYC (Aadhaar/PAN)
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Bullet className="text-luxury-gold mt-1 w-2 h-2" />
+                                    Limit of 5 listings per account
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Bullet className="text-luxury-gold mt-1 w-2 h-2" />
+                                    Strict manual approval
+                                </li>
                             </ul>
                         </div>
                         <div>
                             <h4 className="text-xl font-serif text-luxury-gold mb-2">Company Sellers</h4>
                             <ul className="text-gray-400 space-y-2 text-sm">
-                                <li>• GST & Founder verification required</li>
-                                <li>• Company profile approval</li>
-                                <li>• Unlimited listings (post-approval)</li>
+                                <li className="flex items-start gap-2">
+                                    <Bullet className="text-luxury-gold mt-1 w-2 h-2" />
+                                    GST & Founder verification required
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Bullet className="text-luxury-gold mt-1 w-2 h-2" />
+                                    Company profile approval
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Bullet className="text-luxury-gold mt-1 w-2 h-2" />
+                                    Unlimited listings (post-approval)
+                                </li>
                             </ul>
                         </div>
                     </div>

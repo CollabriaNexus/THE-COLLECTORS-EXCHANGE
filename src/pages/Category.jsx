@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Watch, Gem, Landmark, Footprints, Gamepad2, Archive, ShieldCheck, Award, Heart, ShoppingBag, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
 import { addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
+import Bullet from '../components/Bullet';
+import exchangeHeroBg from '../assets/The_Exchange.jpg';
 
 const CATEGORIES = [
     {
@@ -233,30 +235,78 @@ const Category = () => {
         // This is now handled by TanStack Query invalidation if needed
     };
 
+    const productsRef = useRef(null);
+
+    const handleCategoryClick = (categoryName) => {
+        const isSelected = selectedCategory === categoryName;
+        setSelectedCategory(isSelected ? null : categoryName);
+
+        // Scroll to products section when selecting a category
+        if (!isSelected) {
+            setTimeout(() => {
+                productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-heritage-cream">
-            {/* Hero Section - Minimal Height */}
-            <section className="relative py-10 md:py-12 px-6 bg-heritage-charcoal overflow-hidden">
-                {/* Subtle texture overlay */}
-                <div className="absolute inset-0 opacity-10" style={{
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C8B7E" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
-                }}></div>
+            {/* Hero Section - The Collected Archive (Legacy Style Refined with Background) */}
+            <section className="relative overflow-hidden bg-heritage-cream border-b border-heritage-beige">
+                <div className="grid lg:grid-cols-2 min-h-[300px] lg:h-[320px]">
+                    {/* Left Column: Editorial Narrative (Solves readability) */}
+                    <div className="relative flex items-center justify-center py-8 lg:py-0 px-6 lg:px-12 bg-heritage-cream order-2 lg:order-1">
+                        <div className="max-w-xl text-center lg:text-left">
+                            <div className="flex items-center justify-center lg:justify-start gap-4 mb-3">
+                                <div className="h-px w-8 bg-[#B29352]/40"></div>
+                                <h5 className="text-[#B29352] tracking-[0.4em] font-sans text-[10px] md:text-[11px] font-bold uppercase">
+                                    Archive Vision
+                                </h5>
+                                <div className="hidden lg:block h-px w-8 bg-[#B29352]/40"></div>
+                            </div>
 
-                <div className="container mx-auto max-w-6xl text-center relative z-10">
-                    <h5 className="text-heritage-gold-muted tracking-[0.25em] font-sans text-xs font-medium uppercase mb-4">
-                        Pre-Owned Collectibles Archive
-                    </h5>
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white font-normal mb-4 tracking-wide">
-                        The Exchange
-                    </h1>
-                    <p className="text-heritage-beige/70 font-sans font-light max-w-xl mx-auto text-sm leading-relaxed">
-                        Explore our curated archive of verified pre-owned treasures and rare collectibles.
-                    </p>
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-heritage-charcoal font-normal mb-3 leading-tight tracking-tight">
+                                The <span className="italic text-[#B29352] font-light font-serif">Exchange</span>
+                            </h1>
+
+                            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#B29352]/40 to-transparent mx-auto lg:mx-0 mb-4"></div>
+
+                            <div className="relative">
+                                <p className="text-heritage-charcoal/70 font-serif italic text-base md:text-lg leading-relaxed max-w-md mx-auto lg:mx-0">
+                                    "Explore our curated archive of verified pre-owned treasures and rare collectibles."
+                                </p>
+                            </div>
+
+                            {/* Footer Values */}
+                            <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-[9px] uppercase tracking-[0.2em] text-heritage-charcoal/40 font-sans font-bold">
+                                <span className="flex items-center gap-2"><Bullet className="text-[#B29352] w-2 h-2" />Provenance</span>
+                                <span className="flex items-center gap-2"><Bullet className="text-[#B29352] w-2 h-2" />Authenticity</span>
+                                <span className="flex items-center gap-2"><Bullet className="text-[#B29352] w-2 h-2" />Continuity</span>
+                            </div>
+                        </div>
+
+                        {/* Scroll Indicator - Moved to text column to avoid overlap */}
+                        <div className="absolute bottom-4 left-1/2 lg:left-12 -translate-x-1/2 lg:translate-x-0 hidden lg:flex flex-col items-center gap-2 opacity-20">
+                            <span className="text-[8px] uppercase tracking-[0.6em] text-heritage-gold-muted font-bold">Scroll</span>
+                            <div className="w-px h-8 bg-gradient-to-b from-heritage-gold-muted to-transparent"></div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Visual Archive (100% Clear Background) */}
+                    <div className="relative h-[250px] lg:h-full order-1 lg:order-2 overflow-hidden border-b lg:border-l lg:border-b-0 border-heritage-beige">
+                        <img
+                            src={exchangeHeroBg}
+                            alt="The Exchange Archive"
+                            className="w-full h-full object-cover object-center grayscale-[0.2] hover:grayscale-0 transition-all duration-1000"
+                        />
+                        {/* Subtle Vignette for anchor */}
+                        <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/5"></div>
+                    </div>
                 </div>
             </section>
 
-            {/* Category Icons Navigation */}
-            <section className="py-8 md:py-10 px-6 bg-white border-b border-heritage-beige">
+            {/* Category Icons Navigation - Polished with shadow and border */}
+            <section className="py-8 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
                 <div className="container mx-auto max-w-5xl">
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-6 md:gap-8">
                         {CATEGORIES.map((category) => {
@@ -265,7 +315,7 @@ const Category = () => {
                             return (
                                 <button
                                     key={category.id}
-                                    onClick={() => setSelectedCategory(isSelected ? null : category.name)}
+                                    onClick={() => handleCategoryClick(category.name)}
                                     className="group flex flex-col items-center text-center"
                                 >
                                     <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-2 flex items-center justify-center transition-all duration-300 mb-3 ${isSelected
@@ -292,37 +342,39 @@ const Category = () => {
                         })}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* "Most Rare" Featured Section */}
-            {featuredProducts.length > 0 && (
-                <section className="py-16 md:py-20 px-6 bg-heritage-cream">
-                    <div className="container mx-auto max-w-6xl">
-                        <div className="text-center mb-12">
-                            <div className="flex items-center justify-center gap-4 mb-4">
-                                <div className="h-px w-12 bg-heritage-bronze/30"></div>
-                                <Award size={20} strokeWidth={1} className="text-heritage-gold-muted" />
-                                <div className="h-px w-12 bg-heritage-bronze/30"></div>
+            {
+                featuredProducts.length > 0 && (
+                    <section className="py-16 md:py-20 px-6 bg-heritage-cream">
+                        <div className="container mx-auto max-w-6xl">
+                            <div className="text-center mb-12">
+                                <div className="flex items-center justify-center gap-4 mb-4">
+                                    <div className="h-px w-12 bg-heritage-bronze/30"></div>
+                                    <Award size={20} strokeWidth={1} className="text-heritage-gold-muted" />
+                                    <div className="h-px w-12 bg-heritage-bronze/30"></div>
+                                </div>
+                                <h2 className="text-3xl md:text-4xl font-serif text-heritage-charcoal font-normal tracking-wide mb-2">
+                                    Most Rare
+                                </h2>
+                                <p className="text-heritage-bronze/70 font-sans font-light text-sm">
+                                    An exclusive, museum-style presentation
+                                </p>
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-serif text-heritage-charcoal font-normal tracking-wide mb-2">
-                                Most Rare
-                            </h2>
-                            <p className="text-heritage-bronze/70 font-sans font-light text-sm">
-                                An exclusive, museum-style presentation
-                            </p>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {featuredProducts.map((product) => (
-                                <FeaturedProductCard key={product.id} product={product} onUpdate={loadProducts} />
-                            ))}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {featuredProducts.map((product) => (
+                                    <FeaturedProductCard key={product.id} product={product} onUpdate={loadProducts} />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                </section>
-            )}
+                    </section>
+                )
+            }
 
             {/* All Products Grid */}
-            <section className="py-16 md:py-20 px-6 bg-white">
+            <section ref={productsRef} className="py-16 md:py-20 px-6 bg-white">
                 <div className="container mx-auto max-w-6xl">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                         <div>
@@ -364,7 +416,7 @@ const Category = () => {
                     )}
                 </div>
             </section>
-        </div>
+        </div >
     );
 };
 

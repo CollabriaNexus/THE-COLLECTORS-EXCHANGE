@@ -1,5 +1,6 @@
 import AboutImage from '../assets/About_US.jpg';
 import { History, ShieldCheck, Heart, Users, Compass, Landmark } from 'lucide-react';
+import Bullet from '../components/Bullet';
 
 const About = () => {
     return (
@@ -57,7 +58,7 @@ const About = () => {
                         <div className="relative group">
                             <div className="absolute -left-6 top-0 w-1 h-12 bg-[#C9A962]/30"></div>
                             <p className="text-base sm:text-lg md:text-xl leading-relaxed text-[#4A443E]">
-                                Long before mass production, before trends moved at internet speed, value was built through craft, patience, and provenance. A timepiece was not just worn — it was inherited. A collectible was not bought — it was kept. A possession was not replaced — it became a story.
+                                Long before mass production, before trends moved at internet speed, value was built through craft, patience, and provenance. A timepiece was not just worn: it was inherited. A collectible was not bought: it was kept. A possession was not replaced: it became a story.
                             </p>
                         </div>
 
@@ -66,7 +67,7 @@ const About = () => {
                             <h2 className="text-2xl sm:text-3xl font-serif mb-6 text-[#1A1816]">At The Collectors’ Exchange, we exist to preserve that philosophy.</h2>
                             <p className="text-[#6B635B] leading-relaxed italic text-sm sm:text-base">
                                 We are not a marketplace for the new. <br />
-                                We are a House of Heritage for the pre-owned — for items that have lived, endured, and earned their place in time.
+                                We are a House of Heritage for the pre-owned, for items that have lived, endured, and earned their place in time.
                             </p>
                         </div>
                     </div>
@@ -77,7 +78,7 @@ const About = () => {
                             <History className="text-[#C9A962] mb-6 group-hover:scale-110 transition-transform" size={28} strokeWidth={1} />
                             <h3 className="text-xl font-serif mb-4 text-[#1A1816]">Where Stories Are Collected, Not Discarded</h3>
                             <div className="space-y-4 text-sm text-[#6B635B] leading-relaxed">
-                                <p>Across generations, families have passed down watches, antiques, rare collectibles, toys, sneakers, and cultural artefacts — not as assets, but as memories.</p>
+                                <p>Across generations, families have passed down watches, antiques, rare collectibles, toys, sneakers, and cultural artefacts, not as assets, but as memories.</p>
                                 <p>Today, many millennials and Gen Z collectors find themselves custodians of these inherited pieces, along with carefully built personal collections of their own.</p>
                                 <p>Yet, until now, there has been no trusted space where such objects could be honoured, verified, and exchanged with dignity.</p>
                                 <p className="text-[#C9A962] font-semibold">The Collectors’ Exchange was built to be that space.</p>
@@ -107,93 +108,63 @@ const About = () => {
                         </div>
                         <div className="p-8 sm:p-12 text-center group hover:bg-[#FDFDFD] transition-colors">
                             <Heart className="mx-auto mb-6 sm:mb-8 text-[#1A1816]/60 group-hover:text-[#C9A962] transition-colors w-7 h-7 sm:w-8 sm:h-8" strokeWidth={1.5} />
-                            <p className="text-base sm:text-lg font-serif italic text-[#4A443E] group-hover:text-[#1A1816] transition-colors">"Every buyer understands they are acquiring more than an object — they are acquiring a legacy"</p>
+                            <p className="text-base sm:text-lg font-serif italic text-[#4A443E] group-hover:text-[#1A1816] transition-colors">"Every buyer understands they are acquiring more than an object: they are acquiring a legacy"</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Vision Section: Archival Masterpiece */}
-            <section className="py-24 bg-[#FDFDFD] relative overflow-hidden border-y border-[#C9A962]/20">
-                {/* Architectural Background Pattern (Faint SVG) */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <pattern id="arch-grid" width="100" height="100" patternUnits="userSpaceOnUse">
-                                <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#C9A962" strokeWidth="0.5" />
-                                <circle cx="0" cy="0" r="1" fill="#C9A962" />
-                            </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#arch-grid)" />
-                    </svg>
-                </div>
+            {/* Vision Section: Archival Masterpiece (Redesigned for Legacy Style) */}
+            <section className="py-24 md:py-32 bg-heritage-cream relative overflow-hidden border-y border-heritage-gold-muted/10">
+                <div className="container mx-auto px-6 relative z-10 text-center">
+                    <div className="max-w-4xl mx-auto">
+                        {/* Top Label - Spaced */}
+                        <div className="flex items-center justify-center gap-6 mb-8">
+                            <div className="h-px w-12 bg-heritage-gold-muted/30"></div>
+                            <span className="text-heritage-gold-muted tracking-[0.4em] font-sans text-[11px] font-bold uppercase">
+                                Archive Vision
+                            </span>
+                            <div className="h-px w-12 bg-heritage-gold-muted/30"></div>
+                        </div>
 
-                <div className="container mx-auto px-6 relative z-10">
-                    <div className="max-w-5xl mx-auto">
-                        <div className="grid lg:grid-cols-12 gap-12 items-center">
-                            {/* Left: Masterpiece Medal */}
-                            <div className="lg:col-span-4 flex justify-center lg:justify-start">
-                                <div className="relative">
-                                    {/* Rotating Outer Ring */}
-                                    <div className="w-40 h-40 md:w-56 md:h-56 rounded-full border border-[#C9A962]/20 animate-spin-slow"></div>
-                                    {/* Inner Medallion */}
-                                    <div className="absolute inset-4 rounded-full border-2 border-[#C9A962]/40 bg-white shadow-xl flex items-center justify-center group overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-[#C9A962]/5 to-transparent"></div>
-                                        <Landmark className="text-[#1A1816] w-16 h-16 md:w-24 md:h-24 opacity-80 group-hover:scale-110 transition-transform duration-1000" strokeWidth={0.3} />
-                                        {/* Compass Ornament */}
-                                        <div className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full border border-[#C9A962]/20 flex items-center justify-center shadow-lg">
-                                            <Compass className="text-[#C9A962] w-5 h-5 animate-pulse" strokeWidth={1} />
-                                        </div>
-                                    </div>
-                                    {/* Decorative Crosshair */}
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-px bg-gradient-to-r from-transparent via-[#C9A962]/20 to-transparent rotate-45"></div>
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-px bg-gradient-to-r from-transparent via-[#C9A962]/20 to-transparent -rotate-45"></div>
-                                </div>
+                        <div className="space-y-8">
+                            {/* Heading with Legacy emphasis */}
+                            <h2 className="text-4xl md:text-7xl font-serif text-heritage-charcoal font-normal leading-tight tracking-tight text-center">
+                                The <span className="italic text-heritage-gold-muted font-light">Legacy</span> Statement
+                            </h2>
+
+                            {/* Gold Underline */}
+                            <div className="w-24 h-1 bg-heritage-gold-muted/40 mx-auto mb-10"></div>
+                        </div>
+
+                        {/* Mission Quote Block */}
+                        <div className="relative py-2 mb-12">
+                            <p className="text-2xl md:text-5xl font-serif italic text-heritage-charcoal/80 leading-relaxed max-w-3xl mx-auto">
+                                To become the definitive global archive where the world's most meaningful history is preserved, verified, and exchanged for generations to come.
+                            </p>
+                        </div>
+
+                        {/* Footer Values with Custom Bullets */}
+                        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 text-[10px] uppercase tracking-[0.25em] text-heritage-bronze/50 font-sans font-bold">
+                            <div className="flex items-center gap-3">
+                                <Bullet className="text-heritage-gold-muted" />
+                                <span>Provenance</span>
                             </div>
-
-                            {/* Right: Cinematic Content */}
-                            <div className="lg:col-span-8 space-y-10">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-12 h-px bg-[#C9A962]"></div>
-                                    <span className="text-[11px] uppercase tracking-[1em] text-[#C9A962] font-black">Archive Vision</span>
-                                </div>
-
-                                <div className="space-y-6">
-                                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-serif text-[#1A1816] leading-none mb-4">
-                                        The <span className="text-[#C9A962] italic">Legacy</span> Statement
-                                    </h2>
-                                    <div className="w-24 h-1 bg-gradient-to-r from-[#C9A962] to-transparent"></div>
-                                </div>
-
-                                <div className="relative">
-                                    <p className="text-xl sm:text-2xl md:text-4xl font-serif italic text-[#4A443E] leading-relaxed border-l-4 border-[#C9A962]/10 pl-6 sm:pl-8 py-2">
-                                        To become the definitive global archive where the world's most meaningful history is preserved, verified, and exchanged for generations to come.
-                                    </p>
-                                    <div className="absolute -left-4 -top-8 text-[#C9A962]/5 text-[100px] sm:text-[150px] font-serif select-none italic">"</div>
-                                </div>
-
-                                <div className="pt-8 grid grid-cols-2 sm:flex items-center gap-6 sm:gap-10 opacity-60">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-1.5 h-1.5 bg-[#C9A962] rounded-full"></div>
-                                        <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-nowrap">Provenance</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-1.5 h-1.5 bg-[#C9A962] rounded-full"></div>
-                                        <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-nowrap">Authenticity</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-1.5 h-1.5 bg-[#C9A962] rounded-full"></div>
-                                        <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-nowrap">Continuity</span>
-                                    </div>
-                                </div>
+                            <div className="flex items-center gap-3">
+                                <Bullet className="text-heritage-gold-muted" />
+                                <span>Authenticity</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Bullet className="text-heritage-gold-muted" />
+                                <span>Continuity</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Light Beam Effect */}
-                <div className="absolute -top-1/2 left-1/4 w-[1px] h-[200%] bg-gradient-to-b from-transparent via-[#C9A962]/10 to-transparent rotate-12 blur-[1px]"></div>
-                <div className="absolute -top-1/2 right-1/4 w-[1px] h-[200%] bg-gradient-to-b from-transparent via-[#C9A962]/10 to-transparent rotate-12 blur-[1px]"></div>
+                {/* Subtle Background Glows */}
+                <div className="absolute -top-1/2 -left-1/4 w-[600px] h-[600px] bg-heritage-beige/10 rounded-full blur-[120px] pointer-events-none"></div>
+                <div className="absolute -bottom-1/2 -right-1/4 w-[600px] h-[600px] bg-heritage-gold-muted/5 rounded-full blur-[100px] pointer-events-none"></div>
             </section>
 
             {/* Structured Content Sections */}
@@ -204,14 +175,18 @@ const About = () => {
                         <div className="md:w-1/2">
                             <div className="text-[10px] uppercase tracking-[0.4em] text-[#C9A962] font-bold mb-4">AUTHENTICATION</div>
                             <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-6 sm:mb-8 text-[#1A1816]">Curated. Verified. Meaningful.</h2>
-                            <p className="text-base sm:text-lg text-[#C9A962]/80 italic font-serif mb-6 sm:mb-8 border-l-2 border-[#C9A962]/20 pl-6">We believe trust is not claimed — it is earned.</p>
+                            <p className="text-base sm:text-lg text-[#C9A962]/80 italic font-serif mb-6 sm:mb-8 border-l-2 border-[#C9A962]/20 pl-6">We believe trust is not claimed: it is earned.</p>
                             <div className="space-y-6 text-[#6B635B] leading-relaxed">
                                 <p>Each item listed on The Collectors’ Exchange undergoes a structured verification process before being marked as authenticated by our marketplace. Our focus is not volume, but integrity. We choose curation over clutter, and provenance over popularity.</p>
                                 <p>Whether it is a timepiece that has measured decades, a sneaker preserved in its original condition, or a collectible tied to cultural memory, we ensure that what enters our exchange belongs here.</p>
                             </div>
                         </div>
-                        <div className="md:w-1/2 p-1 bg-[#F4F1ED] border border-[#C9A962]/10 rounded-sm shadow-inner">
-                            <img src={AboutImage} alt="Verification" className="opacity-80 hover:opacity-100 transition-all duration-700 contrast-[1.05]" />
+                        <div className="md:w-1/2 h-[300px] md:h-[400px] p-1 bg-[#F4F1ED] border border-[#C9A962]/10 rounded-sm shadow-inner overflow-hidden">
+                            <img
+                                src={AboutImage}
+                                alt="Verification"
+                                className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-all duration-700 contrast-[1.05]"
+                            />
                         </div>
                     </div>
 
@@ -220,7 +195,7 @@ const About = () => {
                         <div className="text-center">
                             <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-4 sm:mb-6 text-[#1A1816]">Built for Collectors, Then and Now</h2>
                             <p className="text-sm sm:text-base text-[#6B635B] max-w-2xl mx-auto leading-relaxed px-4 sm:px-0">
-                                The courage to collect — to hold onto something when the world moves on — is rare. It takes patience, appreciation, and respect for time itself. We honour that courage.
+                                The courage to collect, to hold onto something when the world moves on, is rare. It takes patience, appreciation, and respect for time itself. We honour that courage.
                             </p>
                         </div>
 
@@ -252,11 +227,11 @@ const About = () => {
                         <p className="text-[#9C8B7E] mb-8 sm:mb-12 text-base sm:text-lg italic">We promise to protect:</p>
                         <div className="flex flex-col sm:flex-row justify-center gap-8 sm:gap-12">
                             <div className="flex items-center gap-4 justify-center sm:justify-start">
-                                <div className="w-1.5 h-1.5 bg-[#C9A962] rounded-full"></div>
+                                <Bullet className="text-luxury-gold" />
                                 <span className="text-xl sm:text-2xl font-serif text-[#E5E1DA]">The privacy of our sellers</span>
                             </div>
                             <div className="flex items-center gap-4 justify-center sm:justify-start">
-                                <div className="w-1.5 h-1.5 bg-[#C9A962] rounded-full"></div>
+                                <Bullet className="text-luxury-gold" />
                                 <span className="text-xl sm:text-2xl font-serif text-[#E5E1DA]">The authenticity of every item sold</span>
                             </div>
                         </div>

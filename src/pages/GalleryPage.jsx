@@ -110,7 +110,7 @@ const GalleryPage = () => {
 
                     <div className="absolute bottom-12 right-12 bg-white/10 backdrop-blur-md border border-white/20 p-6 text-white text-left max-w-sm">
                         <p className="font-serif italic text-lg mb-2">"The past is a foreign country; they do things differently there."</p>
-                        <p className="text-xs uppercase tracking-widest text-white/50">— L.P. Hartley, The Go-Between</p>
+                        <p className="text-xs uppercase tracking-widest text-white/50">- L.P. Hartley, The Go-Between</p>
                     </div>
                 </section>
 

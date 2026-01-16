@@ -1,4 +1,5 @@
 import React from 'react';
+import Bullet from '../components/Bullet';
 
 const Privacy = () => {
     return (
@@ -24,21 +25,42 @@ const Privacy = () => {
             <div className="space-y-10 font-sans text-gray-800">
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">1. Controller & Contact</h2>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                        <li><strong>Data Controller:</strong> The Collectors’ Exchange</li>
-                        <li><strong>Contact Email:</strong> <a href="mailto:privacy@collectorsexchange.com" className="hover:text-luxury-gold transition-colors">privacy@collectorsexchange.com</a></li>
-                        <li>Privacy rights requests are addressed in Section 11.</li>
+                    <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span><strong>Data Controller:</strong> The Collectors’ Exchange</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span><strong>Contact Email:</strong> <a href="mailto:privacy@collectorsexchange.com" className="hover:text-luxury-gold transition-colors">privacy@collectorsexchange.com</a></span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Privacy rights requests are addressed in Section 11.</span>
+                        </li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">2. Scope & Applicability</h2>
                     <p className="mb-2 text-gray-700">This Policy applies to:</p>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                        <li>Website and app visitors</li>
-                        <li>Buyers and prospective buyers</li>
-                        <li>Individual and company sellers</li>
-                        <li>Marketing, support, and authentication service users</li>
+                    <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Website and app visitors</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Buyers and prospective buyers</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Individual and company sellers</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Marketing, support, and authentication service users</span>
+                        </li>
                     </ul>
                     <p className="mt-2 text-gray-700 text-sm italic">Separate written agreements with business customers may supplement this Policy.</p>
                 </section>
@@ -48,35 +70,83 @@ const Privacy = () => {
 
                     <div className="mb-6">
                         <h3 className="text-xl font-medium mb-2">A. Personal Data You Provide</h3>
-                        <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                            <li>Account and contact details</li>
-                            <li>Identity and verification documents including PAN and Aadhaar</li>
-                            <li>Company registration and tax documentation</li>
-                            <li>Payment and payout details (excluding full card numbers)</li>
-                            <li>Product listings, provenance records, images, certificates</li>
-                            <li>Communications with support and other users</li>
-                            <li>Marketing preferences and consents</li>
+                        <ul className="space-y-1 text-gray-700">
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Account and contact details</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Identity and verification documents including PAN and Aadhaar</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Company registration and tax documentation</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Payment and payout details (excluding full card numbers)</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Product listings, provenance records, images, certificates</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Communications with support and other users</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Marketing preferences and consents</span>
+                            </li>
                         </ul>
                     </div>
 
                     <div className="mb-6">
                         <h3 className="text-xl font-medium mb-2">B. Technical & Usage Data</h3>
-                        <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                            <li>IP address</li>
-                            <li>Device and browser information</li>
-                            <li>Operating system</li>
-                            <li>Interaction and usage analytics</li>
-                            <li>Cookies and similar technologies</li>
+                        <ul className="space-y-1 text-gray-700">
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>IP address</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Device and browser information</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Operating system</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Interaction and usage analytics</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Cookies and similar technologies</span>
+                            </li>
                         </ul>
                     </div>
 
                     <div className="mb-6">
                         <h3 className="text-xl font-medium mb-2">C. Third-Party and Public Sources</h3>
-                        <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                            <li>Authentication partners</li>
-                            <li>Public registers and auction records</li>
-                            <li>Linked social profiles</li>
-                            <li>Fraud and identity verification providers</li>
+                        <ul className="space-y-1 text-gray-700">
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Authentication partners</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Public registers and auction records</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Linked social profiles</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Fraud and identity verification providers</span>
+                            </li>
                         </ul>
                     </div>
 
@@ -89,62 +159,146 @@ const Privacy = () => {
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">4. How We Use Personal Data</h2>
                     <p className="mb-2 text-gray-700">Personal Data is used for:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                        <li>Platform operations and transactions</li>
-                        <li>Authentication and provenance verification</li>
-                        <li>Seller onboarding, KYC, AML, and compliance</li>
-                        <li>Payment processing and payouts</li>
-                        <li>Customer support and dispute resolution</li>
-                        <li>Security, fraud prevention, and legal compliance</li>
-                        <li>Marketing and personalization (with consent where required)</li>
-                        <li>Analytics and business operations</li>
+                    <ul className="space-y-1 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Platform operations and transactions</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Authentication and provenance verification</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Seller onboarding, KYC, AML, and compliance</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Payment processing and payouts</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Customer support and dispute resolution</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Security, fraud prevention, and legal compliance</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Marketing and personalization (with consent where required)</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Analytics and business operations</span>
+                        </li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">5. Legal Bases for Processing</h2>
                     <p className="mb-2 text-gray-700">Processing is based on:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                        <li>Contractual necessity</li>
-                        <li>Legal obligations</li>
-                        <li>Legitimate interests</li>
-                        <li>User consent where required</li>
+                    <ul className="space-y-1 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Contractual necessity</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Legal obligations</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Legitimate interests</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>User consent where required</span>
+                        </li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">6. Sharing & Disclosure</h2>
                     <p className="mb-2 text-gray-700">Personal Data may be shared with:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                        <li>Service providers and processors</li>
-                        <li>Authentication partners</li>
-                        <li>Other users for transaction fulfillment</li>
-                        <li>Legal and regulatory authorities</li>
-                        <li>Successor entities in business transfers</li>
-                        <li>Parties with user consent</li>
+                    <ul className="space-y-1 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Service providers and processors</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Authentication partners</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Other users for transaction fulfillment</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Legal and regulatory authorities</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Successor entities in business transfers</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Parties with user consent</span>
+                        </li>
                     </ul>
                     <p className="mt-2 font-medium text-gray-800">Personal data is not sold for monetary consideration.</p>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">7. Authentication & the Verified Mark</h2>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                        <li>Verified Authenticity Mark is applied only after verification.</li>
-                        <li>Verification may be internal or via partners.</li>
-                        <li>Sellers warrant accuracy and lawful ownership.</li>
-                        <li>Verification reflects available evidence at time of inspection.</li>
-                        <li>Remedies for proven inauthenticity follow established dispute procedures.</li>
-                        <li>Verified Mark usage is restricted to The Collectors’ Exchange.</li>
+                    <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Verified Authenticity Mark is applied only after verification.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Verification may be internal or via partners.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Sellers warrant accuracy and lawful ownership.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Verification reflects available evidence at time of inspection.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Remedies for proven inauthenticity follow established dispute procedures.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Verified Mark usage is restricted to The Collectors’ Exchange.</span>
+                        </li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">8. Data Retention</h2>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                        <li>Data retained only as long as legally and operationally required.</li>
-                        <li>Typical retention up to seven years for tax and accounting.</li>
-                        <li>Data may be deleted or anonymized upon account closure.</li>
-                        <li>Data export available where feasible.</li>
+                    <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Data retained only as long as legally and operationally required.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Typical retention up to seven years for tax and accounting.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Data may be deleted or anonymized upon account closure.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Data export available where feasible.</span>
+                        </li>
                     </ul>
                 </section>
 
@@ -162,15 +316,39 @@ const Privacy = () => {
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">11. Your Rights & Choices</h2>
                     <p className="mb-2 text-gray-700">Users may have rights to:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700 grid md:grid-cols-2 gap-2">
-                        <li>Access</li>
-                        <li>Correction</li>
-                        <li>Deletion</li>
-                        <li>Restriction or objection</li>
-                        <li>Data portability</li>
-                        <li>Consent withdrawal</li>
-                        <li>Marketing opt-out</li>
-                        <li>Regulatory complaint</li>
+                    <ul className="space-y-1 text-gray-700 grid md:grid-cols-2 gap-2">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Access</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Correction</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Deletion</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Restriction or objection</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Data portability</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Consent withdrawal</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Marketing opt-out</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Regulatory complaint</span>
+                        </li>
                     </ul>
                     <p className="mt-2 text-gray-700">Requests require identity verification and are handled per applicable law.</p>
                 </section>

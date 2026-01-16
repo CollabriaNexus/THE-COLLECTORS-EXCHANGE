@@ -1,4 +1,5 @@
 import { Trash2, ShoppingBag, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useCart, useRemoveFromCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
 

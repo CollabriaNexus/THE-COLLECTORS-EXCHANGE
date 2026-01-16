@@ -2,6 +2,7 @@ import React from 'react';
 import collectorsStudy from '../assets/collectors_study.png';
 import artisanAtWork from '../assets/artisan2.png';
 import { Landmark, Compass, ShieldCheck, History, Heart, Users } from 'lucide-react';
+import Bullet from '../components/Bullet';
 
 const Vision = () => {
     return (
@@ -43,12 +44,12 @@ const Vision = () => {
                                     We draw inspiration from ancient India, a time when objects were not discarded, but preserved; when possessions were not replaced, but respected; and when value was measured not by price, but by the ability to be carried forward across generations.
                                 </p>
                                 <p>
-                                    In a world driven by speed and excess, we believe it is time to pause — to protect every lantern that once lit a home, every radio that carried voices across decades, every gramophone that captured moments in time, and every timepiece handed down by a grandparent with quiet pride.
+                                    In a world driven by speed and excess, we believe it is time to pause, to protect every lantern that once lit a home, every radio that carried voices across decades, every gramophone that captured moments in time, and every timepiece handed down by a grandparent with quiet pride.
                                 </p>
                             </div>
                             <div className="pt-4 pl-0 sm:pl-6 not-italic">
                                 <p className="text-base sm:text-lg lg:text-xl font-medium text-[#1A1816] border-l-2 border-[#C9A962]/20 pl-6 py-2 bg-[#F9F7F4]/50">
-                                    Our vision is to ensure that such objects are not lost to neglect, imitation, or indifference — but are given a future worthy of their past.
+                                    Our vision is to ensure that such objects are not lost to neglect, imitation, or indifference, but are given a future worthy of their past.
                                 </p>
                             </div>
                         </div>
@@ -94,7 +95,7 @@ const Vision = () => {
                                             "Trust that authenticity, provenance, and integrity are never optional"
                                         ].map((item, i) => (
                                             <li key={i} className="flex items-start gap-2.5 group text-xs md:text-sm">
-                                                <Compass className="text-[#C9A962] mt-0.5 shrink-0 group-hover:rotate-45 transition-transform duration-500" size={14} strokeWidth={1.5} />
+                                                <Bullet className="text-[#C9A962] mt-0.5" />
                                                 <span className="text-[#6B635B] group-hover:text-[#1A1816] transition-colors">{item}</span>
                                             </li>
                                         ))}
@@ -153,10 +154,10 @@ const Vision = () => {
 
                             <div className="space-y-4 text-[#4A443E] leading-relaxed text-sm lg:text-base font-light">
                                 <p className="text-base sm:text-lg lg:text-xl font-serif italic text-[#1A1816] border-b border-[#C9A962]/5 pb-2">
-                                    We believe the secondary market should not diminish creation — it should honour it.
+                                    We believe the secondary market should not diminish creation: it should honour it.
                                 </p>
                                 <p>
-                                    For brands and creators who produce limited works, rare editions, or culturally significant pieces, The Collectors’ Exchange is a modern online museum — a place where intent and originality are preserved long after the first sale.
+                                    For brands and creators who produce limited works, rare editions, or culturally significant pieces, The Collectors’ Exchange is a modern online museum: a place where intent and originality are preserved long after the first sale.
                                 </p>
                                 <div className="bg-white p-6 border border-[#C9A962]/10 rounded-sm shadow-sm relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-[2px] h-full bg-[#C9A962]"></div>
@@ -169,7 +170,7 @@ const Vision = () => {
                                         ].map((item, i) => (
                                             <li key={i} className="flex items-start gap-2 group text-xs md:text-sm text-right justify-end">
                                                 <span className="text-[#6B635B] group-hover:text-[#1A1816] transition-colors">{item}</span>
-                                                <ShieldCheck className="text-[#C9A962] mt-0.5 shrink-0" size={14} strokeWidth={1.5} />
+                                                <Bullet className="text-[#C9A962] mt-0.5" />
                                             </li>
                                         ))}
                                     </ul>
@@ -212,7 +213,7 @@ const Vision = () => {
                         </p>
                         <div className="space-y-4 text-base md:text-lg">
                             <p>
-                                It is an institution in the making — dedicated to preservation, trust, and continuity.
+                                It is an institution in the making, dedicated to preservation, trust, and continuity.
                             </p>
                             <p>
                                 We envision a future where every object with meaning finds its rightful place, and where legacy is experienced as something alive.
@@ -221,7 +222,7 @@ const Vision = () => {
                         <div className="pt-6">
                             <div className="inline-flex flex-col items-center">
                                 <div className="w-12 h-px bg-[#C9A962] mb-4"></div>
-                                <p className="text-xl sm:text-2xl lg:text-3xl font-serif text-[#1A1816] tracking-tight not-italic italic font-medium">
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-serif text-[#1A1816] tracking-tight font-medium">
                                     That is the future we are building.
                                 </p>
                             </div>
