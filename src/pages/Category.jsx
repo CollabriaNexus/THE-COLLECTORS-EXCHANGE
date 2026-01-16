@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Watch, Gem, Landmark, Footprints, Gamepad2, Archive, ShieldCheck, Award, Heart, ShoppingBag } from 'lucide-react';
-import { getProducts, getProductsByCategory, addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
+import { Watch, Gem, Landmark, Footprints, Gamepad2, Archive, ShieldCheck, Award, Heart, ShoppingBag, Loader2 } from 'lucide-react';
+import { useProducts } from '../hooks/api/useProducts';
+import { addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
 
 const CATEGORIES = [
     {
@@ -66,8 +67,8 @@ const FeaturedProductCard = ({ product, onUpdate }) => {
     const title = product.title || product.name;
 
     return (
-        <div className="bg-heritage-cream border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500">
-            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-[4/5] bg-heritage-beige overflow-hidden">
+        <div className="bg-heritage-cream border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 flex flex-col h-full">
+            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-[4/5] bg-heritage-beige overflow-hidden shrink-0">
                 {product.image ? (
                     <img
                         src={product.image}
@@ -95,7 +96,7 @@ const FeaturedProductCard = ({ product, onUpdate }) => {
                 </div>
             </Link>
 
-            <div className="p-6 bg-white">
+            <div className="p-6 bg-white flex flex-col flex-grow">
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">{product.category}</span>
                     {product.isVerified && (
@@ -109,7 +110,7 @@ const FeaturedProductCard = ({ product, onUpdate }) => {
                 </Link>
                 <p className="text-heritage-bronze/70 text-sm font-light line-clamp-2 mb-4">{product.description}</p>
 
-                <div className="flex items-center justify-between pt-4 border-t border-heritage-beige">
+                <div className="flex items-center justify-between pt-4 border-t border-heritage-beige mt-auto">
                     <span className="text-heritage-gold-muted font-serif text-lg">${product.price?.toLocaleString()}</span>
                     <span className="text-xs text-heritage-charcoal/50 uppercase tracking-wider">
                         {product.condition || 'Excellent'}
@@ -156,8 +157,8 @@ const ArchiveProductCard = ({ product, onUpdate }) => {
     const CategoryIcon = CATEGORIES.find(c => c.name.toLowerCase() === product.category?.toLowerCase())?.icon || Gem;
 
     return (
-        <div className="bg-white border border-gray-100 group hover:shadow-heritage transition-all duration-500">
-            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-square bg-heritage-beige overflow-hidden">
+        <div className="bg-white border border-gray-100 group hover:shadow-heritage transition-all duration-500 flex flex-col h-full">
+            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-square bg-heritage-beige overflow-hidden shrink-0">
                 {product.image ? (
                     <img
                         src={product.image}
@@ -192,7 +193,7 @@ const ArchiveProductCard = ({ product, onUpdate }) => {
                 )}
             </Link>
 
-            <div className="p-5">
+            <div className="p-5 flex flex-col flex-grow">
                 <div className="flex items-center gap-2 mb-2">
                     <CategoryIcon size={12} className="text-heritage-bronze/60" strokeWidth={1.5} />
                     <span className="text-[11px] text-heritage-bronze/80 uppercase tracking-[0.12em]">{product.category}</span>
@@ -206,7 +207,7 @@ const ArchiveProductCard = ({ product, onUpdate }) => {
                 <button
                     onClick={handleAddToCart}
                     disabled={inCart}
-                    className={`w-full py-2.5 text-xs uppercase tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-2 ${inCart
+                    className={`w-full py-2.5 text-xs uppercase tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-2 mt-auto ${inCart
                         ? 'bg-heritage-beige text-heritage-charcoal/50 cursor-default'
                         : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
                         }`}
@@ -221,31 +222,21 @@ const ArchiveProductCard = ({ product, onUpdate }) => {
 
 const Category = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [products, setProducts] = useState([]);
-    const [featuredProducts, setFeaturedProducts] = useState([]);
+    const { data: allProducts = [], isLoading } = useProducts(selectedCategory);
 
-    useEffect(() => {
-        loadProducts();
-    }, [selectedCategory]);
+    // Get top 3 most expensive as "Most Rare" featured products
+    const featuredProducts = [...allProducts]
+        .sort((a, b) => (b.price || 0) - (a.price || 0))
+        .slice(0, 3);
 
     const loadProducts = () => {
-        let allProducts;
-        if (selectedCategory) {
-            allProducts = getProductsByCategory(selectedCategory);
-        } else {
-            allProducts = getProducts();
-        }
-        setProducts(allProducts);
-
-        // Get top 3 most expensive as "Most Rare" featured products
-        const sorted = [...allProducts].sort((a, b) => (b.price || 0) - (a.price || 0));
-        setFeaturedProducts(sorted.slice(0, 3));
+        // This is now handled by TanStack Query invalidation if needed
     };
 
     return (
         <div className="min-h-screen bg-heritage-cream">
             {/* Hero Section - Minimal Height */}
-            <section className="relative py-16 md:py-20 px-6 bg-heritage-charcoal overflow-hidden">
+            <section className="relative py-10 md:py-12 px-6 bg-heritage-charcoal overflow-hidden">
                 {/* Subtle texture overlay */}
                 <div className="absolute inset-0 opacity-10" style={{
                     backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C8B7E" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
@@ -265,7 +256,7 @@ const Category = () => {
             </section>
 
             {/* Category Icons Navigation */}
-            <section className="py-12 md:py-16 px-6 bg-white border-b border-heritage-beige">
+            <section className="py-8 md:py-10 px-6 bg-white border-b border-heritage-beige">
                 <div className="container mx-auto max-w-5xl">
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-6 md:gap-8">
                         {CATEGORIES.map((category) => {
@@ -339,7 +330,7 @@ const Category = () => {
                                 {selectedCategory || 'All Listings'}
                             </h2>
                             <p className="text-heritage-bronze/60 text-sm font-sans mt-1">
-                                {products.length} {products.length === 1 ? 'item' : 'items'} in archive
+                                {allProducts.length} {allProducts.length === 1 ? 'item' : 'items'} in archive
                             </p>
                         </div>
 
@@ -353,9 +344,14 @@ const Category = () => {
                         )}
                     </div>
 
-                    {products.length > 0 ? (
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-24">
+                            <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
+                            <p className="text-gray-500 font-serif text-lg italic">Accessing The Archive...</p>
+                        </div>
+                    ) : allProducts.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                            {products.map((product) => (
+                            {allProducts.map((product) => (
                                 <ArchiveProductCard key={product.id} product={product} onUpdate={loadProducts} />
                             ))}
                         </div>
