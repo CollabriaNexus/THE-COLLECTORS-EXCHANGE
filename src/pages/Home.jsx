@@ -2,22 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive } from 'lucide-react';
 import heroBackground from '../assets/hero-background.png';
+import heroVideo from '../assets/hero_section.mp4';
 import verificationAuthenticity from '../assets/verification_authenticity.png';
 
 const Home = () => {
     return (
         <div className="flex flex-col">
             {/* Hero Section */}
-            {/* Hero Section */}
-            <section
-                className="relative py-24 md:py-40 px-6 text-center overflow-hidden"
-                style={{
-                    backgroundImage: `url(${heroBackground})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
-                }}
-            >
+            <section className="relative h-[85vh] min-h-[600px] flex flex-col justify-center items-center px-6 text-center overflow-hidden">
+                <video
+                    src={heroVideo}
+                    className="absolute inset-0 w-full h-full object-cover object-top"
+                    autoPlay
+                    muted
+                    playsInline
+                />
                 {/* Dark overlay for text readability */}
                 <div className="absolute inset-0 bg-black/50"></div>
 

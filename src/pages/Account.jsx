@@ -301,7 +301,6 @@ const Account = () => {
                 ) : (
                     <div className="bg-white p-10 shadow-heritage border border-gray-100 text-center space-y-6">
                         <User size={48} strokeWidth={1} className="mx-auto text-luxury-gold mb-6" />
-                        <h3 className="font-serif text-xl mb-2">Private Access</h3>
                         <p className="text-gray-500 mb-8 font-light">Join the community of verified collectors and sellers.</p>
 
                         <div className="space-y-4">
@@ -309,25 +308,14 @@ const Account = () => {
                                 onClick={() => setIsRegistering(true)}
                                 className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300"
                             >
-                                Apply for Membership
+                                Register as seller
                             </button>
 
                             <div className="relative py-2">
                                 <div className="absolute inset-0 flex items-center">
                                     <div className="w-full border-t border-gray-100"></div>
                                 </div>
-                                <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                                    <span className="bg-white px-2 text-gray-400">Or</span>
-                                </div>
                             </div>
-
-                            <button
-                                onClick={handleGoogleLogin}
-                                className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-4 text-sm font-medium hover:bg-gray-50 transition-colors"
-                            >
-                                <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-                                Login with Google
-                            </button>
                         </div>
                     </div>
                 )}
