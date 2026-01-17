@@ -1,25 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, User, Heart, Menu, X } from 'lucide-react';
-import { getUser, getWishlist } from '../utils/storage';
+import { getUser } from '../utils/storage';
 import { useCart } from '../hooks/api/useCart';
+import { useWishlist } from '../hooks/api/useWishlist';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const user = getUser();
     const { data: cartItems = [] } = useCart(user?.id);
-    const [wishlistCount, setWishlistCount] = useState(0);
-
-    useEffect(() => {
-        const updateCounts = () => {
-            setWishlistCount(getWishlist().length);
-        };
-        updateCounts();
-
-        // Update counts periodically (simple polling for demo)
-        const interval = setInterval(updateCounts, 1000);
-        return () => clearInterval(interval);
-    }, []);
+    // If not logged in, wishlist count is 0 (or we could implement local storage fallback, but sticking to Auth plan)
+    const { data: wishlistItems = [] } = useWishlist(user?.id);
+    const wishlistCount = wishlistItems.length;
 
     const navItems = [
         { name: 'About Us', path: '/THE-COLLECTORS-EXCHANGE/about' },

@@ -1,31 +1,62 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, Trash2, ShoppingBag, ShieldCheck } from 'lucide-react';
+import React from 'react';
+import { Heart, Trash2, ShoppingBag, ShieldCheck, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getWishlist, removeFromWishlist, getProducts, addToCart, isInCart } from '../utils/storage';
+import { useWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
+import { useAddToCart, useCart } from '../hooks/api/useCart';
+import { getUser } from '../utils/storage';
 
 const Wishlist = () => {
-    const [wishlistItems, setWishlistItems] = useState([]);
+    const user = getUser();
+    const { data: wishlistData = [], isLoading } = useWishlist(user?.id);
+    const removeFromWishlistMutation = useRemoveFromWishlist();
+    const addToCartMutation = useAddToCart();
+    const { data: cartItems = [] } = useCart(user?.id);
 
-    useEffect(() => {
-        loadWishlist();
-    }, []);
+    const wishlistItems = wishlistData.map(item => item.product);
 
-    const loadWishlist = () => {
-        const wishlistIds = getWishlist();
-        const allProducts = getProducts();
-        const items = allProducts.filter(p => wishlistIds.includes(p.id));
-        setWishlistItems(items);
+    const handleRemove = async (productId) => {
+        if (!user?.id) return;
+        try {
+            await removeFromWishlistMutation.mutateAsync({ userId: user.id, productId });
+        } catch (error) {
+            console.error('Failed to remove from wishlist', error);
+        }
     };
 
-    const handleRemove = (productId) => {
-        removeFromWishlist(productId);
-        loadWishlist();
+    const handleAddToCart = async (productId) => {
+        if (!user?.id) return;
+        try {
+            await addToCartMutation.mutateAsync({ userId: user.id, productId });
+            alert('Added to cart!');
+        } catch (error) {
+            console.error('Failed to add to cart', error);
+        }
     };
 
-    const handleAddToCart = (productId) => {
-        addToCart(productId);
-        alert('Added to cart!');
+    const isInCart = (productId) => {
+        return cartItems.some(item => item.productId === productId);
     };
+
+    if (!user) {
+        return (
+            <div className="container mx-auto py-20 px-6 text-center">
+                <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
+                <p className="text-gray-500 mb-6">You need to be logged in to view your wishlist.</p>
+                <Link to="/THE-COLLECTORS-EXCHANGE/account" className="bg-black text-white px-6 py-2 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
+                    Sign In
+                </Link>
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="container mx-auto py-20 text-center">
+                <Loader2 className="animate-spin mx-auto text-luxury-gold mb-4" size={40} />
+                <p className="font-serif italic text-gray-400">Loading your collection...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto py-12 px-6">

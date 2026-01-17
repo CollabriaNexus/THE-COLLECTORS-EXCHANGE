@@ -81,4 +81,64 @@ export default async function userRoutes(fastify) {
 
         return updatedUser;
     });
+
+    // --- Phone Verification ---
+
+    // Send OTP
+    fastify.post('/otp/send', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { phone } = request.body; // Simple validation: check if provided
+        if (!phone || phone.length < 10) return reply.status(400).send({ error: 'Invalid phone number' });
+
+        // 1. Check uniqueness
+        const existingUser = await prisma.user.findFirst({ where: { phone } });
+        // Allow re-verification if it's the SAME user (e.g. they want to verify the number they already lay claim to - though usually for changing number)
+        // For now: Strictly unique across OTHER users.
+        if (existingUser && existingUser.id !== request.user.sub) {
+            return reply.status(409).send({ error: 'Phone number already registered' });
+        }
+
+        // 2. Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+        // 3. Store OTP
+        // Upsert to handle retries
+        await prisma.phoneVerification.upsert({
+            where: { phone },
+            update: { code: otp, expiresAt },
+            create: { phone, code: otp, expiresAt },
+        });
+
+        // 4. Send (Log) OTP
+        console.log(`[OTP SIMULATION] Sending OTP ${otp} to ${phone}`);
+
+        return { message: 'OTP sent successfully', simulation: 'Check server console' };
+    });
+
+    // Verify OTP
+    fastify.post('/otp/verify', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { phone, code } = request.body;
+        if (!phone || !code) return reply.status(400).send({ error: 'Missing phone or code' });
+
+        // 1. Find OTP Record
+        const record = await prisma.phoneVerification.findUnique({ where: { phone } });
+
+        if (!record) return reply.status(400).send({ error: 'Invalid or expired OTP' });
+        if (record.code !== code) return reply.status(400).send({ error: 'Invalid OTP' });
+        if (new Date() > record.expiresAt) return reply.status(400).send({ error: 'OTP expired' });
+
+        // 2. Update User
+        // request.user.sub comes from the JWT via fastify.authenticate decorator
+        const userId = request.user.sub;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { phone },
+        });
+
+        // 3. Cleanup OTP
+        await prisma.phoneVerification.delete({ where: { phone } });
+
+        return { message: 'Phone verified successfully', user: updatedUser };
+    });
 }

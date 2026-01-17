@@ -1,9 +1,194 @@
 import React, { useState, useEffect } from 'react';
-import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail } from 'lucide-react';
+import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X } from 'lucide-react';
 import { getUser, setUser as setLocalUser, clearUser } from '../utils/storage';
 import { useUser, useRegisterUser, useSubmitKyc } from '../hooks/api/useUser';
 import { useAddProduct } from '../hooks/api/useProducts';
 import { supabase } from '../utils/supabase';
+import apiClient from '../hooks/api/apiClient';
+
+// Helper Component for Phone Verification
+const PhoneVerification = ({ user, onVerified }) => {
+    const [phone, setPhone] = useState('');
+    const [otp, setOtp] = useState('');
+    const [step, setStep] = useState('input'); // 'input', 'verify'
+    const [loading, setLoading] = useState(false);
+    const { token } = user; // Assuming we can get token or we use supabase session. 
+    // Actually `useUser` hook might not provide the token needed for backend calls if we are using headers.
+    // The previous code uses `registerMutation` which likely uses axios with headers.
+    // I need to check `useUser` or `api/client`. 
+    // For now, I'll use `supabase.auth.getSession()` to get token or assume global interceptor?
+    // Let's assume we can use `fetch` with the session token.
+
+    const sendOtp = async () => {
+        if (!phone || phone.length < 10) return alert("Please enter a valid phone number");
+        setLoading(true);
+        try {
+            await apiClient.post('/users/otp/send', { phone });
+            alert(`OTP Sent! (Simulation: Check Backend Console)`);
+            setStep('verify');
+        } catch (err) {
+            alert(err.response?.data?.error || err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyOtp = async () => {
+        if (!otp) return alert("Please enter OTP");
+        setLoading(true);
+        try {
+            const { data } = await apiClient.post('/users/otp/verify', { phone, code: otp });
+            alert("Phone Verified Successfully!");
+            onVerified(phone);
+        } catch (err) {
+            alert(err.response?.data?.error || err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-gray-50 border border-gray-100 p-4">
+            {step === 'input' ? (
+                <div className="flex gap-2">
+                    <input
+                        type="tel"
+                        placeholder="Enter Phone Number"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        className="flex-grow p-3 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
+                    />
+                    <button
+                        onClick={sendOtp}
+                        disabled={loading}
+                        className="bg-black text-white px-4 py-2 text-xs uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+                    >
+                        {loading ? 'Sending...' : 'Send OTP'}
+                    </button>
+                </div>
+            ) : (
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Enter 6-digit OTP"
+                        value={otp}
+                        onChange={e => setOtp(e.target.value)}
+                        className="flex-grow p-3 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
+                    />
+                    <button
+                        onClick={verifyOtp}
+                        disabled={loading}
+                        className="bg-heritage-charcoal text-white px-4 py-2 text-xs uppercase tracking-widest hover:bg-green-600 transition-colors"
+                    >
+                        {loading ? 'Verifying...' : 'Verify'}
+                    </button>
+                    <button
+                        onClick={() => setStep('input')}
+                        className="text-gray-400 text-xs hover:text-gray-600"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const LoginForm = () => {
+    const [email, setEmail] = useState('');
+    const [otp, setOtp] = useState('');
+    const [step, setStep] = useState('email'); // 'email', 'otp'
+    const [loading, setLoading] = useState(false);
+
+    const handleSendOtp = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                // Removing shouldCreateUser: false to allow new users to sign up via OTP
+            });
+            if (error) throw error;
+            alert('Login Code sent to your email!');
+            setStep('otp');
+        } catch (error) {
+            alert(error.message || 'Failed to send OTP');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.verifyOtp({
+                email,
+                token: otp,
+                type: 'email'
+            });
+            if (error) throw error;
+            // Success handled by onAuthStateChange in parent
+        } catch (error) {
+            alert(error.message || 'Invalid Code');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (step === 'email') {
+        return (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+                <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
+                    <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
+                        placeholder="vip@example.com"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-black text-white py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-2"
+                >
+                    {loading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+                    Send Login Code
+                </button>
+            </form>
+        );
+    }
+
+    return (
+        <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div className="text-center mb-4">
+                <p className="text-sm text-gray-600">Enter the code sent to <span className="font-semibold">{email}</span></p>
+                <button type="button" onClick={() => setStep('email')} className="text-xs text-luxury-gold hover:underline mt-1">Change Email</button>
+            </div>
+            <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">6-Digit Code</label>
+                <input
+                    type="text"
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors text-center text-lg tracking-widest"
+                    placeholder="123456"
+                />
+            </div>
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-black text-white py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-2"
+            >
+                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Verify & Sign In'}
+            </button>
+        </form>
+    );
+};
 
 const CATEGORIES = ['Timepieces', 'Sneakers', 'Collectables', 'Currencies', 'Pop Collection', 'Toys', 'Antiques', 'Limited Editions'];
 const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
@@ -12,6 +197,7 @@ const Account = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [localUser, setLocalUserState] = useState(null);
     const [isRegistering, setIsRegistering] = useState(false);
+    const [showCompanyPopup, setShowCompanyPopup] = useState(false);
     const [regForm, setRegForm] = useState({ name: '', email: '', phone: '', password: '', type: 'individual' });
     const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '' });
     const [productForm, setProductForm] = useState({
@@ -109,6 +295,13 @@ const Account = () => {
         } catch (error) {
             alert('KYC submission failed.');
         }
+    };
+
+    const handlePhoneVerified = (newPhone) => {
+        // Update local state immediately for UI feedback
+        // In a real app, react-query invalidation would re-fetch user
+        setLocalUser(prev => ({ ...prev, phone: newPhone }));
+        setLocalUserState(prev => ({ ...prev, phone: newPhone }));
     };
 
     // Image URL handling
@@ -269,13 +462,13 @@ const Account = () => {
                                     <div className="font-serif font-medium">Individual</div>
                                     <div className="text-xs text-gray-500 mt-1">For private collectors</div>
                                 </label>
-                                <label className={`cursor-pointer p-4 border transition-all ${regForm.type === 'company' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200'}`}>
+                                <label className={`cursor-pointer p-4 border transition-all border-gray-200 hover:border-luxury-gold/50`}>
                                     <input
                                         type="radio"
                                         name="type"
                                         value="company"
-                                        checked={regForm.type === 'company'}
-                                        onChange={(e) => setRegForm({ ...regForm, type: e.target.value })}
+                                        checked={false}
+                                        onChange={() => setShowCompanyPopup(true)}
                                         className="hidden"
                                     />
                                     <div className="font-serif font-medium">Company</div>
@@ -299,22 +492,54 @@ const Account = () => {
                         </p>
                     </form>
                 ) : (
-                    <div className="bg-white p-10 shadow-heritage border border-gray-100 text-center space-y-6">
-                        <User size={48} strokeWidth={1} className="mx-auto text-luxury-gold mb-6" />
-                        <p className="text-gray-500 mb-8 font-light">Join the community of verified collectors and sellers.</p>
+                    <div className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
+                        <div className="text-center mb-8">
+                            <h2 className="text-2xl font-serif text-heritage-charcoal mb-2">Member Sign In</h2>
+                            <p className="text-gray-500 font-light text-sm">Welcome back to The Exchange.</p>
+                        </div>
 
-                        <div className="space-y-4">
+                        <LoginForm onLoginSuccess={() => { }} />
+
+                        <div className="relative py-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-100"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase tracking-widest">
+                                <span className="bg-white px-2 text-gray-400">New Collector?</span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setIsRegistering(true)}
+                            className="w-full bg-black text-white py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 shadow-sm"
+                        >
+                            Create Application
+                        </button>
+                    </div>
+                )}
+
+                {/* Company Registration Popup */}
+                {showCompanyPopup && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
+                        <div className="bg-white p-8 max-w-md w-full shadow-2xl border border-gray-100 relative">
                             <button
-                                onClick={() => setIsRegistering(true)}
-                                className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300"
+                                onClick={() => setShowCompanyPopup(false)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors"
                             >
-                                Register as seller
+                                <X size={20} />
                             </button>
-
-                            <div className="relative py-2">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-100"></div>
+                            <div className="text-center">
+                                <div className="w-12 h-12 bg-luxury-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Info size={24} className="text-luxury-gold" />
                                 </div>
+                                <h3 className="font-serif text-xl mb-3 text-heritage-charcoal">Company Registration</h3>
+                                <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                                    To register as a company please connect with us on the following email. We will get back to you within the next 2 working days.
+                                </p>
+                                <a href="mailto:partnerships@thecollectors.exchange" className="flex items-center justify-center w-full bg-black text-white py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors gap-2">
+                                    <Mail size={16} />
+                                    partnerships@thecollectors.exchange
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -340,7 +565,16 @@ const Account = () => {
                             </div>
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
-                                <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800">{user.phone}</div>
+                                {user.phone ? (
+                                    <div className="p-4 bg-green-50 border border-green-100 text-green-800 flex justify-between items-center">
+                                        <span>{user.phone}</span>
+                                        <span className="text-xs uppercase tracking-widest font-bold flex items-center gap-1">
+                                            <ShieldCheck size={14} /> Verified
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <PhoneVerification user={user} onVerified={handlePhoneVerified} />
+                                )}
                             </div>
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Membership Type</label>

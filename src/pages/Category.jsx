@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Watch, Gem, Landmark, Footprints, Gamepad2, Archive, ShieldCheck, Award, Heart, ShoppingBag, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
-import { addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
+import { addToCart, isInCart, getUser } from '../utils/storage';
+import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import Bullet from '../components/Bullet';
-import exchangeHeroBg from '../assets/The_Exchange.jpg';
+import exchangeHeroBg from '../assets/The_Exchange_Modern.png';
 
 const CATEGORIES = [
     {
@@ -46,24 +47,28 @@ const CATEGORIES = [
 ];
 
 // Featured Product Card Component (Larger, Museum-style)
-const FeaturedProductCard = ({ product, onUpdate }) => {
-    const [inWishlist, setInWishlist] = useState(false);
+const FeaturedProductCard = ({ product }) => {
+    const user = getUser();
+    const { data: wishlistItems = [] } = useWishlist(user?.id);
+    const addToWishlistMutation = useAddToWishlist();
+    const removeFromWishlistMutation = useRemoveFromWishlist();
 
-    useEffect(() => {
-        setInWishlist(isInWishlist(product.id));
-    }, [product.id]);
+    const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
 
-    const handleWishlistToggle = (e) => {
+    const handleWishlistToggle = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (inWishlist) {
-            removeFromWishlist(product.id);
-            setInWishlist(false);
-        } else {
-            addToWishlist(product.id);
-            setInWishlist(true);
+
+        if (!user) {
+            alert("Please sign in to add to wishlist");
+            return;
         }
-        if (onUpdate) onUpdate();
+
+        if (inWishlist) {
+            removeFromWishlistMutation.mutate({ userId: user.id, productId: product.id });
+        } else {
+            addToWishlistMutation.mutate({ userId: user.id, productId: product.id });
+        }
     };
 
     const title = product.title || product.name;
@@ -124,26 +129,35 @@ const FeaturedProductCard = ({ product, onUpdate }) => {
 };
 
 // Standard Product Card Component (Archive-style)
-const ArchiveProductCard = ({ product, onUpdate }) => {
-    const [inWishlist, setInWishlist] = useState(false);
-    const [inCart, setInCart] = useState(false);
+const ArchiveProductCard = ({ product }) => {
+    const user = getUser();
+    const { data: wishlistItems = [] } = useWishlist(user?.id);
+    const addToWishlistMutation = useAddToWishlist();
+    const removeFromWishlistMutation = useRemoveFromWishlist();
+    const [inCart, setInCart] = useState(false); // Can be refactored to useCart similar to Wishlist, but keeping local for now or using props if performance hit. actually usage of storage is fine for cart for now as per plan focus on wishlist
+
+    // Derived state for wishlist
+    const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
 
     useEffect(() => {
-        setInWishlist(isInWishlist(product.id));
-        setInCart(isInCart(product.id));
+        setInCart(isInCart(product.id)); // Keeping local storage cart check for now as refactor is scoped to wishlist
     }, [product.id]);
 
-    const handleWishlistToggle = (e) => {
+
+    const handleWishlistToggle = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (inWishlist) {
-            removeFromWishlist(product.id);
-            setInWishlist(false);
-        } else {
-            addToWishlist(product.id);
-            setInWishlist(true);
+
+        if (!user) {
+            alert("Please sign in to add to wishlist");
+            return;
         }
-        if (onUpdate) onUpdate();
+
+        if (inWishlist) {
+            removeFromWishlistMutation.mutate({ userId: user.id, productId: product.id });
+        } else {
+            addToWishlistMutation.mutate({ userId: user.id, productId: product.id });
+        }
     };
 
     const handleAddToCart = (e) => {
@@ -251,56 +265,55 @@ const Category = () => {
 
     return (
         <div className="min-h-screen bg-heritage-cream">
-            {/* Hero Section - The Collected Archive (Legacy Style Refined with Background) */}
-            <section className="relative overflow-hidden bg-heritage-cream border-b border-heritage-beige">
-                <div className="grid lg:grid-cols-2 min-h-[300px] lg:h-[320px]">
-                    {/* Left Column: Editorial Narrative (Solves readability) */}
-                    <div className="relative flex items-center justify-center py-8 lg:py-0 px-6 lg:px-12 bg-heritage-cream order-2 lg:order-1">
-                        <div className="max-w-xl text-center lg:text-left">
-                            <div className="flex items-center justify-center lg:justify-start gap-4 mb-3">
-                                <div className="h-px w-8 bg-[#B29352]/40"></div>
-                                <h5 className="text-[#B29352] tracking-[0.4em] font-sans text-[10px] md:text-[11px] font-bold uppercase">
-                                    Archive Vision
-                                </h5>
-                                <div className="hidden lg:block h-px w-8 bg-[#B29352]/40"></div>
-                            </div>
+            {/* Hero Section - The Collected Archive (Modern Dark Aesthetic) */}
+            <section className="relative h-[65vh] min-h-[500px] flex items-center justify-center overflow-hidden border-b border-heritage-beige bg-heritage-charcoal">
+                {/* Visual Archive Background Layer */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src={exchangeHeroBg}
+                        alt="The Exchange Archive"
+                        className="w-full h-full object-cover object-center transition-transform duration-1000"
+                    />
+                    {/* Editorial Overlays for Readability - Dark for modern aesthetic */}
+                    <div className="absolute inset-0 bg-black/40"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80"></div>
+                </div>
 
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-heritage-charcoal font-normal mb-3 leading-tight tracking-tight">
-                                The <span className="italic text-[#B29352] font-light font-serif">Exchange</span>
-                            </h1>
-
-                            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#B29352]/40 to-transparent mx-auto lg:mx-0 mb-4"></div>
-
-                            <div className="relative">
-                                <p className="text-heritage-charcoal/70 font-serif italic text-base md:text-lg leading-relaxed max-w-md mx-auto lg:mx-0">
-                                    "Explore our curated archive of verified pre-owned treasures and rare collectibles."
-                                </p>
-                            </div>
-
-                            {/* Footer Values */}
-                            <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-[9px] uppercase tracking-[0.2em] text-heritage-charcoal/40 font-sans font-bold">
-                                <span className="flex items-center gap-2"><Bullet className="text-[#B29352] w-2 h-2" />Provenance</span>
-                                <span className="flex items-center gap-2"><Bullet className="text-[#B29352] w-2 h-2" />Authenticity</span>
-                                <span className="flex items-center gap-2"><Bullet className="text-[#B29352] w-2 h-2" />Continuity</span>
-                            </div>
+                {/* Narrative Content Layer */}
+                <div className="relative z-10 container mx-auto px-6 flex flex-col items-center text-center">
+                    <div className="max-w-3xl">
+                        <div className="flex items-center justify-center gap-6 mb-6">
+                            <div className="h-px w-12 bg-[#D4AF37]/50"></div>
+                            <h5 className="text-[#D4AF37] tracking-[0.5em] font-sans text-[11px] font-bold uppercase">
+                                Archive Vision
+                            </h5>
+                            <div className="h-px w-12 bg-[#D4AF37]/50"></div>
                         </div>
 
-                        {/* Scroll Indicator - Moved to text column to avoid overlap */}
-                        <div className="absolute bottom-4 left-1/2 lg:left-12 -translate-x-1/2 lg:translate-x-0 hidden lg:flex flex-col items-center gap-2 opacity-20">
-                            <span className="text-[8px] uppercase tracking-[0.6em] text-heritage-gold-muted font-bold">Scroll</span>
-                            <div className="w-px h-8 bg-gradient-to-b from-heritage-gold-muted to-transparent"></div>
+                        <h1 className="text-5xl md:text-7xl lg:text-9xl font-serif text-white font-normal mb-6 leading-tight tracking-tighter drop-shadow-2xl">
+                            The <span className="italic text-[#D4AF37] font-light font-serif">Exchange</span>
+                        </h1>
+
+                        <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37]/80 to-transparent mx-auto mb-8"></div>
+
+                        <div className="relative mb-10">
+                            <p className="text-[#E5E1DA] font-serif italic text-xl md:text-2xl lg:text-3xl leading-relaxed max-w-2xl mx-auto drop-shadow-md">
+                                "Explore our curated archive of verified pre-owned treasures and rare collectibles."
+                            </p>
+                        </div>
+
+                        {/* Heritage Values */}
+                        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 text-[10px] uppercase tracking-[0.35em] text-white/80 font-sans font-black">
+                            <span className="flex items-center gap-3"><Bullet className="text-[#D4AF37] w-2.5 h-2.5" />Provenance</span>
+                            <span className="flex items-center gap-3"><Bullet className="text-[#D4AF37] w-2.5 h-2.5" />Authenticity</span>
+                            <span className="flex items-center gap-3"><Bullet className="text-[#D4AF37] w-2.5 h-2.5" />Continuity</span>
                         </div>
                     </div>
 
-                    {/* Right Column: Visual Archive (100% Clear Background) */}
-                    <div className="relative h-[250px] lg:h-full order-1 lg:order-2 overflow-hidden border-b lg:border-l lg:border-b-0 border-heritage-beige">
-                        <img
-                            src={exchangeHeroBg}
-                            alt="The Exchange Archive"
-                            className="w-full h-full object-cover object-center grayscale-[0.2] hover:grayscale-0 transition-all duration-1000"
-                        />
-                        {/* Subtle Vignette for anchor */}
-                        <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/5"></div>
+                    {/* Scroll Indicator */}
+                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-50">
+                        <span className="text-[9px] uppercase tracking-[0.8em] text-[#D4AF37] font-bold mb-1">Scroll</span>
+                        <div className="w-px h-20 bg-gradient-to-b from-[#D4AF37] to-transparent"></div>
                     </div>
                 </div>
             </section>

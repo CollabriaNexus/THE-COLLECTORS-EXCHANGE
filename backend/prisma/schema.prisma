@@ -16,7 +16,7 @@ model User {
   name      String?
   password   String?
   supabaseId String?  @unique
-  phone      String?
+  phone      String?  @unique
   type      String   @default("individual") // "individual", "company"
   role      String   @default("user") // "user", "admin", "curator"
   kycStatus String   @default("none") // "none", "pending", "verified"
@@ -27,6 +27,14 @@ model User {
   products  Product[]
   cart      CartItem[]
   wishlist  WishlistItem[]
+}
+
+model PhoneVerification {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Product {

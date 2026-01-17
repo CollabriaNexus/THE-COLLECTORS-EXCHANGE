@@ -1,10 +1,12 @@
 import Fastify from 'fastify';
+import { ZodError } from 'zod';
 import dotenv from 'dotenv';
 import cors from '@fastify/cors';
 import prismaPlugin from './plugins/prisma.js';
 import productRoutes from './routes/products.js';
 import galleryRoutes from './routes/gallery.js';
 import cartRoutes from './routes/cart.js';
+import wishlistRoutes from './routes/wishlist.js';
 import userRoutes from './routes/users.js';
 
 import { createRemoteJWKSet, jwtVerify } from 'jose';
@@ -44,12 +46,33 @@ fastify.decorate("authenticate", async function (request, reply) {
     }
 });
 
+// Zod Error Handler
+
+fastify.setErrorHandler((error, request, reply) => {
+    if (error instanceof ZodError) {
+        return reply.status(400).send({
+            statusCode: 400,
+            error: 'Bad Request',
+            issues: error.issues,
+        });
+    }
+
+    // Default handler for other errors
+    request.log.error(error);
+    reply.status(error.statusCode || 500).send({
+        statusCode: error.statusCode || 500,
+        error: error.name || 'Internal Server Error',
+        message: error.message,
+    });
+});
+
 fastify.register(prismaPlugin);
 
 // Register Routes
 fastify.register(productRoutes, { prefix: '/api/products' });
 fastify.register(galleryRoutes, { prefix: '/api/gallery' });
 fastify.register(cartRoutes, { prefix: '/api/cart' });
+fastify.register(wishlistRoutes, { prefix: '/api/wishlist' });
 fastify.register(userRoutes, { prefix: '/api/users' });
 
 // Health Check
