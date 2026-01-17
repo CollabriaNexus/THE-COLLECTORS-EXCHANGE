@@ -3,12 +3,18 @@ import Sidebar from './Sidebar';
 import { LogOut, User } from 'lucide-react';
 import { getUser, clearUser, clearAuthToken } from '../utils/storage';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../utils/supabase';
 
 function AdminLayout({ children }) {
     const user = getUser();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await supabase.auth.signOut();
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
         clearUser();
         clearAuthToken();
         navigate('/login', { replace: true });
