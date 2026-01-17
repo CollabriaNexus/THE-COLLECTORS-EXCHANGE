@@ -27,6 +27,7 @@ model User {
   products  Product[]
   cart      CartItem[]
   wishlist  WishlistItem[]
+  orders    Order[]
 }
 
 model PhoneVerification {
@@ -49,6 +50,14 @@ model Product {
   keywords           String[]
   isVerified         Boolean  @default(false)
   authenticityStatus String   @default("Pending")
+  
+  // Verification workflow fields
+  status             String   @default("Pending") // "Pending", "In Review", "Approved", "Rejected"
+  isPublished        Boolean  @default(false) // Only true when status is "Approved"
+  rejectionReason    String?  // Reason for rejection (shown to seller)
+  reviewedAt         DateTime? // When admin last reviewed
+  reviewedBy         String?  // Admin who reviewed (optional for future use)
+  
   sellerId           String
   seller             User     @relation(fields: [sellerId], references: [id])
   createdAt          DateTime @default(now())
@@ -56,6 +65,7 @@ model Product {
 
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
+  orderItems    OrderItem[]
 }
 
 model CartItem {
@@ -93,4 +103,32 @@ model GalleryItem {
   theme        String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          String      @default("Pending") // "Pending", "Processing", "Shipped", "Delivered", "Cancelled"
+  totalAmount     Float
+  shippingAddress String
+  city            String
+  state           String
+  zipCode         String
+  phone           String
+  trackingID      String?     // Delhivery AWB / Tracking ID
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  price     Float    // Price at time of purchase
+  createdAt DateTime @default(now())
 }

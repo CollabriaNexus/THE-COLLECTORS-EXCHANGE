@@ -48,6 +48,26 @@ export default async function userRoutes(fastify) {
         return reply.status(201).send(newUser);
     });
 
+    // Get current authenticated user
+    fastify.get('/me', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+
+        const user = await prisma.user.findUnique({
+            where: { supabaseId },
+            include: {
+                products: true,
+                cart: { include: { product: true } },
+                wishlist: { include: { product: true } },
+            },
+        });
+
+        if (!user) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        return user;
+    });
+
     // Get user by ID
     fastify.get('/:id', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { id } = request.params;

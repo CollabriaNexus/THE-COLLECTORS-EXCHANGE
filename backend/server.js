@@ -8,6 +8,7 @@ import galleryRoutes from './routes/gallery.js';
 import cartRoutes from './routes/cart.js';
 import wishlistRoutes from './routes/wishlist.js';
 import userRoutes from './routes/users.js';
+import adminRoutes from './routes/admin.js';
 
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
@@ -74,6 +75,7 @@ fastify.register(galleryRoutes, { prefix: '/api/gallery' });
 fastify.register(cartRoutes, { prefix: '/api/cart' });
 fastify.register(wishlistRoutes, { prefix: '/api/wishlist' });
 fastify.register(userRoutes, { prefix: '/api/users' });
+fastify.register(adminRoutes, { prefix: '/api/admin' });
 
 // Health Check
 fastify.get('/health', async (request, reply) => {
