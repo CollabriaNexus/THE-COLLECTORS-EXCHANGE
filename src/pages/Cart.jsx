@@ -12,7 +12,7 @@ const Cart = () => {
         if (!user) return;
         try {
             await removeMutation.mutateAsync({ userId: user.id, productId });
-        } catch (error) {
+        } catch {
             alert('Failed to remove item from cart.');
         }
     };

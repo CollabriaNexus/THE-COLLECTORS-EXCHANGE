@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Landmark, Compass, Award, History, Gem, Info, Loader2 } from 'lucide-react';
 import { useGallery } from '../hooks/api/useGallery';

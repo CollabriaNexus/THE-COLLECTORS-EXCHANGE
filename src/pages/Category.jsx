@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Watch, Gem, Landmark, Footprints, Gamepad2, Archive, ShieldCheck, Award, Heart, ShoppingBag, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
@@ -134,15 +134,10 @@ const ArchiveProductCard = ({ product }) => {
     const { data: wishlistItems = [] } = useWishlist(user?.id);
     const addToWishlistMutation = useAddToWishlist();
     const removeFromWishlistMutation = useRemoveFromWishlist();
-    const [inCart, setInCart] = useState(false); // Can be refactored to useCart similar to Wishlist, but keeping local for now or using props if performance hit. actually usage of storage is fine for cart for now as per plan focus on wishlist
+    const [inCart, setInCart] = useState(() => isInCart(product.id));
 
     // Derived state for wishlist
     const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
-
-    useEffect(() => {
-        setInCart(isInCart(product.id)); // Keeping local storage cart check for now as refactor is scoped to wishlist
-    }, [product.id]);
-
 
     const handleWishlistToggle = async (e) => {
         e.preventDefault();

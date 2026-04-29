@@ -219,7 +219,7 @@ export const uploadProductImage = async (file) => {
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        const { data, error } = await supabase.storage
+        const { error } = await supabase.storage
             .from('product-images')
             .upload(filePath, file);
 
@@ -244,7 +244,7 @@ export const uploadBlogImage = async (file) => {
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        const { data, error } = await supabase.storage
+        const { error } = await supabase.storage
             .from('blog-images')
             .upload(filePath, file);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ShieldCheck, Heart, ShoppingBag, ChevronRight, Tag, Share2, Info, Loader2 } from 'lucide-react';
 import { useProduct } from '../hooks/api/useProducts';
@@ -8,31 +8,24 @@ const ProductDetail = () => {
     const { id } = useParams();
     const { data: product, isLoading } = useProduct(id);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
-    const [inCart, setInCartState] = useState(false);
-    const [inWishlist, setInWishlistState] = useState(false);
-
-    useEffect(() => {
-        if (product) {
-            setInCartState(isInCart(product.id));
-            setInWishlistState(isInWishlist(product.id));
-        }
-    }, [product]);
+    const [, forceInteractionUpdate] = useState(0);
+    const inCart = product ? isInCart(product.id) : false;
+    const inWishlist = product ? isInWishlist(product.id) : false;
 
     const handleAddToCart = () => {
         if (!product) return;
         addToCart(product.id);
-        setInCartState(true);
+        forceInteractionUpdate(version => version + 1);
     };
 
     const handleWishlistToggle = () => {
         if (!product) return;
         if (inWishlist) {
             removeFromWishlist(product.id);
-            setInWishlistState(false);
         } else {
             addToWishlist(product.id);
-            setInWishlistState(true);
         }
+        forceInteractionUpdate(version => version + 1);
     };
 
     if (isLoading) {

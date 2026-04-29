@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X } from 'lucide-react';
 import { getUser, setUser as setLocalUser, clearUser } from '../utils/storage';
 import { useUser, useRegisterUser, useSubmitKyc } from '../hooks/api/useUser';
@@ -7,17 +7,11 @@ import { supabase } from '../utils/supabase';
 import apiClient from '../hooks/api/apiClient';
 
 // Helper Component for Phone Verification
-const PhoneVerification = ({ user, onVerified }) => {
+const PhoneVerification = ({ onVerified }) => {
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState('input'); // 'input', 'verify'
     const [loading, setLoading] = useState(false);
-    const { token } = user; // Assuming we can get token or we use supabase session. 
-    // Actually `useUser` hook might not provide the token needed for backend calls if we are using headers.
-    // The previous code uses `registerMutation` which likely uses axios with headers.
-    // I need to check `useUser` or `api/client`. 
-    // For now, I'll use `supabase.auth.getSession()` to get token or assume global interceptor?
-    // Let's assume we can use `fetch` with the session token.
 
     const sendOtp = async () => {
         if (!phone || phone.length < 10) return alert("Please enter a valid phone number");
@@ -37,7 +31,7 @@ const PhoneVerification = ({ user, onVerified }) => {
         if (!otp) return alert("Please enter OTP");
         setLoading(true);
         try {
-            const { data } = await apiClient.post('/users/otp/verify', { phone, code: otp });
+            await apiClient.post('/users/otp/verify', { phone, code: otp });
             alert("Phone Verified Successfully!");
             onVerified(phone);
         } catch (err) {
@@ -212,9 +206,29 @@ const Account = () => {
 
     // API Hooks
     const { data: user, isLoading: isUserLoading } = useUser(localUser?.id);
-    const registerMutation = useRegisterUser();
+    const { mutateAsync: registerUser, isPending: isRegisterPending } = useRegisterUser();
     const kycMutation = useSubmitKyc();
     const addProductMutation = useAddProduct();
+
+    const handleAuthChange = useCallback(async (session) => {
+        if (session) {
+            try {
+                const syncData = {
+                    email: session.user.email,
+                    name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
+                    supabaseId: session.user.id,
+                };
+                const user = await registerUser({ ...syncData, type: 'individual' });
+                setLocalUser(user);
+                setLocalUserState(user);
+            } catch (error) {
+                console.error('Auth sync failed', error);
+            }
+        } else {
+            setLocalUserState(null);
+            clearUser();
+        }
+    }, [registerUser]);
 
     useEffect(() => {
         // Initial session check
@@ -236,28 +250,7 @@ const Account = () => {
         });
 
         return () => subscription.unsubscribe();
-    }, []);
-
-    const handleAuthChange = async (session) => {
-        if (session) {
-            // sync with backend
-            try {
-                const syncData = {
-                    email: session.user.email,
-                    name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
-                    supabaseId: session.user.id,
-                };
-                const user = await registerMutation.mutateAsync({ ...syncData, type: 'individual' });
-                setLocalUser(user);
-                setLocalUserState(user);
-            } catch (error) {
-                console.error('Auth sync failed', error);
-            }
-        } else {
-            setLocalUserState(null);
-            clearUser();
-        }
-    };
+    }, [handleAuthChange]);
 
     const handleGoogleLogin = async () => {
         const { error } = await supabase.auth.signInWithOAuth({
@@ -274,11 +267,11 @@ const Account = () => {
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            const newUser = await registerMutation.mutateAsync(regForm);
+            const newUser = await registerUser(regForm);
             setLocalUser(newUser);
             setLocalUserState(newUser);
             setIsRegistering(false);
-        } catch (error) {
+        } catch {
             alert('Registration failed. Please try again.');
         }
     };
@@ -292,7 +285,7 @@ const Account = () => {
         try {
             await kycMutation.mutateAsync({ userId: user.id, kycData });
             alert('Verification documents submitted successfully!');
-        } catch (error) {
+        } catch {
             alert('KYC submission failed.');
         }
     };
@@ -368,7 +361,7 @@ const Account = () => {
                 keywords: '',
             });
             alert('Product listed successfully! Your item is now live in The Exchange.');
-        } catch (error) {
+        } catch {
             alert('Failed to list product.');
         }
     };
@@ -478,10 +471,10 @@ const Account = () => {
                         </div>
                         <button
                             type="submit"
-                            disabled={registerMutation.isPending}
+                            disabled={isRegisterPending}
                             className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-2"
                         >
-                            {registerMutation.isPending && <Loader2 size={16} className="animate-spin" />}
+                            {isRegisterPending && <Loader2 size={16} className="animate-spin" />}
                             Create Account
                         </button>
                         <p className="text-center text-gray-500 text-sm">
@@ -573,7 +566,7 @@ const Account = () => {
                                         </span>
                                     </div>
                                 ) : (
-                                    <PhoneVerification user={user} onVerified={handlePhoneVerified} />
+                                    <PhoneVerification onVerified={handlePhoneVerified} />
                                 )}
                             </div>
                             <div>

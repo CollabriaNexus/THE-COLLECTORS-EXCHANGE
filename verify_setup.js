@@ -1,6 +1,3 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:3000/api/products';
 // Mock a token - In a real scenario we'd login, but assuming we can test the validation logic
 // The backend requires authentication, so this test might fail 401 if we don't have a valid token.
 // For now, let's just see if we can hit the endpoint or if we need to mockauth.
@@ -18,8 +15,6 @@ const API_URL = 'http://localhost:3000/api/products';
 // The Schema `product.js` clearly has: .refine((val) => val.includes('rjyjblczxhxebtyvglnr.supabase.co...'))
 
 // Instead, I will verify the BUCKETS exsit.
-import { createClient } from '@supabase/supabase-js';
-
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://rjyjblczxhxebtyvglnr.supabase.co';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 

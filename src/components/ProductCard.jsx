@@ -1,16 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
 
 const ProductCard = ({ product, onUpdate }) => {
-    const [inWishlist, setInWishlist] = useState(false);
-    const [inCart, setInCart] = useState(false);
-
-    useEffect(() => {
-        setInWishlist(isInWishlist(product.id));
-        setInCart(isInCart(product.id));
-    }, [product.id]);
+    const [inWishlist, setInWishlist] = useState(() => isInWishlist(product.id));
+    const [inCart, setInCart] = useState(() => isInCart(product.id));
 
     const handleWishlistToggle = (e) => {
         e.preventDefault();
