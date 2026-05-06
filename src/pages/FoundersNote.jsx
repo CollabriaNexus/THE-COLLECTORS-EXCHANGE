@@ -1,99 +1,76 @@
 import React from 'react';
+import AboutImage from '../assets/About_US.jpg';
+import { Sparkles, Quote } from 'lucide-react';
 
 const FoundersNote = () => {
     return (
-        <div className="min-h-screen bg-white text-black py-20 px-6 md:px-12 lg:px-24">
-            <div className="max-w-3xl mx-auto">
+        <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
+            {/* Header section for the note */}
+            <section className="py-24 px-6 bg-white border-b border-heritage-bronze/10">
+                <div className="container mx-auto max-w-4xl text-center">
+                    <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-6 block">Founder’s message</span>
+                    <h1 className="text-5xl md:text-7xl font-serif text-heritage-charcoal mb-8 leading-tight">A Letter from <br />Our Founder</h1>
+                    <div className="w-24 h-0.5 bg-luxury-gold/30 mx-auto"></div>
+                </div>
+            </section>
 
-                {/* Intro Section */}
-                <section className="mb-20 text-center md:text-left">
-                    <h1 className="text-4xl md:text-5xl font-serif mb-12">Founder’s Note</h1>
+            {/* Main Content Section */}
+            <section className="py-24 px-6">
+                <div className="container mx-auto max-w-6xl">
+                    <div className="grid md:grid-cols-2 gap-20 items-start">
+                        <div className="space-y-12 order-2 md:order-1">
+                            <div className="relative">
+                                <Quote className="absolute -top-12 -left-12 text-luxury-gold/10 w-24 h-24 -z-0" strokeWidth={0.5} />
+                                <div className="space-y-8 text-xl md:text-2xl text-heritage-charcoal/90 font-serif italic leading-relaxed relative z-10">
+                                    <p>
+                                        "Growing up, I was always fascinated by the stories objects tell. A simple watch isn’t just about keeping time; it’s about the person who wore it, the milestones they reached, and the legacy they left behind."
+                                    </p>
+                                    <p>
+                                        "At The Collectors Exchange, we don’t just sell items. We connect you with pieces of history that have been carefully sourced and verified. Our goal is to make these treasures accessible to collectors worldwide while ensuring that the essence of their origin remains intact."
+                                    </p>
+                                    <p>
+                                        "Thank you for being a part of our journey."
+                                    </p>
+                                </div>
+                            </div>
 
-                    <div className="space-y-6 text-lg md:text-xl font-light leading-relaxed text-gray-800 font-serif">
-                        <p>
-                            The idea for The Collectors’ Exchange did not come from a trend, a market gap, or a business plan.
-                        </p>
-                        <p className="italic text-black font-normal">
-                            It came from observing how easily meaningful things are forgotten.
-                        </p>
-                        <p>
-                            Across homes, families, and generations, objects that once carried pride, craftsmanship, and memory are quietly discarded, not because they lack value, but because the world has learned to move too fast. In the rush for what is new, we have lost respect for what has endured.
-                        </p>
-                        <p>
-                            I founded The Collectors’ Exchange in 2025 with a belief shaped by history, particularly by eras when possessions were built to last, preserved with care, and passed on with intention. In those times, value was not measured by immediacy, but by continuity.
-                        </p>
-                        <p className="font-normal text-black mt-8">
-                            This platform exists to restore that balance.
-                        </p>
-                    </div>
-                </section>
+                            <div className="pt-12 border-t border-heritage-bronze/10">
+                                <div className="space-y-2">
+                                    <h3 className="text-3xl font-serif text-heritage-charcoal">Prithwis S.</h3>
+                                    <p className="text-xs uppercase tracking-[0.4em] text-luxury-gold font-bold">Founder, The Collectors Exchange</p>
+                                </div>
+                            </div>
+                        </div>
 
-                <div className="w-24 h-0.5 bg-gray-200 mx-auto md:mx-0 mb-20"></div>
-
-                {/* Section 1: Built on Respect */}
-                <section className="mb-16">
-                    <h2 className="text-2xl md:text-3xl font-serif mb-6">Built on Respect, Not Volume</h2>
-                    <div className="space-y-4 text-gray-600 leading-relaxed font-light">
-                        <p>
-                            The Collectors’ Exchange is not designed to be the largest marketplace. It is designed to be the most responsible.
-                        </p>
-                        <p>
-                            Every object listed here represents someone’s trust: a collector’s years of patience, a family’s inheritance, a creator’s original intent. That trust demands more than transactions. It demands verification, transparency, and restraint.
-                        </p>
-                        <div className="pl-6 border-l-2 border-luxury-gold italic text-gray-800 my-8">
-                            <p>This is why we authenticate what we list.</p>
-                            <p>Why we assess quality with care.</p>
-                            <p>Why we protect the privacy of our sellers.</p>
-                            <p>And why we choose curation over excess.</p>
+                        <div className="order-1 md:order-2">
+                            <div className="relative">
+                                <div className="absolute -inset-4 border border-luxury-gold/20 translate-x-4 translate-y-4 -z-10"></div>
+                                <div className="aspect-[3/4] bg-heritage-charcoal p-2 border border-heritage-bronze/10 shadow-2xl overflow-hidden">
+                                    <img 
+                                        src={AboutImage} 
+                                        alt="Founder" 
+                                        className="w-full h-full object-cover contrast-[1.1] grayscale hover:grayscale-0 transition-all duration-1000" 
+                                    />
+                                </div>
+                                <div className="absolute -bottom-8 -left-8 bg-white p-8 border border-heritage-bronze/10 shadow-heritage hidden md:block">
+                                    <Sparkles className="text-luxury-gold w-8 h-8 mb-4" />
+                                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-heritage-charcoal/50">EST. 2024</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </section>
-
-                {/* Section 2: For Those Who Keep */}
-                <section className="mb-16">
-                    <h2 className="text-2xl md:text-3xl font-serif mb-6">For Those Who Keep, Not Consume</h2>
-                    <div className="space-y-4 text-gray-600 leading-relaxed font-light">
-                        <p>
-                            Collectors are often misunderstood. They are not accumulators. They are custodians.
-                        </p>
-                        <p>
-                            They preserve what others overlook. They carry forward what might otherwise disappear. The Collectors’ Exchange was built for them, and for those who are just beginning to understand the quiet satisfaction of owning something that matters.
-                        </p>
-                        <p>
-                            To the families entrusting us with heirlooms, to the collectors refining their archives, and to the creators whose work deserves enduring respect, this platform exists because of you.
-                        </p>
-                    </div>
-                </section>
-
-                {/* Section 3: A Commitment */}
-                <section className="mb-20">
-                    <h2 className="text-2xl md:text-3xl font-serif mb-6">A Commitment, Not a Claim</h2>
-                    <div className="space-y-4 text-gray-600 leading-relaxed font-light">
-                        <p>
-                            Trust is not something we ask for. It is something we work to earn: every listing, every verification, every exchange.
-                        </p>
-                        <p>
-                            The Collectors’ Exchange is a long-term commitment to heritage, authenticity, and integrity. Not for a season. Not for a cycle. But for the generations that follow.
-                        </p>
-                    </div>
-                </section>
-
-                {/* Closing */}
-                <div className="mt-12 text-center md:text-left">
-                    <div className="mb-8">
-                        <p className="font-serif italic text-2xl">
-                            — Shaik Faraz
-                        </p>
-                        <p className="font-serif text-lg text-gray-500 mt-2">
-                            Founder, The Collectors’ Exchange
-                        </p>
-                    </div>
-                    <p className="text-sm text-gray-400 uppercase tracking-widest">
-                        Thank you for being part of this journey.
-                    </p>
                 </div>
+            </section>
 
-            </div>
+            {/* Closing Section */}
+            <section className="py-24 bg-heritage-charcoal text-white text-center">
+                <div className="container mx-auto px-6 max-w-2xl">
+                    <p className="text-lg font-serif italic text-white/60 mb-8">
+                        "Connecting the past to the future, through the hands of those who care."
+                    </p>
+                    <div className="w-12 h-px bg-luxury-gold/30 mx-auto"></div>
+                </div>
+            </section>
         </div>
     );
 };

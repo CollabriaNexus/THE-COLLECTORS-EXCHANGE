@@ -105,7 +105,7 @@ const FeaturedProductCard = ({ product }) => {
 
             <div className="p-6 bg-white flex flex-col flex-grow">
                 <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">{product.category}</span>
+                    <span className="text-xs text-black uppercase tracking-[0.15em] font-bold">{product.category}</span>
                     {product.isVerified && (
                         <span className="flex items-center gap-1 text-xs text-heritage-charcoal/60">
                             <ShieldCheck size={12} /> Verified
@@ -206,8 +206,8 @@ const ArchiveProductCard = ({ product }) => {
 
             <div className="p-5 flex flex-col flex-grow">
                 <div className="flex items-center gap-2 mb-2">
-                    <CategoryIcon size={12} className="text-heritage-bronze/60" strokeWidth={1.5} />
-                    <span className="text-[11px] text-heritage-bronze/80 uppercase tracking-[0.12em]">{product.category}</span>
+                    <CategoryIcon size={12} className="text-black" strokeWidth={2} />
+                    <span className="text-[11px] text-black uppercase tracking-[0.12em] font-bold">{product.category}</span>
                 </div>
                 <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
                     <h3 className="font-serif text-base font-medium text-heritage-charcoal mb-1 leading-snug line-clamp-2">{title}</h3>
@@ -285,16 +285,17 @@ const Category = () => {
                             <div className="h-px w-12 bg-[#D4AF37]/50"></div>
                         </div>
 
-                        <h1 className="text-5xl md:text-7xl lg:text-9xl font-serif text-white font-normal mb-6 leading-tight tracking-tighter drop-shadow-2xl">
-                            The <span className="italic text-[#D4AF37] font-light font-serif">Exchange</span>
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold leading-tight mb-6 text-center animate-fade-in tracking-tight">
+                            <span className="text-white block uppercase text-[10px] md:text-xs tracking-[0.5em] mb-4 font-sans opacity-70">The</span>
+                            <span className="italic text-[#D4AF37] block uppercase">Archive</span>
                         </h1>
 
-                        <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37]/80 to-transparent mx-auto mb-8"></div>
+                        <div className="w-16 h-px bg-[#D4AF37]/40 mx-auto mb-8"></div>
 
                         <div className="relative mb-10">
-                            <p className="text-[#E5E1DA] font-serif italic text-xl md:text-2xl lg:text-3xl leading-relaxed max-w-2xl mx-auto drop-shadow-md">
-                                "Explore our curated archive of verified pre-owned treasures and rare collectibles."
-                            </p>
+                            <h2 className="text-xs md:text-sm lg:text-base font-sans text-white/80 font-medium leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.25em] px-4">
+                                SOURCING THE UNIQUE, THE VALUABLE, AND <br className="hidden md:block" /> THE HISTORICAL FROM EVERY CORNER OF THE STREETS.
+                            </h2>
                         </div>
 
                         {/* Heritage Values */}
@@ -313,10 +314,10 @@ const Category = () => {
                 </div>
             </section>
 
-            {/* Category Icons Navigation - Polished with shadow and border */}
-            <section className="py-8 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
-                <div className="container mx-auto max-w-5xl">
-                    <div className="grid grid-cols-3 md:grid-cols-6 gap-6 md:gap-8">
+            {/* Category Icons Navigation - Matched to Screenshot */}
+            <section className="py-12 md:py-16 px-6 bg-white border-b border-gray-100 relative z-20 shadow-sm">
+                <div className="container mx-auto max-w-6xl">
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-8 md:gap-12">
                         {CATEGORIES.map((category) => {
                             const IconComponent = category.icon;
                             const isSelected = selectedCategory === category.name;
@@ -326,22 +327,22 @@ const Category = () => {
                                     onClick={() => handleCategoryClick(category.name)}
                                     className="group flex flex-col items-center text-center"
                                 >
-                                    <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-2 flex items-center justify-center transition-all duration-300 mb-3 ${isSelected
-                                        ? 'border-heritage-gold-muted bg-heritage-cream shadow-heritage-hover'
-                                        : 'border-heritage-beige bg-heritage-cream/50 hover:border-heritage-bronze hover:shadow-heritage group-hover:bg-heritage-cream'
+                                    <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center transition-all duration-500 mb-6 relative overflow-hidden ${isSelected
+                                        ? 'bg-[#FAF9F6] ring-2 ring-luxury-gold/30 shadow-heritage-hover'
+                                        : 'bg-[#FAF9F6] hover:bg-white hover:shadow-heritage border border-gray-100 shadow-sm'
                                         }`}>
                                         <IconComponent
-                                            size={28}
-                                            strokeWidth={1.2}
-                                            className={`transition-colors duration-300 ${isSelected
-                                                ? 'text-heritage-gold-muted'
-                                                : 'text-heritage-bronze/60 group-hover:text-heritage-bronze'
+                                            size={32}
+                                            strokeWidth={1}
+                                            className={`transition-all duration-500 ${isSelected
+                                                ? 'text-black scale-110'
+                                                : 'text-black/40 group-hover:text-black group-hover:scale-110'
                                                 }`}
                                         />
                                     </div>
-                                    <span className={`text-xs tracking-[0.1em] uppercase font-sans transition-colors duration-300 ${isSelected
-                                        ? 'text-heritage-charcoal font-medium'
-                                        : 'text-heritage-charcoal/60 group-hover:text-heritage-charcoal'
+                                    <span className={`text-[10px] md:text-xs tracking-[0.2em] uppercase font-sans font-black transition-all duration-300 max-w-[120px] leading-tight ${isSelected
+                                        ? 'text-black'
+                                        : 'text-black/60 group-hover:text-black'
                                         }`}>
                                         {category.name}
                                     </span>
@@ -350,7 +351,7 @@ const Category = () => {
                         })}
                     </div>
                 </div>
-            </section >
+            </section> >
 
             {/* "Most Rare" Featured Section */}
             {
@@ -363,7 +364,7 @@ const Category = () => {
                                     <Award size={20} strokeWidth={1} className="text-heritage-gold-muted" />
                                     <div className="h-px w-12 bg-heritage-bronze/30"></div>
                                 </div>
-                                <h2 className="text-3xl md:text-4xl font-serif text-heritage-charcoal font-normal tracking-wide mb-2">
+                                <h2 className="text-3xl md:text-4xl font-serif text-black font-bold tracking-wide mb-2">
                                     Most Rare
                                 </h2>
                                 <p className="text-heritage-bronze/70 font-sans font-light text-sm">

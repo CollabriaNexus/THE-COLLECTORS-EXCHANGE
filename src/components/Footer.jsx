@@ -28,11 +28,11 @@ const Footer = () => {
                         </div>
 
                         <p className="text-gray-400 font-light leading-relaxed max-w-xs mx-auto text-sm">
-                            A curated marketplace for verified pre-owned collectibles, antiques, and limited pieces.
+                            The sovereign archival registry for verified heritage, provenance-backed horology, and significant cultural artefacts.
                         </p>
 
                         <p className="font-serif italic text-white text-base lg:text-lg">
-                            Preserving Value. Celebrating Authenticity.
+                            Preserving History. Verifying Provenance.
                         </p>
 
                         <div className="pt-4">

@@ -3,321 +3,88 @@ import Bullet from '../components/Bullet';
 
 const Terms = () => {
     return (
-        <div className="min-h-screen bg-white text-black py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
-            {/* Header */}
-            <div className="mb-12 border-b border-gray-200 pb-8">
-                <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">Terms & Conditions</h1>
-                <p className="text-gray-500 font-sans">Effective Date: 31st December 2025</p>
-                <div className="w-20 h-1 bg-luxury-gold mt-6"></div>
-            </div>
+        <div className="min-h-screen bg-heritage-cream text-heritage-charcoal py-24 px-6 md:px-12 lg:px-24">
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="mb-16 border-b border-heritage-bronze/10 pb-12">
+                    <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-4 block">Institutional Framework</span>
+                    <h1 className="text-5xl md:text-6xl font-serif font-normal mb-6 tracking-tight">Custodianship Agreement</h1>
+                    <p className="text-heritage-charcoal/50 font-sans text-sm tracking-widest uppercase">Effective Date: 31st December 2025</p>
+                    <div className="w-20 h-0.5 bg-luxury-gold/40 mt-8"></div>
+                </div>
 
-            {/* Introduction */}
-            <div className="mb-10 font-sans text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                    Welcome to <strong>The Collectors’ Exchange</strong> (“The Collectors’ Exchange”). These Terms & Conditions (“Terms”) govern your access to and use of our website, marketplace, applications, seller dashboards, and related services (collectively, the “Platform”).
-                </p>
-                <p>
-                    By accessing or using the Platform, you agree to be bound by these Terms. If you do not agree, you must not use the Platform.
-                </p>
-            </div>
+                {/* Introduction */}
+                <div className="mb-16 font-serif italic text-xl text-heritage-charcoal/80 leading-relaxed border-l-2 border-luxury-gold/20 pl-8">
+                    <p>
+                        "This agreement establishes the professional protocols and ethical mandates for the stewardship, verification, and exchange of heritage assets within the House of Heritage archive."
+                    </p>
+                </div>
 
-            {/* Sections */}
-            <div className="space-y-10 font-sans text-gray-800">
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">1. Nature of the Platform</h2>
-                    <p className="mb-3 text-gray-700">The Collectors’ Exchange operates as a curated pre-owned marketplace for collectibles, antiques, timepieces, footwear, toys, cultural artefacts, and related items.</p>
-                    <p className="mb-2 text-gray-700">Items available on the Platform may be sold by:</p>
-                    <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>The Collectors’ Exchange as a direct seller</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Individual sellers (private collectors)</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Creators and brands offering limited editions, archives, or secondary market listings</span>
-                        </li>
-                    </ul>
-                    <p className="text-gray-700">All transactions conducted on the Platform are subject to these Terms.</p>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">2. Eligibility</h2>
-                    <p className="text-gray-700">Users must be at least 18 years of age to access or use the Platform. By registering or transacting, users confirm they are legally capable of entering into binding contracts.</p>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">3. Seller Categories & Responsibilities</h2>
-
-                    <div className="mb-6">
-                        <h3 className="text-xl font-medium mb-2">3.1 Individual Sellers</h3>
-                        <p className="mb-2 text-gray-700">Individual sellers may list pre-owned items they legally own or are authorized to sell. Sellers must provide truthful, complete, and accurate information regarding:</p>
-                        <ul className="space-y-1 text-gray-700">
-                            <li className="flex items-start gap-3">
+                {/* Sections */}
+                <div className="space-y-16 font-sans text-heritage-charcoal/80">
+                    <section>
+                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">01. Nature of the Registry</h2>
+                        <p className="mb-4 leading-relaxed">The House of Heritage (formerly The Collectors’ Exchange) operates as a sovereign archival registry for heritage assets, provenance-backed horology, and cultural artefacts.</p>
+                        <p className="mb-4 leading-relaxed">All entries into the registry are subject to institutional verification and are stewarded by:</p>
+                        <ul className="space-y-3 mb-6">
+                            <li className="flex items-start gap-4">
                                 <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Ownership and right to sell</span>
+                                <span>The Institution as the primary repository</span>
                             </li>
-                            <li className="flex items-start gap-3">
+                            <li className="flex items-start gap-4">
                                 <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Item condition</span>
+                                <span>Sovereign Stewards (Private Collectors)</span>
                             </li>
-                            <li className="flex items-start gap-3">
+                            <li className="flex items-start gap-4">
                                 <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Provenance and supporting documentation</span>
+                                <span>Archival Originators (Creators and Heritage Brands)</span>
                             </li>
                         </ul>
-                    </div>
+                    </section>
 
-                    <div className="mb-6">
-                        <h3 className="text-xl font-medium mb-2">3.2 Creators & Brands</h3>
-                        <p className="text-gray-700">Creators and brands may list limited editions, archived works, or secondary market items. Intellectual property rights remain with the creators or brands, subject to licenses granted to The Collectors’ Exchange for listing, display, and marketing.</p>
-                    </div>
-
-                    <div>
-                        <h3 className="text-xl font-medium mb-2">3.3 Marketplace-Owned Listings</h3>
-                        <p className="text-gray-700">Items sold directly by The Collectors’ Exchange are owned or consigned by the marketplace and are subject to the same authentication and quality standards.</p>
-                    </div>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">4. Authentication & Quality Verification</h2>
-
-                    <div className="mb-6">
-                        <h3 className="text-xl font-medium mb-2">4.1 Authentication</h3>
-                        <p className="mb-2 text-gray-700">All items listed on the Platform are subject to an authentication process conducted or overseen by The Collectors’ Exchange. Authentication may include:</p>
-                        <ul className="space-y-1 text-gray-700 mb-3">
-                            <li className="flex items-start gap-3">
+                    <section>
+                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">02. Verification Protocols</h2>
+                        <p className="mb-4 leading-relaxed">Every asset submitted for registration undergoes a rigorous multi-stage authentication process to establish historical continuity and provenance.</p>
+                        <ul className="space-y-3 mb-6">
+                            <li className="flex items-start gap-4">
                                 <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Expert review</span>
+                                <span>Physical Archive Inspection</span>
                             </li>
-                            <li className="flex items-start gap-3">
+                            <li className="flex items-start gap-4">
                                 <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Documentation verification</span>
+                                <span>Provenance Documentation Audit</span>
                             </li>
-                            <li className="flex items-start gap-3">
+                            <li className="flex items-start gap-4">
                                 <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Serial number or material checks</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Third-party authentication partners where applicable</span>
+                                <span>Sovereign Verification Marking</span>
                             </li>
                         </ul>
-                        <p className="mb-2 text-gray-700">Items that successfully pass authentication may receive a Verified Authenticity Mark.</p>
-                        <p className="text-gray-700 italic">Authentication reflects a professional opinion at the time of inspection based on available information. Absolute certainty cannot be guaranteed.</p>
-                    </div>
+                        <p className="text-sm italic opacity-60">Verification reflects a professional archival opinion based on the historical evidence provided at the time of entry.</p>
+                    </section>
 
-                    <div>
-                        <h3 className="text-xl font-medium mb-2">4.2 Quality & Condition Checks</h3>
-                        <p className="text-gray-700 mb-2">Items undergo quality and condition assessments and are assigned condition grades disclosed to buyers.</p>
-                        <p className="text-gray-700">Normal wear consistent with age and use does not constitute a defect unless expressly stated.</p>
-                    </div>
-                </section>
+                    <section>
+                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">03. Stewardship Responsibilities</h2>
+                        <p className="mb-4 leading-relaxed">Stewards (Sellers) warrant the absolute accuracy of the provenance provided and the legal right to transfer custodianship of the heritage asset.</p>
+                        <p className="mb-4 leading-relaxed">Acquirers (Buyers) acknowledge that they are assuming the role of custodian for a historical asset, subject to the preservation standards of the institution.</p>
+                    </section>
 
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">5. Buyer Responsibilities</h2>
-                    <p className="text-gray-700 mb-2">Buyers are responsible for:</p>
-                    <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Reviewing item descriptions, condition reports, and images</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Understanding items are pre-owned unless explicitly stated otherwise</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Seeking clarification prior to purchase where necessary</span>
-                        </li>
-                    </ul>
-                    <p className="text-gray-700">Purchases constitute binding agreements.</p>
-                </section>
+                    <section>
+                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">04. Archival Fees & Transfers</h2>
+                        <p className="mb-4 leading-relaxed">All transfers of custodianship involve archival processing fees, verification costs, and secure heritage transport arrangements, as disclosed during the acquisition process.</p>
+                    </section>
 
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">6. Pricing, Payments & Fees</h2>
-                    <ul className="space-y-2 text-gray-700">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Prices are determined by sellers or by The Collectors’ Exchange for marketplace-owned items.</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Payments must be completed through approved methods.</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Taxes, duties, and applicable fees may be added at checkout.</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Seller commissions and payout terms are governed by separate agreements or published schedules.</span>
-                        </li>
-                    </ul>
-                </section>
+                    <section>
+                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">05. Governing Mandate</h2>
+                        <p className="mb-4 leading-relaxed">This agreement is governed by the sovereign laws of the jurisdiction of operation. Any disputes regarding historical misrepresentation or inauthenticity are subject to the Institution's internal Archival Audit Board.</p>
+                    </section>
+                </div>
 
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">7. Shipping, Delivery & Risk</h2>
-                    <ul className="space-y-2 text-gray-700">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Shipping methods, timelines, and insurance terms are disclosed at checkout.</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Risk of loss transfers to the buyer upon confirmed delivery, unless otherwise required by law.</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>International shipments may be subject to customs duties and delays beyond platform control.</span>
-                        </li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">8. Returns, Refunds & Disputes</h2>
-                    <ul className="space-y-2 text-gray-700">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Returns and refunds are governed by the Returns & Authenticity Dispute Policy, incorporated by reference.</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>In cases of verified inauthenticity or misrepresentation, remedies may include refunds, returns, or account actions.</span>
-                        </li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">9. Intellectual Property</h2>
-                    <p className="text-gray-700 mb-3">All Platform content, including trademarks, logos, text, images, verification marks, and proprietary processes, is owned by or licensed to The Collectors’ Exchange.</p>
-                    <p className="text-gray-700 mb-2">Users must not:</p>
-                    <ul className="space-y-1 text-gray-700">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Copy or reproduce Platform content</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Misrepresent affiliation with The Collectors’ Exchange</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Use the Verified Authenticity Mark without authorization</span>
-                        </li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">10. Prohibited Conduct</h2>
-                    <p className="text-gray-700 mb-2">Users must not:</p>
-                    <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>List counterfeit or stolen items</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Provide false or misleading information</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Infringe intellectual property rights</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Manipulate transactions or pricing</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Engage in fraudulent, abusive, or unlawful conduct</span>
-                        </li>
-                    </ul>
-                    <p className="text-gray-700">Accounts violating these rules may be suspended or terminated.</p>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">11. Account Suspension & Termination</h2>
-                    <p className="text-gray-700 mb-2">The Collectors’ Exchange may suspend or terminate access where:</p>
-                    <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>These Terms are breached</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Fraud or misrepresentation is suspected</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Legal or regulatory compliance requires action</span>
-                        </li>
-                    </ul>
-                    <p className="text-gray-700">Termination does not relieve obligations incurred prior to termination.</p>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">12. Limitation of Liability</h2>
-                    <p className="text-gray-700 mb-2">To the maximum extent permitted by law:</p>
-                    <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>The Collectors’ Exchange is not liable for indirect or consequential damages</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Total liability shall not exceed the amount paid for the item in dispute</span>
-                        </li>
-                    </ul>
-                    <p className="text-gray-700">Nothing limits liability where prohibited by law.</p>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">13. Indemnification</h2>
-                    <p className="text-gray-700 mb-2">Users agree to indemnify and hold harmless The Collectors’ Exchange from claims arising from:</p>
-                    <ul className="space-y-1 text-gray-700">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Breach of these Terms</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Item misrepresentation</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Violation of laws or third-party rights</span>
-                        </li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">14. Governing Law & Jurisdiction</h2>
-                    <ul className="space-y-2 text-gray-700">
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>These Terms are governed by the laws of India.</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Bullet className="text-luxury-gold mt-1.5" />
-                            <span>Courts located in [Insert City/State] shall have exclusive jurisdiction.</span>
-                        </li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">15. Changes to Terms</h2>
-                    <p className="text-gray-700">Terms may be updated periodically. Changes will be posted with an updated effective date. Continued use constitutes acceptance of revised Terms.</p>
-                </section>
-
-                <section>
-                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">16. Contact Information</h2>
-                    <p className="text-gray-700">For questions regarding these Terms, contact:</p>
-                    <p className="text-gray-700 font-medium">Email: <a href="mailto:support@collectorsexchange.com" className="hover:text-luxury-gold transition-colors">support@collectorsexchange.com</a></p>
-                </section>
+                {/* Footer Note */}
+                <div className="mt-24 pt-12 border-t border-heritage-bronze/10 text-center">
+                    <p className="font-serif italic text-heritage-charcoal/40 text-lg">
+                        "Integrity is the bedrock of heritage."
+                    </p>
+                </div>
             </div>
         </div>
     );

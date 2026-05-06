@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Landmark, Compass, Award, History, Gem, Info, Loader2 } from 'lucide-react';
+import { Landmark, Compass, Award, History, Gem, Info, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useGallery } from '../hooks/api/useGallery';
 import galleryHero from '../assets/gallery-hero.png';
 
@@ -41,7 +41,7 @@ const GalleryCard = ({ item }) => {
     return (
         <Link
             to={`/THE-COLLECTORS-EXCHANGE/gallery/${item.id}`}
-            className="group relative flex flex-col bg-white/5 overflow-hidden transition-all duration-700 hover:shadow-[0_0_30px_rgba(191,155,48,0.15)] rounded-sm border border-[#3D352F] hover:border-[#C9A962]/40"
+            className="group relative flex flex-col bg-white overflow-hidden transition-all duration-700 hover:shadow-heritage-hover rounded-sm border border-gray-100 hover:border-luxury-gold/30"
         >
             {/* The Frame */}
             <div className="p-4 flex flex-col items-center">
@@ -50,11 +50,11 @@ const GalleryCard = ({ item }) => {
                     const isScene = currentImg.includes('OpIndia') || currentImg.includes('unsplash') || currentImg.includes('context') || currentImg.includes('Tiger') || currentImg.includes('rosetta');
 
                     return (
-                        <div className={`relative aspect-square w-full overflow-hidden rounded-sm shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] border border-black/40 group-hover:border-[#C9A962]/20 transition-all duration-700 ${isScene ? 'bg-black/20 p-0' : 'bg-[#e2e0d9] p-0'}`}>
+                        <div className={`relative aspect-square w-full overflow-hidden rounded-sm shadow-sm border border-gray-50 transition-all duration-700 ${isScene ? 'bg-gray-100 p-0' : 'bg-[#FAF9F6] p-0'}`}>
                             <img
                                 src={item.images[0]}
                                 alt={item.title}
-                                className={`w-full h-full transition-transform duration-1000 group-hover:scale-110 ${isScene ? 'object-cover' : 'object-contain mix-blend-multiply brightness-[1.1] contrast-[1.1]'}`}
+                                className={`w-full h-full transition-transform duration-1000 group-hover:scale-110 ${isScene ? 'object-cover' : 'object-contain mix-blend-multiply'}`}
                             />
                         </div>
                     );
@@ -62,16 +62,10 @@ const GalleryCard = ({ item }) => {
 
                 {/* Understated Title Label */}
                 <div className="mt-4 text-center w-full px-2">
-                    <p className="text-[9px] uppercase tracking-[0.25em] text-[#C9A962]/50 font-bold mb-1">{item.theme}</p>
-                    <h3 className="font-serif text-sm text-[#E5E1DA] line-clamp-1 group-hover:text-[#C9A962] transition-colors tracking-wide">{item.title}</h3>
+                    <p className="text-[9px] uppercase tracking-[0.25em] text-luxury-gold/50 font-bold mb-1">{item.theme}</p>
+                    <h3 className="font-serif text-sm text-heritage-charcoal line-clamp-1 group-hover:text-luxury-gold transition-colors tracking-wide">{item.title}</h3>
                 </div>
             </div>
-
-            {/* Subtle Metallic Corner Detail */}
-            <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-[#C9A962]/20 group-hover:border-[#C9A962]/40 transition-colors"></div>
-            <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-[#C9A962]/20 group-hover:border-[#C9A962]/40 transition-colors"></div>
-            <div className="absolute bottom-0 left-0 w-1 h-1 border-b border-l border-[#C9A962]/20 group-hover:border-[#C9A962]/40 transition-colors"></div>
-            <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-[#C9A962]/20 group-hover:border-[#C9A962]/40 transition-colors"></div>
         </Link>
     );
 };
@@ -80,63 +74,90 @@ const GalleryPage = () => {
     const { data: galleryItems = [], isLoading } = useGallery();
 
     return (
-        <div className="min-h-screen bg-[#1A1816] relative overflow-hidden">
-            {/* ... heritage background ... */}
-            <div className="fixed inset-0 pointer-events-none opacity-20 mix-blend-overlay" style={{
-                backgroundImage: 'url("https://www.transparenttextures.com/patterns/pinstriped-suit.png")',
-            }}></div>
-            <div className="fixed inset-0 pointer-events-none shadow-[inset_0_0_200px_rgba(0,0,0,0.8)]"></div>
+        <div className="min-h-screen bg-white relative overflow-hidden">
+            <div className="relative z-10">
+                {/* Hero Section - Museum Archival Style */}
+                <section className="relative h-[90vh] flex flex-col items-center justify-center overflow-hidden">
+                    {/* Background Image */}
+                    <div className="absolute inset-0 z-0">
+                        <img 
+                            src={galleryHero} 
+                            alt="Museum Gallery" 
+                            className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/30"></div>
+                    </div>
 
-            <div className="relative z-10 pb-24">
-                {/* ... hero and statement ... */}
-                {/* ... (keeping hero and statement code identical for brevity) ... */}
-                <section
-                    className="relative h-[65vh] flex items-center justify-center overflow-hidden"
-                    style={{
-                        backgroundImage: `url(${galleryHero})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                    }}
-                >
-                    <div className="absolute inset-0 bg-black/30"></div>
-                    <div className="relative z-10 text-center px-6">
-                        <h5 className="text-white/70 tracking-[0.4em] font-sans text-xs font-bold uppercase mb-6">
+                    {/* Centered Branding (Behind or to the left of the card) */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-full -translate-y-1/2 z-10 hidden md:block">
+                        <h5 className="text-white tracking-[1em] font-sans text-[12px] font-light uppercase opacity-40 whitespace-nowrap rotate-[-90deg] origin-right translate-x-[-150%]">
                             Educational Archive
                         </h5>
-                        <div className="opacity-0 translate-y-4">
-                            <h1 className="text-6xl md:text-8xl font-serif text-white font-normal tracking-tight">The Gallery</h1>
-                        </div>
                     </div>
 
-                    <div className="absolute bottom-12 right-12 bg-white/10 backdrop-blur-md border border-white/20 p-6 text-white text-left max-w-sm">
-                        <p className="font-serif italic text-lg mb-2">"The past is a foreign country; they do things differently there."</p>
-                        <p className="text-xs uppercase tracking-widest text-white/50">- L.P. Hartley, The Go-Between</p>
-                    </div>
-                </section>
-
-                <section className="py-24 px-6 border-b border-[#3D352F]/30">
-                    <div className="container mx-auto max-w-4xl text-center">
-                        <div className="flex justify-center mb-8">
-                            <div className="w-12 h-px bg-[#C9A962]/20"></div>
-                            <div className="mx-4 text-[#C9A962]/40">
-                                <Landmark size={20} strokeWidth={1} />
+                    {/* Glassmorphism Quote Card - Prominent and Central-Right */}
+                    <div className="relative z-20 w-full max-w-6xl px-6 flex justify-end">
+                        <div className="bg-[#5C4D3C]/30 backdrop-blur-2xl border border-white/10 p-12 md:p-20 shadow-[0_40px_100px_rgba(0,0,0,0.4)] max-w-2xl transform translate-y-10">
+                            <p className="font-serif italic text-3xl md:text-5xl text-white leading-[1.15] mb-12 drop-shadow-lg tracking-tight">
+                                "The past is a foreign country; they do things differently there."
+                            </p>
+                            <div className="flex items-center gap-6">
+                                <div className="h-px w-12 bg-white/40"></div>
+                                <p className="text-[11px] md:text-xs uppercase tracking-[0.5em] text-white font-bold opacity-80">
+                                    - L.P. Hartley, The Go-Between
+                                </p>
                             </div>
-                            <div className="w-12 h-px bg-[#C9A962]/20"></div>
                         </div>
-                        <h2 className="text-4xl font-serif text-[#E5E1DA] mb-8 leading-tight tracking-wide">A Sanctuary for Human Heritage</h2>
-                        <p className="text-lg text-[#9C8B7E] font-light leading-relaxed max-w-2xl mx-auto">
-                            The Gallery is a non-commercial archival project dedicated to the preservation and study of objects that shaped civilizations. We seek to provide context, history, and respect to what has endured the passage of time.
-                        </p>
                     </div>
                 </section>
 
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-32">
-                        <Loader2 className="animate-spin text-[#C9A962]/40 mb-4" size={48} />
-                        <p className="text-[#9C8B7E] font-serif text-xl italic tracking-widest opacity-60">Restoring Historical Context...</p>
+                {/* Archival Separator Line with Icon */}
+                <div className="bg-[#0F0F0F] py-8 relative">
+                    <div className="container mx-auto px-6 flex justify-center items-center">
+                        <div className="w-full max-w-md h-px bg-white/10"></div>
+                        <div className="px-6">
+                            <Landmark className="text-luxury-gold opacity-50" size={20} strokeWidth={1} />
+                        </div>
+                        <div className="w-full max-w-md h-px bg-white/10"></div>
                     </div>
-                ) : (
-                    <div className="space-y-32">
+                </div>
+
+                {/* Stewardship Section - Matched to Screenshot 2 */}
+                <section className="py-32 px-6 bg-[#0F0F0F] relative">
+                    <div className="container mx-auto max-w-4xl text-center">
+                        <div className="flex flex-col items-center mb-16">
+                            <div className="mb-8 opacity-40">
+                                <Landmark className="text-luxury-gold" size={32} strokeWidth={1} />
+                            </div>
+                            <div className="flex items-center gap-6 mb-12">
+                                <div className="w-12 h-px bg-luxury-gold/20"></div>
+                                <h2 className="text-3xl md:text-5xl font-serif text-white tracking-widest uppercase">
+                                    Stewardship and Education
+                                </h2>
+                                <div className="w-12 h-px bg-luxury-gold/20"></div>
+                            </div>
+                        </div>
+                        
+                        <div className="relative max-w-3xl mx-auto">
+                            <p className="text-lg md:text-2xl text-white/80 font-serif italic leading-relaxed text-center">
+                                "The Collectors Exchange Gallery is more than just a collection; it is an educational archive. We are here to rescue the 'dead value' of Indian heritage and bring it back to life."
+                            </p>
+                            <div className="absolute -top-10 -left-10 opacity-5">
+                                <History size={120} strokeWidth={0.5} className="text-white" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Gallery Content Section */}
+                <section className="bg-white py-32">
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-32">
+                            <Loader2 className="animate-spin text-luxury-gold/40 mb-4" size={48} />
+                            <p className="text-heritage-charcoal/40 font-serif text-xl italic tracking-widest opacity-60">Restoring Historical Context...</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-32">
                         {THEMES.map((theme) => {
                             const items = galleryItems.filter(item => item.theme === theme.name);
                             if (items.length === 0) return null;
@@ -146,10 +167,10 @@ const GalleryPage = () => {
                                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
                                         <div className="max-w-2xl">
                                             <div className="flex items-center gap-4 mb-4">
-                                                <theme.icon className="text-[#C9A962]/70" size={20} strokeWidth={1} />
-                                                <h2 className="text-2xl md:text-3xl font-serif text-[#E5E1DA] tracking-wide">{theme.name}</h2>
+                                                <theme.icon className="text-luxury-gold/70" size={20} strokeWidth={1} />
+                                                <h2 className="text-2xl md:text-3xl font-serif text-heritage-charcoal tracking-wide">{theme.name}</h2>
                                             </div>
-                                            <p className="text-[#9C8B7E] text-xs font-light leading-relaxed italic opacity-80">
+                                            <p className="text-heritage-charcoal/60 text-xs font-light leading-relaxed italic">
                                                 {theme.description}
                                             </p>
                                         </div>
@@ -169,17 +190,13 @@ const GalleryPage = () => {
                                 </section>
                             );
                         })}
-                    </div>
-                )}
-
-                {/* Empty States / Missing Theme Handling */}
-                <section className="mt-16 pt-16 border-t border-[#3D352F]/30 container mx-auto px-6 text-center">
-                    <Info size={24} strokeWidth={1} className="mx-auto text-[#C9A962]/20 mb-6" />
-                    <h3 className="text-lg font-serif text-[#9C8B7E]/60 mb-2 tracking-wide">Archives in Expansion</h3>
-                    <p className="text-xs text-[#9C8B7E]/40 font-light italic">
-                        Additional collections are currently undergoing authentication and historical categorization.
-                    </p>
+                        </div>
+                    )}
                 </section>
+
+
+
+
             </div>
         </div>
     );

@@ -26,7 +26,7 @@ const Auction = () => {
 
                 {/* Title */}
                 <h1 className="text-4xl md:text-6xl font-serif mb-8 leading-tight">
-                    Auctions by <br /> The Collectors’ Exchange
+                    Sovereign Auctions by <br /> House of Heritage
                 </h1>
 
                 {/* Description */}

@@ -35,7 +35,7 @@ const Header = () => {
                         <Link
                             key={item.name}
                             to={item.path}
-                            className="text-[10px] xl:text-xs font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.2em]"
+                            className="text-[10px] xl:text-xs font-bold hover:text-luxury-gold transition-colors uppercase tracking-[0.2em]"
                         >
                             {item.name}
                         </Link>
@@ -84,7 +84,7 @@ const Header = () => {
                                 key={item.name}
                                 to={item.path}
                                 onClick={() => setIsMenuOpen(false)}
-                                className="text-[11px] font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.2em] py-2 border-b border-gray-50 last:border-0"
+                                className="text-[11px] font-bold hover:text-luxury-gold transition-colors uppercase tracking-[0.2em] py-2 border-b border-gray-50 last:border-0"
                             >
                                 {item.name}
                             </Link>
