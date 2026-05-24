@@ -17,10 +17,10 @@ const FoundersNote = () => {
                             It came from observing how easily meaningful things are forgotten.
                         </p>
                         <p>
-                            Across homes, families, and generations, objects that once carried pride, craftsmanship, and memory are quietly discarded — not because they lack value, but because the world has learned to move too fast. In the rush for what is new, we have lost respect for what has endured.
+                            Across homes, families, and generations, objects that once carried pride, craftsmanship, and memory are quietly discarded, not because they lack value, but because the world has learned to move too fast. In the rush for what is new, we have lost respect for what has endured.
                         </p>
                         <p>
-                            I founded The Collectors’ Exchange in 2025 with a belief shaped by history — particularly by eras when possessions were built to last, preserved with care, and passed on with intention. In those times, value was not measured by immediacy, but by continuity.
+                            I founded The Collectors’ Exchange in 2025 with a belief shaped by history, particularly by eras when possessions were built to last, preserved with care, and passed on with intention. In those times, value was not measured by immediacy, but by continuity.
                         </p>
                         <p className="font-normal text-black mt-8">
                             This platform exists to restore that balance.
@@ -38,7 +38,7 @@ const FoundersNote = () => {
                             The Collectors’ Exchange is not designed to be the largest marketplace. It is designed to be the most responsible.
                         </p>
                         <p>
-                            Every object listed here represents someone’s trust — a collector’s years of patience, a family’s inheritance, a creator’s original intent. That trust demands more than transactions. It demands verification, transparency, and restraint.
+                            Every object listed here represents someone’s trust: a collector’s years of patience, a family’s inheritance, a creator’s original intent. That trust demands more than transactions. It demands verification, transparency, and restraint.
                         </p>
                         <div className="pl-6 border-l-2 border-luxury-gold italic text-gray-800 my-8">
                             <p>This is why we authenticate what we list.</p>
@@ -57,10 +57,10 @@ const FoundersNote = () => {
                             Collectors are often misunderstood. They are not accumulators. They are custodians.
                         </p>
                         <p>
-                            They preserve what others overlook. They carry forward what might otherwise disappear. The Collectors’ Exchange was built for them — and for those who are just beginning to understand the quiet satisfaction of owning something that matters.
+                            They preserve what others overlook. They carry forward what might otherwise disappear. The Collectors’ Exchange was built for them, and for those who are just beginning to understand the quiet satisfaction of owning something that matters.
                         </p>
                         <p>
-                            To the families entrusting us with heirlooms, to the collectors refining their archives, and to the creators whose work deserves enduring respect — this platform exists because of you.
+                            To the families entrusting us with heirlooms, to the collectors refining their archives, and to the creators whose work deserves enduring respect, this platform exists because of you.
                         </p>
                     </div>
                 </section>
@@ -70,7 +70,7 @@ const FoundersNote = () => {
                     <h2 className="text-2xl md:text-3xl font-serif mb-6">A Commitment, Not a Claim</h2>
                     <div className="space-y-4 text-gray-600 leading-relaxed font-light">
                         <p>
-                            Trust is not something we ask for. It is something we work to earn — every listing, every verification, every exchange.
+                            Trust is not something we ask for. It is something we work to earn: every listing, every verification, every exchange.
                         </p>
                         <p>
                             The Collectors’ Exchange is a long-term commitment to heritage, authenticity, and integrity. Not for a season. Not for a cycle. But for the generations that follow.

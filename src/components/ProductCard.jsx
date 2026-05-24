@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
 
 const ProductCard = ({ product, onUpdate }) => {
-    const [inWishlist, setInWishlist] = useState(false);
-    const [inCart, setInCart] = useState(false);
-
-    useEffect(() => {
-        setInWishlist(isInWishlist(product.id));
-        setInCart(isInCart(product.id));
-    }, [product.id]);
+    const [inWishlist, setInWishlist] = useState(() => isInWishlist(product.id));
+    const [inCart, setInCart] = useState(() => isInCart(product.id));
 
     const handleWishlistToggle = (e) => {
         e.preventDefault();
@@ -36,8 +32,8 @@ const ProductCard = ({ product, onUpdate }) => {
     const title = product.title || product.name;
 
     return (
-        <div className="bg-white border border-gray-100 group hover:shadow-lg transition-shadow duration-300">
-            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-square bg-gray-100 overflow-hidden cursor-pointer">
+        <div className="bg-white border border-gray-100 group hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
+            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-square bg-gray-100 overflow-hidden cursor-pointer shrink-0">
                 {product.image ? (
                     <img
                         src={product.image}
@@ -66,18 +62,20 @@ const ProductCard = ({ product, onUpdate }) => {
                 )}
             </Link>
 
-            <div className="p-6">
-                <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">{product.category}</div>
-                <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
-                    <h3 className="font-serif text-lg font-medium mb-2">{title}</h3>
-                </Link>
-                <p className="text-luxury-gold font-sans font-semibold mb-4">${product.price?.toLocaleString()}</p>
+            <div className="p-6 flex flex-col flex-grow">
+                <div className="flex-grow">
+                    <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">{product.category}</div>
+                    <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
+                        <h3 className="font-serif text-lg font-medium mb-2">{title}</h3>
+                    </Link>
+                    <p className="text-luxury-gold font-sans font-semibold mb-4">${product.price?.toLocaleString()}</p>
+                </div>
 
                 {/* Add to Cart Button */}
                 <button
                     onClick={handleAddToCart}
                     disabled={inCart}
-                    className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${inCart
+                    className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mt-auto ${inCart
                         ? 'bg-gray-200 text-gray-500 cursor-default'
                         : 'bg-black text-white hover:bg-luxury-gold'
                         }`}

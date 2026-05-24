@@ -1,4 +1,5 @@
 import React from 'react';
+import Bullet from '../components/Bullet';
 
 const Terms = () => {
     return (
@@ -26,10 +27,19 @@ const Terms = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">1. Nature of the Platform</h2>
                     <p className="mb-3 text-gray-700">The Collectors’ Exchange operates as a curated pre-owned marketplace for collectibles, antiques, timepieces, footwear, toys, cultural artefacts, and related items.</p>
                     <p className="mb-2 text-gray-700">Items available on the Platform may be sold by:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700 mb-3">
-                        <li>The Collectors’ Exchange as a direct seller</li>
-                        <li>Individual sellers (private collectors)</li>
-                        <li>Creators and brands offering limited editions, archives, or secondary market listings</li>
+                    <ul className="space-y-1 text-gray-700 mb-3">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>The Collectors’ Exchange as a direct seller</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Individual sellers (private collectors)</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Creators and brands offering limited editions, archives, or secondary market listings</span>
+                        </li>
                     </ul>
                     <p className="text-gray-700">All transactions conducted on the Platform are subject to these Terms.</p>
                 </section>
@@ -45,10 +55,19 @@ const Terms = () => {
                     <div className="mb-6">
                         <h3 className="text-xl font-medium mb-2">3.1 Individual Sellers</h3>
                         <p className="mb-2 text-gray-700">Individual sellers may list pre-owned items they legally own or are authorized to sell. Sellers must provide truthful, complete, and accurate information regarding:</p>
-                        <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                            <li>Ownership and right to sell</li>
-                            <li>Item condition</li>
-                            <li>Provenance and supporting documentation</li>
+                        <ul className="space-y-1 text-gray-700">
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Ownership and right to sell</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Item condition</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Provenance and supporting documentation</span>
+                            </li>
                         </ul>
                     </div>
 
@@ -69,11 +88,23 @@ const Terms = () => {
                     <div className="mb-6">
                         <h3 className="text-xl font-medium mb-2">4.1 Authentication</h3>
                         <p className="mb-2 text-gray-700">All items listed on the Platform are subject to an authentication process conducted or overseen by The Collectors’ Exchange. Authentication may include:</p>
-                        <ul className="list-disc pl-5 space-y-1 text-gray-700 mb-3">
-                            <li>Expert review</li>
-                            <li>Documentation verification</li>
-                            <li>Serial number or material checks</li>
-                            <li>Third-party authentication partners where applicable</li>
+                        <ul className="space-y-1 text-gray-700 mb-3">
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Expert review</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Documentation verification</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Serial number or material checks</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Bullet className="text-luxury-gold mt-1.5" />
+                                <span>Third-party authentication partners where applicable</span>
+                            </li>
                         </ul>
                         <p className="mb-2 text-gray-700">Items that successfully pass authentication may receive a Verified Authenticity Mark.</p>
                         <p className="text-gray-700 italic">Authentication reflects a professional opinion at the time of inspection based on available information. Absolute certainty cannot be guaranteed.</p>
@@ -89,38 +120,74 @@ const Terms = () => {
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">5. Buyer Responsibilities</h2>
                     <p className="text-gray-700 mb-2">Buyers are responsible for:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700 mb-3">
-                        <li>Reviewing item descriptions, condition reports, and images</li>
-                        <li>Understanding items are pre-owned unless explicitly stated otherwise</li>
-                        <li>Seeking clarification prior to purchase where necessary</li>
+                    <ul className="space-y-1 text-gray-700 mb-3">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Reviewing item descriptions, condition reports, and images</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Understanding items are pre-owned unless explicitly stated otherwise</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Seeking clarification prior to purchase where necessary</span>
+                        </li>
                     </ul>
                     <p className="text-gray-700">Purchases constitute binding agreements.</p>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">6. Pricing, Payments & Fees</h2>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                        <li>Prices are determined by sellers or by The Collectors’ Exchange for marketplace-owned items.</li>
-                        <li>Payments must be completed through approved methods.</li>
-                        <li>Taxes, duties, and applicable fees may be added at checkout.</li>
-                        <li>Seller commissions and payout terms are governed by separate agreements or published schedules.</li>
+                    <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Prices are determined by sellers or by The Collectors’ Exchange for marketplace-owned items.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Payments must be completed through approved methods.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Taxes, duties, and applicable fees may be added at checkout.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Seller commissions and payout terms are governed by separate agreements or published schedules.</span>
+                        </li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">7. Shipping, Delivery & Risk</h2>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                        <li>Shipping methods, timelines, and insurance terms are disclosed at checkout.</li>
-                        <li>Risk of loss transfers to the buyer upon confirmed delivery, unless otherwise required by law.</li>
-                        <li>International shipments may be subject to customs duties and delays beyond platform control.</li>
+                    <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Shipping methods, timelines, and insurance terms are disclosed at checkout.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Risk of loss transfers to the buyer upon confirmed delivery, unless otherwise required by law.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>International shipments may be subject to customs duties and delays beyond platform control.</span>
+                        </li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">8. Returns, Refunds & Disputes</h2>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                        <li>Returns and refunds are governed by the Returns & Authenticity Dispute Policy, incorporated by reference.</li>
-                        <li>In cases of verified inauthenticity or misrepresentation, remedies may include refunds, returns, or account actions.</li>
+                    <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Returns and refunds are governed by the Returns & Authenticity Dispute Policy, incorporated by reference.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>In cases of verified inauthenticity or misrepresentation, remedies may include refunds, returns, or account actions.</span>
+                        </li>
                     </ul>
                 </section>
 
@@ -128,22 +195,46 @@ const Terms = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">9. Intellectual Property</h2>
                     <p className="text-gray-700 mb-3">All Platform content, including trademarks, logos, text, images, verification marks, and proprietary processes, is owned by or licensed to The Collectors’ Exchange.</p>
                     <p className="text-gray-700 mb-2">Users must not:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                        <li>Copy or reproduce Platform content</li>
-                        <li>Misrepresent affiliation with The Collectors’ Exchange</li>
-                        <li>Use the Verified Authenticity Mark without authorization</li>
+                    <ul className="space-y-1 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Copy or reproduce Platform content</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Misrepresent affiliation with The Collectors’ Exchange</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Use the Verified Authenticity Mark without authorization</span>
+                        </li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">10. Prohibited Conduct</h2>
                     <p className="text-gray-700 mb-2">Users must not:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700 mb-3">
-                        <li>List counterfeit or stolen items</li>
-                        <li>Provide false or misleading information</li>
-                        <li>Infringe intellectual property rights</li>
-                        <li>Manipulate transactions or pricing</li>
-                        <li>Engage in fraudulent, abusive, or unlawful conduct</li>
+                    <ul className="space-y-1 text-gray-700 mb-3">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>List counterfeit or stolen items</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Provide false or misleading information</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Infringe intellectual property rights</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Manipulate transactions or pricing</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Engage in fraudulent, abusive, or unlawful conduct</span>
+                        </li>
                     </ul>
                     <p className="text-gray-700">Accounts violating these rules may be suspended or terminated.</p>
                 </section>
@@ -151,10 +242,19 @@ const Terms = () => {
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">11. Account Suspension & Termination</h2>
                     <p className="text-gray-700 mb-2">The Collectors’ Exchange may suspend or terminate access where:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700 mb-3">
-                        <li>These Terms are breached</li>
-                        <li>Fraud or misrepresentation is suspected</li>
-                        <li>Legal or regulatory compliance requires action</li>
+                    <ul className="space-y-1 text-gray-700 mb-3">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>These Terms are breached</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Fraud or misrepresentation is suspected</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Legal or regulatory compliance requires action</span>
+                        </li>
                     </ul>
                     <p className="text-gray-700">Termination does not relieve obligations incurred prior to termination.</p>
                 </section>
@@ -162,9 +262,15 @@ const Terms = () => {
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">12. Limitation of Liability</h2>
                     <p className="text-gray-700 mb-2">To the maximum extent permitted by law:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700 mb-3">
-                        <li>The Collectors’ Exchange is not liable for indirect or consequential damages</li>
-                        <li>Total liability shall not exceed the amount paid for the item in dispute</li>
+                    <ul className="space-y-1 text-gray-700 mb-3">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>The Collectors’ Exchange is not liable for indirect or consequential damages</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Total liability shall not exceed the amount paid for the item in dispute</span>
+                        </li>
                     </ul>
                     <p className="text-gray-700">Nothing limits liability where prohibited by law.</p>
                 </section>
@@ -172,18 +278,33 @@ const Terms = () => {
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">13. Indemnification</h2>
                     <p className="text-gray-700 mb-2">Users agree to indemnify and hold harmless The Collectors’ Exchange from claims arising from:</p>
-                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                        <li>Breach of these Terms</li>
-                        <li>Item misrepresentation</li>
-                        <li>Violation of laws or third-party rights</li>
+                    <ul className="space-y-1 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Breach of these Terms</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Item misrepresentation</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Violation of laws or third-party rights</span>
+                        </li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">14. Governing Law & Jurisdiction</h2>
-                    <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                        <li>These Terms are governed by the laws of India.</li>
-                        <li>Courts located in [Insert City/State] shall have exclusive jurisdiction.</li>
+                    <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>These Terms are governed by the laws of India.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <Bullet className="text-luxury-gold mt-1.5" />
+                            <span>Courts located in [Insert City/State] shall have exclusive jurisdiction.</span>
+                        </li>
                     </ul>
                 </section>
 

@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password   String?
+  supabaseId String?  @unique
+  phone      String?  @unique
+  type      String   @default("individual") // "individual", "company"
+  role      String   @default("user") // "user", "admin", "curator"
+  kycStatus String   @default("none") // "none", "pending", "verified"
+  kycData   Json?    @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products  Product[]
+  cart      CartItem[]
+  wishlist  WishlistItem[]
+  orders    Order[]
+}
+
+model PhoneVerification {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id                 String   @id @default(cuid())
+  title              String
+  category           String
+  description        String
+  condition          String
+  price              Float
+  image              String
+  images             String[]
+  keywords           String[]
+  isVerified         Boolean  @default(false)
+  authenticityStatus String   @default("Pending")
+  
+  // Verification workflow fields
+  status             String   @default("Pending") // "Pending", "In Review", "Approved", "Rejected"
+  isPublished        Boolean  @default(false) // Only true when status is "Approved"
+  rejectionReason    String?  // Reason for rejection (shown to seller)
+  reviewedAt         DateTime? // When admin last reviewed
+  reviewedBy         String?  // Admin who reviewed (optional for future use)
+  
+  sellerId           String
+  seller             User     @relation(fields: [sellerId], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+  orderItems    OrderItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model GalleryItem {
+  id           String   @id @default(cuid())
+  title        String
+  teaser       String
+  description  String
+  images       String[]
+  origin       String
+  timePeriod   String
+  institution  String
+  significance String
+  theme        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          String      @default("Pending") // "Pending", "Processing", "Shipped", "Delivered", "Cancelled"
+  totalAmount     Float
+  shippingAddress String
+  city            String
+  state           String
+  zipCode         String
+  phone           String
+  trackingID      String?     // Delhivery AWB / Tracking ID
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  price     Float    // Price at time of purchase
+  createdAt DateTime @default(now())
+}

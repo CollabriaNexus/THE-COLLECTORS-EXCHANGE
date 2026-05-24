@@ -1,4 +1,5 @@
 // localStorage utility functions for The Collectors' Exchange
+import { supabase } from './supabase';
 
 const STORAGE_KEYS = {
     USER: 'tce_user',
@@ -207,3 +208,55 @@ const getInitialProducts = () => {
 if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
     getInitialProducts();
 }
+
+// ============== STORAGE / IMAGES ==============
+
+export const uploadProductImage = async (file) => {
+    try {
+        if (!file) throw new Error('No file selected');
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error } = await supabase.storage
+            .from('product-images')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(filePath);
+
+        return publicUrl;
+    } catch (error) {
+        console.error('Error uploading product image:', error);
+        throw error;
+    }
+};
+
+export const uploadBlogImage = async (file) => {
+    try {
+        if (!file) throw new Error('No file selected');
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error } = await supabase.storage
+            .from('blog-images')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('blog-images')
+            .getPublicUrl(filePath);
+
+        return publicUrl;
+    } catch (error) {
+        console.error('Error uploading blog image:', error);
+        throw error;
+    }
+};
