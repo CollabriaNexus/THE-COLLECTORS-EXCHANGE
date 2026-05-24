@@ -7,6 +7,7 @@ import Account from './pages/Account';
 import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
 import About from './pages/About';
+import AboutUs from "./pages/AboutUs";
 import Vision from './pages/Vision';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
@@ -21,6 +22,7 @@ function App() {
       <Routes>
         <Route path="/THE-COLLECTORS-EXCHANGE/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="about-us" element={<AboutUs />} />
           <Route path="/THE-COLLECTORS-EXCHANGE/about" element={<About />} />
           <Route path="/THE-COLLECTORS-EXCHANGE/category" element={<Category />} />
           <Route path="/THE-COLLECTORS-EXCHANGE/auction" element={<Auction />} />

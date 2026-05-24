@@ -8,6 +8,9 @@ export default {
         extend: {
             colors: {
                 'primary-bg': '#FFFFFF',
+                'obsidian': '#0A0A0A',
+                'brass': '#B8860B',
+                'cream': '#FDFBF7',
                 'secondary-bg': '#F9F9F9',
                 'luxury-gold': '#D4AF37',
                 'text-main': '#000000',
