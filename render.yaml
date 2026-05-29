@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: tce-backend
+    runtime: node
+    repo: https://github.com/CollabriaNexus/THE-COLLECTORS-EXCHANGE
+    branch: main
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: PORT
+        value: 3000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
