@@ -68,7 +68,7 @@ const ProductCard = ({ product, onUpdate }) => {
                     <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
                         <h3 className="font-serif text-lg font-medium mb-2">{title}</h3>
                     </Link>
-                    <p className="text-luxury-gold font-sans font-semibold mb-4">${product.price?.toLocaleString()}</p>
+                    <p className="text-luxury-gold font-sans font-semibold mb-4">₹{product.price?.toLocaleString()}</p>
                 </div>
 
                 {/* Add to Cart Button */}

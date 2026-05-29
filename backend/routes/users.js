@@ -58,6 +58,11 @@ export default async function userRoutes(fastify) {
                 products: true,
                 cart: { include: { product: true } },
                 wishlist: { include: { product: true } },
+                orders: {
+                    include: { items: { include: { product: true } } },
+                    orderBy: { createdAt: 'desc' },
+                },
+                vendor: { include: { subscription: true } },
             },
         });
 
@@ -87,6 +92,81 @@ export default async function userRoutes(fastify) {
         return user;
     });
 
+    // Get current authenticated user's orders
+    fastify.get('/orders', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+
+        const user = await prisma.user.findUnique({
+            where: { supabaseId },
+            select: { id: true }
+        });
+
+        if (!user) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const orders = await prisma.order.findMany({
+            where: { userId: user.id },
+            include: {
+                items: { include: { product: true } }
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return orders;
+    });
+
+    // ============== NOTIFICATIONS ==============
+
+    // Get user notifications
+    fastify.get('/notifications', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        const notifications = await prisma.notification.findMany({
+            where: { userId: user.id },
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+        });
+
+        return notifications;
+    });
+
+    // Mark all notifications as read — MUST be before /:id/read to avoid route conflict
+    fastify.patch('/notifications/read-all', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        await prisma.notification.updateMany({
+            where: { userId: user.id, read: false },
+            data: { read: true },
+        });
+
+        return { message: 'All notifications marked as read' };
+    });
+
+    // Mark a single notification as read
+    fastify.patch('/notifications/:id/read', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { id } = request.params;
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        const notification = await prisma.notification.findUnique({ where: { id } });
+        if (!notification || notification.userId !== user.id) {
+            return reply.status(404).send({ error: 'Notification not found' });
+        }
+
+        const updated = await prisma.notification.update({
+            where: { id },
+            data: { read: true },
+        });
+
+        return updated;
+    });
+
     // Submit KYC
     fastify.post('/kyc', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { userId, kycData } = UserKycSchema.parse(request.body);
@@ -102,6 +182,43 @@ export default async function userRoutes(fastify) {
         return updatedUser;
     });
 
+    // Accept Seller Agreement (digital signature)
+    fastify.post('/seller-agreement/accept', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { userId, signedByName } = request.body;
+
+        if (!userId || !signedByName) {
+            return reply.status(400).send({ error: 'userId and signedByName are required' });
+        }
+
+        const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+        if (!existingUser) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const currentKycData = typeof existingUser.kycData === 'object' && existingUser.kycData !== null
+            ? existingUser.kycData
+            : {};
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                kycData: {
+                    ...currentKycData,
+                    agreementAccepted: true,
+                    agreementSignedByName: signedByName,
+                    agreementSignedAt: new Date().toISOString(),
+                },
+            },
+        });
+
+        return {
+            message: 'Seller Agreement accepted successfully',
+            signedByName,
+            signedAt: new Date().toISOString(),
+            user: updatedUser,
+        };
+    });
+
     // --- Phone Verification ---
 
     // Send OTP
@@ -111,9 +228,8 @@ export default async function userRoutes(fastify) {
 
         // 1. Check uniqueness
         const existingUser = await prisma.user.findFirst({ where: { phone } });
-        // Allow re-verification if it's the SAME user (e.g. they want to verify the number they already lay claim to - though usually for changing number)
-        // For now: Strictly unique across OTHER users.
-        if (existingUser && existingUser.id !== request.user.sub) {
+        // Allow re-verification if it's the SAME user
+        if (existingUser && existingUser.supabaseId !== request.user.sub) {
             return reply.status(409).send({ error: 'Phone number already registered' });
         }
 
@@ -148,11 +264,10 @@ export default async function userRoutes(fastify) {
         if (new Date() > record.expiresAt) return reply.status(400).send({ error: 'OTP expired' });
 
         // 2. Update User
-        // request.user.sub comes from the JWT via fastify.authenticate decorator
-        const userId = request.user.sub;
+        const supabaseId = request.user.sub;
 
         const updatedUser = await prisma.user.update({
-            where: { id: userId },
+            where: { supabaseId },
             data: { phone },
         });
 

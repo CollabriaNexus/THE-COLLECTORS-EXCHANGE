@@ -166,7 +166,7 @@ function ProductDetail() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 pb-6 border-b border-gray-100">
                             <div>
                                 <dt className="text-xs uppercase tracking-wider font-semibold text-gray-500">Price</dt>
-                                <dd className="text-xl font-bold text-luxury-gold mt-1">${product.price}</dd>
+                                <dd className="text-xl font-bold text-luxury-gold mt-1">₹{product.price}</dd>
                             </div>
                             <div>
                                 <dt className="text-xs uppercase tracking-wider font-semibold text-gray-500">Category</dt>

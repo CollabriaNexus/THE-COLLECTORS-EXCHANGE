@@ -1,10 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
+import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X, ShoppingBag, Store, Crown, Check, CreditCard, Upload, Bell, BarChart3 } from 'lucide-react';
 import { getUser, setUser as setLocalUser, clearUser } from '../utils/storage';
-import { useUser, useRegisterUser, useSubmitKyc } from '../hooks/api/useUser';
+import { useMe, useRegisterUser, useSubmitKyc } from '../hooks/api/useUser';
 import { useAddProduct } from '../hooks/api/useProducts';
+import { useMyOrders } from '../hooks/api/useOrders';
+import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/api/useNotifications';
 import { supabase } from '../utils/supabase';
+import { uploadProductImage, uploadKycDocument } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
+import { useToast } from '../components/Toast';
+import { useVendorProfile, useVendorSubscribe } from '../hooks/api/useVendor';
 
 // Helper Component for Phone Verification
 const PhoneVerification = ({ onVerified }) => {
@@ -184,6 +193,113 @@ const LoginForm = () => {
     );
 };
 
+const NotificationsPanel = () => {
+    const { data: notifications = [], isLoading } = useNotifications(!!getUser());
+    const markReadMutation = useMarkNotificationRead();
+    const markAllReadMutation = useMarkAllNotificationsRead();
+
+    if (isLoading) {
+        return (
+            <div className="bg-white p-8 shadow-sm border border-gray-100 flex justify-center">
+                <Loader2 className="animate-spin text-luxury-gold" size={32} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-white p-8 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h2 className="text-2xl font-serif mb-1">Notifications</h2>
+                    <p className="text-gray-500 text-sm">Stay informed about your account and listings</p>
+                </div>
+                {notifications.some(n => !n.read) && (
+                    <button
+                        onClick={() => markAllReadMutation.mutate()}
+                        className="text-xs text-luxury-gold hover:underline uppercase tracking-wider"
+                    >
+                        Mark All Read
+                    </button>
+                )}
+            </div>
+
+            {notifications.length === 0 ? (
+                <div className="text-center py-16">
+                    <Bell size={48} className="mx-auto text-gray-200 mb-4" />
+                    <p className="text-gray-400 font-serif text-lg">No notifications yet.</p>
+                    <p className="text-gray-400 text-sm mt-1">We'll notify you about orders, verification updates, and more.</p>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {notifications.map((notification) => (
+                        <div
+                            key={notification.id}
+                            className={`p-4 border transition-colors ${notification.read ? 'bg-white border-gray-100' : 'bg-luxury-gold/5 border-luxury-gold/20'}`}
+                            onClick={() => { if (!notification.read) markReadMutation.mutate(notification.id); }}
+                        >
+                            <div className="flex justify-between items-start gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <h4 className={`text-sm font-medium ${notification.read ? 'text-gray-600' : 'text-heritage-charcoal'}`}>
+                                        {notification.title}
+                                    </h4>
+                                    <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
+                                </div>
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                                        {new Date(notification.createdAt).toLocaleDateString()}
+                                    </span>
+                                    {!notification.read && <div className="w-2 h-2 rounded-full bg-luxury-gold" />}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const DocUploadField = ({ label, placeholder, value, docUrl, docType, uploading, onValueChange, onFileUpload }) => (
+    <div className="mb-6 last:mb-0">
+        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">{label}</label>
+        <div className="flex gap-3 items-start">
+            <div className="flex-grow space-y-2">
+                {placeholder && (
+                    <input
+                        type="text"
+                        placeholder={placeholder}
+                        value={value || ''}
+                        onChange={(e) => onValueChange(e.target.value)}
+                        className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                    />
+                )}
+                <div className="flex gap-2 items-center">
+                    <label className={`flex items-center gap-2 px-4 py-3 border border-dashed border-gray-300 cursor-pointer hover:border-luxury-gold transition-colors text-sm ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <Upload size={16} className="text-gray-400" />
+                        <span className="text-gray-500">{uploading ? 'Uploading...' : docUrl ? 'Replace Scan' : 'Upload Scanned Copy'}</span>
+                        <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            className="hidden"
+                            disabled={uploading}
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) onFileUpload(file);
+                                e.target.value = '';
+                            }}
+                        />
+                    </label>
+                    {docUrl && (
+                        <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-luxury-gold hover:underline flex items-center gap-1">
+                            <ImageIcon size={14} /> View
+                        </a>
+                    )}
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
 const CATEGORIES = ['Timepieces', 'Sneakers', 'Collectables', 'Currencies', 'Pop Collection', 'Toys', 'Antiques', 'Limited Editions'];
 const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
 
@@ -193,7 +309,7 @@ const Account = () => {
     const [isRegistering, setIsRegistering] = useState(false);
     const [showCompanyPopup, setShowCompanyPopup] = useState(false);
     const [regForm, setRegForm] = useState({ name: '', email: '', phone: '', password: '', type: 'individual' });
-    const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '' });
+    const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '', aadhaarDoc: '', panDoc: '', gstDoc: '', incorporationDoc: '', signedByName: '' });
     const [productForm, setProductForm] = useState({
         title: '',
         category: CATEGORIES[0],
@@ -205,22 +321,32 @@ const Account = () => {
     });
 
     // API Hooks
-    const { data: user, isLoading: isUserLoading } = useUser(localUser?.id);
+    const queryClient = useQueryClient();
+    const { data: user, isLoading: isUserLoading } = useMe();
+    const { data: vendorProfile } = useVendorProfile();
+    const subscribeMutation = useVendorSubscribe();
     const { mutateAsync: registerUser, isPending: isRegisterPending } = useRegisterUser();
     const kycMutation = useSubmitKyc();
     const addProductMutation = useAddProduct();
+    const { data: myOrders = [], isLoading: ordersLoading } = useMyOrders();
+    const showToast = useToast();
 
     const handleAuthChange = useCallback(async (session) => {
         if (session) {
             try {
+                const pendingReg = window.__tce_pendingReg || {};
                 const syncData = {
                     email: session.user.email,
-                    name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
+                    name: session.user.user_metadata?.full_name || pendingReg.name || session.user.email.split('@')[0],
                     supabaseId: session.user.id,
+                    phone: pendingReg.phone || session.user.phone || undefined,
+                    type: pendingReg.type || 'individual',
                 };
-                const user = await registerUser({ ...syncData, type: 'individual' });
-                setLocalUser(user);
-                setLocalUserState(user);
+            const user = await registerUser(syncData);
+            window.__tce_pendingReg = null;
+            setLocalUser(user);
+            setLocalUserState(user);
+            queryClient.invalidateQueries({ queryKey: ['user'] });
             } catch (error) {
                 console.error('Auth sync failed', error);
             }
@@ -228,7 +354,7 @@ const Account = () => {
             setLocalUserState(null);
             clearUser();
         }
-    }, [registerUser]);
+    }, [registerUser, queryClient]);
 
     useEffect(() => {
         // Initial session check
@@ -253,13 +379,16 @@ const Account = () => {
     }, [handleAuthChange]);
 
     const handleGoogleLogin = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 redirectTo: window.location.origin + '/THE-COLLECTORS-EXCHANGE/account'
             }
         });
         if (error) alert(error.message);
+        if (data?.url) {
+            window.location.href = data.url;
+        }
     };
 
     const userProducts = user?.products || [];
@@ -267,26 +396,67 @@ const Account = () => {
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            const newUser = await registerUser(regForm);
-            setLocalUser(newUser);
-            setLocalUserState(newUser);
+            const { error } = await supabase.auth.signUp({
+                email: regForm.email,
+                password: regForm.password,
+                options: {
+                    data: {
+                        full_name: regForm.name,
+                        phone: regForm.phone,
+                    }
+                }
+            });
+            if (error) throw error;
+            window.__tce_pendingReg = {
+                name: regForm.name,
+                phone: regForm.phone,
+                type: regForm.type,
+            };
             setIsRegistering(false);
-        } catch {
-            alert('Registration failed. Please try again.');
+        } catch (err) {
+            alert(err.message || 'Registration failed. Please try again.');
         }
     };
 
     const handleKycSubmit = async (e) => {
         e.preventDefault();
-        const kycData = user.type === 'individual'
-            ? { aadhaar: kycForm.aadhaar, pan: kycForm.pan }
-            : { companyName: kycForm.companyName, gst: kycForm.gst, founderName: kycForm.founderName };
+        const base = user.type === 'individual'
+            ? { aadhaar: kycForm.aadhaar, pan: kycForm.pan, aadhaarDoc: kycForm.aadhaarDoc, panDoc: kycForm.panDoc }
+            : { companyName: kycForm.companyName, gst: kycForm.gst, founderName: kycForm.founderName, aadhaarDoc: kycForm.aadhaarDoc, panDoc: kycForm.panDoc, gstDoc: kycForm.gstDoc, incorporationDoc: kycForm.incorporationDoc };
+
+        if (!kycForm.signedByName.trim()) {
+            showToast('Please enter your full name to digitally sign the Seller Agreement.', 'error');
+            return;
+        }
+
+        const kycData = {
+            ...base,
+            agreementAccepted: true,
+            agreementSignedByName: kycForm.signedByName.trim(),
+            agreementSignedAt: new Date().toISOString(),
+        };
 
         try {
             await kycMutation.mutateAsync({ userId: user.id, kycData });
-            alert('Verification documents submitted successfully!');
+            showToast('Verification documents submitted successfully!', 'success');
         } catch {
-            alert('KYC submission failed.');
+            showToast('KYC submission failed.', 'error');
+        }
+    };
+
+    const handleKycDocUpload = async (docType, file) => {
+        if (!file) return;
+        setKycDocUploading(prev => ({ ...prev, [docType]: true }));
+        try {
+            const url = await uploadKycDocument(file, docType);
+            const fieldMap = { aadhaar: 'aadhaarDoc', pan: 'panDoc', gst: 'gstDoc', incorporation: 'incorporationDoc' };
+            setKycForm(prev => ({ ...prev, [fieldMap[docType]]: url }));
+            showToast(`${docType.charAt(0).toUpperCase() + docType.slice(1)} document uploaded successfully`, 'success');
+        } catch (err) {
+            console.error('KYC doc upload failed:', err);
+            showToast(`Failed to upload ${docType} document. Please try again.`, 'error');
+        } finally {
+            setKycDocUploading(prev => ({ ...prev, [docType]: false }));
         }
     };
 
@@ -297,7 +467,25 @@ const Account = () => {
         setLocalUserState(prev => ({ ...prev, phone: newPhone }));
     };
 
+    const handleVendorSubscribe = async (plan) => {
+        const proceed = window.confirm(`Subscribe to ${plan.replace('_', ' ')}? In mock mode, this simulates a successful payment.`);
+        if (!proceed) return;
+
+        try {
+            await subscribeMutation.mutateAsync({
+                paymentId: `pay_mock_${Date.now()}`,
+                plan,
+            });
+            showToast(`Successfully upgraded to ${plan.replace('_', ' ')}!`, 'success');
+        } catch {
+            showToast('Subscription failed. Please try again.', 'error');
+        }
+    };
+
     // Image URL handling
+    const [imageUploading, setImageUploading] = useState(false);
+    const [kycDocUploading, setKycDocUploading] = useState({ aadhaar: false, pan: false, gst: false, incorporation: false });
+
     const handleImageUrlChange = (index, value) => {
         const newUrls = [...productForm.imageUrls];
         newUrls[index] = value;
@@ -315,26 +503,40 @@ const Account = () => {
         setProductForm({ ...productForm, imageUrls: newUrls });
     };
 
+    const handleFileUpload = async (index, file) => {
+        if (!file) return;
+        setImageUploading(true);
+        try {
+            const url = await uploadProductImage(file);
+            handleImageUrlChange(index, url);
+        } catch (err) {
+            console.error('Upload failed:', err);
+            alert('Failed to upload image. Please try again or use a URL directly.');
+        } finally {
+            setImageUploading(false);
+        }
+    };
+
     const handleProductSubmit = async (e) => {
         e.preventDefault();
 
         // 1. Validate User Type Limit
         if (user.type === 'individual' && userProducts.length >= 5) {
-            alert('Individual sellers are limited to 5 products. Please upgrade to a Company account for unlimited listings.');
+            showToast('Individual sellers are limited to 5 products. Upgrade to a Company account for unlimited listings.', 'error');
             return;
         }
 
         // 2. Validate Images (Min 4)
         const validImages = productForm.imageUrls.filter(url => url.trim() !== '');
         if (validImages.length < 4) {
-            alert('Authenticity Requirement: Please provide at least 4 high-quality images of the item.');
+            showToast('Please provide at least 4 high-quality images of the item.', 'error');
             return;
         }
 
         // 3. Process Keywords
         const keywordsArray = productForm.keywords.split(',').map(k => k.trim()).filter(k => k !== '');
         if (keywordsArray.length === 0) {
-            alert('Please provide at least one keyword for categorization.');
+            showToast('Please provide at least one keyword for categorization.', 'error');
             return;
         }
 
@@ -360,9 +562,9 @@ const Account = () => {
                 imageUrls: [''],
                 keywords: '',
             });
-            alert('Product listed successfully! Your item is now live in The Exchange.');
+            showToast('Product listed successfully! Your item is now live in The Exchange.', 'success');
         } catch {
-            alert('Failed to list product.');
+            showToast('Failed to list product.', 'error');
         }
     };
 
@@ -376,6 +578,7 @@ const Account = () => {
     if (isUserLoading && localUser) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-secondary-bg">
+                <Helmet><title>My Account — The Collectors Exchange</title></Helmet>
                 <Loader2 className="animate-spin text-luxury-gold mb-4" size={64} />
                 <p className="text-gray-500 font-serif text-xl italic">Authenticating Profile...</p>
             </div>
@@ -385,6 +588,7 @@ const Account = () => {
     if (!localUser) {
         return (
             <div className="container mx-auto py-20 px-6 max-w-xl">
+                <Helmet><title>My Account — The Collectors Exchange</title></Helmet>
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-serif mb-4">{isRegistering ? 'Membership Application' : 'Welcome Back'}</h1>
                     <p className="text-gray-500 font-light">Access The Collectors' Exchange secure portal.</p>
@@ -489,6 +693,24 @@ const Account = () => {
                         <div className="text-center mb-8">
                             <h2 className="text-2xl font-serif text-heritage-charcoal mb-2">Member Sign In</h2>
                             <p className="text-gray-500 font-light text-sm">Welcome back to The Exchange.</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-4 text-sm font-medium hover:bg-gray-50 transition-colors"
+                        >
+                            <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
+                            Continue with Google
+                        </button>
+
+                        <div className="relative py-2">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-100"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase tracking-widest">
+                                <span className="bg-white px-2 text-gray-400">Or Sign In with Email</span>
+                            </div>
                         </div>
 
                         <LoginForm onLoginSuccess={() => { }} />
@@ -608,67 +830,143 @@ const Account = () => {
                         ) : (
                             <div className="max-w-2xl">
                                 <p className="text-gray-500 mb-8 font-light">
-                                    To maintain the integrity of our marketplace, all sellers must complete improved verification.
-                                    Your data is encrypted and permanently deleted after verification.
+                                    To maintain the integrity of our marketplace, all sellers must complete identity verification
+                                    and accept the Seller Agreement. Your data is encrypted and handled per our Privacy Policy.
                                 </p>
                                 <form onSubmit={handleKycSubmit} className="space-y-6">
-                                    {user.type === 'individual' ? (
-                                        <>
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Aadhaar Number</label>
-                                                <input
-                                                    type="text"
-                                                    required
+
+                                    {/* ── Section 1: Identity Documents ── */}
+                                    <div className="bg-gray-50 p-6 border border-gray-100">
+                                        <h4 className="font-serif text-lg font-medium mb-6 text-heritage-charcoal">1. Upload Identity Documents</h4>
+
+                                        {user.type === 'individual' ? (
+                                            <>
+                                                <DocUploadField
+                                                    label="Aadhaar Number"
+                                                    placeholder="Enter 12-digit Aadhaar number"
                                                     value={kycForm.aadhaar}
-                                                    onChange={(e) => setKycForm({ ...kycForm, aadhaar: e.target.value })}
-                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                    docUrl={kycForm.aadhaarDoc}
+                                                    docType="aadhaar"
+                                                    uploading={kycDocUploading.aadhaar}
+                                                    onValueChange={(v) => setKycForm({ ...kycForm, aadhaar: v })}
+                                                    onFileUpload={(f) => handleKycDocUpload('aadhaar', f)}
                                                 />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">PAN Number</label>
-                                                <input
-                                                    type="text"
-                                                    required
+                                                <DocUploadField
+                                                    label="PAN Number"
+                                                    placeholder="Enter 10-digit PAN"
                                                     value={kycForm.pan}
-                                                    onChange={(e) => setKycForm({ ...kycForm, pan: e.target.value })}
-                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                    docUrl={kycForm.panDoc}
+                                                    docType="pan"
+                                                    uploading={kycDocUploading.pan}
+                                                    onValueChange={(v) => setKycForm({ ...kycForm, pan: v })}
+                                                    onFileUpload={(f) => handleKycDocUpload('pan', f)}
                                                 />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Registered Company Name</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={kycForm.companyName}
-                                                    onChange={(e) => setKycForm({ ...kycForm, companyName: e.target.value })}
-                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                            </>
+                                        ) : (
+                                            <>
+                                                <DocUploadField
+                                                    label="Aadhaar Number (Director/Authorised Signatory)"
+                                                    placeholder="Enter 12-digit Aadhaar number"
+                                                    value={kycForm.aadhaar}
+                                                    docUrl={kycForm.aadhaarDoc}
+                                                    docType="aadhaar"
+                                                    uploading={kycDocUploading.aadhaar}
+                                                    onValueChange={(v) => setKycForm({ ...kycForm, aadhaar: v })}
+                                                    onFileUpload={(f) => handleKycDocUpload('aadhaar', f)}
                                                 />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">GST Number</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={kycForm.gst}
-                                                    onChange={(e) => setKycForm({ ...kycForm, gst: e.target.value })}
-                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                <DocUploadField
+                                                    label="PAN Number (Company / Director)"
+                                                    placeholder="Enter 10-digit PAN"
+                                                    value={kycForm.pan}
+                                                    docUrl={kycForm.panDoc}
+                                                    docType="pan"
+                                                    uploading={kycDocUploading.pan}
+                                                    onValueChange={(v) => setKycForm({ ...kycForm, pan: v })}
+                                                    onFileUpload={(f) => handleKycDocUpload('pan', f)}
                                                 />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Founder / Director Name</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={kycForm.founderName}
-                                                    onChange={(e) => setKycForm({ ...kycForm, founderName: e.target.value })}
-                                                    className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
-                                                />
-                                            </div>
-                                        </>
-                                    )}
+                                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                                    <h5 className="text-xs font-bold uppercase tracking-widest text-gray-500">Company Details</h5>
+                                                    <div>
+                                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Registered Company Name</label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={kycForm.companyName}
+                                                            onChange={(e) => setKycForm({ ...kycForm, companyName: e.target.value })}
+                                                            className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                        />
+                                                    </div>
+                                                    <DocUploadField
+                                                        label="GST Registration Certificate"
+                                                        placeholder="Enter GST number"
+                                                        value={kycForm.gst}
+                                                        docUrl={kycForm.gstDoc}
+                                                        docType="gst"
+                                                        uploading={kycDocUploading.gst}
+                                                        onValueChange={(v) => setKycForm({ ...kycForm, gst: v })}
+                                                        onFileUpload={(f) => handleKycDocUpload('gst', f)}
+                                                    />
+                                                    <div>
+                                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Founder / Director Name</label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={kycForm.founderName}
+                                                            onChange={(e) => setKycForm({ ...kycForm, founderName: e.target.value })}
+                                                            className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                        />
+                                                    </div>
+                                                    <DocUploadField
+                                                        label="Certificate of Incorporation / LLP Registration"
+                                                        docUrl={kycForm.incorporationDoc}
+                                                        docType="incorporation"
+                                                        uploading={kycDocUploading.incorporation}
+                                                        onFileUpload={(f) => handleKycDocUpload('incorporation', f)}
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* ── Section 2: Seller Agreement ── */}
+                                    <div className="bg-gray-50 p-6 border border-gray-100">
+                                        <h4 className="font-serif text-lg font-medium mb-4 text-heritage-charcoal">2. Seller Agreement</h4>
+
+                                        <div className="bg-white p-6 border border-gray-200 max-h-80 overflow-y-auto text-sm text-gray-700 leading-relaxed space-y-3">
+                                            <p className="font-semibold text-heritage-charcoal">Seller Agreement — The Collectors Exchange</p>
+                                            <p>
+                                                By listing items on The Collectors Exchange, you agree to the following terms:
+                                            </p>
+                                            <ul className="list-disc pl-5 space-y-2">
+                                                <li><strong>Verification:</strong> All items are subject to verification by our curation team before listing. We reserve the right to reject any item that does not meet our standards of authenticity, condition, or provenance.</li>
+                                                <li><strong>Authenticity:</strong> You warrant that every item you list is genuine, authentic, and accurately described. Misrepresentation of any item will result in immediate suspension and legal action.</li>
+                                                <li><strong>Fraudulent Listings:</strong> Knowingly listing counterfeit, stolen, or misrepresented items is strictly prohibited. Violators will be permanently banned and reported to relevant authorities.</li>
+                                                <li><strong>Payment Hold:</strong> Payments for sold items are held for 7 days after delivery to allow for buyer inspection and verification.</li>
+                                                <li><strong>Identity Privacy:</strong> The Collectors Exchange prioritizes collector privacy. For individual sellers, your identity remains anonymous to buyers unless you choose otherwise.</li>
+                                                <li><strong>Suspension:</strong> We reserve the right to suspend or terminate your seller account at any time for violations of these terms.</li>
+                                            </ul>
+                                            <p className="text-xs text-gray-400 mt-2">
+                                                This agreement is governed by the laws of India. By signing below, you acknowledge that you have read, understood, and agree to be bound by these terms.
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-4">
+                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Digital Signature</label>
+                                            <p className="text-xs text-gray-400 mb-2">Type your full legal name as your electronic signature</p>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Enter your full name as digital signature"
+                                                value={kycForm.signedByName}
+                                                onChange={(e) => setKycForm({ ...kycForm, signedByName: e.target.value })}
+                                                className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold font-serif"
+                                            />
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                By typing your name above, you electronically sign the Seller Agreement.
+                                            </p>
+                                        </div>
+                                    </div>
+
                                     <button
                                         type="submit"
                                         disabled={kycMutation.isPending}
@@ -807,6 +1105,11 @@ const Account = () => {
                                                     <div className="w-8 text-xs text-gray-400 font-mono text-center">
                                                         {index === 0 ? 'MAIN' : `#${index + 1}`}
                                                     </div>
+                                                    {url && (
+                                                        <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                                                            <img src={url} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+                                                        </div>
+                                                    )}
                                                     <div className="flex-grow relative">
                                                         <input
                                                             type="url"
@@ -817,6 +1120,20 @@ const Account = () => {
                                                         />
                                                         <ImageIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                                     </div>
+                                                    <label className="cursor-pointer p-2 text-gray-400 hover:text-luxury-gold transition-colors" title="Upload file">
+                                                        <Upload size={16} />
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            disabled={imageUploading}
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) handleFileUpload(index, file);
+                                                                e.target.value = '';
+                                                            }}
+                                                        />
+                                                    </label>
                                                     {productForm.imageUrls.length > 1 && (
                                                         <button
                                                             type="button"
@@ -842,7 +1159,7 @@ const Account = () => {
 
                                         <div className="mt-4 flex items-start gap-2 text-xs text-gray-400 bg-white p-3 border border-gray-100">
                                             <Info size={14} className="mt-0.5 flex-shrink-0" />
-                                            <p>Use direct image URLs (e.g., from Unsplash or hosted assets). The first image will be the primary detailed view and card thumbnail.</p>
+                                            <p>Upload images directly or paste image URLs. The first image will be the primary detailed view and card thumbnail. {imageUploading && <span className="text-luxury-gold font-medium">Uploading...</span>}</p>
                                         </div>
                                     </div>
 
@@ -883,7 +1200,7 @@ const Account = () => {
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="font-serif text-lg font-medium">${product.price?.toLocaleString()}</p>
+                                                        <p className="font-serif text-lg font-medium">₹{product.price?.toLocaleString()}</p>
                                                         {product.authenticityStatus === 'Verified' ? (
                                                             <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-1 mt-2">
                                                                 <ShieldCheck size={12} /> Authenticated
@@ -921,13 +1238,24 @@ const Account = () => {
                     </div>
                 );
 
-            default:
-                return null;
+        case 'orders':
+            return (
+                <div className="bg-white p-8 shadow-sm border border-gray-100">
+                    <h2 className="text-2xl font-serif mb-2">My Orders</h2>
+                    <p className="text-gray-500 text-sm mb-8">Track your purchases and shipments</p>
+                    ...
+                </div>
+            );
+        case 'notifications':
+            return <NotificationsPanel />;
+        default:
+            return null;
         }
     };
 
     return (
         <div className="min-h-screen bg-secondary-bg">
+            <Helmet><title>My Account — The Collectors Exchange</title></Helmet>
             <div className="container mx-auto py-16 px-6">
                 <div className="flex flex-col lg:flex-row gap-12">
                     {/* Sidebar */}
@@ -959,6 +1287,26 @@ const Account = () => {
                                 >
                                     <Package size={18} /> Portfolio
                                 </button>
+                                <button
+                                    onClick={() => setActiveTab('orders')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'orders' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <ShoppingBag size={18} /> My Orders
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('notifications')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'notifications' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <Bell size={18} /> Notifications
+                                </button>
+                                {vendorProfile?.status === 'APPROVED' && (
+                                    <Link
+                                        to="/THE-COLLECTORS-EXCHANGE/vendor-dashboard"
+                                        className="flex items-center gap-4 w-full p-4 text-sm font-medium transition-all text-gray-600 hover:bg-gray-50"
+                                    >
+                                        <BarChart3 size={18} /> Vendor Dashboard
+                                    </Link>
+                                )}
                                 <button
                                     onClick={handleLogout}
                                     className="flex items-center gap-4 w-full p-4 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors mt-8 border-t border-gray-100"

@@ -1,0 +1,484 @@
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Landmark } from 'lucide-react';
+
+const ARTICLES = {
+  'art-of-time': {
+    title: 'The Art of Time: An Introduction to Horology',
+    subtitle: 'The Mechanical Heartbeat',
+    content: [
+      {
+        type: 'paragraph',
+        text: 'Welcome to The Collectors Exchange. Before we dive into the dials, movements, and the thrill of the hunt, it helps to understand the very foundation of what brings us together: Horology.'
+      },
+      {
+        type: 'paragraph',
+        text: 'At its simplest, horology is the study and measurement of time. But for the collector, it is much more than that. It is the intersection of engineering, art, history, and human ingenuity. Every ticking escapement is a heartbeat from a different era, carrying the stories of the people who built it, wore it, and eventually passed it on.'
+      },
+      {
+        type: 'heading',
+        text: 'From Shadows to Springs: The Evolution of Time'
+      },
+      {
+        type: 'paragraph',
+        text: "Humanity's obsession with capturing time is ancient. For millennia, we relied on the natural world: the shifting shadows of sundials, the steady drip of water clocks, and the slow burn of calibrated candles."
+      },
+      {
+        type: 'paragraph',
+        text: 'The true horological revolution began in the 13th and 14th centuries with the invention of the mechanical escapement. Suddenly, time was no longer dictated by the sun; it could be captured in the rhythmic ticking of massive, weight-driven tower clocks that governed town squares.'
+      },
+      {
+        type: 'paragraph',
+        text: 'Over centuries, this grand engineering was miniaturized. Blacksmiths became watchmakers. Massive gears were refined into microscopic pinions.'
+      },
+      {
+        type: 'bullet',
+        items: [
+          'The 16th Century: Timekeeping became personal with the invention of the mainspring, giving birth to the first portable pocket watches.',
+          'The 19th & 20th Centuries: Precision manufacturing allowed timepieces to become essential tools for railway navigation, military coordination, and eventually daily life.'
+        ]
+      },
+      {
+        type: 'heading',
+        text: 'The Quartz Crisis and the Mechanical Renaissance'
+      },
+      {
+        type: 'paragraph',
+        text: 'In the 1970s and 80s, horology faced its greatest existential threat: quartz technology. Battery-powered watches were cheaper, more accurate, and easier to mass-produce than mechanical ones. Traditional watchmaking nearly collapsed. Countless mechanical watches were discarded, traded away, or relegated to the back shelves of pawn shops and local bazaars.'
+      },
+      {
+        type: 'paragraph',
+        text: "Yet, mechanical horology survived. Why? Because a mechanical watch has a soul. It doesn't rely on a microchip; it relies on tension, friction, and the perfect calibration of hundreds of microscopic parts working in harmony."
+      },
+      {
+        type: 'paragraph',
+        text: "Today, we are living in a mechanical renaissance. We no longer wear vintage mechanical watches because we need to know the exact atomic time. We wear them to carry a piece of history on our wrists."
+      },
+      {
+        type: 'heading',
+        text: 'Why We Collect: The Mission of TCE'
+      },
+      {
+        type: 'paragraph',
+        text: "This history is exactly why The Collectors Exchange exists. The story of horology isn't just kept in Swiss museums or high-end boutiques. The real history is often hidden in plain sight. It is sitting in the dusty glass cases of local pawn shops, scattered across the vibrant street markets, and resting in forgotten family drawers."
+      },
+      {
+        type: 'paragraph',
+        text: "From the rugged reliability of an early-era HMT that timed a nation's growth, to the bold 1970s aesthetics of an imported automatic found in a local bazaar, these watches are artifacts."
+      },
+      {
+        type: 'paragraph',
+        text: "Our mission is to build the trusted bridge between those streets, the pawn shops, and the collector. We do this for the sake of the ancestors who built and wore these watches, and for the collectors of the future who will preserve them. When you rescue a vintage piece, service its movement, and strap it to your wrist, you aren't just telling time; you are keeping history alive."
+      },
+      {
+        type: 'signoff',
+        text: 'Welcome to the hunt.'
+      }
+    ]
+  },
+  'heart-of-the-earth': {
+    title: 'The Heart of the Earth: An Introduction to Gemstones',
+    subtitle: 'The Geological Truth',
+    content: [
+      {
+        type: 'paragraph',
+        text: 'Welcome to The Collectors Exchange. Just as a mechanical watch captures the passage of time, a gemstone captures the very history of the earth.'
+      },
+      {
+        type: 'paragraph',
+        text: "Long before we engineered gears to track our days, we were pulling crystallized light from the dirt. Gemstones are the intersection of immense geological pressure and human artistry. Every faceted stone carries a dual legacy: the millions of years it spent forming in darkness, and the hands of the ancestors who finally brought it to the light."
+      },
+      {
+        type: 'heading',
+        text: 'From Riverbeds to Royal Courts: The Legacy of the Stone'
+      },
+      {
+        type: 'paragraph',
+        text: "The human fascination with colored stones and diamonds is as old as civilization itself. For centuries, they were not just adornments; they were talismans, currency, and ultimate symbols of power."
+      },
+      {
+        type: 'bullet',
+        items: [
+          'The Ancient Cradles: The story of the modern gemstone market owes a massive debt to the very soil beneath our feet here in India. For over a thousand years, the legendary Golconda mines were the sole source of the world\'s diamonds.',
+          'The Art of the Lapidary: By the Renaissance and the era of the great Maharajas, artisans learned how to facet stones, mathematically calculating angles to unlock the maximum fire and brilliance.',
+          'The Modern Landscape: A natural gemstone is defined by its inclusions — the microscopic internal fractures and trapped minerals that prove it was forged by nature.'
+        ]
+      },
+      {
+        type: 'heading',
+        text: 'Why We Collect: The Mission of TCE'
+      },
+      {
+        type: 'paragraph',
+        text: 'At The Collectors Exchange, we believe that the true value of a vintage gemstone or antique piece of jewelry is not just in its carat weight, but in its journey.'
+      },
+      {
+        type: 'paragraph',
+        text: "Our mission is to build the trusted bridge between those bustling streets, the estate liquidators, and you, the collector. We hunt for these overlooked treasures to preserve the artistry of the craftsmen who cut them, honoring the ancestors who wore them."
+      },
+      {
+        type: 'signoff',
+        text: 'Welcome to the hunt.'
+      }
+    ]
+  },
+  'artifacts-of-the-everyday': {
+    title: 'Artifacts of the Everyday: An Introduction to Collectables & Antiques',
+    subtitle: 'The Curated Pulse',
+    content: [
+      {
+        type: 'paragraph',
+        text: 'Welcome to The Collectors Exchange. If horology captures the passage of time, and gemstones capture the history of the earth, then collectables capture the story of human daily life.'
+      },
+      {
+        type: 'paragraph',
+        text: 'The term "collectable" is brilliantly broad. It encompasses the ephemera of the past, the objects that were once deeply ordinary but have been transformed by time into something extraordinary. These are the tangible fragments of culture, industry, and personal history that have managed to survive the decades.'
+      },
+      {
+        type: 'heading',
+        text: 'From Utility to Artifact: The Beauty of the Tangible'
+      },
+      {
+        type: 'paragraph',
+        text: 'The most fascinating collectables usually started as functional tools. They were meant to be used, spent, written with, or struck, yet they outlived their original purpose to become artifacts.'
+      },
+      {
+        type: 'bullet',
+        items: [
+          'Numismatics & Philately (Coins and Stamps): The earliest forms of mass communication and trade.',
+          'Instruments of Thought & Vision: The heavy brass of an antique film camera or the intricate nib of a vintage fountain pen.',
+          'The Curiosities of Culture: Vintage lighters, enamel advertising signs, antique brassware, and old matchbox art.'
+        ]
+      },
+      {
+        type: 'paragraph',
+        text: "In our increasingly digital, untouchable world, collectables offer a deeply necessary grounding. Holding a silver rupee from the 1800s connects you physically to the hands that held them before you."
+      },
+      {
+        type: 'heading',
+        text: 'Why We Collect: The Mission of TCE'
+      },
+      {
+        type: 'paragraph',
+        text: "At The Collectors Exchange, we know that history is not just kept under museum glass. The most compelling stories are often found resting on a tarp in a bustling Sunday bazaar, tucked into a forgotten tin box in a local pawn shop, or passed over by someone who didn't recognize their worth."
+      },
+      {
+        type: 'paragraph',
+        text: "When you add a vintage piece of everyday history to your shelf, you are doing more than accumulating objects. You are taking responsibility for a fragment of the past, ensuring it survives for the collectors of the future."
+      },
+      {
+        type: 'signoff',
+        text: 'Welcome to the hunt.'
+      }
+    ]
+  },
+  'art-of-rarity': {
+    title: 'The Art of Rarity: An Introduction to Limited Editions',
+    subtitle: 'The Exclusive Truth',
+    content: [
+      {
+        type: 'paragraph',
+        text: 'Welcome to The Collectors Exchange. While our other categories are deeply defined by the slow passage of time, a Limited Edition is defined by something else entirely: deliberate scarcity.'
+      },
+      {
+        type: 'paragraph',
+        text: 'It is the pure, unfiltered thrill of knowing that what you are holding is one of only a few in the entire world.'
+      },
+      {
+        type: 'paragraph',
+        text: 'Whether it was crafted fifty years ago or released fifty days ago, a limited edition represents a moment captured in physical form.'
+      },
+      {
+        type: 'heading',
+        text: 'The Grails of the Past and the Artifacts of Tomorrow'
+      },
+      {
+        type: 'bullet',
+        items: [
+          'The Vintage Grails: Commemorative models released decades ago for a specific event, or watches and collectables whose production was unexpectedly cut short.',
+          'The Modern Masterpieces: Today\'s modern releases, numbered modern art pieces, and exclusive brand collaborations are born rare.'
+        ]
+      },
+      {
+        type: 'heading',
+        text: 'Why We Collect: The Mission of TCE'
+      },
+      {
+        type: 'paragraph',
+        text: 'At The Collectors Exchange, we believe that the thrill of the hunt applies just as much to securing a brand-new, sold-out release as it does to unearthing a forgotten antique.'
+      },
+      {
+        type: 'paragraph',
+        text: 'Whether you are preserving a rare piece of the past or securing a highly coveted piece of the present, a limited edition offers something unique: you are not just adding to a collection; you are securing an exclusive chapter in a very small story.'
+      },
+      {
+        type: 'signoff',
+        text: 'Welcome to the hunt.'
+      }
+    ]
+  },
+  'canvas-of-the-streets': {
+    title: 'The Canvas of the Streets: An Introduction to Sneaker Culture',
+    subtitle: 'The Modern Artifact',
+    content: [
+      {
+        type: 'paragraph',
+        text: 'Welcome to The Collectors Exchange. If horology is the engineering of time and gemstones are the history of the earth, then sneakers are the ultimate expression of modern culture.'
+      },
+      {
+        type: 'paragraph',
+        text: 'Being a "sneakerhead" is about far more than just footwear. It is a vibrant collision of sports history, hip-hop, high fashion, and street art.'
+      },
+      {
+        type: 'heading',
+        text: 'From the Hardwood to the Pavement'
+      },
+      {
+        type: 'paragraph',
+        text: 'The evolution of sneaker culture is the story of how functional athletic gear transformed into the most sought-after collectables of the modern era.'
+      },
+      {
+        type: 'bullet',
+        items: [
+          'The Originals (OGs) & The Hardwood Heritage: The foundation was built on the basketball courts and running tracks of the 1970s and 80s.',
+          'The Art of the Collab: Today, a sneaker is a blank canvas. The most coveted pairs are often born from collaborations.',
+          'Deadstock vs. The Daily Wear: The pursuit of the pristine versus the appreciation for worn pairs that carry the scuffs of a life well-lived.'
+        ]
+      },
+      {
+        type: 'heading',
+        text: 'Why We Collect: The Mission of TCE'
+      },
+      {
+        type: 'paragraph',
+        text: 'At The Collectors Exchange, we recognize that the hunt for the perfect pair of sneakers is one of the most intense and passionate pursuits in the collecting world.'
+      },
+      {
+        type: 'paragraph',
+        text: 'Our mission is to build the trusted bridge between the raw energy of the streets, the secondary market, and you, the collector.'
+      },
+      {
+        type: 'signoff',
+        text: 'Welcome to the hunt.'
+      }
+    ]
+  },
+  'soul-of-expression': {
+    title: 'The Soul of Expression: An Introduction to Art',
+    subtitle: 'The Visual Truth',
+    content: [
+      {
+        type: 'paragraph',
+        text: 'Welcome to The Collectors Exchange. If horology is the heartbeat of engineering and gemstones are the treasures of the earth, then art is the visual soul of the human experience.'
+      },
+      {
+        type: 'paragraph',
+        text: 'Art is where history, emotion, and culture collide. It is the oldest form of storytelling, predating the written word and surviving through every rise and fall of civilization.'
+      },
+      {
+        type: 'heading',
+        text: 'From the Ancient Canvas to the Modern Street'
+      },
+      {
+        type: 'bullet',
+        items: [
+          'The Heritage of the Hand: For millennia, art was the ultimate record of our ancestors.',
+          'The Revolutionary Spirit: Art moved from palaces and cathedrals into the studios of the avant-garde.',
+          'The Urban Renaissance: Street art has brought masterpieces to the pavement, proving that high-value art belongs to the people.'
+        ]
+      },
+      {
+        type: 'heading',
+        text: 'Why We Collect: The Mission of TCE'
+      },
+      {
+        type: 'paragraph',
+        text: 'At The Collectors Exchange, we believe that art is most powerful when it is discovered.'
+      },
+      {
+        type: 'paragraph',
+        text: 'True artistic treasures are not always found under spotlighting in elite galleries. They are often waiting in the dusty corners of an old antique shop, tucked away in a local pawn shop, or even hidden in plain sight on a street corner.'
+      },
+      {
+        type: 'paragraph',
+        text: 'When you acquire a piece of art, you are not just buying an object; you are becoming a guardian of a story. You are ensuring that a specific moment of human creativity is never forgotten.'
+      },
+      {
+        type: 'signoff',
+        text: 'Welcome to the hunt.'
+      }
+    ]
+  },
+  'icons-of-imagination': {
+    title: 'Icons of Imagination: An Introduction to Toys & Pop Culture',
+    subtitle: 'The Nostalgic Truth',
+    content: [
+      {
+        type: 'paragraph',
+        text: 'Welcome to The Collectors Exchange. While other categories on our platform capture the earth, time, or art, Toys & Pop Culture capture something perhaps even more precious: our collective memory and the joy of play.'
+      },
+      {
+        type: 'paragraph',
+        text: 'This is the world of "Nostalgia in Plastic." It is where a small, die-cast car or a poseable action figure ceases to be a mere plaything and becomes a cultural time capsule.'
+      },
+      {
+        type: 'heading',
+        text: 'From the Sandbox to the Showcase: The Evolution of Play'
+      },
+      {
+        type: 'bullet',
+        items: [
+          'The Vintage Foundations: Cast-iron trains, tinplate wind-ups, and hand-painted dolls from a bygone era of craftsmanship.',
+          'The Action Figure Revolution: In the 1960s and 70s, led by icons like G.I. Joe and the world-changing arrival of Star Wars.',
+          'The Die-Cast Drive: Brands like Hot Wheels turned the automotive world into a handheld obsession.',
+          'Modern Pop Culture & Vinyl: From Funko Pops to limited-edition art toys.'
+        ]
+      },
+      {
+        type: 'heading',
+        text: 'Why We Collect: The Mission of TCE'
+      },
+      {
+        type: 'paragraph',
+        text: 'At The Collectors Exchange, we know that some of the greatest treasures are hidden in plain sight. They are tucked away in the back of local toy shops, resting in the crates of Sunday bazaars, or sitting forgotten in a neighborhood pawn shop.'
+      },
+      {
+        type: 'paragraph',
+        text: 'We do this for the sake of the designers who dreamt these worlds up, and for the collectors of the future who will keep the spirit of play alive. When you rescue a vintage toy or secure a limited-edition figure, you are not just buying plastic; you are reclaiming a piece of your own story.'
+      },
+      {
+        type: 'signoff',
+        text: 'Welcome to the hunt.'
+      }
+    ]
+  },
+  'alchemy-of-the-new': {
+    title: 'The Alchemy of the New: An Introduction to TCE Originals',
+    subtitle: 'The Absolute Truth',
+    content: [
+      {
+        type: 'paragraph',
+        text: 'Welcome to the heart of our workshop. While the other corners of The Collectors Exchange are dedicated to the thrill of the hunt and the preservation of history, TCE Originals is where we look forward.'
+      },
+      {
+        type: 'highlight',
+        text: 'Here, we don\'t collect. We create.'
+      },
+      {
+        type: 'paragraph',
+        text: 'TCE Originals is our dedicated line of jewelry, born from the belief that the artifacts of tomorrow must be forged with the same soul, intention, and craftsmanship as the treasures of the past. If our vintage collections are a dialogue with history, our Originals are our contribution to it.'
+      },
+      {
+        type: 'heading',
+        text: 'From Raw Vision to Refined Reality'
+      },
+      {
+        type: 'bullet',
+        items: [
+          'Materials with Meaning: We select our metals and stones not just for their luster, but for their integrity.',
+          'Heritage Craftsmanship: Our pieces are crafted using time-honored methods — hand-casting, manual polishing, and bespoke stone setting.',
+          'Contemporary Soul: While our methods are traditional, our designs are modern. We create for the contemporary collector.'
+        ]
+      },
+      {
+        type: 'heading',
+        text: 'Why We Create: The Mission of TCE'
+      },
+      {
+        type: 'paragraph',
+        text: 'At The Collectors Exchange, our vision has always been to build a bridge between the ancestors and the collectors of the future. While our vintage finds honor those who came before us, TCE Originals are designed for those who come after.'
+      },
+      {
+        type: 'paragraph',
+        text: 'We create because we believe that the world still needs objects that are built to last centuries, not seasons. We forge these pieces to become the "lucky finds" of the next generation, the heirlooms that will one day be discovered in a velvet-lined box and cherished for the stories they carry.'
+      },
+      {
+        type: 'signoff',
+        text: 'We don\'t just find the legacy. We forge it.'
+      }
+    ]
+  }
+};
+
+const renderContent = (blocks) => {
+  return blocks.map((block, idx) => {
+    switch (block.type) {
+      case 'heading':
+        return <h2 key={idx} className="text-2xl md:text-3xl font-serif text-heritage-charcoal mt-12 mb-6">{block.text}</h2>;
+      case 'paragraph':
+        return <p key={idx} className="text-lg font-serif text-heritage-charcoal/80 leading-relaxed mb-6">{block.text}</p>;
+      case 'highlight':
+        return <p key={idx} className="text-2xl font-serif italic text-luxury-gold border-l-4 border-luxury-gold pl-6 py-4 my-8 bg-heritage-cream">{block.text}</p>;
+      case 'bullet':
+        return (
+          <ul key={idx} className="space-y-3 mb-8">
+            {block.items.map((item, i) => (
+              <li key={i} className="flex items-start gap-3 text-heritage-charcoal/80 font-serif text-lg">
+                <span className="text-luxury-gold mt-2 flex-shrink-0">•</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      case 'signoff':
+        return <p key={idx} className="text-xl font-serif italic text-luxury-gold mt-12 pt-8 border-t border-gray-100">{block.text}</p>;
+      default:
+        return null;
+    }
+  });
+};
+
+const GalleryArticle = () => {
+  const { slug } = useParams();
+  const article = ARTICLES[slug];
+
+  if (!article) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-serif text-gray-400 mb-4">Article Not Found</h2>
+          <Link to="/THE-COLLECTORS-EXCHANGE/gallery" className="text-luxury-gold hover:underline">Return to Gallery</Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Helmet><title>{article.title} — The Collectors Exchange</title></Helmet>
+
+      {/* Hero */}
+      <section className="relative py-20 px-6 bg-heritage-charcoal overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#D4AF37 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }}></div>
+        <div className="container mx-auto max-w-4xl relative z-10">
+          <Link to="/THE-COLLECTORS-EXCHANGE/gallery" className="inline-flex items-center gap-2 text-white/60 hover:text-luxury-gold text-sm uppercase tracking-widest transition-colors mb-8">
+            <ArrowLeft size={16} /> Back to Gallery
+          </Link>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-12 bg-luxury-gold/50"></div>
+            <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">{article.subtitle}</span>
+            <div className="h-px w-12 bg-luxury-gold/50"></div>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white leading-tight">
+            {article.title}
+          </h1>
+        </div>
+      </section>
+
+      {/* Content */}
+      <section className="py-16 px-6">
+        <div className="container mx-auto max-w-3xl">
+          <div className="flex items-center gap-3 mb-12 text-heritage-bronze/50 text-xs uppercase tracking-widest">
+            <Landmark size={16} />
+            <span>Archival Article</span>
+            <div className="h-px flex-1 bg-heritage-bronze/10 ml-3"></div>
+          </div>
+          {renderContent(article.content)}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default GalleryArticle;

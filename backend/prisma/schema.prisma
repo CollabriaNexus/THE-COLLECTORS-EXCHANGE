@@ -28,6 +28,9 @@ model User {
   cart      CartItem[]
   wishlist  WishlistItem[]
   orders    Order[]
+  vendor    Vendor?
+  notifications Notification[]
+  bids           AuctionBid[]
 }
 
 model PhoneVerification {
@@ -63,9 +66,13 @@ model Product {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  cartItems     CartItem[]
-  wishlistItems WishlistItem[]
-  orderItems    OrderItem[]
+  cartItems      CartItem[]
+  wishlistItems  WishlistItem[]
+  orderItems     OrderItem[]
+  auction        Auction?
+  productViews   ProductView[]
+  cartEvents     CartEvent[]
+  checkoutEvents CheckoutEvent[]
 }
 
 model CartItem {
@@ -117,6 +124,13 @@ model Order {
   zipCode         String
   phone           String
   trackingID      String?     // Delhivery AWB / Tracking ID
+  
+  // Razorpay payment integration fields
+  paymentStatus   String      @default("Pending") // "Pending", "Paid", "Failed", "Refunded"
+  paymentId       String?     // Razorpay payment ID
+  paymentOrderId  String?     // Razorpay Order ID
+  paymentSignature String?    // Razorpay signature
+  
   items           OrderItem[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -132,3 +146,139 @@ model OrderItem {
   price     Float    // Price at time of purchase
   createdAt DateTime @default(now())
 }
+
+model Vendor {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  type         String   // "SINGLE", "BULK"
+  status       String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED", "SUSPENDED"
+  maxListings  Int      @default(5) // 5 for SINGLE, 999999 for BULK
+  companyName  String?
+  gst          String?
+  founderName  String?
+  aadhaar      String?
+  pan          String?
+  
+  // Document upload URLs (scanned copies)
+  aadhaarDoc       String?
+  panDoc           String?
+  gstDoc           String?
+  incorporationDoc String?
+  
+  // Seller Agreement digital signature
+  agreementAccepted   Boolean   @default(false)
+  agreementSignedAt   DateTime?
+  agreementSignedByName String?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  subscription VendorSubscription?
+  payouts       Payout[]
+}
+
+model VendorSubscription {
+  id               String   @id @default(cuid())
+  vendorId         String   @unique
+  vendor           Vendor   @relation(fields: [vendorId], references: [id])
+  plan             String   // "BULK_MONTHLY", "BULK_YEARLY", "FREE", "CUSTOM_APPROVED"
+  status           String   // "active", "cancelled", "expired", "trialing"
+  paymentId        String?  // reference to payment/subscription
+  currentPeriodEnd DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  action      String   // "APPROVE_KYC", "REJECT_PRODUCT", "SUSPEND_VENDOR", etc.
+  targetType  String   // "User", "Product", "Vendor", etc.
+  targetId    String
+  details     String?
+  createdAt   DateTime @default(now())
+}
+
+model Auction {
+  id             String      @id @default(cuid())
+  title          String
+  description    String
+  images         String[]
+  startingBid    Float
+  currentBid     Float?
+  reservePrice   Float?
+  startDate      DateTime
+  endDate        DateTime
+  status         String      @default("UPCOMING") // "UPCOMING", "ACTIVE", "SOLD", "ENDED"
+  productId      String?   @unique
+  product        Product?    @relation(fields: [productId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  bids           AuctionBid[]
+}
+
+model AuctionBid {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Float
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// Analytics & Tracking Models
+
+model ProductView {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String?  // null if not logged in
+  sessionId String?  // session fingerprint for anonymous users
+  createdAt DateTime @default(now())
+}
+
+model CartEvent {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String
+  action    String   // "ADD", "REMOVE"
+  createdAt DateTime @default(now())
+}
+
+model CheckoutEvent {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String
+  orderId   String?  // set when checkout completes
+  createdAt DateTime @default(now())
+}
+
+model Payout {
+  id          String   @id @default(cuid())
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+  amount      Float
+  status      String   @default("PENDING") // "PENDING", "PROCESSING", "PAID", "FAILED"
+  periodStart DateTime
+  periodEnd   DateTime
+  paidAt      DateTime?
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

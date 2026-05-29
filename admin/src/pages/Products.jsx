@@ -43,7 +43,7 @@ function Products() {
         {
             key: 'price',
             label: 'Price',
-            render: (price) => `$${price}`,
+            render: (price) => `₹${price?.toLocaleString()}`,
         },
         {
             key: 'seller',

@@ -8,6 +8,14 @@ export default async function wishlistRoutes(fastify) {
     // Get user wishlist
     fastify.get('/:userId', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { userId } = request.params;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user || user.supabaseId !== request.user.sub) {
+            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+        }
+
         const wishlist = await prisma.wishlistItem.findMany({
             where: { userId },
             include: { product: true },
@@ -18,6 +26,14 @@ export default async function wishlistRoutes(fastify) {
     // Add to wishlist
     fastify.post('/', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { userId, productId } = request.body;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user || user.supabaseId !== request.user.sub) {
+            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+        }
+
         const wishlistItem = await prisma.wishlistItem.upsert({
             where: {
                 userId_productId: { userId, productId },
@@ -31,6 +47,14 @@ export default async function wishlistRoutes(fastify) {
     // Remove from wishlist
     fastify.delete('/', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { userId, productId } = request.body;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user || user.supabaseId !== request.user.sub) {
+            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+        }
+
         await prisma.wishlistItem.delete({
             where: {
                 userId_productId: { userId, productId },
@@ -39,3 +63,4 @@ export default async function wishlistRoutes(fastify) {
         return reply.status(204).send();
     });
 }
+

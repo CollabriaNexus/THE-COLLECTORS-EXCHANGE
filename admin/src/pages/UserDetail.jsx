@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Package, ShoppingCart, Heart } from 'lucide-react';
-import { useUserDetail, useUpdateUserRole } from '../hooks/api/useUsers';
+import { useUserDetail, useUpdateUserRole, useWhitelistVendor } from '../hooks/api/useUsers';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
@@ -16,6 +16,7 @@ function UserDetail() {
 
     const { data: user, isLoading } = useUserDetail(id);
     const updateRoleMutation = useUpdateUserRole();
+    const whitelistVendorMutation = useWhitelistVendor();
 
     const handleUpdateRole = async () => {
         if (!selectedRole) return;
@@ -30,6 +31,18 @@ function UserDetail() {
             setError(err.message || 'Failed to update role');
         }
     };
+
+    const handleWhitelistVendor = async () => {
+        setError('');
+        try {
+            await whitelistVendorMutation.mutateAsync({ userId: id, plan: 'CUSTOM_APPROVED' });
+            setSuccess('User whitelisted as Bulk Vendor successfully!');
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Failed to whitelist vendor');
+        }
+    };
+
 
     if (isLoading) {
         return (
@@ -126,7 +139,7 @@ function UserDetail() {
                     </div>
 
                     {/* Actions */}
-                    <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="mt-6 pt-6 border-t border-gray-200 space-y-4">
                         <button
                             onClick={() => {
                                 setSelectedRole(user.role);
@@ -136,8 +149,33 @@ function UserDetail() {
                         >
                             Change Role
                         </button>
+
+                        {/* Whitelist Vendor Button */}
+                        {user.kycStatus === 'verified' && (
+                            <div className="pt-4 border-t border-gray-100">
+                                <h4 className="text-sm font-semibold text-heritage-charcoal mb-2 font-serif">Vendor Subscription</h4>
+                                <div className="bg-gray-50 p-3 rounded border border-gray-100 mb-3 text-xs text-gray-600 space-y-1">
+                                    <p><strong>Vendor Status:</strong> <span className="capitalize">{user.vendor?.status || 'None'}</span></p>
+                                    <p><strong>Vendor Type:</strong> <span className="capitalize">{user.vendor?.type || 'Not initialized'}</span></p>
+                                    <p><strong>Max Listings:</strong> {user.vendor?.maxListings ?? 5}</p>
+                                    {user.vendor?.subscription && (
+                                        <p><strong>Plan:</strong> {user.vendor.subscription.plan} ({user.vendor.subscription.status})</p>
+                                    )}
+                                </div>
+                                {user.vendor?.type !== 'BULK' && (
+                                    <button
+                                        onClick={handleWhitelistVendor}
+                                        disabled={whitelistVendorMutation.isPending}
+                                        className="w-full border border-heritage-charcoal text-heritage-charcoal py-2 rounded-md font-medium hover:bg-heritage-charcoal hover:text-white transition-all text-sm uppercase tracking-wider"
+                                    >
+                                        {whitelistVendorMutation.isPending ? 'Whitelisting...' : 'Whitelist as Bulk Vendor'}
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
+
 
                 {/* Stats */}
                 <div className="lg:col-span-2 space-y-6">
@@ -160,7 +198,7 @@ function UserDetail() {
                                         />
                                         <div>
                                             <p className="font-medium text-sm">{product.title}</p>
-                                            <p className="text-xs text-gray-500">${product.price}</p>
+                                            <p className="text-xs text-gray-500">₹{product.price}</p>
                                         </div>
                                     </div>
                                 ))}

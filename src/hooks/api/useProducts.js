@@ -4,15 +4,23 @@ import apiClient from './apiClient';
 /**
  * Hook to fetch all products
  * @param {string} category
+ * @param {string} search
+ * @param {number} page
+ * @param {number} pageSize
  */
-export const useProducts = (category) => {
+export const useProducts = (category, search, page = 1, pageSize = 12) => {
     return useQuery({
-        queryKey: ['products', category],
+        queryKey: ['products', category, search, page, pageSize],
         queryFn: async () => {
-            const url = category && category !== 'all' ? `/products?category=${category}` : '/products';
-            const { data } = await apiClient.get(url);
+            const params = new URLSearchParams();
+            if (category && category !== 'all') params.append('category', category);
+            if (search) params.append('search', search);
+            params.append('page', page);
+            params.append('limit', pageSize);
+            const { data } = await apiClient.get(`/products?${params.toString()}`);
             return data;
         },
+        placeholderData: (prev) => prev,
     });
 };
 
@@ -46,3 +54,37 @@ export const useAddProduct = () => {
         },
     });
 };
+
+/**
+ * Hook to update an existing product
+ */
+export const useUpdateProduct = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, productData }) => {
+            const { data } = await apiClient.put(`/products/${id}`, productData);
+            return data;
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['products', variables.id] });
+        },
+    });
+};
+
+/**
+ * Hook to delete a product
+ */
+export const useDeleteProduct = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id) => {
+            const { data } = await apiClient.delete(`/products/${id}`);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+        },
+    });
+};
+

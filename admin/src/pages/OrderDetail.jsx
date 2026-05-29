@@ -141,7 +141,7 @@ function OrderDetail() {
                                         <p className="text-sm text-gray-500">Category: {item.product?.category}</p>
                                     </div>
                                     <div className="text-right">
-                                        <div className="font-bold text-heritage-charcoal">${item.price.toFixed(2)}</div>
+                                        <div className="font-bold text-heritage-charcoal">₹{item.price.toFixed(2)}</div>
                                         <div className="text-xs text-gray-500">Qty: {item.quantity}</div>
                                     </div>
                                 </div>
@@ -150,7 +150,7 @@ function OrderDetail() {
                         <div className="bg-gray-50 p-6 space-y-2">
                             <div className="flex justify-between text-gray-600">
                                 <span>Subtotal</span>
-                                <span>${order.totalAmount.toFixed(2)}</span>
+                                <span>₹{order.totalAmount.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-gray-600">
                                 <span>Shipping</span>
@@ -158,7 +158,7 @@ function OrderDetail() {
                             </div>
                             <div className="flex justify-between text-xl font-bold text-heritage-charcoal pt-2 border-t border-gray-200">
                                 <span>Total</span>
-                                <span className="text-luxury-gold">${order.totalAmount.toFixed(2)}</span>
+                                <span className="text-luxury-gold">₹{order.totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

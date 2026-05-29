@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Landmark, Compass, Award, History, Gem, Info, Loader2 } from 'lucide-react';
 import { useGallery } from '../hooks/api/useGallery';
@@ -81,6 +82,7 @@ const GalleryPage = () => {
 
     return (
         <div className="min-h-screen bg-[#1A1816] relative overflow-hidden">
+            <Helmet><title>Gallery — The Collectors Exchange</title></Helmet>
             {/* ... heritage background ... */}
             <div className="fixed inset-0 pointer-events-none opacity-20 mix-blend-overlay" style={{
                 backgroundImage: 'url("https://www.transparenttextures.com/patterns/pinstriped-suit.png")',
@@ -88,10 +90,8 @@ const GalleryPage = () => {
             <div className="fixed inset-0 pointer-events-none shadow-[inset_0_0_200px_rgba(0,0,0,0.8)]"></div>
 
             <div className="relative z-10 pb-24">
-                {/* ... hero and statement ... */}
-                {/* ... (keeping hero and statement code identical for brevity) ... */}
                 <section
-                    className="relative h-[65vh] flex items-center justify-center overflow-hidden"
+                    className="relative h-[45vh] sm:h-[55vh] lg:h-[65vh] min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] flex items-center justify-center overflow-hidden"
                     style={{
                         backgroundImage: `url(${galleryHero})`,
                         backgroundSize: 'cover',
@@ -99,18 +99,18 @@ const GalleryPage = () => {
                     }}
                 >
                     <div className="absolute inset-0 bg-black/30"></div>
-                    <div className="relative z-10 text-center px-6">
-                        <h5 className="text-white/70 tracking-[0.4em] font-sans text-xs font-bold uppercase mb-6">
-                            Educational Archive
+                    <div className="relative z-10 text-center px-4 sm:px-6">
+                        <h5 className="text-white/70 tracking-[0.3em] sm:tracking-[0.4em] font-sans text-[10px] sm:text-xs font-bold uppercase mb-4 sm:mb-6">
+                            Where History Breathes Again
                         </h5>
-                        <div className="opacity-0 translate-y-4">
-                            <h1 className="text-6xl md:text-8xl font-serif text-white font-normal tracking-tight">The Gallery</h1>
-                        </div>
+                        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif text-white font-normal tracking-tight">
+                            The Gallery
+                        </h1>
                     </div>
 
-                    <div className="absolute bottom-12 right-12 bg-white/10 backdrop-blur-md border border-white/20 p-6 text-white text-left max-w-sm">
-                        <p className="font-serif italic text-lg mb-2">"The past is a foreign country; they do things differently there."</p>
-                        <p className="text-xs uppercase tracking-widest text-white/50">- L.P. Hartley, The Go-Between</p>
+                    <div className="absolute bottom-4 sm:bottom-12 left-4 sm:left-auto right-4 sm:right-12 bg-white/10 backdrop-blur-md border border-white/20 p-4 sm:p-6 text-white text-left max-w-[calc(100%-2rem)] sm:max-w-sm">
+                        <p className="font-serif italic text-sm sm:text-lg mb-2">"History isn't meant to be trapped in the past. It is meant to be touched, held, and lived in the present."</p>
+                        <p className="text-[10px] sm:text-xs uppercase tracking-widest text-white/50">— The Collectors Exchange</p>
                     </div>
                 </section>
 
@@ -123,9 +123,9 @@ const GalleryPage = () => {
                             </div>
                             <div className="w-12 h-px bg-[#C9A962]/20"></div>
                         </div>
-                        <h2 className="text-4xl font-serif text-[#E5E1DA] mb-8 leading-tight tracking-wide">A Sanctuary for Human Heritage</h2>
+                        <h2 className="text-4xl font-serif text-[#E5E1DA] mb-8 leading-tight tracking-wide">A Museum Without Walls</h2>
                         <p className="text-lg text-[#9C8B7E] font-light leading-relaxed max-w-2xl mx-auto">
-                            The Gallery is a non-commercial archival project dedicated to the preservation and study of objects that shaped civilizations. We seek to provide context, history, and respect to what has endured the passage of time.
+                            In a world obsessed with the "new" and the "now," the Gallery is our tribute to the "forever." This is more than a marketplace; it is a digital archive of the mechanical heartbeats, the hand-forged artifacts, and the timeless treasures that have survived the decades. Every article showcased here has been found in the needle-in-a-haystack search across the country and brought here for you to witness. As you scroll, you aren't just looking at products; you are walking through the corridors of time.
                         </p>
                     </div>
                 </section>

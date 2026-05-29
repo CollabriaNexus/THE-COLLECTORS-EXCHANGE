@@ -1,14 +1,39 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
 
-/* Custom base styles */
+@theme {
+  --color-primary-bg: #FFFFFF;
+  --color-secondary-bg: #F9F9F9;
+  --color-text-main: #000000;
+  --color-text-inverse: #FFFFFF;
+  --color-obsidian: #0A0A0A;
+  --color-brass: #B8860B;
+  --color-luxury-gold: #D4AF37;
+
+  --color-heritage-charcoal: #1C1C1C;
+  --color-heritage-dark: #2A2A2A;
+  --color-heritage-brown: #3D3028;
+  --color-heritage-warm: #4A3F35;
+  --color-heritage-beige: #F5F0E8;
+  --color-heritage-cream: #FAF8F5;
+  --color-heritage-bronze: #8B7355;
+  --color-heritage-gold-muted: #C9A962;
+
+  --font-family-serif: "Playfair Display", serif;
+  --font-family-sans: "Inter", sans-serif;
+
+  --shadow-heritage: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-heritage-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
 body {
-  background-color: #ffffff; /* primary-bg */
-  color: #000000; /* text-main */
-  font-family: 'Inter', sans-serif;
+  background-color: var(--color-primary-bg);
+  color: var(--color-text-main);
+  font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-family-serif);
 }

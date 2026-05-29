@@ -6,7 +6,7 @@ const Footer = () => {
     return (
         <footer className="bg-black text-white pt-20 pb-10 border-t border-gray-900">
             <div className="container mx-auto px-6 md:px-12 lg:px-24">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
 
                     {/* Column 1: Company (Left) */}
                     <div className="flex flex-col space-y-6 text-left order-2 lg:order-1">
@@ -17,11 +17,22 @@ const Footer = () => {
                             <Link to="/THE-COLLECTORS-EXCHANGE/founders-note" className="hover:text-white transition-colors duration-300">Founder’s Note</Link>
                             <Link to="/THE-COLLECTORS-EXCHANGE/terms" className="hover:text-white transition-colors duration-300">Terms & Conditions</Link>
                             <Link to="/THE-COLLECTORS-EXCHANGE/privacy" className="hover:text-white transition-colors duration-300">Privacy Policy</Link>
+                            <Link to="/THE-COLLECTORS-EXCHANGE/seller-agreement" className="hover:text-white transition-colors duration-300">Seller Agreement</Link>
                         </div>
                     </div>
 
-                    {/* Column 2: Brand (Center) */}
-                    <div className="flex flex-col space-y-6 text-center items-center col-span-1 sm:col-span-2 lg:col-span-1 order-1 lg:order-2 mb-12 lg:mb-0">
+                    {/* Column 2: My Account */}
+                    <div className="flex flex-col space-y-6 text-left order-3 lg:order-2">
+                        <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">My Account</h3>
+                        <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
+                            <Link to="/THE-COLLECTORS-EXCHANGE/account" className="hover:text-white transition-colors duration-300">My Profile</Link>
+                            <Link to="/THE-COLLECTORS-EXCHANGE/account" className="hover:text-white transition-colors duration-300">Account</Link>
+                            <Link to="/THE-COLLECTORS-EXCHANGE/account" className="hover:text-white transition-colors duration-300">Seller Account</Link>
+                        </div>
+                    </div>
+
+                    {/* Column 3: Brand (Center) */}
+                    <div className="flex flex-col space-y-6 text-center items-center col-span-1 sm:col-span-2 lg:col-span-1 order-1 lg:order-3 mb-12 lg:mb-0">
                         <div>
                             <h2 className="text-lg sm:text-2xl font-serif font-bold tracking-tight sm:tracking-widest mb-2">THE COLLECTORS EXCHANGE</h2>
                             <div className="w-16 h-0.5 bg-luxury-gold mx-auto opacity-70"></div>
@@ -44,8 +55,8 @@ const Footer = () => {
                         </div>
                     </div>
 
-                    {/* Column 3: Follow Us (Right) */}
-                    <div className="flex flex-col space-y-6 sm:text-right sm:items-end order-3">
+                    {/* Column 4: Follow Us (Right) */}
+                    <div className="flex flex-col space-y-6 sm:text-right sm:items-end order-4">
                         <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Follow Us</h3>
 
                         <div className="flex gap-6">

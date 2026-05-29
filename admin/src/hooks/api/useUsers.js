@@ -49,3 +49,35 @@ export const useUpdateUserRole = () => {
         },
     });
 };
+
+/**
+ * Hook to fetch admin dashboard stats overview
+ */
+export const useAdminStats = () => {
+    return useQuery({
+        queryKey: ['admin', 'stats'],
+        queryFn: async () => {
+            const { data } = await apiClient.get('/admin/stats/overview');
+            return data;
+        },
+    });
+};
+
+/**
+ * Hook to whitelist a vendor
+ */
+export const useWhitelistVendor = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ userId, plan }) => {
+            const { data } = await apiClient.post(`/admin/vendor/${userId}/whitelist`, { plan });
+            return data;
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['user', variables.userId] });
+        },
+    });
+};
+
+

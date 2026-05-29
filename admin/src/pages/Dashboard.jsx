@@ -1,34 +1,37 @@
 import React from 'react';
 import { Users, FileText, Package, TrendingUp } from 'lucide-react';
+import { useAdminStats } from '../hooks/api/useUsers';
 
 function Dashboard() {
-    // Placeholder stats - will be populated from API later
+    const { data: statsData, isLoading } = useAdminStats();
+
     const stats = [
         {
             title: 'Total Users',
-            value: '0',
+            value: isLoading ? '...' : (statsData?.totalUsers ?? 0).toString(),
             icon: Users,
             color: 'bg-blue-500',
         },
         {
             title: 'Pending KYC',
-            value: '0',
+            value: isLoading ? '...' : (statsData?.pendingKyc ?? 0).toString(),
             icon: FileText,
             color: 'bg-yellow-500',
         },
         {
             title: 'Total Products',
-            value: '0',
+            value: isLoading ? '...' : (statsData?.totalProducts ?? 0).toString(),
             icon: Package,
             color: 'bg-green-500',
         },
         {
             title: 'Orders',
-            value: '0',
+            value: isLoading ? '...' : (statsData?.totalOrders ?? 0).toString(),
             icon: TrendingUp,
             color: 'bg-purple-500',
         },
     ];
+
 
     return (
         <div>

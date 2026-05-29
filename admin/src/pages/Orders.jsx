@@ -44,7 +44,7 @@ function Orders() {
         {
             key: 'totalAmount',
             label: 'Total',
-            render: (amount) => `$${amount.toFixed(2)}`,
+            render: (amount) => `₹${amount?.toFixed(2)}`,
         },
         {
             key: 'status',

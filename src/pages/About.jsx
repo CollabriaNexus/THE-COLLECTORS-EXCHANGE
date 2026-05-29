@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import AboutImage from '../assets/About_US.jpg';
 import { History, ShieldCheck, Heart, Users, Compass, Landmark } from 'lucide-react';
 import Bullet from '../components/Bullet';
@@ -5,8 +6,9 @@ import Bullet from '../components/Bullet';
 const About = () => {
     return (
         <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
+            <Helmet><title>About — The Collectors Exchange</title></Helmet>
             {/* Cinematic Hero */}
-            <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden border-b border-heritage-bronze/10 bg-heritage-charcoal">
+            <section className="relative min-h-[60vh] sm:min-h-[75vh] lg:min-h-[90vh] flex items-center justify-center overflow-hidden border-b border-heritage-bronze/10 bg-heritage-charcoal">
                 <div className="absolute inset-0 z-0">
                     <img
                         src={AboutImage}
@@ -16,69 +18,69 @@ const About = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-heritage-charcoal via-transparent to-heritage-charcoal/60"></div>
                 </div>
 
-                <div className="relative z-10 container mx-auto px-6 py-24 flex flex-col items-center justify-center gap-12 text-center">
+                <div className="relative z-10 container mx-auto px-4 sm:px-6 py-16 sm:py-24 flex flex-col items-center justify-center gap-8 sm:gap-12 text-center">
                     {/* Center: Text Content */}
                     <div className="max-w-4xl">
-                        <div className="inline-flex items-center gap-4 mb-8 justify-center">
-                            <span className="text-[10px] sm:text-xs uppercase tracking-[0.4em] text-luxury-gold font-bold">Authorized & Premium</span>
+                        <div className="inline-flex items-center gap-3 sm:gap-4 mb-4 sm:mb-8 justify-center">
+                            <span className="text-[9px] sm:text-xs uppercase tracking-[0.3em] sm:tracking-[0.4em] text-luxury-gold font-bold">Authorized & Premium</span>
                         </div>
 
-                        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif mb-8 tracking-tighter leading-none text-white drop-shadow-lg">
-                            A Marketplace for <br />
-                            <span className="italic font-light text-white/90">Authentic</span> <span className="text-luxury-gold font-normal">History</span>
+                        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-8xl font-serif mb-4 sm:mb-8 tracking-tighter leading-none text-white drop-shadow-lg">
+                            From the Streets of <br />
+                            <span className="italic font-light text-white/90">India</span> <span className="text-luxury-gold font-normal">to Your Collection</span>
                         </h1>
 
-                        <p className="text-base sm:text-lg md:text-xl text-white/80 font-light mb-12 max-w-2xl mx-auto leading-relaxed">
-                            Verified. Original. Limited. Discover a curated world of rare finds and verified sellers.
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/80 font-light mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
+                            We go where others don't. Sourcing the most unique, valuable, and historical finds from every corner of Indian pawn shops, street markets, and beyond. Whether you're a seasoned collector or a history enthusiast, we provide global access to a selection you won't find anywhere else.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                            <button className="px-10 py-4 bg-white text-heritage-charcoal text-xs uppercase tracking-[0.2em] font-bold shadow-heritage hover:bg-luxury-gold hover:text-white transition-all duration-300 rounded-sm min-w-[220px]">
+                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
+                            <button className="px-6 sm:px-10 py-3 sm:py-4 bg-white text-heritage-charcoal text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold shadow-heritage hover:bg-luxury-gold hover:text-white transition-all duration-300 rounded-sm w-full sm:w-auto">
                                 Explore The Exchange
                             </button>
-                            <button className="px-10 py-4 bg-transparent border border-white/30 text-white text-xs uppercase tracking-[0.2em] font-bold hover:bg-white hover:text-heritage-charcoal transition-all duration-300 rounded-sm min-w-[220px]">
+                            <button className="px-6 sm:px-10 py-3 sm:py-4 bg-transparent border border-white/30 text-white text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold hover:bg-white hover:text-heritage-charcoal transition-all duration-300 rounded-sm w-full sm:w-auto">
                                 View Auctions
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-50">
+                <div className="hidden sm:flex absolute bottom-12 left-1/2 -translate-x-1/2 flex-col items-center gap-4 opacity-50">
                     <span className="text-[10px] uppercase tracking-[0.8em] text-luxury-gold font-bold">Scroll</span>
                     <div className="w-px h-20 bg-gradient-to-b from-luxury-gold to-transparent animate-pulse"></div>
                 </div>
             </section>
 
-            {/* Philosophy Grid */}
+            {/* Why We Do It & Mission */}
             <section className="py-24 px-6 container mx-auto">
                 <div className="grid lg:grid-cols-2 gap-16 item-start">
                     <div className="space-y-12">
                         <div className="relative pl-8 border-l-2 border-luxury-gold/30">
                             <p className="text-lg sm:text-xl md:text-2xl leading-relaxed text-heritage-charcoal/80 font-serif italic">
-                                "Long before mass production, before trends moved at internet speed, value was built through craft, patience, and provenance. A timepiece was not just worn: it was inherited."
+                                "We believe that every collector deserves more than just an object; they deserve a legacy they can trust."
                             </p>
                         </div>
 
                         <div className="p-10 sm:p-12 bg-white rounded-sm border border-heritage-bronze/10 relative overflow-hidden shadow-heritage">
                             <Landmark className="absolute -right-8 -bottom-8 text-heritage-bronze/5 w-40 h-40" />
-                            <h2 className="text-3xl sm:text-4xl font-serif mb-6 text-heritage-charcoal">Preserving Philosophy</h2>
+                            <h2 className="text-3xl sm:text-4xl font-serif mb-6 text-heritage-charcoal">Why We Do It</h2>
                             <p className="text-heritage-brown leading-relaxed text-sm sm:text-base font-medium">
-                                We are not a marketplace for the new. <br />
-                                We are a House of Heritage for the pre-owned, for items that have lived, endured, and earned their place in time.
+                                Finding that one dream watch or a relic that honors the memory of your forefathers shouldn't require endless hours of digital rabbit holes or navigating the uncertainty of local markets.
+                            </p>
+                            <p className="text-heritage-brown leading-relaxed text-sm sm:text-base font-medium mt-4">
+                                We exist to bridge the gap between the hunt and the heritage. By sourcing only 100% original and authentic articles, we do the heavy lifting so you can focus on what matters: keeping history close to your heart.
                             </p>
                         </div>
                     </div>
 
                     <div className="flex flex-col h-full">
-                        {/* Featured Box */}
                         <div className="h-full p-10 bg-heritage-beige/30 border border-heritage-bronze/10 rounded-sm hover:border-heritage-bronze/30 transition-all duration-500 hover:shadow-heritage group">
                             <History className="text-luxury-gold mb-8 group-hover:scale-110 transition-transform duration-500" size={32} strokeWidth={1} />
-                            <h3 className="text-2xl font-serif mb-6 text-heritage-charcoal">Where Stories Are Collected</h3>
+                            <h3 className="text-2xl font-serif mb-6 text-heritage-charcoal">Mission: Reviving the Soul of Indian Heritage</h3>
                             <div className="space-y-6 text-sm text-heritage-brown/80 leading-relaxed font-light">
-                                <p>Across generations, families have passed down watches, antiques, rare collectibles, toys, sneakers, and cultural artefacts, not as assets, but as memories.</p>
-                                <p>Today, many millennials and Gen Z collectors find themselves custodians of these inherited pieces, along with carefully built personal collections of their own.</p>
-                                <p>Yet, until now, there has been no trusted space where such objects could be honoured, verified, and exchanged with dignity.</p>
-                                <p className="text-heritage-bronze font-semibold uppercase tracking-wider text-xs">The Collectors’ Exchange was built to be that space.</p>
+                                <p>In an era dominated by the digital, the tangible history of India is at risk of fading away. Our mission is to reclaim that "dead value" and bring it back to life. We don't just trade articles; we preserve stories.</p>
+                                <p>We act as the lifejacket for our national heritage, ensuring that every collectible is backed by trust and authenticity. We are dedicated to educating the next generation of collectors, helping them understand and protect the true worth of the past.</p>
+                                <p className="text-heritage-bronze font-semibold uppercase tracking-wider text-xs">The Collectors Exchange was built to end that struggle.</p>
                             </div>
                         </div>
                     </div>
@@ -86,7 +88,7 @@ const About = () => {
             </section>
 
             {/* Belief Section */}
-            <section className="py-32 bg-white relative overflow-hidden border-y border-heritage-bronze/10">
+            <section className="py-16 sm:py-24 lg:py-32 bg-white relative overflow-hidden border-y border-heritage-bronze/10">
                 <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#D4AF37 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }}></div>
                 <div className="container mx-auto px-6 relative z-10">
                     <div className="text-center mb-20">
@@ -96,24 +98,24 @@ const About = () => {
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-0 border border-heritage-bronze/10 bg-heritage-cream shadow-sm">
-                        <div className="p-10 sm:p-14 border-b md:border-b-0 md:border-r border-heritage-bronze/10 text-center group hover:bg-white transition-all duration-500">
-                            <Compass className="mx-auto mb-8 text-heritage-charcoal/40 group-hover:text-luxury-gold transition-colors duration-300 w-8 h-8" strokeWidth={1.5} />
-                            <p className="text-lg font-serif italic text-heritage-charcoal/80 group-hover:text-heritage-charcoal transition-colors">"Every pre-owned valuable is respected for its journey"</p>
+                        <div className="p-6 sm:p-10 lg:p-14 border-b md:border-b-0 md:border-r border-heritage-bronze/10 text-center group hover:bg-white transition-all duration-500">
+                            <Compass className="mx-auto mb-4 sm:mb-8 text-heritage-charcoal/40 group-hover:text-luxury-gold transition-colors duration-300 w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
+                            <p className="text-sm sm:text-lg font-serif italic text-heritage-charcoal/80 group-hover:text-heritage-charcoal transition-colors">"Every pre-owned valuable is respected for its journey"</p>
                         </div>
-                        <div className="p-10 sm:p-14 border-b md:border-b-0 md:border-r border-heritage-bronze/10 text-center group hover:bg-white transition-all duration-500">
-                            <Users className="mx-auto mb-8 text-heritage-charcoal/40 group-hover:text-luxury-gold transition-colors duration-300 w-8 h-8" strokeWidth={1.5} />
-                            <p className="text-lg font-serif italic text-heritage-charcoal/80 group-hover:text-heritage-charcoal transition-colors">"Every seller is valued as a custodian, not just a vendor"</p>
+                        <div className="p-6 sm:p-10 lg:p-14 border-b md:border-b-0 md:border-r border-heritage-bronze/10 text-center group hover:bg-white transition-all duration-500">
+                            <Users className="mx-auto mb-4 sm:mb-8 text-heritage-charcoal/40 group-hover:text-luxury-gold transition-colors duration-300 w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
+                            <p className="text-sm sm:text-lg font-serif italic text-heritage-charcoal/80 group-hover:text-heritage-charcoal transition-colors">"Every seller is valued as a custodian, not just a vendor"</p>
                         </div>
-                        <div className="p-10 sm:p-14 text-center group hover:bg-white transition-all duration-500">
-                            <Heart className="mx-auto mb-8 text-heritage-charcoal/40 group-hover:text-luxury-gold transition-colors duration-300 w-8 h-8" strokeWidth={1.5} />
-                            <p className="text-lg font-serif italic text-heritage-charcoal/80 group-hover:text-heritage-charcoal transition-colors">"Every buyer understands they are acquiring more than an object: they are acquiring a legacy"</p>
+                        <div className="p-6 sm:p-10 lg:p-14 text-center group hover:bg-white transition-all duration-500">
+                            <Heart className="mx-auto mb-4 sm:mb-8 text-heritage-charcoal/40 group-hover:text-luxury-gold transition-colors duration-300 w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
+                            <p className="text-sm sm:text-lg font-serif italic text-heritage-charcoal/80 group-hover:text-heritage-charcoal transition-colors">"Every buyer understands they are acquiring more than an object: they are acquiring a legacy"</p>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Vision Section: Archival Masterpiece */}
-            <section className="py-32 bg-heritage-cream relative overflow-hidden border-y border-heritage-gold-muted/10">
+            <section className="py-16 sm:py-24 lg:py-32 bg-heritage-cream relative overflow-hidden border-y border-heritage-gold-muted/10">
                 <div className="container mx-auto px-6 relative z-10 text-center">
                     <div className="max-w-5xl mx-auto">
                         <div className="flex items-center justify-center gap-6 mb-10">
@@ -159,11 +161,11 @@ const About = () => {
                     <div className="flex flex-col md:flex-row gap-20 items-center">
                         <div className="md:w-1/2">
                             <div className="text-xs uppercase tracking-[0.4em] text-luxury-gold font-bold mb-6">Authentication</div>
-                            <h2 className="text-4xl md:text-5xl font-serif mb-8 text-heritage-charcoal">Curated. Verified. Meaningful.</h2>
-                            <p className="text-lg text-heritage-gold-muted italic font-serif mb-8 border-l-2 border-luxury-gold/30 pl-6">We believe trust is not claimed: it is earned.</p>
+                            <h2 className="text-4xl md:text-5xl font-serif mb-8 text-heritage-charcoal">Truth Over Misbranding</h2>
+                            <p className="text-lg text-heritage-gold-muted italic font-serif mb-8 border-l-2 border-luxury-gold/30 pl-6">You cannot ask a cobbler to stitch a wound and call him a doctor.</p>
                             <div className="space-y-6 text-heritage-brown/80 leading-relaxed font-light">
-                                <p>Each item listed on The Collectors’ Exchange undergoes a structured verification process before being marked as authenticated by our marketplace. Our focus is not volume, but integrity. We choose curation over clutter, and provenance over popularity.</p>
-                                <p>Whether it is a timepiece that has measured decades, a sneaker preserved in its original condition, or a collectible tied to cultural memory, we ensure that what enters our exchange belongs here.</p>
+                                <p>While many brands sell "lifestyle" through clever marketing, we sell the Truth. We specialize in the mechanical heartbeat of history and the raw authenticity of heritage. If it isn't genuine, it isn't on our platform. Period.</p>
+                                <p>Each item listed on The Collectors Exchange undergoes a rigorous internal verification process. Our focus is not volume, but integrity. We choose curation over clutter, and provenance over popularity. We reject "misbranding."</p>
                             </div>
                         </div>
                         <div className="md:w-1/2 relative">
@@ -201,24 +203,27 @@ const About = () => {
                         </div>
                     </div>
 
-                    {/* Final Promise */}
+                    {/* Final Promise: Stewardship */}
                     <div className="bg-heritage-charcoal p-12 sm:p-24 text-center shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl"></div>
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl"></div>
 
                         <div className="relative z-10">
                             <ShieldCheck className="mx-auto mb-8 text-luxury-gold w-16 h-16" strokeWidth={1} />
-                            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-6 text-white">Our Promise</h2>
-                            <p className="text-heritage-beige/60 mb-12 text-lg sm:text-xl italic font-serif">"To protect the past, so it may have a future."</p>
+                            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-6 text-white">Stewardship, Not Just Sales</h2>
+                            <p className="text-heritage-beige/60 mb-12 text-lg sm:text-xl italic font-serif">"Most businesses end their relationship with you at the checkout. We are just getting started."</p>
+                            <p className="text-heritage-beige/70 mb-12 text-base sm:text-lg font-light leading-relaxed max-w-2xl mx-auto">
+                                As stewards of Indian history, we provide annual "health checks" for the articles you purchase. We stay in touch to ensure your timepieces and collectibles are preserved correctly, honoring the lineage they represent.
+                            </p>
 
                             <div className="inline-flex flex-col sm:flex-row justify-center gap-8 sm:gap-16 border-t border-white/10 pt-12">
                                 <div className="flex items-center gap-4 justify-center">
                                     <Bullet className="text-luxury-gold w-3 h-3" />
-                                    <span className="text-lg sm:text-xl font-serif text-white/90">Seller Privacy</span>
+                                    <span className="text-lg sm:text-xl font-serif text-white/90">Ancestral Integrity</span>
                                 </div>
                                 <div className="flex items-center gap-4 justify-center">
                                     <Bullet className="text-luxury-gold w-3 h-3" />
-                                    <span className="text-lg sm:text-xl font-serif text-white/90">Absolute Authenticity</span>
+                                    <span className="text-lg sm:text-xl font-serif text-white/90">Annual Health Checks</span>
                                 </div>
                             </div>
                         </div>

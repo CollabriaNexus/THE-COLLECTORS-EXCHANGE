@@ -15,7 +15,7 @@
 // The Schema `product.js` clearly has: .refine((val) => val.includes('rjyjblczxhxebtyvglnr.supabase.co...'))
 
 // Instead, I will verify the BUCKETS exsit.
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://rjyjblczxhxebtyvglnr.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://rvamybeqoyznlgzglqqx.supabase.co';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 // I will run a script to check public access to the buckets.

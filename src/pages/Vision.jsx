@@ -37,10 +37,13 @@ const Vision = () => {
                         <div className="absolute -left-6 top-0 w-px h-full bg-gradient-to-b from-[#C9A962]/40 via-[#C9A962]/10 to-transparent hidden md:block"></div>
                         <div className="space-y-4 text-sm sm:text-base lg:text-lg font-serif italic leading-relaxed text-[#4A443E]">
                             <p className="text-lg sm:text-xl lg:text-2xl text-[#1A1816] font-medium not-italic mb-6 border-b border-[#C9A962]/10 pb-6">
-                                At The Collectors’ Exchange, our vision is to bring legacy back to life.
+                                To restore integrity to the world of collectibles by eliminating cheap quality in favor of authentic Indian heritage.
                             </p>
                             <div className="pl-0 md:pl-6 space-y-4">
                                 <p>
+                                    We are building the world's most trusted bridge from the local streets to the global collector, honoring the craftsmanship of our ancestors while securing history for the generations to come.
+                                </p>
+                                <p className="text-base sm:text-lg lg:text-xl font-medium text-[#1A1816] border-l-2 border-[#C9A962]/20 pl-6 py-2 bg-[#F9F7F4]/50 not-italic">
                                     We draw inspiration from ancient India, a time when objects were not discarded, but preserved; when possessions were not replaced, but respected; and when value was measured not by price, but by the ability to be carried forward across generations.
                                 </p>
                                 <p>

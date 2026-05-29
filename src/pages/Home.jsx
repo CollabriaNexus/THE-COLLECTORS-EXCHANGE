@@ -1,15 +1,110 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive } from 'lucide-react';
+import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive, ChevronLeft, ChevronRight, ShoppingBag, Award, Gem, Heart, Pause, Play } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import heroVideo from '../assets/hero_section.mp4';
 import verificationAuthenticity from '../assets/verification_authenticity.png';
+import { useProducts } from '../hooks/api/useProducts';
+import { getUser, addToCart, isInCart } from '../utils/storage';
+
+const FeaturedProductsCarousel = () => {
+    const trackRef = useRef(null);
+    const [paused, setPaused] = React.useState(false);
+    const { data, isLoading } = useProducts(null, '', 1, 10);
+    const products = data?.products || [];
+
+    if (isLoading || products.length === 0) return null;
+
+    const cards = products.map((product) => {
+        const title = product.title || product.name;
+        return (
+            <Link
+                key={product.id}
+                to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`}
+                className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 snap-start"
+            >
+                <div className="relative aspect-[4/5] bg-heritage-beige overflow-hidden">
+                    {product.image ? (
+                        <img src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/40 bg-heritage-beige">
+                            <Gem size={48} strokeWidth={1} />
+                        </div>
+                    )}
+                    <div className="absolute bottom-4 left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-xs px-4 py-2 font-sans tracking-[0.15em] uppercase flex items-center gap-2">
+                        <Award size={14} strokeWidth={1.5} />
+                        <span>Featured</span>
+                    </div>
+                </div>
+                <div className="p-5">
+                    <span className="text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">{product.category}</span>
+                    <h3 className="font-serif text-lg font-medium text-heritage-charcoal mb-1 leading-tight mt-1">{title}</h3>
+                    <p className="text-heritage-gold-muted font-serif text-lg font-medium mt-2">₹{product.price?.toLocaleString()}</p>
+                </div>
+            </Link>
+        );
+    });
+
+    return (
+        <section className="py-16 sm:py-20 px-6 bg-heritage-cream overflow-hidden">
+            <div className="container mx-auto max-w-6xl">
+                <div className="flex items-center justify-between mb-10">
+                    <div>
+                        <div className="flex items-center gap-4 mb-3">
+                            <div className="h-px w-8 bg-luxury-gold/40"></div>
+                            <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Curated Selection</span>
+                            <div className="h-px w-8 bg-luxury-gold/40"></div>
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal">Featured <span className="text-luxury-gold italic font-light">Products</span></h2>
+                    </div>
+                    <button
+                        onClick={() => setPaused(p => !p)}
+                        className="p-3 border border-heritage-bronze/20 hover:border-heritage-bronze hover:bg-white transition-all duration-300 rounded-full"
+                        title={paused ? 'Resume' : 'Pause'}
+                    >
+                        {paused ? <Play size={20} className="text-heritage-charcoal" /> : <Pause size={20} className="text-heritage-charcoal" />}
+                    </button>
+                </div>
+
+                <div className="relative">
+                    <style>{`
+                        @keyframes marquee {
+                            0% { transform: translateX(0); }
+                            100% { transform: translateX(-50%); }
+                        }
+                        .carousel-track {
+                            animation: marquee 40s linear infinite;
+                        }
+                        .carousel-track:hover {
+                            animation-play-state: paused;
+                        }
+                    `}</style>
+                    <div
+                        ref={trackRef}
+                        className={`carousel-track flex gap-6 ${paused ? '' : ''}`}
+                        style={{
+                            width: 'max-content',
+                            animationPlayState: paused ? 'paused' : '',
+                        }}
+                        onMouseEnter={() => setPaused(true)}
+                        onMouseLeave={() => setPaused(false)}
+                    >
+                        {cards}
+                        {cards}
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
 
 const Home = () => {
     return (
         <div className="flex flex-col">
+            <Helmet><title>The Collectors Exchange — Luxury Pre-Owned & Rare Collectibles</title></Helmet>
             {/* Hero Section */}
-            <section className="relative h-[85vh] min-h-[600px] flex flex-col justify-center items-center px-6 text-center overflow-hidden">
+            <section className="relative h-[70vh] sm:h-[80vh] lg:h-[85vh] min-h-[450px] sm:min-h-[500px] lg:min-h-[600px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden">
                 <video
                     src={heroVideo}
                     className="absolute inset-0 w-full h-full object-cover object-top"
@@ -21,20 +116,20 @@ const Home = () => {
                 <div className="absolute inset-0 bg-black/50"></div>
 
                 <div className="container mx-auto max-w-4xl relative z-10">
-                    <h5 className="text-luxury-gold tracking-[0.2em] font-sans text-sm font-semibold uppercase mb-4">
+                    <h5 className="text-luxury-gold tracking-[0.2em] font-sans text-[10px] sm:text-sm font-semibold uppercase mb-3 sm:mb-4">
                         Authorized & Premium
                     </h5>
-                    <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif text-white font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg">
                         A Marketplace for Authentic <span className="italic text-luxury-gold">Collectibles</span> & Timeless Antiques
                     </h1>
-                    <p className="text-xl text-gray-200 font-sans font-light mb-10 max-w-2xl mx-auto">
+                    <p className="text-base sm:text-lg md:text-xl text-gray-200 font-sans font-light mb-6 sm:mb-10 max-w-2xl mx-auto">
                         Verified. Original. Limited. Discover a curated world of rare finds and verified sellers.
                     </p>
-                    <div className="flex flex-col md:flex-row justify-center gap-6">
-                        <Link to="/THE-COLLECTORS-EXCHANGE/category" className="bg-luxury-gold text-black px-8 py-4 font-sans text-sm tracking-widest hover:bg-white transition-colors duration-300">
+                    <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+                        <Link to="/THE-COLLECTORS-EXCHANGE/category" className="bg-luxury-gold text-black px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white transition-colors duration-300">
                             EXPLORE THE EXCHANGE
                         </Link>
-                        <Link to="/THE-COLLECTORS-EXCHANGE/auction" className="bg-transparent text-white border border-white px-8 py-4 font-sans text-sm tracking-widest hover:bg-white hover:text-black transition-colors duration-300">
+                        <Link to="/THE-COLLECTORS-EXCHANGE/auction" className="bg-transparent text-white border border-white px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors duration-300">
                             VIEW AUCTIONS
                         </Link>
                     </div>
@@ -69,6 +164,9 @@ const Home = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Featured Products Carousel */}
+            <FeaturedProductsCarousel />
 
             {/* Verification Works */}
             <section className="py-12 sm:py-16 lg:py-20 px-6 bg-primary-bg">
