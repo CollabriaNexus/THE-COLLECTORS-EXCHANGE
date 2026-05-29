@@ -100,17 +100,25 @@ const FeaturedProductsCarousel = () => {
 };
 
 const Home = () => {
+    const homeVideoRef = useRef(null);
+
+    const handleVideoEnded = () => {
+        window.dispatchEvent(new CustomEvent('homeVideoEnded'));
+    };
+
     return (
         <div className="flex flex-col">
             <Helmet><title>The Collectors Exchange — Luxury Pre-Owned & Rare Collectibles</title></Helmet>
             {/* Hero Section */}
-            <section className="relative h-[70vh] sm:h-[80vh] lg:h-[85vh] min-h-[450px] sm:min-h-[500px] lg:min-h-[600px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden">
+            <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden">
                 <video
+                    ref={homeVideoRef}
                     src={heroVideo}
                     className="absolute inset-0 w-full h-full object-cover object-top"
                     autoPlay
                     muted
                     playsInline
+                    onEnded={handleVideoEnded}
                 />
                 {/* Dark overlay for text readability */}
                 <div className="absolute inset-0 bg-black/50"></div>

@@ -15,6 +15,7 @@ import OrderDetail from './pages/OrderDetail';
 import Vendors from './pages/Vendors';
 import GalleryManager from './pages/GalleryManager';
 import Payouts from './pages/Payouts';
+import TCEStore from './pages/TCEStore';
 import AdminLayout from './components/AdminLayout';
 
 // Protected Route wrapper
@@ -104,6 +105,12 @@ function App() {
             <Route path="/payouts" element={
                 <ProtectedRoute>
                     <Payouts />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/tce-store" element={
+                <ProtectedRoute>
+                    <TCEStore />
                 </ProtectedRoute>
             } />
 

@@ -241,6 +241,20 @@ const ProductDetail = () => {
                     </div>
 
                     {/* Trust Indicators */}
+                    {product.isVerified && (
+                        <div className="bg-heritage-cream border border-luxury-gold/20 p-4 sm:p-6">
+                            <div className="flex items-start gap-3 sm:gap-4">
+                                <ShieldCheck size={28} className="sm:w-8 sm:h-8 text-green-700 flex-shrink-0" />
+                                <div>
+                                    <h4 className="font-serif text-base sm:text-lg font-medium text-heritage-charcoal mb-1">The Exchange's Guarantee</h4>
+                                    <p className="text-xs sm:text-sm text-heritage-charcoal/70 leading-relaxed">
+                                        This item is marked <strong>Verified Authentic</strong> by The Collectors Exchange. When you purchase this item, you receive our unconditional guarantee of authenticity — backed by our expert curation team.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-6 sm:pt-8 border-t border-gray-100">
                         <div className="flex gap-4 items-start">
                             <ShieldCheck size={24} className="text-luxury-gold flex-shrink-0" />

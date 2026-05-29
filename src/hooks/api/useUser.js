@@ -58,3 +58,19 @@ export const useSubmitKyc = () => {
         },
     });
 };
+
+/**
+ * Hook to update user profile
+ */
+export const useUpdateProfile = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data) => {
+            const { data: result } = await apiClient.patch('/users/me', data);
+            return result;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+        },
+    });
+};

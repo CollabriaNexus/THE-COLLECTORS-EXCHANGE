@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, XCircle, Package, Eye, EyeOff, Clock, MessageSquare } from 'lucide-react';
-import { useProductDetail, useApproveProduct, useRejectProduct, useReviewProduct, useUpdateAuthenticityStatus } from '../hooks/api/useProducts';
+import { ArrowLeft, CheckCircle, XCircle, Package, Eye, EyeOff, Clock, MessageSquare, Trash2, Plus } from 'lucide-react';
+import { useProductDetail, useApproveProduct, useRejectProduct, useReviewProduct, useUpdateAuthenticityStatus, useDeleteProduct, useUpdateProduct, useBrands } from '../hooks/api/useProducts';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
@@ -11,16 +11,25 @@ function ProductDetail() {
     const navigate = useNavigate();
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState('');
     const [rejectionReason, setRejectionReason] = useState('');
+    const [editBrand, setEditBrand] = useState('');
+    const [editListingCategory, setEditListingCategory] = useState('');
+    const [showEditModal, setShowEditModal] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [brandInputMode, setBrandInputMode] = useState(false);
+    const [customBrand, setCustomBrand] = useState('');
 
     const { data: product, isLoading } = useProductDetail(id);
+    const { data: brands = [] } = useBrands();
     const approveMutation = useApproveProduct();
     const rejectMutation = useRejectProduct();
     const reviewMutation = useReviewProduct();
     const updateStatusMutation = useUpdateAuthenticityStatus();
+    const deleteMutation = useDeleteProduct();
+    const updateProductMutation = useUpdateProduct();
 
     const handleReview = async () => {
         setError('');
@@ -62,6 +71,37 @@ function ProductDetail() {
         }
     };
 
+    const handleDelete = async () => {
+        setError('');
+        try {
+            await deleteMutation.mutateAsync(id);
+            setSuccess('Product deleted');
+            setTimeout(() => navigate('/products'), 1500);
+        } catch (err) {
+            setError(err.message || 'Failed to delete product');
+        }
+    };
+
+    const handleUpdateProduct = async () => {
+        setError('');
+        try {
+            const fields = {};
+            const finalBrand = brandInputMode ? customBrand : editBrand;
+            if (finalBrand !== (product.brand || '')) fields.brand = finalBrand;
+            if (editListingCategory !== product.listingCategory) fields.listingCategory = editListingCategory;
+            if (Object.keys(fields).length === 0) {
+                setShowEditModal(false);
+                return;
+            }
+            await updateProductMutation.mutateAsync({ id, ...fields });
+            setSuccess('Product updated successfully');
+            setShowEditModal(false);
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Failed to update product');
+        }
+    };
+
     const handleUpdateAuthStatus = async () => {
         if (!selectedStatus) return;
 
@@ -91,6 +131,25 @@ function ProductDetail() {
             </div>
         );
     }
+
+    const handleOpenEditModal = () => {
+        setEditBrand(product.brand || '');
+        setEditListingCategory(product.listingCategory || 'normal');
+        setBrandInputMode(false);
+        setCustomBrand('');
+        setShowEditModal(true);
+    };
+
+    const handleBrandSelect = (value) => {
+        if (value === '__custom__') {
+            setBrandInputMode(true);
+            setCustomBrand('');
+            setEditBrand('');
+        } else {
+            setBrandInputMode(false);
+            setEditBrand(value);
+        }
+    };
 
     return (
         <div>
@@ -173,6 +232,18 @@ function ProductDetail() {
                                 <dd className="text-sm font-medium text-heritage-charcoal mt-1">{product.category}</dd>
                             </div>
                             <div>
+                                <dt className="text-xs uppercase tracking-wider font-semibold text-gray-500">Brand</dt>
+                                <dd className="text-sm font-medium text-heritage-charcoal mt-1">{product.brand || 'Not set'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs uppercase tracking-wider font-semibold text-gray-500">Listing</dt>
+                                <dd className="text-sm font-medium mt-1">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${product.listingCategory === 'most_rare' ? 'bg-purple-100 text-purple-800' : product.listingCategory === 'featured' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                                        {product.listingCategory || 'normal'}
+                                    </span>
+                                </dd>
+                            </div>
+                            <div>
                                 <dt className="text-xs uppercase tracking-wider font-semibold text-gray-500">Condition</dt>
                                 <dd className="text-sm font-medium text-heritage-charcoal mt-1">{product.condition}</dd>
                             </div>
@@ -202,7 +273,6 @@ function ProductDetail() {
                         </h3>
 
                         <div className="space-y-4">
-                            {/* Status Buttons */}
                             <div className="flex flex-col gap-2">
                                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Actions</p>
 
@@ -256,6 +326,23 @@ function ProductDetail() {
                                     className="w-full text-xs text-luxury-gold hover:underline font-medium text-center"
                                 >
                                     Change Authenticity Status Manually
+                                </button>
+                            </div>
+
+                            <div className="pt-4 border-t space-y-3">
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Product Settings</p>
+                                <button
+                                    onClick={handleOpenEditModal}
+                                    className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-700 py-3 rounded-md font-medium hover:bg-amber-100 transition-colors"
+                                >
+                                    Edit Brand & Category
+                                </button>
+                                <button
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-700 py-3 rounded-md font-medium hover:bg-red-100 transition-colors"
+                                >
+                                    <Trash2 size={18} />
+                                    Delete Product
                                 </button>
                             </div>
                         </div>
@@ -327,6 +414,124 @@ function ProductDetail() {
                             className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50"
                         >
                             {rejectMutation.isPending ? 'Rejecting...' : 'Confirm Rejection'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="Delete Product"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                        Are you sure you want to delete <strong>{product.title}</strong>? This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 justify-end pt-4">
+                        <button
+                            onClick={() => setShowDeleteModal(false)}
+                            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleDelete}
+                            disabled={deleteMutation.isPending}
+                            className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50"
+                        >
+                            {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Edit Brand & Listing Category Modal */}
+            <Modal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                title="Edit Product Settings"
+            >
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Brand</label>
+                        {brandInputMode ? (
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={customBrand}
+                                    onChange={(e) => setCustomBrand(e.target.value)}
+                                    placeholder="Enter brand name..."
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
+                                    autoFocus
+                                />
+                                <button
+                                    onClick={() => setBrandInputMode(false)}
+                                    className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex gap-2">
+                                <select
+                                    value={brands.includes(editBrand) ? editBrand : (editBrand ? '__custom__' : '')}
+                                    onChange={(e) => handleBrandSelect(e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
+                                >
+                                    <option value="">No brand</option>
+                                    {brands.filter(Boolean).map(b => (
+                                        <option key={b} value={b}>{b}</option>
+                                    ))}
+                                    <option value="__custom__">+ Add New Brand...</option>
+                                </select>
+                                {editBrand && !brands.includes(editBrand) && (
+                                    <span className="text-xs text-amber-600 self-center">(custom)</span>
+                                )}
+                            </div>
+                        )}
+                        {brandInputMode && (
+                            <div className="mt-2 flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        setBrandInputMode(false);
+                                        if (customBrand.trim()) {
+                                            setEditBrand(customBrand.trim());
+                                        }
+                                    }}
+                                    className="flex items-center gap-1 text-xs text-luxury-gold hover:underline font-medium"
+                                >
+                                    <Plus size={14} /> Add "{customBrand || 'new brand'}"
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Listing Category</label>
+                        <select
+                            value={editListingCategory}
+                            onChange={(e) => setEditListingCategory(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
+                        >
+                            <option value="normal">Normal</option>
+                            <option value="featured">Featured</option>
+                            <option value="most_rare">Most Rare</option>
+                        </select>
+                    </div>
+                    <div className="flex gap-3 justify-end pt-4">
+                        <button
+                            onClick={() => setShowEditModal(false)}
+                            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleUpdateProduct}
+                            disabled={updateProductMutation.isPending}
+                            className="px-6 py-2 bg-luxury-gold text-white rounded-md hover:bg-luxury-gold/90 disabled:opacity-50"
+                        >
+                            {updateProductMutation.isPending ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>
                 </div>

@@ -17,6 +17,7 @@ import vendorRoutes from './routes/vendor.js';
 import checkoutRoutes from './routes/checkout.js';
 import auctionRoutes from './routes/auction.js';
 import analyticsRoutes from './routes/analytics.js';
+import contactRoutes from './routes/contact.js';
 
 dotenv.config();
 
@@ -80,6 +81,7 @@ fastify.register(vendorRoutes, { prefix: '/api/vendor' });
 fastify.register(checkoutRoutes, { prefix: '/api/checkout' });
 fastify.register(auctionRoutes, { prefix: '/api/auctions' });
 fastify.register(analyticsRoutes, { prefix: '/api/analytics' });
+fastify.register(contactRoutes, { prefix: '/api/contact' });
 
 
 

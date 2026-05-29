@@ -31,6 +31,9 @@ export default fp(async function authPlugin(fastify, opts) {
             if (!dbUser) {
                 request.dbUser = null;
             } else {
+                if (dbUser.banned) {
+                    return reply.code(403).send({ error: 'Forbidden', message: 'Your account has been banned. Please contact support.' });
+                }
                 request.dbUser = dbUser;
             }
         } catch (err) {

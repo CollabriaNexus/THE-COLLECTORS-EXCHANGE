@@ -37,3 +37,82 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-serif);
 }
+
+/* Mobile Responsive Overrides */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 { font-size: 1.75rem !important; }
+  h2 { font-size: 1.375rem !important; }
+  h3 { font-size: 1.125rem !important; }
+  h4 { font-size: 1rem !important; }
+
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  [class*="p-10"],
+  [class*="p-12"],
+  [class*="p-16"] {
+    padding: 1.25rem !important;
+  }
+
+  [class*="px-10"],
+  [class*="px-12"],
+  [class*="px-16"] {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+
+  [class*="py-10"],
+  [class*="py-12"],
+  [class*="py-16"],
+  [class*="py-20"] {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  [class*="gap-12"] {
+    gap: 1.5rem !important;
+  }
+
+  input, select, textarea, button, a {
+    font-size: 14px !important;
+  }
+
+  [class*="p-4"]:where(input, select, textarea) {
+    padding: 0.625rem !important;
+  }
+
+  [class*="py-4"]:where(button) {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  [class*="grid-cols-"] {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  [class*="text-4xl"] { font-size: 2rem !important; }
+  [class*="text-5xl"] { font-size: 2.25rem !important; }
+  [class*="text-6xl"] { font-size: 2.5rem !important; }
+
+  [class*="p-8"] {
+    padding: 1.25rem !important;
+  }
+
+  [class*="py-16"] {
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+}

@@ -21,6 +21,7 @@ model User {
   role      String   @default("user") // "user", "admin", "curator"
   kycStatus String   @default("none") // "none", "pending", "verified"
   kycData   Json?    @default("{}")
+  banned    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -45,6 +46,8 @@ model Product {
   id                 String   @id @default(cuid())
   title              String
   category           String
+  brand              String?
+  listingCategory    String   @default("normal") // "normal", "featured", "most_rare"
   description        String
   condition          String
   price              Float

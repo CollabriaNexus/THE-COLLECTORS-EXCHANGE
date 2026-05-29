@@ -98,9 +98,11 @@ function Products() {
                             className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold focus:border-transparent outline-none"
                         >
                             <option value="all">All Categories</option>
-                            <option value="Collectables">Collectables</option>
+                            <option value="Collectibles">Collectibles</option>
                             <option value="Timepieces">Timepieces</option>
-                            <option value="Sneakers">Sneakers</option>
+                            <option value="Antiques">Antiques</option>
+                            <option value="Toys & Pop Culture">Toys & Pop Culture</option>
+                            <option value="Jewelry">Jewelry</option>
                         </select>
                     </div>
 

@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X, ShoppingBag, Store, Crown, Check, CreditCard, Upload, Bell, BarChart3 } from 'lucide-react';
+import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X, ShoppingBag, Store, Crown, Check, CreditCard, Upload, Bell, BarChart3, Eye, Edit3 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { getUser, setUser as setLocalUser, clearUser } from '../utils/storage';
-import { useMe, useRegisterUser, useSubmitKyc } from '../hooks/api/useUser';
+import { useMe, useRegisterUser, useSubmitKyc, useUpdateProfile } from '../hooks/api/useUser';
 import { useAddProduct } from '../hooks/api/useProducts';
 import { useMyOrders } from '../hooks/api/useOrders';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
@@ -319,9 +321,36 @@ const Account = () => {
         imageUrls: [''],
         keywords: '',
     });
+    const descRef = useRef(null);
+
+    const insertMarkdown = (before, after = '') => {
+        const textarea = descRef.current;
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.substring(start, end);
+        const newText = textarea.value.substring(0, start) + before + selected + after + textarea.value.substring(end);
+        setProductForm({ ...productForm, description: newText });
+        setTimeout(() => {
+            textarea.focus();
+            textarea.selectionStart = start + before.length;
+            textarea.selectionEnd = start + before.length + selected.length;
+        }, 0);
+    };
+
+    const toolbarItems = [
+        { label: 'B', action: () => insertMarkdown('**', '**'), title: 'Bold' },
+        { label: 'I', action: () => insertMarkdown('*', '*'), title: 'Italic' },
+        { label: 'H', action: () => insertMarkdown('## ', ''), title: 'Heading' },
+        { label: '•', action: () => insertMarkdown('- ', ''), title: 'Bullet List' },
+        { label: '1.', action: () => insertMarkdown('1. ', ''), title: 'Numbered List' },
+        { label: '🔗', action: () => insertMarkdown('[', '](url)'), title: 'Link' },
+        { label: '❝', action: () => insertMarkdown('> ', ''), title: 'Quote' },
+    ];
 
     // API Hooks
     const queryClient = useQueryClient();
+    const [descPreview, setDescPreview] = useState(false);
     const { data: user, isLoading: isUserLoading } = useMe();
     const { data: vendorProfile } = useVendorProfile();
     const subscribeMutation = useVendorSubscribe();
@@ -330,6 +359,9 @@ const Account = () => {
     const addProductMutation = useAddProduct();
     const { data: myOrders = [], isLoading: ordersLoading } = useMyOrders();
     const showToast = useToast();
+    const [editingProfile, setEditingProfile] = useState(false);
+    const [editProfileForm, setEditProfileForm] = useState({ name: '', phone: '' });
+    const updateProfileMutation = useUpdateProfile();
 
     const handleAuthChange = useCallback(async (session) => {
         if (session) {
@@ -768,37 +800,89 @@ const Account = () => {
             case 'profile':
                 return (
                     <div className="bg-white p-10 shadow-sm border border-gray-100">
-                        <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">Collector Profile</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
-                                <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 font-serif">{user.name}</div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
-                                <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800">{user.email}</div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
-                                {user.phone ? (
-                                    <div className="p-4 bg-green-50 border border-green-100 text-green-800 flex justify-between items-center">
-                                        <span>{user.phone}</span>
-                                        <span className="text-xs uppercase tracking-widest font-bold flex items-center gap-1">
-                                            <ShieldCheck size={14} /> Verified
-                                        </span>
+                        <div className="flex justify-between items-start mb-8">
+                            <h3 className="text-3xl font-serif text-heritage-charcoal">Collector Profile</h3>
+                            <button onClick={() => {
+                                if (editingProfile) {
+                                    setEditingProfile(false);
+                                    setEditProfileForm({ name: '', phone: '' });
+                                } else {
+                                    setEditProfileForm({ name: user.name || '', phone: user.phone || '' });
+                                    setEditingProfile(true);
+                                }
+                            }}
+                                className="text-sm text-luxury-gold hover:underline font-medium uppercase tracking-wider">
+                                {editingProfile ? 'Cancel' : 'Edit Profile'}
+                            </button>
+                        </div>
+                        {editingProfile ? (
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                try {
+                                    await updateProfileMutation.mutateAsync(editProfileForm);
+                                    showToast('Profile updated successfully!', 'success');
+                                    setEditingProfile(false);
+                                } catch {
+                                    showToast('Failed to update profile.', 'error');
+                                }
+                            }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
+                                    <input type="text" required value={editProfileForm.name}
+                                        onChange={e => setEditProfileForm({ ...editProfileForm, name: e.target.value })}
+                                        className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email</label>
+                                    <div className="p-4 bg-gray-100 border border-gray-200 text-gray-500 cursor-not-allowed">{user.email}</div>
+                                    <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
+                                    <input type="tel" value={editProfileForm.phone}
+                                        onChange={e => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
+                                        className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold" />
+                                </div>
+                                <div className="flex items-end">
+                                    <button type="submit" disabled={updateProfileMutation.isPending}
+                                        className="bg-heritage-charcoal text-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors flex items-center gap-2">
+                                        {updateProfileMutation.isPending && <Loader2 size={16} className="animate-spin" />}
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
+                                    <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 font-serif">{user.name}</div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
+                                    <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800">{user.email}</div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
+                                    {user.phone ? (
+                                        <div className="p-4 bg-green-50 border border-green-100 text-green-800 flex justify-between items-center">
+                                            <span>{user.phone}</span>
+                                            <span className="text-xs uppercase tracking-widest font-bold flex items-center gap-1">
+                                                <ShieldCheck size={14} /> Verified
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <PhoneVerification onVerified={handlePhoneVerified} />
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Membership Type</label>
+                                    <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 capitalize flex items-center gap-2">
+                                        {user.type}
+                                        {user.kycStatus === 'verified' && <ShieldCheck size={16} className="text-luxury-gold" />}
                                     </div>
-                                ) : (
-                                    <PhoneVerification onVerified={handlePhoneVerified} />
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Membership Type</label>
-                                <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 capitalize flex items-center gap-2">
-                                    {user.type}
-                                    {user.kycStatus === 'verified' && <ShieldCheck size={16} className="text-luxury-gold" />}
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 );
 
@@ -1047,14 +1131,62 @@ const Account = () => {
                                         <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                             Provenance & Description <span className="text-luxury-gold">*</span>
                                         </label>
-                                        <textarea
-                                            required
-                                            rows={6}
-                                            placeholder="Describe the history, condition, and provenance of the item. This text will be displayed as the main storytelling element on the product page."
-                                            value={productForm.description}
-                                            onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                                            className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold leading-relaxed"
-                                        />
+                                        <div className="border border-gray-200">
+                                            <div className="flex items-center border-b border-gray-200">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDescPreview(false)}
+                                                    className={`px-4 py-2 text-xs uppercase tracking-widest font-medium flex items-center gap-1.5 transition-colors ${!descPreview ? 'bg-luxury-gold text-black' : 'text-gray-500 hover:text-gray-800'}`}
+                                                >
+                                                    <Edit3 size={12} />
+                                                    Write
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDescPreview(true)}
+                                                    className={`px-4 py-2 text-xs uppercase tracking-widest font-medium flex items-center gap-1.5 transition-colors ${descPreview ? 'bg-luxury-gold text-black' : 'text-gray-500 hover:text-gray-800'}`}
+                                                >
+                                                    <Eye size={12} />
+                                                    Preview
+                                                </button>
+                                                {!descPreview && (
+                                                    <div className="flex items-center gap-0.5 ml-auto px-2 border-l border-gray-200">
+                                                        {toolbarItems.map((item) => (
+                                                            <button
+                                                                key={item.label}
+                                                                type="button"
+                                                                onClick={item.action}
+                                                                title={item.title}
+                                                                className="w-7 h-7 flex items-center justify-center text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors font-bold"
+                                                            >
+                                                                {item.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {descPreview ? (
+                                                <div className="p-4 min-h-[150px] prose prose-sm max-w-none">
+                                                    {productForm.description ? (
+                                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                            {productForm.description}
+                                                        </ReactMarkdown>
+                                                    ) : (
+                                                        <p className="text-gray-400 italic">Nothing to preview</p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <textarea
+                                                    ref={descRef}
+                                                    required
+                                                    rows={8}
+                                                    placeholder="Describe your item... Supports Markdown (use the toolbar above for formatting)"
+                                                    value={productForm.description}
+                                                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                                                    className="w-full p-4 border-0 focus:outline-none focus:ring-0 leading-relaxed resize-y"
+                                                />
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1243,7 +1375,51 @@ const Account = () => {
                 <div className="bg-white p-8 shadow-sm border border-gray-100">
                     <h2 className="text-2xl font-serif mb-2">My Orders</h2>
                     <p className="text-gray-500 text-sm mb-8">Track your purchases and shipments</p>
-                    ...
+                    {ordersLoading ? (
+                        <div className="flex justify-center py-16">
+                            <Loader2 className="animate-spin text-luxury-gold" size={32} />
+                        </div>
+                    ) : myOrders.length === 0 ? (
+                        <div className="text-center py-16 bg-gray-50 border border-gray-100 border-dashed">
+                            <ShoppingBag size={48} className="mx-auto text-gray-300 mb-4" />
+                            <p className="text-gray-500 font-serif text-lg">No orders yet.</p>
+                            <p className="text-gray-400 text-sm mt-1">When you make a purchase, your orders will appear here.</p>
+                            <Link to="/THE-COLLECTORS-EXCHANGE/category" className="inline-block mt-6 text-luxury-gold font-semibold hover:underline text-sm uppercase tracking-widest">
+                                Browse The Exchange
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {myOrders.map(order => (
+                                <div key={order.id} className="border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                                    <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase tracking-wider">Order #{order.id.slice(-8).toUpperCase()}</p>
+                                            <p className="text-xs text-gray-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' : order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' : order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' : order.status === 'Cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                                            {order.status}
+                                        </span>
+                                    </div>
+                                    {order.items?.map(item => (
+                                        <div key={item.id} className="flex items-center gap-4 py-3 border-t border-gray-50">
+                                            <img src={item.product?.image || 'https://via.placeholder.com/60'} alt={item.product?.title} className="w-14 h-14 object-cover bg-gray-50" />
+                                            <div className="flex-grow min-w-0">
+                                                <p className="text-sm font-medium truncate">{item.product?.title}</p>
+                                                <p className="text-xs text-gray-500">Qty: {item.quantity} &middot; ${item.price?.toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="flex justify-between items-center pt-3 border-t border-gray-100 mt-3">
+                                        <p className="text-sm text-gray-600">Total: <span className="font-semibold">${order.totalAmount?.toLocaleString()}</span></p>
+                                        {order.trackingID && (
+                                            <span className="text-xs text-gray-500">Tracking: {order.trackingID}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             );
         case 'notifications':

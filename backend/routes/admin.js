@@ -26,6 +26,42 @@ export default async function adminRoutes(fastify) {
         };
     });
 
+    // Get analytics data for dashboard charts
+    fastify.get('/stats/analytics', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const [revenueData, userGrowth, ordersByStatus, productsByCategory] = await Promise.all([
+            // Daily revenue for last 30 days
+            prisma.$queryRaw`
+                SELECT DATE(o."createdAt") as date, SUM(o."totalAmount") as revenue
+                FROM "Order" o
+                WHERE o."paymentStatus" = 'Paid' AND o."createdAt" >= NOW() - INTERVAL '30 days'
+                GROUP BY DATE(o."createdAt")
+                ORDER BY date ASC
+            `,
+            // User signups per day for last 30 days
+            prisma.$queryRaw`
+                SELECT DATE(u."createdAt") as date, COUNT(*) as count
+                FROM "User" u
+                WHERE u."createdAt" >= NOW() - INTERVAL '30 days'
+                GROUP BY DATE(u."createdAt")
+                ORDER BY date ASC
+            `,
+            // Orders by status
+            prisma.$queryRaw`
+                SELECT o."status", COUNT(*) as count
+                FROM "Order" o
+                GROUP BY o."status"
+            `,
+            // Products by category
+            prisma.$queryRaw`
+                SELECT p."category", COUNT(*) as count
+                FROM "Product" p
+                GROUP BY p."category"
+            `,
+        ]);
+
+        return { revenueData, userGrowth, ordersByStatus, productsByCategory };
+    });
+
     // ============== KYC MANAGEMENT ==============
 
     // Get all KYC requests with filters
@@ -198,6 +234,57 @@ export default async function adminRoutes(fastify) {
     });
 
     // ============== USER MANAGEMENT ==============
+
+    // Ban user
+    fastify.patch('/users/:id/ban', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (!user) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: { banned: true },
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: id,
+                title: 'Account Banned',
+                message: 'Your account has been banned. Please contact support for more information.',
+            }
+        });
+
+        return { message: 'User banned successfully', user: updatedUser };
+    });
+
+    // Unban user
+    fastify.patch('/users/:id/unban', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (!user) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: { banned: false },
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: id,
+                title: 'Account Unbanned',
+                message: 'Your account has been reinstated. You can now use The Collectors Exchange normally.',
+            }
+        });
+
+        return { message: 'User unbanned successfully', user: updatedUser };
+    });
+
     fastify.get('/users', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
         const { role, search } = request.query;
 
@@ -224,6 +311,7 @@ export default async function adminRoutes(fastify) {
                 type: true,
                 role: true,
                 kycStatus: true,
+                banned: true,
                 createdAt: true,
                 updatedAt: true,
                 vendor: {
@@ -434,8 +522,8 @@ export default async function adminRoutes(fastify) {
         return { message: 'Product is now under review', product: updatedProduct };
     });
 
-    // Approve product (Publish)
-    fastify.patch('/products/:id/approve', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+    // Approve product (Publish) — super admin only
+    fastify.patch('/products/:id/approve', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
         const { id } = request.params;
 
         const updatedProduct = await prisma.product.update({
@@ -495,8 +583,8 @@ export default async function adminRoutes(fastify) {
         return { message: 'Product rejected', product: updatedProduct };
     });
 
-    // Update authenticity status (legacy support or more granular control)
-    fastify.patch('/products/:id/authenticity', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+    // Update authenticity status — super admin only
+    fastify.patch('/products/:id/authenticity', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
         const { id } = request.params;
         const { status: authStatus } = request.body;
 
@@ -526,6 +614,52 @@ export default async function adminRoutes(fastify) {
         });
 
         return { message: 'Authenticity status updated', product: updatedProduct };
+    });
+
+    // Delete product
+    fastify.delete('/products/:id', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+
+        const existing = await prisma.product.findUnique({ where: { id } });
+        if (!existing) {
+            return reply.status(404).send({ error: 'Product not found' });
+        }
+
+        await prisma.product.delete({ where: { id } });
+
+        return { message: 'Product deleted successfully' };
+    });
+
+    // Update product (brand, listingCategory, etc.)
+    fastify.patch('/products/:id', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+        const { brand, listingCategory, category } = request.body;
+
+        const existing = await prisma.product.findUnique({ where: { id } });
+        if (!existing) {
+            return reply.status(404).send({ error: 'Product not found' });
+        }
+
+        const data = {};
+        if (brand !== undefined) data.brand = brand;
+        if (listingCategory !== undefined) data.listingCategory = listingCategory;
+        if (category !== undefined) data.category = category;
+
+        const updated = await prisma.product.update({ where: { id }, data });
+
+        return { message: 'Product updated successfully', product: updated };
+    });
+
+    // Get all unique brands
+    fastify.get('/brands', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const products = await prisma.product.findMany({
+            where: { brand: { not: null } },
+            select: { brand: true },
+            distinct: ['brand'],
+        });
+
+        const brands = products.map(p => p.brand).filter(Boolean);
+        return brands;
     });
 
     // ============== ORDER MANAGEMENT ==============
@@ -773,5 +907,42 @@ export default async function adminRoutes(fastify) {
             payouts,
             pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
         };
+    });
+
+    // Get TCE Store products (listed by super admin)
+    fastify.get('/products/tce-store', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const products = await prisma.product.findMany({
+            where: { seller: { role: 'admin' } },
+            include: { seller: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'desc' },
+        });
+        return { products };
+    });
+
+    // Create product as TCE (super admin) — auto-verified, auto-published
+    fastify.post('/products', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
+        const { title, category, description, condition, price, image, images, keywords, brand } = request.body;
+        if (!title || !category || !description || !condition || !price) {
+            return reply.status(400).send({ error: 'Missing required fields' });
+        }
+        const product = await prisma.product.create({
+            data: {
+                title,
+                category,
+                description,
+                condition,
+                price: parseFloat(price),
+                image: image || '',
+                images: images || [],
+                keywords: keywords || [],
+                brand: brand || null,
+                sellerId: request.dbUser.id,
+                status: 'Approved',
+                isPublished: true,
+                isVerified: true,
+                authenticityStatus: 'Verified',
+            },
+        });
+        return product;
     });
 }

@@ -19,6 +19,8 @@ import GalleryArticle from './pages/GalleryArticle';
 import SellerAgreement from './pages/SellerAgreement';
 import Checkout from './pages/Checkout';
 import VendorDashboard from './pages/VendorDashboard';
+import Contact from './pages/Contact';
+import FAQ from './pages/FAQ';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import { HelmetProvider } from 'react-helmet-async';
@@ -50,6 +52,8 @@ function App() {
           <Route path="/THE-COLLECTORS-EXCHANGE/seller-agreement" element={<SellerAgreement />} />
           <Route path="/THE-COLLECTORS-EXCHANGE/checkout" element={<Checkout />} />
           <Route path="/THE-COLLECTORS-EXCHANGE/vendor-dashboard" element={<VendorDashboard />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/contact" element={<Contact />} />
+          <Route path="/THE-COLLECTORS-EXCHANGE/faq" element={<FAQ />} />
           <Route path="*" element={<div className="container mx-auto py-12 px-6 text-center font-serif text-2xl">404 - Not Found</div>} />
         </Route>
       </Routes>

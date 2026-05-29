@@ -116,6 +116,28 @@ export default async function userRoutes(fastify) {
         return orders;
     });
 
+    // Update current user's profile
+    fastify.patch('/me', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const { name, phone } = request.body;
+
+        const existingUser = await prisma.user.findUnique({ where: { supabaseId } });
+        if (!existingUser) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const data = {};
+        if (name !== undefined) data.name = name;
+        if (phone !== undefined) data.phone = phone;
+
+        const updatedUser = await prisma.user.update({
+            where: { supabaseId },
+            data,
+        });
+
+        return updatedUser;
+    });
+
     // ============== NOTIFICATIONS ==============
 
     // Get user notifications
