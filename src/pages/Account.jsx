@@ -1618,7 +1618,7 @@ const Account = () => {
                                                         <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded">
                                                             <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1">Reason for Rejection</p>
                                                             <p className="text-xs text-red-600 leading-relaxed">{product.rejectionReason}</p>
-                                                            <p className="text-[10px] text-red-500 mt-2">Edit your listing to fix the issues and it will be sent for review again.</p>
+                                                            <p className="text-[10px] text-red-500 mt-2">Edit your listing to fix the issues and it will be sent for review again. For queries, contact <a href="mailto:support@collectorsexchange.in" className="underline font-medium">support@collectorsexchange.in</a>.</p>
                                                         </div>
                                                     )}
                                                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">

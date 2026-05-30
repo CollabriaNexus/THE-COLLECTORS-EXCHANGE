@@ -28,7 +28,7 @@ const FAQ_ITEMS = [
         questions: [
             { q: 'How do I create an account?', a: 'Click on the Account icon and choose "Create Application". You can sign up with your email or use Google OAuth for a faster registration.' },
             { q: 'Is my personal information secure?', a: 'Yes. All data is encrypted and handled per our Privacy Policy. We use Supabase for authentication and secure data storage. Your identity remains anonymous to buyers unless you choose otherwise.' },
-            { q: 'How do I delete my account?', a: 'Please contact our support team at support@collectorsexchange.com with your account details, and we will assist you with account deletion.' },
+            { q: 'How do I delete my account?', a: 'Please contact our support team at support@collectorsexchange.in with your account details, and we will assist you with account deletion.' },
             { q: 'What is the KYC verification process?', a: 'KYC requires submitting identity documents (Aadhaar, PAN) along with a digital signature of the Seller Agreement. Company accounts require additional documentation including GST and incorporation certificates.' },
         ]
     },

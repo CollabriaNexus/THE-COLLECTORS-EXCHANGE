@@ -16,7 +16,7 @@ const Contact = () => {
             setSent(true);
         } catch {
             // Fall back to mailto
-            const mailto = `mailto:support@collectorsexchange.com?subject=${encodeURIComponent(form.subject)}&body=${encodeURIComponent(`From: ${form.name} (${form.email})\n\n${form.message}`)}`;
+            const mailto = `mailto:support@collectorsexchange.in?subject=${encodeURIComponent(form.subject)}&body=${encodeURIComponent(`From: ${form.name} (${form.email})\n\n${form.message}`)}`;
             window.location.href = mailto;
         } finally {
             setSending(false);
@@ -50,7 +50,7 @@ const Contact = () => {
                     <div className="bg-white p-6 text-center shadow-sm border border-gray-100">
                         <Mail size={28} className="mx-auto text-luxury-gold mb-3" />
                         <h3 className="font-serif font-medium mb-2">Email</h3>
-                        <a href="mailto:support@collectorsexchange.com" className="text-sm text-gray-600 hover:text-luxury-gold">support@collectorsexchange.com</a>
+                        <a href="mailto:support@collectorsexchange.in" className="text-sm text-gray-600 hover:text-luxury-gold">support@collectorsexchange.in</a>
                     </div>
                     <div className="bg-white p-6 text-center shadow-sm border border-gray-100">
                         <MessageSquare size={28} className="mx-auto text-luxury-gold mb-3" />

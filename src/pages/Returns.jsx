@@ -27,7 +27,7 @@ const Returns = () => {
                     <p className="mb-2 font-medium text-black">During this period:</p>
                     <ul className="space-y-2 text-gray-700 mb-3">
                         <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Examine the item thoroughly. Compare it against the description, images, and condition notes provided on the listing.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>If there is a significant discrepancy (e.g., damage not disclosed, incorrect model, missing components), report it to us immediately at <a href="mailto:support@collectorsexchange.com" className="text-luxury-gold hover:underline">support@collectorsexchange.com</a>.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>If there is a significant discrepancy (e.g., damage not disclosed, incorrect model, missing components), report it to us immediately at <a href="mailto:support@collectorsexchange.in" className="text-luxury-gold hover:underline">support@collectorsexchange.in</a>.</span></li>
                         <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>We will review your claim and may offer a partial refund, full return, or replacement depending on the nature of the discrepancy.</span></li>
                     </ul>
                     <p className="text-sm text-gray-500 mt-2 italic">Note: Normal wear, patina, and character marks consistent with the item's age and described condition are not considered discrepancies.</p>
@@ -54,7 +54,7 @@ const Returns = () => {
                     <p className="mb-3 text-gray-700">If your item arrives damaged or is lost during shipping:</p>
                     <ul className="space-y-2 text-gray-700 mb-3">
                         <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Document the damage with photographs and retain all packaging materials.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Contact us within 48 hours of delivery at <a href="mailto:support@collectorsexchange.com" className="text-luxury-gold hover:underline">support@collectorsexchange.com</a> with your order number and photos.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Contact us within 48 hours of delivery at <a href="mailto:support@collectorsexchange.in" className="text-luxury-gold hover:underline">support@collectorsexchange.in</a> with your order number and photos.</span></li>
                         <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>We will file a claim with the courier and arrange a replacement or full refund, including shipping.</span></li>
                     </ul>
                 </section>
@@ -83,7 +83,7 @@ const Returns = () => {
                 <h3 className="text-sm font-bold uppercase tracking-widest text-luxury-gold mb-4">Need Help?</h3>
                 <p className="font-serif text-lg text-heritage-charcoal leading-relaxed">
                     If you have any questions about our return policy or need assistance with an order, please contact us at{' '}
-                    <a href="mailto:support@collectorsexchange.com" className="text-luxury-gold hover:underline">support@collectorsexchange.com</a>.
+                    <a href="mailto:support@collectorsexchange.in" className="text-luxury-gold hover:underline">support@collectorsexchange.in</a>.
                     We are here to ensure your experience with The Collectors Exchange is one of trust and satisfaction.
                 </p>
             </div>

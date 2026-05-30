@@ -445,7 +445,7 @@ function ProductDetail() {
                                     Send Remarks & Reject
                                 </button>
                                 <p className="text-[10px] text-gray-400 leading-relaxed">
-                                    Reject with these remarks. The seller will see them on their dashboard and can fix the issues to resubmit for review.
+                                    Reject with these remarks. The seller will see them on their dashboard and can fix the issues to resubmit for review. For queries, sellers can contact <a href="mailto:support@collectorsexchange.in" className="text-luxury-gold hover:underline">support@collectorsexchange.in</a>.
                                 </p>
                             </div>
                         </div>

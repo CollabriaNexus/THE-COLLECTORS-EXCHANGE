@@ -22,9 +22,9 @@ const Footer = () => {
                         </p>
                         <div className="pt-2">
                             <p className="text-[10px] uppercase tracking-widest text-luxury-gold mb-2">Contact Us</p>
-                            <a href="mailto:support@collectorsexchange.com" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
+                            <a href="mailto:support@collectorsexchange.in" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
                                 <Mail size={14} />
-                                support@collectorsexchange.com
+                                support@collectorsexchange.in
                             </a>
                         </div>
                     </div>
