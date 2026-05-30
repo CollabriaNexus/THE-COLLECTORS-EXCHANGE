@@ -181,17 +181,6 @@ const ProductDetail = () => {
                             </div>
                         )}
 
-                        {/* Keywords */}
-                        {keywords.length > 0 && (
-                            <div className="mb-6">
-                                <div className="flex flex-wrap gap-1.5">
-                                    {keywords.map(tag => (
-                                        <span key={tag} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 border border-gray-100 rounded-sm">#{tag}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
                         {/* Actions */}
                         <div className="flex gap-3 sm:gap-4">
                             {!currentUser ? (
@@ -231,6 +220,31 @@ const ProductDetail = () => {
                             >
                                 <Heart size={18} className="sm:w-5 sm:h-5" fill={inWishlist ? 'currentColor' : 'none'} />
                             </button>
+                        </div>
+
+                        {/* Trust Indicators below Add to Cart */}
+                        <div className="grid grid-cols-1 gap-3 mt-6">
+                            <div className="flex gap-3 items-start" title="Every item is verified by our expert team before shipping.">
+                                <ShieldCheck size={20} className="text-luxury-gold flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h4 className="font-serif text-sm font-medium text-black">Authenticity Guarantee</h4>
+                                    <p className="text-xs text-gray-500 leading-relaxed">Every item is verified by our expert team before shipping.</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 items-start" title="Insured shipping and secure ownership transfer.">
+                                <Share2 size={20} className="text-luxury-gold flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h4 className="font-serif text-sm font-medium text-black">Secure Transfer</h4>
+                                    <p className="text-xs text-gray-500 leading-relaxed">Insured shipping and secure ownership transfer.</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 items-start" title="Detailed condition assessment available on request.">
+                                <Info size={20} className="text-luxury-gold flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h4 className="font-serif text-sm font-medium text-black">Condition Report</h4>
+                                    <p className="text-xs text-gray-500 leading-relaxed">Detailed condition assessment available on request.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -285,43 +299,6 @@ const ProductDetail = () => {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-6 sm:pt-8 border-t border-gray-100">
-                        <div className="flex gap-4 items-start">
-                            <ShieldCheck size={24} className="text-luxury-gold flex-shrink-0" />
-                            <div>
-                                <h4 className="font-serif text-sm font-medium mb-1">Authenticity Guarantee</h4>
-                                <p className="text-xs text-gray-500 leading-relaxed">Every item is verified by our expert team before shipping.</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-4 items-start">
-                            <Share2 size={24} className="text-luxury-gold flex-shrink-0" />
-                            <div>
-                                <h4 className="font-serif text-sm font-medium mb-1">Secure Transfer</h4>
-                                <p className="text-xs text-gray-500 leading-relaxed">Insured shipping and secure ownership transfer.</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-4 items-start">
-                            <Info size={24} className="text-luxury-gold flex-shrink-0" />
-                            <div>
-                                <h4 className="font-serif text-sm font-medium mb-1">Condition Report</h4>
-                                <p className="text-xs text-gray-500 leading-relaxed">Detailed condition assessment available on request.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Keywords */}
-                    {keywords.length > 0 && (
-                        <div>
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Tags</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {keywords.map(tag => (
-                                    <span key={tag} className="px-3 py-1 bg-gray-50 text-gray-600 text-xs border border-gray-100 rounded-sm">
-                                        #{tag}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -373,9 +350,8 @@ const SuggestedProducts = ({ category, currentId }) => {
                                     </div>
                                 </div>
                                 <div className="p-4">
-                                    <span className="text-[10px] text-heritage-bronze uppercase tracking-[0.12em] font-medium">{product.category}</span>
-                                    <h3 className="font-serif text-sm font-medium text-heritage-charcoal mb-1 leading-snug line-clamp-1 mt-0.5">{title}</h3>
-                                    <p className="text-heritage-gold-muted font-sans text-sm font-medium">₹{product.price?.toLocaleString()}</p>
+                                    <h3 className="font-serif text-sm font-medium text-heritage-charcoal leading-snug line-clamp-1" title={title}>{title}</h3>
+                                    <p className="text-heritage-gold-muted font-sans text-sm font-medium mt-1.5">₹{product.price?.toLocaleString()}</p>
                                 </div>
                             </Link>
                         );
