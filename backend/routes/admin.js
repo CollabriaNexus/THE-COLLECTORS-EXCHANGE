@@ -633,7 +633,7 @@ export default async function adminRoutes(fastify) {
     // Update product (brand, listingCategory, etc.)
     fastify.patch('/products/:id', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
         const { id } = request.params;
-        const { brand, listingCategory, category } = request.body;
+        const { brand, listingCategory, category, title, description, price, condition, image, images, keywords } = request.body;
 
         const existing = await prisma.product.findUnique({ where: { id } });
         if (!existing) {
@@ -644,10 +644,18 @@ export default async function adminRoutes(fastify) {
         if (brand !== undefined) data.brand = brand;
         if (listingCategory !== undefined) data.listingCategory = listingCategory;
         if (category !== undefined) data.category = category;
+        if (title !== undefined) data.title = title;
+        if (description !== undefined) data.description = description;
+        if (price !== undefined) data.price = parseFloat(price);
+        if (condition !== undefined) data.condition = condition;
+        if (image !== undefined) data.image = image;
+        if (images !== undefined) data.images = images;
+        if (keywords !== undefined) data.keywords = keywords;
 
         const updated = await prisma.product.update({ where: { id }, data });
 
         return { message: 'Product updated successfully', product: updated };
+    });
     });
 
     // Get all unique brands

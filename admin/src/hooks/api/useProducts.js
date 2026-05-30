@@ -185,3 +185,22 @@ export const useCreateProduct = () => {
         },
     });
 };
+
+/**
+ * Hook to edit a TCE Store product (full update)
+ */
+export const useEditProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id, ...fields }) => {
+            const { data } = await apiClient.patch(`/admin/products/${id}`, fields);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+            queryClient.invalidateQueries({ queryKey: ['adminTCEProducts'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProduct'] });
+        },
+    });
+};

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Crown, Plus, Loader2, X, ShieldCheck, Gem, Edit3, Eye, Image as ImageIcon, Tag, Upload, Trash2, Info } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useTCEProducts, useCreateProduct } from '../hooks/api/useProducts';
+import { useTCEProducts, useCreateProduct, useEditProduct } from '../hooks/api/useProducts';
 import { uploadProductImage } from '../utils/storage';
 
 const CATEGORIES = ['Timepieces', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'];
@@ -12,7 +12,9 @@ const CONDITIONS = ['Mint', 'Excellent', 'Good', 'Fair', 'Poor'];
 const TCEStore = () => {
     const { data, isLoading } = useTCEProducts();
     const createProduct = useCreateProduct();
+    const editProduct = useEditProduct();
     const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState(null);
     const [descPreview, setDescPreview] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
     const descRef = useRef(null);
@@ -86,23 +88,51 @@ const TCEStore = () => {
             alert('Please provide at least one image.');
             return;
         }
+        const payload = {
+            title: form.title,
+            category: form.category,
+            description: form.description,
+            condition: form.condition,
+            price: parseFloat(form.price),
+            image: validImages[0],
+            images: validImages,
+            keywords: form.keywords.split(',').map(k => k.trim()).filter(Boolean),
+        };
         try {
-            await createProduct.mutateAsync({
-                title: form.title,
-                category: form.category,
-                description: form.description,
-                condition: form.condition,
-                price: parseFloat(form.price),
-                image: validImages[0],
-                images: validImages,
-                keywords: form.keywords.split(',').map(k => k.trim()).filter(Boolean),
-            });
+            if (editingId) {
+                await editProduct.mutateAsync({ id: editingId, ...payload });
+            } else {
+                await createProduct.mutateAsync(payload);
+            }
             setForm({ title: '', category: CATEGORIES[0], description: '', condition: 'Excellent', price: '', imageUrls: [''], keywords: '' });
             setDescPreview(false);
             setShowForm(false);
+            setEditingId(null);
         } catch (err) {
-            alert(err?.response?.data?.error || 'Failed to create product');
+            alert(err?.response?.data?.error || 'Failed to save product');
         }
+    };
+
+    const startEdit = (product) => {
+        setForm({
+            title: product.title,
+            category: product.category,
+            description: product.description,
+            condition: product.condition,
+            price: product.price?.toString() || '',
+            imageUrls: product.images?.length ? [...product.images] : [product.image || ''],
+            keywords: product.keywords?.join(', ') || '',
+        });
+        setEditingId(product.id);
+        setDescPreview(false);
+        setShowForm(true);
+    };
+
+    const cancelForm = () => {
+        setShowForm(false);
+        setEditingId(null);
+        setForm({ title: '', category: CATEGORIES[0], description: '', condition: 'Excellent', price: '', imageUrls: [''], keywords: '' });
+        setDescPreview(false);
     };
 
     return (
@@ -114,7 +144,7 @@ const TCEStore = () => {
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">Products listed by The Collectors Exchange — auto-verified, auto-published</p>
                 </div>
-                <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-luxury-gold text-black rounded-md hover:bg-luxury-gold/90 transition-colors font-medium text-sm">
+                <button onClick={() => showForm ? cancelForm() : setShowForm(true)} className="flex items-center gap-2 px-4 py-2 bg-luxury-gold text-black rounded-md hover:bg-luxury-gold/90 transition-colors font-medium text-sm">
                     {showForm ? <X size={18} /> : <Plus size={18} />}
                     {showForm ? 'Cancel' : 'Add Product'}
                 </button>
@@ -124,9 +154,9 @@ const TCEStore = () => {
                 <div className="bg-white border border-gray-100 shadow-sm mb-6">
                     <div className="p-10">
                         <div className="mb-8 pb-8 border-b border-gray-100">
-                            <h3 className="text-3xl font-serif mb-2 text-heritage-charcoal">New TCE Listing</h3>
+                            <h3 className="text-3xl font-serif mb-2 text-heritage-charcoal">{editingId ? 'Edit TCE Listing' : 'New TCE Listing'}</h3>
                             <p className="text-gray-500 font-light text-sm">
-                                Products are auto-verified and auto-published upon creation.
+                                {editingId ? 'Update product details below.' : 'Products are auto-verified and auto-published upon creation.'}
                             </p>
                         </div>
 
@@ -255,9 +285,9 @@ const TCEStore = () => {
                             </div>
 
                             <div className="pt-4 border-t border-gray-100 flex justify-end">
-                                <button type="submit" disabled={createProduct.isPending} className="bg-heritage-charcoal text-white px-12 py-4 text-sm uppercase tracking-widest hover:bg-heritage-dark transition-colors shadow-lg flex items-center justify-center gap-2">
-                                    {createProduct.isPending && <Loader2 size={16} className="animate-spin" />}
-                                    {createProduct.isPending ? 'Creating...' : 'Create Product'}
+                                <button type="submit" disabled={createProduct.isPending || editProduct.isPending} className="bg-heritage-charcoal text-white px-12 py-4 text-sm uppercase tracking-widest hover:bg-heritage-dark transition-colors shadow-lg flex items-center justify-center gap-2">
+                                    {(createProduct.isPending || editProduct.isPending) && <Loader2 size={16} className="animate-spin" />}
+                                    {createProduct.isPending || editProduct.isPending ? 'Saving...' : editingId ? 'Update Product' : 'Create Product'}
                                 </button>
                             </div>
                         </form>
@@ -276,23 +306,28 @@ const TCEStore = () => {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {products.map(product => (
-                        <Link key={product.id} to={`/products/${product.id}`} className="bg-white border border-gray-200 hover:shadow-md transition-shadow group">
-                            <div className="relative aspect-square bg-gray-50 overflow-hidden">
-                                {product.image ? (
-                                    <img src={product.image} alt={product.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
-                                ) : (
-                                    <div className="absolute inset-0 flex items-center justify-center text-gray-300"><Gem size={40} strokeWidth={1} /></div>
-                                )}
-                                <div className="absolute top-2 left-2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded flex items-center gap-1">
-                                    <ShieldCheck size={10} /> Verified
+                        <div key={product.id} className="bg-white border border-gray-200 hover:shadow-md transition-shadow group relative">
+                            <Link to={`/products/${product.id}`}>
+                                <div className="relative aspect-square bg-gray-50 overflow-hidden">
+                                    {product.image ? (
+                                        <img src={product.image} alt={product.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center text-gray-300"><Gem size={40} strokeWidth={1} /></div>
+                                    )}
+                                    <div className="absolute top-2 left-2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded flex items-center gap-1">
+                                        <ShieldCheck size={10} /> Verified
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="p-3">
-                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">{product.category}</span>
-                                <h3 className="font-serif text-sm font-medium text-heritage-charcoal line-clamp-1 mt-0.5">{product.title}</h3>
-                                <p className="text-luxury-gold font-sans text-sm font-medium mt-1">₹{product.price?.toLocaleString()}</p>
-                            </div>
-                        </Link>
+                                <div className="p-3">
+                                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">{product.category}</span>
+                                    <h3 className="font-serif text-sm font-medium text-heritage-charcoal line-clamp-1 mt-0.5">{product.title}</h3>
+                                    <p className="text-luxury-gold font-sans text-sm font-medium mt-1">₹{product.price?.toLocaleString()}</p>
+                                </div>
+                            </Link>
+                            <button type="button" onClick={(e) => { e.preventDefault(); startEdit(product); }} className="absolute top-2 right-2 p-1.5 bg-white/90 rounded text-gray-400 hover:text-luxury-gold transition-colors shadow-sm opacity-0 group-hover:opacity-100" title="Edit product">
+                                <Edit3 size={14} />
+                            </button>
+                        </div>
                     ))}
                 </div>
             )}
