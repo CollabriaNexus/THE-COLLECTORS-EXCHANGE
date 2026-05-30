@@ -88,3 +88,20 @@ export const useDeleteProduct = () => {
     });
 };
 
+/**
+ * Hook to bulk create products (for BULK vendors)
+ */
+export const useAddBulkProducts = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (products) => {
+            const { data } = await apiClient.post('/products/bulk', { products });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+        },
+    });
+};
+

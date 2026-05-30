@@ -215,4 +215,66 @@ export default async function productRoutes(fastify) {
 
         return reply.status(204).send();
     });
+
+    // Bulk create products (for BULK vendors)
+    fastify.post('/bulk', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { products } = request.body;
+        const dbUser = request.dbUser;
+
+        if (!dbUser) {
+            return reply.status(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+        }
+
+        if (!Array.isArray(products) || products.length === 0) {
+            return reply.status(400).send({ error: 'Bad Request', message: 'Products array is required and must not be empty.' });
+        }
+
+        if (dbUser.kycStatus !== 'verified') {
+            return reply.status(403).send({ error: 'Forbidden', message: 'Seller KYC verification is required.' });
+        }
+
+        let vendor = dbUser.vendor || await prisma.vendor.create({
+            data: {
+                userId: dbUser.id,
+                type: 'BULK',
+                status: 'APPROVED',
+                maxListings: 999999,
+            }
+        });
+
+        if (vendor.type !== 'BULK') {
+            return reply.status(403).send({ error: 'Forbidden', message: 'Bulk upload is only available for BULK vendors.' });
+        }
+
+        const created = [];
+        const errors = [];
+
+        for (let i = 0; i < products.length; i++) {
+            const item = products[i];
+            try {
+                const parsed = ProductSchema.parse({
+                    ...item,
+                    sellerId: dbUser.id,
+                    price: parseFloat(item.price),
+                    keywords: item.keywords ? (typeof item.keywords === 'string' ? item.keywords.split(',').map(k => k.trim()).filter(Boolean) : item.keywords) : [],
+                    images: item.images || (item.image ? [item.image] : []),
+                });
+                const product = await prisma.product.create({
+                    data: {
+                        ...parsed,
+                        images: parsed.images || [],
+                        keywords: parsed.keywords || [],
+                        authenticityStatus: 'Pending',
+                        status: 'Pending',
+                        isPublished: false,
+                    },
+                });
+                created.push(product);
+            } catch (err) {
+                errors.push({ row: i + 1, title: item.title || '(no title)', error: err.message || 'Validation failed' });
+            }
+        }
+
+        return { created: created.length, errors, products: created };
+    });
 }

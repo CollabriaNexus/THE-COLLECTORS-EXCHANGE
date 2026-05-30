@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X, ShoppingBag, Store, Crown, Check, CreditCard, Upload, Bell, BarChart3, Eye, Edit3 } from 'lucide-react';
+import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X, ShoppingBag, Store, Crown, Check, CreditCard, Upload, Bell, BarChart3, Eye, Edit3, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import Papa from 'papaparse';
 import { getUser, setUser as setLocalUser, clearUser } from '../utils/storage';
 import { useMe, useRegisterUser, useSubmitKyc, useUpdateProfile } from '../hooks/api/useUser';
-import { useAddProduct } from '../hooks/api/useProducts';
+import { useAddProduct, useDeleteProduct, useAddBulkProducts } from '../hooks/api/useProducts';
 import { useMyOrders } from '../hooks/api/useOrders';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/api/useNotifications';
@@ -357,6 +358,9 @@ const Account = () => {
     const { mutateAsync: registerUser, isPending: isRegisterPending } = useRegisterUser();
     const kycMutation = useSubmitKyc();
     const addProductMutation = useAddProduct();
+    const deleteProductMutation = useDeleteProduct();
+    const bulkAddProductsMutation = useAddBulkProducts();
+    const [bulkResults, setBulkResults] = useState(null);
     const { data: myOrders = [], isLoading: ordersLoading } = useMyOrders();
     const showToast = useToast();
     const [editingProfile, setEditingProfile] = useState(false);
@@ -597,6 +601,59 @@ const Account = () => {
             showToast('Product listed successfully! Your item is now live in The Exchange.', 'success');
         } catch {
             showToast('Failed to list product.', 'error');
+        }
+    };
+
+    const handleBulkCsvUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+                if (results.errors.length > 0) {
+                    showToast('CSV parsing error. Check your file format.', 'error');
+                    return;
+                }
+                try {
+                    const res = await bulkAddProductsMutation.mutateAsync(results.data);
+                    setBulkResults(res);
+                    queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+                    if (res.created > 0) {
+                        showToast(`${res.created} products created successfully!`, 'success');
+                    }
+                } catch (err) {
+                    showToast(err?.response?.data?.error || 'Bulk upload failed.', 'error');
+                }
+            },
+            error: () => {
+                showToast('Failed to read CSV file.', 'error');
+            },
+        });
+        e.target.value = '';
+    };
+
+    const handleDownloadCsvTemplate = () => {
+        const headers = ['title', 'category', 'description', 'condition', 'price', 'image', 'keywords'];
+        const sampleRow = ['Example Item', 'Timepieces', 'A detailed description of the item.', 'Excellent', '999', 'https://example.com/image.jpg', 'vintage, luxury, rare'];
+        const csv = Papa.unparse({ fields: headers, data: [sampleRow] });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tce-bulk-upload-template.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleDeleteProduct = async (productId) => {
+        if (!window.confirm('Are you sure you want to delete this listing?')) return;
+        try {
+            await deleteProductMutation.mutateAsync(productId);
+            showToast('Product deleted.', 'success');
+            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+        } catch {
+            showToast('Failed to delete product.', 'error');
         }
     };
 
@@ -1309,44 +1366,134 @@ const Account = () => {
                             </div>
                         )}
 
-                        {/* User's Listings */}
+                        {/* User's Listings / Portfolio */}
                         <div className="bg-white p-10 shadow-sm border border-gray-100">
-                            <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">My Collection</h3>
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h3 className="text-3xl font-serif text-heritage-charcoal">My Collection</h3>
+                                    {vendorProfile ? (
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            {vendorProfile.type === 'BULK' ? (
+                                                <span className="text-luxury-gold font-medium">Bulk Vendor — Unlimited Listings</span>
+                                            ) : (
+                                                <span>{vendorProfile.activeCount ?? userProducts.length} of {vendorProfile.maxListings || 5} listings used</span>
+                                            )}
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            {userProducts.length} of {user.type === 'company' ? '∞' : '5'} listings used
+                                        </p>
+                                    )}
+                                </div>
+                                {vendorProfile?.type === 'BULK' && (
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={handleDownloadCsvTemplate}
+                                            className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium"
+                                        >
+                                            <Download size={16} /> Template
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => document.getElementById('bulk-csv-input')?.click()}
+                                            className="flex items-center gap-2 px-4 py-2 text-sm border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-black transition-colors font-medium"
+                                        >
+                                            <Upload size={16} /> Bulk Upload
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Slot usage bar for single vendors */}
+                            {(!vendorProfile || vendorProfile.type !== 'BULK') && (
+                                <div className="w-full bg-gray-100 h-2 mb-6 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-luxury-gold transition-all rounded-full"
+                                        style={{ width: `${Math.min((userProducts.length / (vendorProfile?.maxListings || 5)) * 100, 100)}%` }}
+                                    />
+                                </div>
+                            )}
+
+                            {/* CSV Bulk Upload Section (hidden file input) */}
+                            <input
+                                id="bulk-csv-input"
+                                type="file"
+                                accept=".csv"
+                                className="hidden"
+                                onChange={handleBulkCsvUpload}
+                            />
+
+                            {/* Bulk upload progress / results */}
+                            {bulkResults && (
+                                <div className={`mb-6 p-4 border ${bulkResults.errors?.length > 0 ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'}`}>
+                                    <p className="text-sm font-medium mb-1">
+                                        {bulkResults.created > 0 ? `✓ ${bulkResults.created} products created` : 'No products created'}
+                                    </p>
+                                    {bulkResults.errors?.length > 0 && (
+                                        <div className="text-xs text-red-600 mt-2">
+                                            {bulkResults.errors.map((err, i) => (
+                                                <p key={i}>Row {err.row} ({err.title}): {err.error}</p>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setBulkResults(null)}
+                                        className="text-xs text-gray-500 underline mt-2"
+                                    >
+                                        Dismiss
+                                    </button>
+                                </div>
+                            )}
+
                             {userProducts.length > 0 ? (
-                                <div className="space-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {userProducts.map(product => (
-                                        <div key={product.id} className="border border-gray-100 p-6 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow">
-                                            <img
-                                                src={product.image || 'https://via.placeholder.com/150'}
-                                                alt={product.title}
-                                                className="w-full md:w-40 h-40 object-cover bg-gray-50"
-                                            />
-                                            <div className="flex-grow">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <h4 className="font-serif text-xl mb-2">{product.title}</h4>
-                                                        <div className="flex items-center gap-4 text-xs text-gray-500 uppercase tracking-wider mb-4">
-                                                            <span>{product.category}</span>
-                                                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                                                            <span>{product.condition}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="font-serif text-lg font-medium">₹{product.price?.toLocaleString()}</p>
-                                                        {product.authenticityStatus === 'Verified' ? (
-                                                            <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-1 mt-2">
-                                                                <ShieldCheck size={12} /> Authenticated
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-1 mt-2">
-                                                                Pending Review
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                        <div key={product.id} className="border border-gray-100 hover:shadow-md transition-shadow group bg-white">
+                                            <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
+                                                <img
+                                                    src={product.image || 'https://via.placeholder.com/300'}
+                                                    alt={product.title}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                />
+                                                <div className="absolute top-2 right-2">
+                                                    {product.authenticityStatus === 'Verified' ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-1 rounded">
+                                                            <ShieldCheck size={10} /> Authenticated
+                                                        </span>
+                                                    ) : product.status === 'Approved' ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">
+                                                            Published
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                                                            Pending Review
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
-                                                    {product.description}
-                                                </p>
+                                                {product.status === 'Approved' && (
+                                                    <div className="absolute top-2 left-2">
+                                                        <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">Live</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-4">
+                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">{product.category}</span>
+                                                <h4 className="font-serif text-base font-medium text-heritage-charcoal line-clamp-1 mt-0.5">{product.title}</h4>
+                                                <p className="text-luxury-gold font-sans text-sm font-medium mt-1">₹{product.price?.toLocaleString()}</p>
+                                                <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">{product.description}</p>
+                                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                                    <span className="text-[10px] text-gray-400">{product.condition}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteProduct(product.id)}
+                                                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                                        title="Delete listing"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
