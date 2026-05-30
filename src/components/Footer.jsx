@@ -44,6 +44,7 @@ const Footer = () => {
                             <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
                                 <Link to="/contact" className="hover:text-white transition-colors duration-300">Contact Us</Link>
                                 <Link to="/faq" className="hover:text-white transition-colors duration-300">FAQ</Link>
+                                <Link to="/returns" className="hover:text-white transition-colors duration-300">Returns & Refunds</Link>
                                 <Link to="/seller-agreement" className="hover:text-white transition-colors duration-300">Seller Agreement</Link>
                             </div>
                         </div>

@@ -21,6 +21,7 @@ import Checkout from './pages/Checkout';
 import VendorDashboard from './pages/VendorDashboard';
 import Contact from './pages/Contact';
 import FAQ from './pages/FAQ';
+import Returns from './pages/Returns';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import { HelmetProvider } from 'react-helmet-async';
@@ -54,6 +55,7 @@ function App() {
           <Route path="/vendor-dashboard" element={<VendorDashboard />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/returns" element={<Returns />} />
           <Route path="*" element={<div className="container mx-auto py-12 px-6 text-center font-serif text-2xl">404 - Not Found</div>} />
         </Route>
       </Routes>
