@@ -396,4 +396,46 @@ export default async function vendorRoutes(fastify) {
 
         return { message: 'Subscription activated successfully', vendor: updatedVendor };
     });
+
+    // Get vendor's sold orders (orders containing vendor's products)
+    fastify.get('/orders', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const dbUser = request.dbUser;
+        const productIds = (await prisma.product.findMany({
+            where: { sellerId: dbUser.id },
+            select: { id: true }
+        })).map(p => p.id);
+
+        const orderItems = await prisma.orderItem.findMany({
+            where: { productId: { in: productIds } },
+            include: {
+                order: { include: { user: { select: { name: true, email: true, phone: true } } } },
+                product: { select: { id: true, title: true, image: true, price: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return orderItems;
+    });
+
+    // Vendor marks order item as shipped with tracking ID
+    fastify.patch('/orders/:orderItemId/ship', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { orderItemId } = request.params;
+        const { trackingID } = request.body;
+        const dbUser = request.dbUser;
+
+        const orderItem = await prisma.orderItem.findUnique({
+            where: { id: orderItemId },
+            include: { product: true, order: true },
+        });
+
+        if (!orderItem) return reply.status(404).send({ error: 'Order item not found' });
+        if (orderItem.product.sellerId !== dbUser.id) return reply.status(403).send({ error: 'Not your product' });
+
+        await prisma.order.update({
+            where: { id: orderItem.orderId },
+            data: { trackingID, status: 'Shipped' },
+        });
+
+        return { message: 'Marked as shipped', trackingID };
+    });
 }

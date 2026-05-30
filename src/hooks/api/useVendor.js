@@ -113,3 +113,32 @@ export const useVendorSubscribe = () => {
         },
     });
 };
+
+/**
+ * Hook to fetch vendor's sold order items
+ */
+export const useVendorOrders = () => {
+    return useQuery({
+        queryKey: ['vendor', 'orders'],
+        queryFn: async () => {
+            const { data } = await apiClient.get('/vendor/orders');
+            return data;
+        },
+    });
+};
+
+/**
+ * Hook to mark an order item as shipped
+ */
+export const useShipOrderItem = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ orderItemId, trackingID }) => {
+            const { data } = await apiClient.patch(`/vendor/orders/${orderItemId}/ship`, { trackingID });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vendor', 'orders'] });
+        },
+    });
+};

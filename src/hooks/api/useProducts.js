@@ -105,3 +105,21 @@ export const useAddBulkProducts = () => {
     });
 };
 
+/**
+ * Hook to mark a product as sold
+ */
+export const useMarkAsSold = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id) => {
+            const { data } = await apiClient.patch(`/products/${id}/sold`);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+            queryClient.invalidateQueries({ queryKey: ['vendor', 'stats'] });
+        },
+    });
+};
+

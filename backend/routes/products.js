@@ -277,4 +277,15 @@ export default async function productRoutes(fastify) {
 
         return { created: created.length, errors, products: created };
     });
+
+    // Mark product as sold
+    fastify.patch('/:id/sold', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { id } = ProductIdParam.parse(request.params);
+        const dbUser = request.dbUser;
+        const existing = await prisma.product.findUnique({ where: { id } });
+        if (!existing) return reply.status(404).send({ error: 'Product not found' });
+        if (existing.sellerId !== dbUser.id) return reply.status(403).send({ error: 'Not your product' });
+        const updated = await prisma.product.update({ where: { id }, data: { status: 'Sold', isPublished: false } });
+        return updated;
+    });
 }

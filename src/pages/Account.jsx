@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm';
 import Papa from 'papaparse';
 import { getUser, setUser as setLocalUser, clearUser } from '../utils/storage';
 import { useMe, useRegisterUser, useSubmitKyc, useUpdateProfile } from '../hooks/api/useUser';
-import { useAddProduct, useDeleteProduct, useAddBulkProducts } from '../hooks/api/useProducts';
+import { useAddProduct, useDeleteProduct, useAddBulkProducts, useUpdateProduct, useMarkAsSold } from '../hooks/api/useProducts';
 import { useMyOrders } from '../hooks/api/useOrders';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/api/useNotifications';
@@ -16,7 +16,7 @@ import { supabase } from '../utils/supabase';
 import { uploadProductImage, uploadKycDocument } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
-import { useVendorProfile, useVendorSubscribe } from '../hooks/api/useVendor';
+import { useVendorProfile, useVendorStats, useVendorPayouts, useVendorOrders, useShipOrderItem, useVendorSubscribe } from '../hooks/api/useVendor';
 
 // Helper Component for Phone Verification
 const PhoneVerification = ({ onVerified }) => {
@@ -354,18 +354,27 @@ const Account = () => {
     const [descPreview, setDescPreview] = useState(false);
     const { data: user, isLoading: isUserLoading } = useMe();
     const { data: vendorProfile } = useVendorProfile();
+    const { data: vendorStats } = useVendorStats();
+    const { data: vendorPayoutsData } = useVendorPayouts();
+    const { data: vendorOrderItems } = useVendorOrders();
+    const shipOrderItem = useShipOrderItem();
+    const [shippingTracking, setShippingTracking] = useState({});
     const subscribeMutation = useVendorSubscribe();
     const { mutateAsync: registerUser, isPending: isRegisterPending } = useRegisterUser();
     const kycMutation = useSubmitKyc();
     const addProductMutation = useAddProduct();
     const deleteProductMutation = useDeleteProduct();
     const bulkAddProductsMutation = useAddBulkProducts();
+    const markAsSoldMutation = useMarkAsSold();
     const [bulkResults, setBulkResults] = useState(null);
     const { data: myOrders = [], isLoading: ordersLoading } = useMyOrders();
     const showToast = useToast();
     const [editingProfile, setEditingProfile] = useState(false);
     const [editProfileForm, setEditProfileForm] = useState({ name: '', phone: '' });
     const updateProfileMutation = useUpdateProfile();
+    const updateProductMutation = useUpdateProduct();
+    const [editingProductId, setEditingProductId] = useState(null);
+    const [editProductForm, setEditProductForm] = useState({ title: '', description: '', price: '', condition: '', category: '', keywords: '' });
 
     const handleAuthChange = useCallback(async (session) => {
         if (session) {
@@ -646,6 +655,29 @@ const Account = () => {
         URL.revokeObjectURL(url);
     };
 
+    const handleExportPortfolioCsv = () => {
+        const headers = ['title', 'category', 'description', 'condition', 'price', 'status', 'authenticityStatus', 'keywords', 'image'];
+        const data = userProducts.map(p => ({
+            title: p.title,
+            category: p.category,
+            description: p.description?.replace(/"/g, '""'),
+            condition: p.condition,
+            price: p.price || 0,
+            status: p.status || 'Pending',
+            authenticityStatus: p.authenticityStatus || 'Pending',
+            keywords: (p.keywords || []).join(', '),
+            image: p.image || '',
+        }));
+        const csv = Papa.unparse({ fields: headers, data });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'my-portfolio-export.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     const handleDeleteProduct = async (productId) => {
         if (!window.confirm('Are you sure you want to delete this listing?')) return;
         try {
@@ -654,6 +686,44 @@ const Account = () => {
             queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
         } catch {
             showToast('Failed to delete product.', 'error');
+        }
+    };
+
+    const handleStartEdit = (product) => {
+        setEditingProductId(product.id);
+        setEditProductForm({
+            title: product.title || '',
+            description: product.description || '',
+            price: product.price?.toString() || '',
+            condition: product.condition || '',
+            category: product.category || '',
+            keywords: (product.keywords || []).join(', '),
+        });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingProductId(null);
+        setEditProductForm({ title: '', description: '', price: '', condition: '', category: '', keywords: '' });
+    };
+
+    const handleSaveEdit = async (productId) => {
+        try {
+            await updateProductMutation.mutateAsync({
+                id: productId,
+                productData: {
+                    title: editProductForm.title,
+                    description: editProductForm.description,
+                    price: parseFloat(editProductForm.price),
+                    condition: editProductForm.condition,
+                    category: editProductForm.category,
+                    keywords: editProductForm.keywords.split(',').map(k => k.trim()).filter(Boolean),
+                },
+            });
+            showToast('Product updated! It will be re-reviewed.', 'success');
+            handleCancelEdit();
+            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+        } catch {
+            showToast('Failed to update product.', 'error');
         }
     };
 
@@ -1385,24 +1455,23 @@ const Account = () => {
                                         </p>
                                     )}
                                 </div>
-                                {vendorProfile?.type === 'BULK' && (
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={handleDownloadCsvTemplate}
-                                            className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium"
-                                        >
-                                            <Download size={16} /> Template
+                                <div className="flex items-center gap-3">
+                                    {vendorProfile?.type === 'BULK' && (
+                                        <>
+                                            <button type="button" onClick={handleDownloadCsvTemplate} className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium">
+                                                <Download size={16} /> Template
+                                            </button>
+                                            <button type="button" onClick={() => document.getElementById('bulk-csv-input')?.click()} className="flex items-center gap-2 px-4 py-2 text-sm border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-black transition-colors font-medium">
+                                                <Upload size={16} /> Bulk Upload
+                                            </button>
+                                        </>
+                                    )}
+                                    {userProducts.length > 0 && (
+                                        <button type="button" onClick={handleExportPortfolioCsv} className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium">
+                                            <Download size={16} /> Export CSV
                                         </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => document.getElementById('bulk-csv-input')?.click()}
-                                            className="flex items-center gap-2 px-4 py-2 text-sm border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-black transition-colors font-medium"
-                                        >
-                                            <Upload size={16} /> Bulk Upload
-                                        </button>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
 
                             {/* Slot usage bar for single vendors */}
@@ -1447,55 +1516,109 @@ const Account = () => {
                                 </div>
                             )}
 
+                            {userProducts.length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                                    <div className="bg-gray-50 p-4 border border-gray-100">
+                                        <p className="text-2xl font-serif font-bold text-heritage-charcoal">{userProducts.length}</p>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Total Listings</p>
+                                    </div>
+                                    <div className="bg-gray-50 p-4 border border-gray-100">
+                                        <p className="text-2xl font-serif font-bold text-green-700">{userProducts.filter(p => p.status === 'Approved').length}</p>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Live / Published</p>
+                                    </div>
+                                    <div className="bg-gray-50 p-4 border border-gray-100">
+                                        <p className="text-2xl font-serif font-bold text-heritage-charcoal">{userProducts.filter(p => p.status !== 'Approved').length}</p>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Pending Review</p>
+                                    </div>
+                                    <div className="bg-gray-50 p-4 border border-gray-100">
+                                        <p className="text-2xl font-serif font-bold text-luxury-gold">{vendorStats ? `₹${(vendorStats.totalSales || 0).toLocaleString()}` : '₹0'}</p>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Total Sales</p>
+                                    </div>
+                                </div>
+                            )}
+
                             {userProducts.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {userProducts.map(product => (
-                                        <div key={product.id} className="border border-gray-100 hover:shadow-md transition-shadow group bg-white">
-                                            <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
-                                                <img
-                                                    src={product.image || 'https://via.placeholder.com/300'}
-                                                    alt={product.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                                />
-                                                <div className="absolute top-2 right-2">
-                                                    {product.authenticityStatus === 'Verified' ? (
-                                                        <span className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-1 rounded">
-                                                            <ShieldCheck size={10} /> Authenticated
-                                                        </span>
-                                                    ) : product.status === 'Approved' ? (
-                                                        <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">
-                                                            Published
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
-                                                            Pending Review
-                                                        </span>
+                                        editingProductId === product.id ? (
+                                            <div key={product.id} className="border border-luxury-gold bg-white col-span-1 sm:col-span-2 lg:col-span-3">
+                                                <div className="p-6">
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h4 className="font-serif text-lg font-medium">Edit: {product.title}</h4>
+                                                        <button type="button" onClick={handleCancelEdit} className="text-gray-400 hover:text-black"><X size={18} /></button>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Title</label>
+                                                            <input value={editProductForm.title} onChange={e => setEditProductForm({...editProductForm, title: e.target.value})} className="w-full p-3 border border-gray-200 text-sm" />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Description</label>
+                                                            <textarea rows={4} value={editProductForm.description} onChange={e => setEditProductForm({...editProductForm, description: e.target.value})} className="w-full p-3 border border-gray-200 text-sm" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Price (₹)</label>
+                                                            <input type="number" value={editProductForm.price} onChange={e => setEditProductForm({...editProductForm, price: e.target.value})} className="w-full p-3 border border-gray-200 text-sm" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Condition</label>
+                                                            <select value={editProductForm.condition} onChange={e => setEditProductForm({...editProductForm, condition: e.target.value})} className="w-full p-3 border border-gray-200 text-sm bg-white">
+                                                                {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Category</label>
+                                                            <select value={editProductForm.category} onChange={e => setEditProductForm({...editProductForm, category: e.target.value})} className="w-full p-3 border border-gray-200 text-sm bg-white">
+                                                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Keywords (comma separated)</label>
+                                                            <input value={editProductForm.keywords} onChange={e => setEditProductForm({...editProductForm, keywords: e.target.value})} className="w-full p-3 border border-gray-200 text-sm" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+                                                        <button type="button" onClick={handleCancelEdit} className="px-6 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50">Cancel</button>
+                                                        <button type="button" onClick={() => handleSaveEdit(product.id)} disabled={updateProductMutation.isPending} className="px-6 py-2 text-sm bg-heritage-charcoal text-white hover:bg-heritage-brown flex items-center gap-2">
+                                                            {updateProductMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+                                                            Save Changes
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div key={product.id} className="border border-gray-100 hover:shadow-md transition-shadow group bg-white">
+                                                <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
+                                                    <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                    <div className="absolute top-2 right-2">
+                                                        {product.authenticityStatus === 'Verified' ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-1 rounded"><ShieldCheck size={10} /> Authenticated</span>
+                                                        ) : product.status === 'Approved' ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">Published</span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">Pending Review</span>
+                                                        )}
+                                                    </div>
+                                                    {product.status === 'Approved' && (
+                                                        <div className="absolute top-2 left-2"><span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">Live</span></div>
                                                     )}
                                                 </div>
-                                                {product.status === 'Approved' && (
-                                                    <div className="absolute top-2 left-2">
-                                                        <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">Live</span>
+                                                <div className="p-4">
+                                                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">{product.category}</span>
+                                                    <h4 className="font-serif text-base font-medium text-heritage-charcoal line-clamp-1 mt-0.5">{product.title}</h4>
+                                                    <p className="text-luxury-gold font-sans text-sm font-medium mt-1">₹{product.price?.toLocaleString()}</p>
+                                                    <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">{product.description}</p>
+                                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                                        <span className="text-[10px] text-gray-400">{product.condition}</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <button type="button" onClick={() => handleStartEdit(product)} className="text-gray-400 hover:text-luxury-gold transition-colors p-1" title="Edit listing"><Edit3 size={14} /></button>
+                                                            <button type="button" onClick={() => markAsSoldMutation.mutate(product.id)} className="text-gray-400 hover:text-green-600 transition-colors p-1" title="Mark as sold"><Tag size={14} /></button>
+                                                            <button type="button" onClick={() => handleDeleteProduct(product.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Delete listing"><Trash2 size={14} /></button>
+                                                        </div>
                                                     </div>
-                                                )}
-                                            </div>
-                                            <div className="p-4">
-                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">{product.category}</span>
-                                                <h4 className="font-serif text-base font-medium text-heritage-charcoal line-clamp-1 mt-0.5">{product.title}</h4>
-                                                <p className="text-luxury-gold font-sans text-sm font-medium mt-1">₹{product.price?.toLocaleString()}</p>
-                                                <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">{product.description}</p>
-                                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                                    <span className="text-[10px] text-gray-400">{product.condition}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteProduct(product.id)}
-                                                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                                                        title="Delete listing"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )
                                     ))}
                                 </div>
                             ) : (
@@ -1571,6 +1694,106 @@ const Account = () => {
             );
         case 'notifications':
             return <NotificationsPanel />;
+        case 'payouts':
+            return (
+                <div className="bg-white p-8 shadow-sm border border-gray-100">
+                    <h2 className="text-2xl font-serif mb-2">Payouts</h2>
+                    <p className="text-gray-500 text-sm mb-8">Track your earnings and payout requests</p>
+                    {vendorStats ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                            <div className="bg-green-50 p-4 border border-green-100">
+                                <p className="text-2xl font-serif font-bold text-green-700">₹{(vendorStats.totalSales || 0).toLocaleString()}</p>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Total Earnings</p>
+                            </div>
+                            <div className="bg-blue-50 p-4 border border-blue-100">
+                                <p className="text-2xl font-serif font-bold text-blue-700">{vendorStats.totalItemsSold || 0}</p>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Items Sold</p>
+                            </div>
+                            <div className="bg-amber-50 p-4 border border-amber-100">
+                                <p className="text-2xl font-serif font-bold text-amber-700">{vendorStats.uniqueOrders || 0}</p>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Unique Orders</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 bg-gray-50 border border-gray-100 border-dashed mb-8">
+                            <p className="text-gray-500 font-serif">No sales data yet.</p>
+                            <p className="text-gray-400 text-sm mt-1">Earnings will appear once items are sold.</p>
+                        </div>
+                    )}
+                    <div className="border-t border-gray-100 pt-6">
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">Payout History</h3>
+                        {vendorPayoutsData?.payouts?.length > 0 ? (
+                            <div className="space-y-3">
+                                {vendorPayoutsData.payouts.map(payout => (
+                                    <div key={payout.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100">
+                                        <div>
+                                            <p className="font-medium text-sm">₹{parseFloat(payout.amount).toLocaleString()}</p>
+                                            <p className="text-xs text-gray-500">{new Date(payout.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                        <span className={`text-xs px-2 py-1 rounded ${payout.status === 'completed' ? 'bg-green-50 text-green-700' : payout.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                            {payout.status}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-400 italic">No payouts yet.</p>
+                        )}
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-6 mt-6">
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">Sold Items — Shipping</h3>
+                        {vendorOrderItems?.length > 0 ? (
+                            <div className="space-y-3">
+                                {vendorOrderItems.map(item => (
+                                    <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100">
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <img src={item.product?.image || ''} alt={item.product?.title} className="w-12 h-12 object-cover bg-gray-100 rounded" />
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium">{item.product?.title}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    Buyer: {item.order?.user?.name || item.order?.user?.email} · ₹{item.price?.toLocaleString()}
+                                                </p>
+                                                <p className="text-xs text-gray-400">
+                                                    Order status: {item.order?.status} · Tracking: {item.order?.trackingID || '—'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {item.order?.status !== 'Shipped' && item.order?.status !== 'Delivered' ? (
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Tracking ID"
+                                                    value={shippingTracking[item.id] || ''}
+                                                    onChange={e => setShippingTracking(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                                    className="w-28 p-2 text-xs border border-gray-200"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        const tid = shippingTracking[item.id];
+                                                        if (!tid) { alert('Enter a tracking ID'); return; }
+                                                        await shipOrderItem.mutateAsync({ orderItemId: item.id, trackingID: tid });
+                                                        setShippingTracking(prev => ({ ...prev, [item.id]: '' }));
+                                                    }}
+                                                    disabled={shipOrderItem.isPending}
+                                                    className="text-xs px-3 py-2 bg-heritage-charcoal text-white hover:bg-heritage-brown"
+                                                >
+                                                    Ship
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded">Shipped</span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-400 italic">No items sold yet.</p>
+                        )}
+                    </div>
+                </div>
+            );
         default:
             return null;
         }
@@ -1622,6 +1845,14 @@ const Account = () => {
                                 >
                                     <Bell size={18} /> Notifications
                                 </button>
+                                {vendorProfile && (
+                                    <button
+                                        onClick={() => setActiveTab('payouts')}
+                                        className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'payouts' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                    >
+                                        <CreditCard size={18} /> Payouts
+                                    </button>
+                                )}
                                 {vendorProfile?.status === 'APPROVED' && (
                                     <Link
                                         to="/THE-COLLECTORS-EXCHANGE/vendor-dashboard"
