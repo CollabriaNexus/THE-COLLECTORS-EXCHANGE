@@ -10,7 +10,7 @@ export default async function productRoutes(fastify) {
 
     // Get all products (Public catalog)
     fastify.get('/', async (request, reply) => {
-        const { category, search, sellerId, page, limit } = request.query;
+        const { category, search, sellerId, page, limit, listingCategory } = request.query;
 
         const where = {};
 
@@ -41,6 +41,10 @@ export default async function productRoutes(fastify) {
 
         if (category && category !== 'all') {
             where.category = { equals: category, mode: 'insensitive' };
+        }
+
+        if (listingCategory) {
+            where.listingCategory = listingCategory;
         }
 
         if (search) {

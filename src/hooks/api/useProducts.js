@@ -7,14 +7,16 @@ import apiClient from './apiClient';
  * @param {string} search
  * @param {number} page
  * @param {number} pageSize
+ * @param {string} listingCategory
  */
-export const useProducts = (category, search, page = 1, pageSize = 12) => {
+export const useProducts = (category, search, page = 1, pageSize = 12, listingCategory) => {
     return useQuery({
-        queryKey: ['products', category, search, page, pageSize],
+        queryKey: ['products', category, search, page, pageSize, listingCategory],
         queryFn: async () => {
             const params = new URLSearchParams();
             if (category && category !== 'all') params.append('category', category);
             if (search) params.append('search', search);
+            if (listingCategory) params.append('listingCategory', listingCategory);
             params.append('page', page);
             params.append('limit', pageSize);
             const { data } = await apiClient.get(`/products?${params.toString()}`);

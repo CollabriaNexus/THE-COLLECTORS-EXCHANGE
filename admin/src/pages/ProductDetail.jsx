@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, XCircle, Package, Eye, EyeOff, Clock, MessageSquare, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Eye, EyeOff, Clock, MessageSquare, Trash2, Plus, Edit3 } from 'lucide-react';
 import { useProductDetail, useApproveProduct, useRejectProduct, useReviewProduct, useUpdateAuthenticityStatus, useDeleteProduct, useUpdateProduct, useBrands } from '../hooks/api/useProducts';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -21,6 +21,7 @@ function ProductDetail() {
     const [success, setSuccess] = useState('');
     const [brandInputMode, setBrandInputMode] = useState(false);
     const [customBrand, setCustomBrand] = useState('');
+    const [isEditingCategory, setIsEditingCategory] = useState(false);
 
     const { data: product, isLoading } = useProductDetail(id);
     const { data: brands = [] } = useBrands();
@@ -52,6 +53,24 @@ function ProductDetail() {
             setError(err.message || 'Failed to approve product');
         }
     };
+
+    const [lightboxIndex, setLightboxIndex] = useState(null);
+    const [imageFeedback, setImageFeedback] = useState('');
+
+    const allImages = product?.image
+        ? [product.image, ...(product?.images?.filter(img => img !== product.image) || [])]
+        : (product?.images || []);
+
+    useEffect(() => {
+        if (lightboxIndex === null) return;
+        const handleKey = (e) => {
+            if (e.key === 'Escape') setLightboxIndex(null);
+            if (e.key === 'ArrowLeft' && lightboxIndex > 0) setLightboxIndex(lightboxIndex - 1);
+            if (e.key === 'ArrowRight' && lightboxIndex < allImages.length - 1) setLightboxIndex(lightboxIndex + 1);
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [lightboxIndex, allImages.length]);
 
     const handleReject = async () => {
         if (!rejectionReason.trim()) {
@@ -217,11 +236,26 @@ function ProductDetail() {
                             <img
                                 src={product.image}
                                 alt={product.title}
-                                className="w-full h-96 object-contain rounded-lg bg-gray-50"
+                                className="w-full h-96 object-contain rounded-lg bg-gray-50 cursor-zoom-in"
+                                onClick={() => setLightboxIndex(0)}
                             />
                         ) : (
                             <div className="w-full h-96 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400">
                                 <Package size={64} strokeWidth={1} />
+                            </div>
+                        )}
+                        {allImages.length > 1 && (
+                            <div className="flex gap-2 mt-3 overflow-x-auto">
+                                {allImages.map((img, i) => (
+                                    <img
+                                        key={i}
+                                        src={img}
+                                        alt=""
+                                        className={`w-16 h-16 object-cover rounded border-2 cursor-pointer flex-shrink-0 ${i === 0 ? 'border-luxury-gold' : 'border-gray-200 hover:border-gray-400'}`}
+                                        onClick={() => setLightboxIndex(i)}
+                                        onError={(e) => { e.target.style.display = 'none' }}
+                                    />
+                                ))}
                             </div>
                         )}
                     </div>
@@ -244,9 +278,47 @@ function ProductDetail() {
                             <div>
                                 <dt className="text-xs uppercase tracking-wider font-semibold text-gray-500">Listing</dt>
                                 <dd className="text-sm font-medium mt-1">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${product.listingCategory === 'most_rare' ? 'bg-purple-100 text-purple-800' : product.listingCategory === 'featured' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                                        {product.listingCategory || 'normal'}
-                                    </span>
+                                    {isEditingCategory ? (
+                                        <div className="flex gap-2">
+                                            <select
+                                                value={editListingCategory}
+                                                onChange={(e) => setEditListingCategory(e.target.value)}
+                                                className="px-2 py-1 border border-gray-300 rounded text-xs outline-none focus:ring-2 focus:ring-luxury-gold"
+                                                autoFocus
+                                            >
+                                                <option value="normal">Normal</option>
+                                                <option value="featured">Featured</option>
+                                                <option value="most_rare">Most Rare</option>
+                                            </select>
+                                            <button
+                                                onClick={async () => {
+                                                    if (editListingCategory !== (product.listingCategory || 'normal')) {
+                                                        await updateProductMutation.mutateAsync({ id, listingCategory: editListingCategory });
+                                                    }
+                                                    setIsEditingCategory(false);
+                                                }}
+                                                className="text-xs text-green-600 hover:underline font-medium"
+                                            >Save</button>
+                                            <button
+                                                onClick={() => {
+                                                    setEditListingCategory(product.listingCategory || 'normal');
+                                                    setIsEditingCategory(false);
+                                                }}
+                                                className="text-xs text-gray-500 hover:underline"
+                                            >Cancel</button>
+                                        </div>
+                                    ) : (
+                                        <span
+                                            onClick={() => {
+                                                setEditListingCategory(product.listingCategory || 'normal');
+                                                setIsEditingCategory(true);
+                                            }}
+                                            className={`cursor-pointer inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold ${product.listingCategory === 'most_rare' ? 'bg-purple-100 text-purple-800' : product.listingCategory === 'featured' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
+                                        >
+                                            {product.listingCategory || 'normal'}
+                                            <Edit3 size={12} className="opacity-50 group-hover:opacity-100" />
+                                        </span>
+                                    )}
                                 </dd>
                             </div>
                             <div>
@@ -351,6 +423,31 @@ function ProductDetail() {
                                     Delete Product
                                 </button>
                             </div>
+
+                            <div className="pt-4 border-t space-y-3">
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Image Review</p>
+                                <textarea
+                                    value={imageFeedback}
+                                    onChange={(e) => setImageFeedback(e.target.value)}
+                                    placeholder="e.g., Blurry image, poor lighting, missing angles, watermark visible..."
+                                    className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md text-xs focus:ring-2 focus:ring-luxury-gold outline-none resize-none"
+                                ></textarea>
+                                <button
+                                    onClick={() => {
+                                        if (!imageFeedback.trim()) return;
+                                        setRejectionReason(imageFeedback);
+                                        setShowRejectModal(true);
+                                    }}
+                                    disabled={!imageFeedback.trim() || rejectMutation.isPending}
+                                    className="w-full flex items-center justify-center gap-2 bg-orange-50 text-orange-700 py-2.5 rounded-md text-sm font-medium hover:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <XCircle size={16} />
+                                    Request Image Changes
+                                </button>
+                                <p className="text-[10px] text-gray-400 leading-relaxed">
+                                    This will reject the product with your feedback as the reason. The seller can update images and resubmit.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -440,6 +537,46 @@ function ProductDetail() {
                     </div>
                 </div>
             </div>
+
+            {/* Image Lightbox */}
+            {lightboxIndex !== null && (
+                <div
+                    className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+                    onClick={() => setLightboxIndex(null)}
+                >
+                    <button
+                        onClick={() => setLightboxIndex(null)}
+                        className="absolute top-4 right-4 text-white/80 hover:text-white z-10"
+                    >
+                        <XCircle size={32} />
+                    </button>
+                    <span className="absolute top-4 left-4 text-white/60 text-sm font-mono">
+                        {lightboxIndex + 1} / {allImages.length}
+                    </span>
+                    {lightboxIndex > 0 && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+                            className="absolute left-4 text-white/80 hover:text-white"
+                        >
+                            <ArrowLeft size={36} />
+                        </button>
+                    )}
+                    <img
+                        src={allImages[lightboxIndex]}
+                        alt=""
+                        className="max-w-[90vw] max-h-[90vh] object-contain"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    {lightboxIndex < allImages.length - 1 && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+                            className="absolute right-4 text-white/80 hover:text-white"
+                        >
+                            <ArrowLeft size={36} className="rotate-180" />
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Reject Modal */}
             <Modal

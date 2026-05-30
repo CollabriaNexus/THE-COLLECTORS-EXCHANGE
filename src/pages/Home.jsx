@@ -13,7 +13,12 @@ const FeaturedProductsCarousel = () => {
     const trackRef = useRef(null);
     const [paused, setPaused] = React.useState(false);
     const { data, isLoading } = useProducts(null, '', 1, 10);
-    const products = data?.products || [];
+    const allProducts = data?.products || [];
+
+    // Only show products marked as featured or most_rare
+    const products = allProducts.filter(
+        p => p.listingCategory === 'featured' || p.listingCategory === 'most_rare'
+    );
 
     if (isLoading || products.length === 0) return null;
 
@@ -92,7 +97,7 @@ const FeaturedProductsCarousel = () => {
                         onMouseLeave={() => setPaused(false)}
                     >
                         {cards}
-                        {cards}
+                        {cards.length >= 2 && cards}
                     </div>
                 </div>
             </div>
