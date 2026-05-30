@@ -1,12 +1,13 @@
 import React, { useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive, ChevronLeft, ChevronRight, ShoppingBag, Award, Gem, Heart, Pause, Play } from 'lucide-react';
+import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive, ChevronLeft, ChevronRight, ShoppingBag, Award, Gem, Heart, Pause, Play, Quote, QuoteIcon } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import heroVideo from '../assets/hero_section.mp4';
 import verificationAuthenticity from '../assets/verification_authenticity.png';
 import { useProducts } from '../hooks/api/useProducts';
 import { getUser, addToCart, isInCart } from '../utils/storage';
+import { useTestimonials } from '../hooks/api/useTestimonials';
 
 const FeaturedProductsCarousel = () => {
     const trackRef = useRef(null);
@@ -256,7 +257,54 @@ const Home = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Testimonials Section */}
+            <TestimonialsSection />
         </div>
+    );
+};
+
+const TestimonialsSection = () => {
+    const { data: testimonials, isLoading } = useTestimonials();
+    const [activeIndex, setActiveIndex] = React.useState(0);
+
+    if (isLoading || !testimonials?.length) return null;
+
+    const t = testimonials[activeIndex];
+
+    return (
+        <section className="py-16 sm:py-20 px-6 bg-heritage-cream">
+            <div className="container mx-auto max-w-4xl text-center">
+                <div className="flex items-center justify-center gap-4 mb-6">
+                    <div className="h-px w-8 bg-luxury-gold/40"></div>
+                    <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Testimonials</span>
+                    <div className="h-px w-8 bg-luxury-gold/40"></div>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal mb-10">What Our <span className="text-luxury-gold italic font-light">Collectors</span> Say</h2>
+                <div className="bg-white p-8 sm:p-12 shadow-sm border border-gray-100 relative">
+                    <Quote className="text-luxury-gold/20 absolute top-4 left-4 w-12 h-12 sm:w-16 sm:h-16" />
+                    <p className="text-lg sm:text-xl text-gray-700 leading-relaxed font-sans italic mb-6 relative z-10">&ldquo;{t.content}&rdquo;</p>
+                    <div className="flex items-center justify-center gap-1 mb-3">
+                        {[1,2,3,4,5].map(i => (
+                            <span key={i} className={`text-lg ${i <= t.rating ? 'text-amber-400' : 'text-gray-200'}`}>★</span>
+                        ))}
+                    </div>
+                    <p className="font-serif font-bold text-heritage-charcoal">— {t.authorName}</p>
+                </div>
+                {testimonials.length > 1 && (
+                    <div className="flex items-center justify-center gap-3 mt-6">
+                        {testimonials.map((_, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onClick={() => setActiveIndex(i)}
+                                className={`w-2.5 h-2.5 rounded-full transition-all ${i === activeIndex ? 'bg-luxury-gold w-6' : 'bg-gray-300 hover:bg-gray-400'}`}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+        </section>
     );
 };
 

@@ -17,6 +17,7 @@ import { uploadProductImage, uploadKycDocument } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useVendorProfile, useVendorStats, useVendorPayouts, useVendorOrders, useShipOrderItem, useVendorSubscribe } from '../hooks/api/useVendor';
+import { useTestimonials, useSubmitTestimonial } from '../hooks/api/useTestimonials';
 
 // Helper Component for Phone Verification
 const PhoneVerification = ({ onVerified }) => {
@@ -359,6 +360,9 @@ const Account = () => {
     const { data: vendorOrderItems } = useVendorOrders();
     const shipOrderItem = useShipOrderItem();
     const [shippingTracking, setShippingTracking] = useState({});
+    const submitTestimonial = useSubmitTestimonial();
+    const [testimonialForm, setTestimonialForm] = useState({ content: '', authorName: '', rating: 5 });
+    const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
     const subscribeMutation = useVendorSubscribe();
     const { mutateAsync: registerUser, isPending: isRegisterPending } = useRegisterUser();
     const kycMutation = useSubmitKyc();
@@ -1690,6 +1694,44 @@ const Account = () => {
                             ))}
                         </div>
                     )}
+
+                    <div className="mt-10 pt-8 border-t border-gray-100">
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">Share Your Experience</h3>
+                        {testimonialSubmitted ? (
+                            <p className="text-green-700 bg-green-50 p-4 text-sm">Thank you! Your testimonial has been submitted for review.</p>
+                        ) : (
+                            <div className="max-w-lg">
+                                <div className="mb-4">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Rating</label>
+                                    <div className="flex gap-1">
+                                        {[1,2,3,4,5].map(i => (
+                                            <button key={i} type="button" onClick={() => setTestimonialForm(prev => ({ ...prev, rating: i }))} className={`text-2xl ${i <= testimonialForm.rating ? 'text-amber-400' : 'text-gray-200'} hover:text-amber-300 transition-colors`}>★</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Name</label>
+                                    <input type="text" value={testimonialForm.authorName} onChange={e => setTestimonialForm(prev => ({ ...prev, authorName: e.target.value }))} placeholder="Your name" className="w-full p-3 border border-gray-200 text-sm" />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Your Testimonial</label>
+                                    <textarea rows={4} value={testimonialForm.content} onChange={e => setTestimonialForm(prev => ({ ...prev, content: e.target.value }))} placeholder="Share your experience with The Collectors Exchange..." className="w-full p-3 border border-gray-200 text-sm resize-none" />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        if (!testimonialForm.content || testimonialForm.content.length < 10) { alert('Please write at least 10 characters.'); return; }
+                                        await submitTestimonial.mutateAsync(testimonialForm);
+                                        setTestimonialSubmitted(true);
+                                    }}
+                                    disabled={submitTestimonial.isPending}
+                                    className="px-6 py-3 bg-heritage-charcoal text-white text-xs uppercase tracking-widest hover:bg-heritage-brown transition-colors"
+                                >
+                                    {submitTestimonial.isPending ? 'Submitting...' : 'Submit Testimonial'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         case 'notifications':
