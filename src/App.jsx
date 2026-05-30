@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Category from './pages/Category';
@@ -26,10 +27,17 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import { HelmetProvider } from 'react-helmet-async';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function App() {
   return (
     <HelmetProvider>
     <BrowserRouter>
+      <ScrollToTop />
       <ErrorBoundary>
       <ToastProvider>
       <Routes>

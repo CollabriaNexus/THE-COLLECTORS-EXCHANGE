@@ -106,14 +106,14 @@ const ProductDetail = () => {
                 </div>
             </div>
 
-            {/* Top Row: Left = Header + Actions, Right = Image + Vertical Thumbnails */}
-            <div className="container mx-auto px-4 sm:px-6 pt-8 sm:pt-12 md:pt-20">
-                <div className="flex flex-col lg:flex-row gap-8 sm:gap-12 lg:gap-16">
-                    {/* Left: Main Image + Vertical Thumbnails */}
-                    <div className="w-full lg:w-3/5 flex gap-2 sm:gap-4 order-2 lg:order-1">
-                        {/* Thumbnails (Vertical) */}
+            {/* Top Row */}
+            <div className="container mx-auto px-4 sm:px-6 pt-4 sm:pt-12 md:pt-20">
+                <div className="flex flex-col lg:flex-row gap-4 sm:gap-12 lg:gap-16">
+                    {/* Left: Main Image + Thumbnails */}
+                    <div className="w-full lg:w-3/5 flex gap-2 sm:gap-4 order-1">
+                        {/* Thumbnails */}
                         {images.length > 1 && (
-                            <div className="flex flex-col gap-2 sm:gap-3 w-12 sm:w-16 md:w-20 shrink-0">
+                            <div className="flex flex-col gap-1 sm:gap-3 w-10 sm:w-16 md:w-20 shrink-0">
                                 {images.map((img, idx) => (
                                     <button
                                         key={idx}
@@ -130,82 +130,82 @@ const ProductDetail = () => {
                             <img
                                 src={images[activeImageIndex]}
                                 alt={product.title}
-                                className="w-full h-full object-contain mix-blend-multiply p-4 sm:p-6 md:p-8"
+                                className="w-full h-full object-contain p-2 sm:p-6 md:p-8"
                             />
                             {product.isVerified && (
-                                <div className="absolute top-3 sm:top-6 left-3 sm:left-6 bg-white/90 backdrop-blur-sm border border-gray-200 px-3 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-sm">
-                                    <ShieldCheck size={14} className="sm:w-4 sm:h-4 text-green-700" />
-                                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-800">Verified Authentic</span>
+                                <div className="absolute top-2 sm:top-6 left-2 sm:left-6 bg-white/90 backdrop-blur-sm border border-gray-200 px-2 sm:px-4 py-1 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-sm">
+                                    <ShieldCheck size={12} className="sm:w-4 sm:h-4 text-green-700" />
+                                    <span className="text-[9px] sm:text-xs font-bold uppercase tracking-widest text-gray-800">Verified Authentic</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Right: Category, Title, Price, Actions, Details */}
-                    <div className="w-full lg:w-2/5 order-1 lg:order-2">
-                        <div className="mb-6 sm:mb-8">
-                            <div className="flex items-center flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
-                                <span className="px-2 sm:px-3 py-1 bg-heritage-cream text-heritage-bronze text-[10px] sm:text-xs font-bold uppercase tracking-widest">
+                    {/* Right: Product Info */}
+                    <div className="w-full lg:w-2/5 order-2">
+                        <div className="mb-4 sm:mb-8">
+                            <div className="flex items-center flex-wrap gap-1.5 sm:gap-3 mb-2 sm:mb-4">
+                                <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-heritage-cream text-heritage-bronze text-[9px] sm:text-xs font-bold uppercase tracking-widest">
                                     {product.category}
                                 </span>
                                 {product.condition && (
-                                    <span className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest border border-gray-200 px-2 sm:px-3 py-1 rounded-full">
+                                    <span className="text-[9px] sm:text-xs text-gray-500 uppercase tracking-widest border border-gray-200 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full">
                                         {product.condition}
                                     </span>
                                 )}
                                 {product.listingCategory && product.listingCategory !== 'normal' && (
-                                    <span className={`text-[10px] px-2 py-1 rounded-full uppercase tracking-widest font-semibold ${product.listingCategory === 'most_rare' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-widest font-semibold ${product.listingCategory === 'most_rare' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
                                         {product.listingCategory}
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif text-heritage-charcoal leading-tight mb-4 sm:mb-6">
+                            <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-serif text-heritage-charcoal leading-tight mb-2 sm:mb-6">
                                 {product.title}
                             </h1>
-                            <p className="text-2xl sm:text-3xl font-light text-heritage-charcoal">
+                            <p className="text-xl sm:text-3xl font-light text-heritage-charcoal">
                                 ₹{product.price?.toLocaleString()}
                             </p>
                             {product.brand && (
-                                <p className="text-sm text-gray-500 mt-2 uppercase tracking-wider">{product.brand}</p>
+                                <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 uppercase tracking-wider">{product.brand}</p>
                             )}
                         </div>
 
                         {/* Seller Info */}
                         {product.seller && (
-                            <div className="mb-6 p-4 bg-gray-50 border border-gray-100">
-                                <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Brokered By</p>
-                                <p className="font-serif text-base font-medium text-heritage-charcoal">{product.seller.name || 'The Collectors Exchange'}</p>
+                            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 border border-gray-100">
+                                <p className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest mb-0.5 sm:mb-1">Brokered By</p>
+                                <p className="font-serif text-sm sm:text-base font-medium text-heritage-charcoal">{product.seller.name || 'The Collectors Exchange'}</p>
                                 {product.seller.type === 'company' && (
-                                    <span className="text-[10px] text-luxury-gold uppercase tracking-wider">Verified Company</span>
+                                    <span className="text-[9px] sm:text-[10px] text-luxury-gold uppercase tracking-wider">Verified Company</span>
                                 )}
                             </div>
                         )}
 
                         {/* Actions */}
-                        <div className="flex gap-3 sm:gap-4">
+                        <div className="flex gap-2 sm:gap-4">
                             {!currentUser ? (
                                 <Link
                                     to="/account"
-                                    className="flex-1 py-4 sm:py-5 text-[11px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-2 sm:gap-3 bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg"
+                                    className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg"
                                 >
-                                    <ShoppingBag size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                    <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
                                     Sign In to Acquire
                                 </Link>
                             ) : (
                                 <button
                                     onClick={handleAddToCart}
                                     disabled={inCart || addToCartMutation.isPending}
-                                    className={`flex-1 py-4 sm:py-5 text-[11px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-2 sm:gap-3 ${inCart
+                                    className={`flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 ${inCart
                                         ? 'bg-gray-100 text-gray-400 cursor-default'
                                         : 'bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg'
                                         }`}
                                 >
                                     {addToCartMutation.isPending ? (
-                                        <Loader2 size={16} className="animate-spin sm:w-[18px] sm:h-[18px]" />
+                                        <Loader2 size={14} className="animate-spin sm:w-[18px] sm:h-[18px]" />
                                     ) : inCart || cartFeedback ? (
-                                        <Check size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                        <Check size={14} className="sm:w-[18px] sm:h-[18px]" />
                                     ) : (
-                                        <ShoppingBag size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                        <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
                                     )}
                                     {inCart ? 'Added to Cart' : cartFeedback ? 'Added!' : 'Acquire Now'}
                                 </button>
@@ -213,36 +213,36 @@ const ProductDetail = () => {
                             <button
                                 onClick={handleWishlistToggle}
                                 disabled={!currentUser || addToWishlistMutation.isPending || removeFromWishlistMutation.isPending}
-                                className={`px-4 sm:px-6 border transition-colors ${inWishlist
+                                className={`px-3 sm:px-6 border transition-colors ${inWishlist
                                     ? 'border-red-200 bg-red-50 text-red-600'
                                     : 'border-gray-200 hover:border-heritage-charcoal text-gray-500 hover:text-heritage-charcoal'
                                     } disabled:opacity-40`}
                             >
-                                <Heart size={18} className="sm:w-5 sm:h-5" fill={inWishlist ? 'currentColor' : 'none'} />
+                                <Heart size={16} className="sm:w-5 sm:h-5" fill={inWishlist ? 'currentColor' : 'none'} />
                             </button>
                         </div>
 
-                        {/* Trust Indicators below Add to Cart */}
-                        <div className="grid grid-cols-1 gap-3 mt-6">
-                            <div className="flex gap-3 items-start" title="Every item is verified by our expert team before shipping.">
-                                <ShieldCheck size={20} className="text-luxury-gold flex-shrink-0 mt-0.5" />
+                        {/* Trust Indicators */}
+                        <div className="grid grid-cols-1 gap-2 sm:gap-3 mt-4 sm:mt-6">
+                            <div className="flex gap-2 sm:gap-3 items-start" title="Every item is verified by our expert team before shipping.">
+                                <ShieldCheck size={16} className="sm:w-5 sm:h-5 text-luxury-gold flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h4 className="font-serif text-sm font-medium text-black">Authenticity Guarantee</h4>
-                                    <p className="text-xs text-gray-500 leading-relaxed">Every item is verified by our expert team before shipping.</p>
+                                    <h4 className="font-serif text-xs sm:text-sm font-medium text-black">Authenticity Guarantee</h4>
+                                    <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">Every item is verified by our expert team before shipping.</p>
                                 </div>
                             </div>
-                            <div className="flex gap-3 items-start" title="Insured shipping and secure ownership transfer.">
-                                <Share2 size={20} className="text-luxury-gold flex-shrink-0 mt-0.5" />
+                            <div className="flex gap-2 sm:gap-3 items-start" title="Insured shipping and secure ownership transfer.">
+                                <Share2 size={16} className="sm:w-5 sm:h-5 text-luxury-gold flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h4 className="font-serif text-sm font-medium text-black">Secure Transfer</h4>
-                                    <p className="text-xs text-gray-500 leading-relaxed">Insured shipping and secure ownership transfer.</p>
+                                    <h4 className="font-serif text-xs sm:text-sm font-medium text-black">Secure Transfer</h4>
+                                    <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">Insured shipping and secure ownership transfer.</p>
                                 </div>
                             </div>
-                            <div className="flex gap-3 items-start" title="Detailed condition assessment available on request.">
-                                <Info size={20} className="text-luxury-gold flex-shrink-0 mt-0.5" />
+                            <div className="flex gap-2 sm:gap-3 items-start" title="Detailed condition assessment available on request.">
+                                <Info size={16} className="sm:w-5 sm:h-5 text-luxury-gold flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h4 className="font-serif text-sm font-medium text-black">Condition Report</h4>
-                                    <p className="text-xs text-gray-500 leading-relaxed">Detailed condition assessment available on request.</p>
+                                    <h4 className="font-serif text-xs sm:text-sm font-medium text-black">Condition Report</h4>
+                                    <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">Detailed condition assessment available on request.</p>
                                 </div>
                             </div>
                         </div>
@@ -252,11 +252,11 @@ const ProductDetail = () => {
 
             {/* Below: Full-width content */}
             <div className="container mx-auto px-4 sm:px-6 pb-12 md:pb-20">
-                <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12 mt-10 sm:mt-16 pt-10 sm:pt-16 border-t border-gray-100">
+                <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12 mt-8 sm:mt-16 pt-8 sm:pt-16 border-t border-gray-100">
                     {/* Provenance & Story */}
                     <div>
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-6">Provenance & Story</h3>
-                        <div className="font-serif text-gray-700 text-lg leading-loose">
+                        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 sm:mb-6">Provenance & Story</h3>
+                        <div className="font-serif text-gray-700 text-base sm:text-lg leading-relaxed">
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
@@ -286,12 +286,12 @@ const ProductDetail = () => {
 
                     {/* Trust Indicators */}
                     {product.isVerified && (
-                        <div className="bg-heritage-cream border border-luxury-gold/20 p-4 sm:p-6">
-                            <div className="flex items-start gap-3 sm:gap-4">
-                                <ShieldCheck size={28} className="sm:w-8 sm:h-8 text-green-700 flex-shrink-0" />
+                        <div className="bg-heritage-cream border border-luxury-gold/20 p-3 sm:p-6">
+                            <div className="flex items-start gap-2 sm:gap-4">
+                                <ShieldCheck size={20} className="sm:w-8 sm:h-8 text-green-700 flex-shrink-0" />
                                 <div>
-                                    <h4 className="font-serif text-base sm:text-lg font-medium text-heritage-charcoal mb-1">The Exchange's Guarantee</h4>
-                                    <p className="text-xs sm:text-sm text-heritage-charcoal/70 leading-relaxed">
+                                    <h4 className="font-serif text-sm sm:text-lg font-medium text-heritage-charcoal mb-0.5 sm:mb-1">The Exchange's Guarantee</h4>
+                                    <p className="text-[11px] sm:text-sm text-heritage-charcoal/70 leading-relaxed">
                                         This item is marked <strong>Verified Authentic</strong> by The Collectors Exchange. When you purchase this item, you receive our unconditional guarantee of authenticity — backed by our expert curation team.
                                     </p>
                                 </div>
@@ -315,19 +315,19 @@ const SuggestedProducts = ({ category, currentId }) => {
     if (isLoading || products.length === 0) return null;
 
     return (
-        <section className="py-16 sm:py-20 px-6 bg-heritage-cream border-t border-gray-100">
+        <section className="py-12 sm:py-20 px-4 sm:px-6 bg-heritage-cream border-t border-gray-100">
             <div className="container mx-auto max-w-6xl">
-                <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center justify-between mb-6 sm:mb-10">
                     <div>
-                        <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal">Suggested <span className="text-luxury-gold italic font-light">Products</span></h2>
-                        <p className="text-heritage-bronze/70 font-sans text-sm mt-2">You may also be interested in</p>
+                        <h2 className="text-xl sm:text-4xl font-serif text-heritage-charcoal">Suggested <span className="text-luxury-gold italic font-light">Products</span></h2>
+                        <p className="text-heritage-bronze/70 font-sans text-xs sm:text-sm mt-1 sm:mt-2">You may also be interested in</p>
                     </div>
-                    <Link to="/category" className="flex items-center gap-2 text-heritage-charcoal/60 hover:text-luxury-gold text-xs uppercase tracking-widest transition-colors border-b border-transparent hover:border-luxury-gold pb-0.5">
-                        View All <ArrowRight size={14} />
+                    <Link to="/category" className="flex items-center gap-1 sm:gap-2 text-heritage-charcoal/60 hover:text-luxury-gold text-[10px] sm:text-xs uppercase tracking-widest transition-colors border-b border-transparent hover:border-luxury-gold pb-0.5">
+                        View All <ArrowRight size={10} className="sm:w-[14px] sm:h-[14px]" />
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                     {products.map((product) => {
                         const title = product.title || product.name;
                         return (

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { getUser } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
@@ -30,9 +30,16 @@ const ProtectedRoute = ({ children }) => {
     return <AdminLayout>{children}</AdminLayout>;
 };
 
+function ScrollToTop() {
+    const { pathname } = useLocation();
+    useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+    return null;
+}
+
 function App() {
     return (
         <ErrorBoundary>
+        <ScrollToTop />
         <Routes>
             <Route path="/login" element={<Login />} />
 
