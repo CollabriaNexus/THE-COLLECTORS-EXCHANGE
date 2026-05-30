@@ -1,6 +1,6 @@
-const z = require('zod');
+import { z } from 'zod';
 
-module.exports = async function testimonialsRoutes(fastify) {
+export default async function testimonialsRoutes(fastify) {
     // Public: get approved testimonials
     fastify.get('/', async (request, reply) => {
         const testimonials = await prisma.testimonial.findMany({
