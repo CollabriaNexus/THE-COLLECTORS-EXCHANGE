@@ -656,7 +656,6 @@ export default async function adminRoutes(fastify) {
 
         return { message: 'Product updated successfully', product: updated };
     });
-    });
 
     // Get all unique brands
     fastify.get('/brands', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
