@@ -174,7 +174,11 @@ const ProductDetail = () => {
                         {product.seller && (
                             <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 border border-gray-100">
                                 <p className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest mb-0.5 sm:mb-1">Brokered By</p>
-                                <p className="font-serif text-sm sm:text-base font-medium text-heritage-charcoal">{product.seller.name || 'The Collectors Exchange'}</p>
+                                <p className="font-serif text-sm sm:text-base font-medium text-heritage-charcoal">
+                                    {product.seller.role === 'admin' || product.seller.role === 'superadmin' || product.seller.role === 'curator'
+                                        ? 'THE COLLECTORS EXCHANGE'
+                                        : (product.seller.name || 'The Collectors Exchange')}
+                                </p>
                                 {product.seller.type === 'company' && (
                                     <span className="text-[9px] sm:text-[10px] text-luxury-gold uppercase tracking-wider">Verified Company</span>
                                 )}
