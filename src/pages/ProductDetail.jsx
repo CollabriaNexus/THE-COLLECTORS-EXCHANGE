@@ -94,9 +94,9 @@ const ProductDetail = () => {
         <div className="min-h-screen bg-white">
             <Helmet><title>{product.title} — The Collectors Exchange</title></Helmet>
             {/* Breadcrumbs */}
-            <div className="border-b border-gray-100 bg-gray-50/50">
+            <div className="hidden sm:block border-b border-gray-100 bg-gray-50/50">
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-                    <div className="flex items-center text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest gap-1 sm:gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap">
+                    <div className="flex items-center text-xs text-gray-500 uppercase tracking-widest gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap">
                         <Link to="/" className="hover:text-luxury-gold shrink-0">Home</Link>
                         <ChevronRight size={10} className="sm:w-3 sm:h-3 shrink-0" />
                         <Link to="/category" className="hover:text-luxury-gold shrink-0">The Exchange</Link>
@@ -159,10 +159,10 @@ const ProductDetail = () => {
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-serif text-heritage-charcoal leading-tight mb-2 sm:mb-6">
+                            <h1 className="text-lg sm:text-3xl md:text-4xl lg:text-5xl font-serif text-heritage-charcoal leading-tight mb-2 sm:mb-6">
                                 {product.title}
                             </h1>
-                            <p className="text-xl sm:text-3xl font-light text-heritage-charcoal">
+                            <p className="text-lg sm:text-3xl font-light text-heritage-charcoal">
                                 ₹{product.price?.toLocaleString()}
                             </p>
                             {product.brand && (
@@ -255,28 +255,28 @@ const ProductDetail = () => {
                 <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12 mt-8 sm:mt-16 pt-8 sm:pt-16 border-t border-gray-100">
                     {/* Provenance & Story */}
                     <div>
-                        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 sm:mb-6">Provenance & Story</h3>
-                        <div className="font-serif text-gray-700 text-base sm:text-lg leading-relaxed">
+                        <h3 className="text-[10px] sm:text-sm font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-6">Provenance & Story</h3>
+                        <div className="font-serif text-gray-700 text-sm sm:text-lg leading-relaxed">
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
-                                    p: ({ children }) => <p className="mb-6 last:mb-0">{children}</p>,
-                                    ul: ({ children }) => <ul className="list-disc pl-6 mb-6 space-y-2">{children}</ul>,
-                                    ol: ({ children }) => <ol className="list-decimal pl-6 mb-6 space-y-2">{children}</ol>,
-                                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 mt-8">{children}</h1>,
-                                    h2: ({ children }) => <h2 className="text-xl font-bold mb-3 mt-6">{children}</h2>,
-                                    h3: ({ children }) => <h3 className="text-lg font-bold mb-2 mt-4">{children}</h3>,
+                                    p: ({ children }) => <p className="mb-4 sm:mb-6 last:mb-0">{children}</p>,
+                                    ul: ({ children }) => <ul className="list-disc pl-5 sm:pl-6 mb-4 sm:mb-6 space-y-1 sm:space-y-2">{children}</ul>,
+                                    ol: ({ children }) => <ol className="list-decimal pl-5 sm:pl-6 mb-4 sm:mb-6 space-y-1 sm:space-y-2">{children}</ol>,
+                                    h1: ({ children }) => <h1 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 mt-6 sm:mt-8">{children}</h1>,
+                                    h2: ({ children }) => <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 mt-4 sm:mt-6">{children}</h2>,
+                                    h3: ({ children }) => <h3 className="text-base sm:text-lg font-bold mb-2 mt-3 sm:mt-4">{children}</h3>,
                                     strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                                     em: ({ children }) => <em className="italic">{children}</em>,
                                     a: ({ children, href }) => <a href={href} className="text-luxury-gold underline" target="_blank" rel="noopener noreferrer">{children}</a>,
-                                    blockquote: ({ children }) => <blockquote className="border-l-4 border-luxury-gold/30 pl-4 italic text-heritage-brown/70 my-6">{children}</blockquote>,
+                                    blockquote: ({ children }) => <blockquote className="border-l-4 border-luxury-gold/30 pl-3 sm:pl-4 italic text-heritage-brown/70 my-4 sm:my-6">{children}</blockquote>,
                                     code: ({ children, className }) => {
                                         const isInline = !className;
                                         return isInline
-                                            ? <code className="bg-gray-50 px-1.5 py-0.5 text-sm rounded">{children}</code>
-                                            : <pre className="bg-gray-50 p-4 rounded overflow-x-auto mb-6"><code className="bg-transparent p-0">{children}</code></pre>;
+                                            ? <code className="bg-gray-50 px-1.5 py-0.5 text-[11px] sm:text-sm rounded">{children}</code>
+                                            : <pre className="bg-gray-50 p-3 sm:p-4 rounded overflow-x-auto mb-4 sm:mb-6"><code className="bg-transparent p-0 text-[11px] sm:text-sm">{children}</code></pre>;
                                     },
-                                    hr: () => <hr className="border-gray-200 my-6" />,
+                                    hr: () => <hr className="border-gray-200 my-4 sm:my-6" />,
                                 }}
                             >
                                 {product.description}
