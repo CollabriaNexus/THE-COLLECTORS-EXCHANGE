@@ -384,6 +384,58 @@ function ProductDetail() {
                                     ) : 'Not provided'}
                                 </dd>
                             </div>
+                            <div>
+                                <dt className="text-xs font-semibold text-gray-500 uppercase">Seller ID</dt>
+                                <dd className="text-xs text-gray-500 mt-1 font-mono">{product.seller?.id || 'N/A'}</dd>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="bg-white rounded-lg shadow-heritage p-6">
+                        <h3 className="text-lg font-serif font-bold text-heritage-charcoal mb-4 border-b pb-2">
+                            Product Info
+                        </h3>
+                        <div className="space-y-4">
+                            <div>
+                                <dt className="text-xs font-semibold text-gray-500 uppercase mb-1">Keywords</dt>
+                                <dd className="flex flex-wrap gap-1">
+                                    {product.keywords?.length > 0 ? product.keywords.map((kw, i) => (
+                                        <span key={i} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{kw}</span>
+                                    )) : <span className="text-sm text-gray-400">None</span>}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs font-semibold text-gray-500 uppercase mb-1">Images</dt>
+                                <dd className="text-sm text-gray-700">{product.images?.length || 1} image(s)</dd>
+                                {product.images?.length > 0 && (
+                                    <div className="flex gap-1 mt-2 overflow-x-auto">
+                                        {product.images.slice(0, 5).map((img, i) => (
+                                            <img key={i} src={img} alt="" className="w-12 h-12 object-cover rounded border border-gray-100 flex-shrink-0" onError={(e) => { e.target.style.display = 'none' }} />
+                                        ))}
+                                        {product.images.length > 5 && (
+                                            <span className="w-12 h-12 flex items-center justify-center text-xs text-gray-400 bg-gray-50 rounded border border-gray-100 flex-shrink-0">+{product.images.length - 5}</span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <dt className="text-xs font-semibold text-gray-500 uppercase mb-1">Timeline</dt>
+                                <div className="space-y-2 text-xs text-gray-600">
+                                    <div className="flex justify-between"><span>Created</span><span>{new Date(product.createdAt).toLocaleString()}</span></div>
+                                    <div className="flex justify-between"><span>Last Updated</span><span>{new Date(product.updatedAt).toLocaleString()}</span></div>
+                                    {product.reviewedAt && <div className="flex justify-between"><span>Reviewed</span><span>{new Date(product.reviewedAt).toLocaleString()}</span></div>}
+                                </div>
+                            </div>
+                            {product.authenticityStatus !== 'Pending' && (
+                                <div>
+                                    <dt className="text-xs font-semibold text-gray-500 uppercase mb-1">Authenticity</dt>
+                                    <dd className="text-sm">
+                                        <StatusBadge status={product.authenticityStatus} />
+                                        {product.reviewedBy && <span className="text-xs text-gray-400 ml-2">by {product.reviewedBy}</span>}
+                                    </dd>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -141,7 +141,7 @@ const ProductDetail = () => {
                         </div>
                     </div>
 
-                    {/* Right: Category, Title, Price, Actions */}
+                    {/* Right: Category, Title, Price, Actions, Details */}
                     <div className="w-full lg:w-2/5 order-1 lg:order-2">
                         <div className="mb-6 sm:mb-8">
                             <div className="flex items-center flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
@@ -153,6 +153,11 @@ const ProductDetail = () => {
                                         {product.condition}
                                     </span>
                                 )}
+                                {product.listingCategory && product.listingCategory !== 'normal' && (
+                                    <span className={`text-[10px] px-2 py-1 rounded-full uppercase tracking-widest font-semibold ${product.listingCategory === 'most_rare' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                        {product.listingCategory}
+                                    </span>
+                                )}
                             </div>
                             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif text-heritage-charcoal leading-tight mb-4 sm:mb-6">
                                 {product.title}
@@ -160,7 +165,32 @@ const ProductDetail = () => {
                             <p className="text-2xl sm:text-3xl font-light text-heritage-charcoal">
                                 ₹{product.price?.toLocaleString()}
                             </p>
+                            {product.brand && (
+                                <p className="text-sm text-gray-500 mt-2 uppercase tracking-wider">{product.brand}</p>
+                            )}
                         </div>
+
+                        {/* Seller Info */}
+                        {product.seller && (
+                            <div className="mb-6 p-4 bg-gray-50 border border-gray-100">
+                                <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Brokered By</p>
+                                <p className="font-serif text-base font-medium text-heritage-charcoal">{product.seller.name || 'The Collectors Exchange'}</p>
+                                {product.seller.type === 'company' && (
+                                    <span className="text-[10px] text-luxury-gold uppercase tracking-wider">Verified Company</span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Keywords */}
+                        {keywords.length > 0 && (
+                            <div className="mb-6">
+                                <div className="flex flex-wrap gap-1.5">
+                                    {keywords.map(tag => (
+                                        <span key={tag} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 border border-gray-100 rounded-sm">#{tag}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Actions */}
                         <div className="flex gap-3 sm:gap-4">
@@ -292,19 +322,6 @@ const ProductDetail = () => {
                             </div>
                         </div>
                     )}
-
-                    {/* Seller Info */}
-                    <div className="bg-gray-50 p-6 border border-gray-100">
-                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Brokered By</p>
-                        <div className="flex items-center justify-between">
-                            <p className="font-serif text-lg">{product.seller?.name || 'The Collectors Exchange'}</p>
-                            {product.seller?.type === 'company' ? (
-                                <ShieldCheck size={18} className="text-luxury-gold" />
-                            ) : (
-                                <span className="text-xs text-gray-500">Private Seller</span>
-                            )}
-                        </div>
-                    </div>
                 </div>
             </div>
 
