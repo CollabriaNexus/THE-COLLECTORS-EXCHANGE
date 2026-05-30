@@ -425,11 +425,11 @@ function ProductDetail() {
                             </div>
 
                             <div className="pt-4 border-t space-y-3">
-                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Image Review</p>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Listing Review</p>
                                 <textarea
                                     value={imageFeedback}
                                     onChange={(e) => setImageFeedback(e.target.value)}
-                                    placeholder="e.g., Blurry image, poor lighting, missing angles, watermark visible..."
+                                    placeholder="e.g., Blurry image, poor lighting, missing details, incorrect category..."
                                     className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md text-xs focus:ring-2 focus:ring-luxury-gold outline-none resize-none"
                                 ></textarea>
                                 <button
@@ -442,10 +442,10 @@ function ProductDetail() {
                                     className="w-full flex items-center justify-center gap-2 bg-orange-50 text-orange-700 py-2.5 rounded-md text-sm font-medium hover:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <XCircle size={16} />
-                                    Request Image Changes
+                                    Send Remarks & Reject
                                 </button>
                                 <p className="text-[10px] text-gray-400 leading-relaxed">
-                                    This will reject the product with your feedback as the reason. The seller can update images and resubmit.
+                                    Reject with these remarks. The seller will see them on their dashboard and can fix the issues to resubmit for review.
                                 </p>
                             </div>
                         </div>

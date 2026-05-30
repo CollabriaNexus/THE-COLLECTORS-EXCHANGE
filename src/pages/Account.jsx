@@ -1595,7 +1595,9 @@ const Account = () => {
                                                 <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
                                                     <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                                                     <div className="absolute top-2 right-2">
-                                                        {product.authenticityStatus === 'Verified' ? (
+                                                        {product.status === 'Rejected' ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] text-red-700 bg-red-50 px-2 py-1 rounded"><XCircle size={10} /> Rejected</span>
+                                                        ) : product.authenticityStatus === 'Verified' ? (
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-1 rounded"><ShieldCheck size={10} /> Authenticated</span>
                                                         ) : product.status === 'Approved' ? (
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">Published</span>
@@ -1612,10 +1614,17 @@ const Account = () => {
                                                     <h4 className="font-serif text-base font-medium text-heritage-charcoal line-clamp-1 mt-0.5">{product.title}</h4>
                                                     <p className="text-luxury-gold font-sans text-sm font-medium mt-1">₹{product.price?.toLocaleString()}</p>
                                                     <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">{product.description}</p>
+                                                    {product.status === 'Rejected' && product.rejectionReason && (
+                                                        <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded">
+                                                            <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1">Reason for Rejection</p>
+                                                            <p className="text-xs text-red-600 leading-relaxed">{product.rejectionReason}</p>
+                                                            <p className="text-[10px] text-red-500 mt-2">Edit your listing to fix the issues and it will be sent for review again.</p>
+                                                        </div>
+                                                    )}
                                                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                                                         <span className="text-[10px] text-gray-400">{product.condition}</span>
                                                         <div className="flex items-center gap-1">
-                                                            <button type="button" onClick={() => handleStartEdit(product)} className="text-gray-400 hover:text-luxury-gold transition-colors p-1" title="Edit listing"><Edit3 size={14} /></button>
+                                                            <button type="button" onClick={() => handleStartEdit(product)} className={`transition-colors p-1 ${product.status === 'Rejected' ? 'text-orange-500 hover:text-orange-700 bg-orange-50 rounded' : 'text-gray-400 hover:text-luxury-gold'}`} title="Edit listing"><Edit3 size={14} /></button>
                                                             <button type="button" onClick={() => markAsSoldMutation.mutate(product.id)} className="text-gray-400 hover:text-green-600 transition-colors p-1" title="Mark as sold"><Tag size={14} /></button>
                                                             <button type="button" onClick={() => handleDeleteProduct(product.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Delete listing"><Trash2 size={14} /></button>
                                                         </div>
