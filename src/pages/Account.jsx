@@ -431,7 +431,7 @@ const Account = () => {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin + '/THE-COLLECTORS-EXCHANGE/account'
+                redirectTo: window.location.origin + '/account'
             }
         });
         if (error) alert(error.message);
@@ -1658,7 +1658,7 @@ const Account = () => {
                             <ShoppingBag size={48} className="mx-auto text-gray-300 mb-4" />
                             <p className="text-gray-500 font-serif text-lg">No orders yet.</p>
                             <p className="text-gray-400 text-sm mt-1">When you make a purchase, your orders will appear here.</p>
-                            <Link to="/THE-COLLECTORS-EXCHANGE/category" className="inline-block mt-6 text-luxury-gold font-semibold hover:underline text-sm uppercase tracking-widest">
+                            <Link to="/category" className="inline-block mt-6 text-luxury-gold font-semibold hover:underline text-sm uppercase tracking-widest">
                                 Browse The Exchange
                             </Link>
                         </div>
@@ -1897,7 +1897,7 @@ const Account = () => {
                                 )}
                                 {vendorProfile?.status === 'APPROVED' && (
                                     <Link
-                                        to="/THE-COLLECTORS-EXCHANGE/vendor-dashboard"
+                                        to="/vendor-dashboard"
                                         className="flex items-center gap-4 w-full p-4 text-sm font-medium transition-all text-gray-600 hover:bg-gray-50"
                                     >
                                         <BarChart3 size={18} /> Vendor Dashboard

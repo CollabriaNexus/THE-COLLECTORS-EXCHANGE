@@ -31,7 +31,7 @@ const Contact = () => {
                     <CheckCircle size={64} className="mx-auto text-green-500 mb-6" />
                     <h1 className="text-3xl font-serif mb-4">Message Sent</h1>
                     <p className="text-gray-500 mb-8">Thank you for reaching out. Our team will respond within 24–48 hours.</p>
-                    <a href="/THE-COLLECTORS-EXCHANGE" className="text-luxury-gold hover:underline font-medium">Return Home</a>
+                    <a href="" className="text-luxury-gold hover:underline font-medium">Return Home</a>
                 </div>
             </div>
         );

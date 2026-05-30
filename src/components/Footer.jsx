@@ -34,25 +34,25 @@ const Footer = () => {
                         <div className="flex flex-col space-y-6">
                             <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Company</h3>
                             <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
-                                <Link to="/THE-COLLECTORS-EXCHANGE/about" className="hover:text-white transition-colors duration-300">About Us</Link>
-                                <Link to="/THE-COLLECTORS-EXCHANGE/vision" className="hover:text-white transition-colors duration-300">Our Vision</Link>
-                                <Link to="/THE-COLLECTORS-EXCHANGE/founders-note" className="hover:text-white transition-colors duration-300">Founder&rsquo;s Note</Link>
+                                <Link to="/about" className="hover:text-white transition-colors duration-300">About Us</Link>
+                                <Link to="/vision" className="hover:text-white transition-colors duration-300">Our Vision</Link>
+                                <Link to="/founders-note" className="hover:text-white transition-colors duration-300">Founder&rsquo;s Note</Link>
                             </div>
                         </div>
                         <div className="flex flex-col space-y-6">
                             <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Support</h3>
                             <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
-                                <Link to="/THE-COLLECTORS-EXCHANGE/contact" className="hover:text-white transition-colors duration-300">Contact Us</Link>
-                                <Link to="/THE-COLLECTORS-EXCHANGE/faq" className="hover:text-white transition-colors duration-300">FAQ</Link>
-                                <Link to="/THE-COLLECTORS-EXCHANGE/seller-agreement" className="hover:text-white transition-colors duration-300">Seller Agreement</Link>
+                                <Link to="/contact" className="hover:text-white transition-colors duration-300">Contact Us</Link>
+                                <Link to="/faq" className="hover:text-white transition-colors duration-300">FAQ</Link>
+                                <Link to="/seller-agreement" className="hover:text-white transition-colors duration-300">Seller Agreement</Link>
                             </div>
                         </div>
                         <div className="flex flex-col space-y-6">
                             <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Legal</h3>
                             <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
-                                <Link to="/THE-COLLECTORS-EXCHANGE/terms" className="hover:text-white transition-colors duration-300">Terms &amp; Conditions</Link>
-                                <Link to="/THE-COLLECTORS-EXCHANGE/privacy" className="hover:text-white transition-colors duration-300">Privacy Policy</Link>
-                                <Link to="/THE-COLLECTORS-EXCHANGE/account" className="hover:text-white transition-colors duration-300">My Account</Link>
+                                <Link to="/terms" className="hover:text-white transition-colors duration-300">Terms &amp; Conditions</Link>
+                                <Link to="/privacy" className="hover:text-white transition-colors duration-300">Privacy Policy</Link>
+                                <Link to="/account" className="hover:text-white transition-colors duration-300">My Account</Link>
                             </div>
                             <div className="flex gap-4 pt-2">
                                 <a href="https://www.instagram.com/the_collectors_exchange/?utm_source=ig_web_button_share_sheet" target="_blank" rel="noopener noreferrer" className="text-white hover:text-luxury-gold transition-colors duration-300">

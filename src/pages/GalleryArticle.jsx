@@ -438,7 +438,7 @@ const GalleryArticle = () => {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-serif text-gray-400 mb-4">Article Not Found</h2>
-          <Link to="/THE-COLLECTORS-EXCHANGE/gallery" className="text-luxury-gold hover:underline">Return to Gallery</Link>
+          <Link to="/gallery" className="text-luxury-gold hover:underline">Return to Gallery</Link>
         </div>
       </div>
     );
@@ -452,7 +452,7 @@ const GalleryArticle = () => {
       <section className="relative py-20 px-6 bg-heritage-charcoal overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#D4AF37 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }}></div>
         <div className="container mx-auto max-w-4xl relative z-10">
-          <Link to="/THE-COLLECTORS-EXCHANGE/gallery" className="inline-flex items-center gap-2 text-white/60 hover:text-luxury-gold text-sm uppercase tracking-widest transition-colors mb-8">
+          <Link to="/gallery" className="inline-flex items-center gap-2 text-white/60 hover:text-luxury-gold text-sm uppercase tracking-widest transition-colors mb-8">
             <ArrowLeft size={16} /> Back to Gallery
           </Link>
           <div className="flex items-center gap-4 mb-6">

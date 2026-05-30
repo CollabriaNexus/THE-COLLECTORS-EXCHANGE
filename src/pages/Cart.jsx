@@ -94,7 +94,7 @@ const Cart = () => {
                                 <span>₹{total.toLocaleString()}</span>
                             </div>
                             <button
-                                onClick={() => navigate('/THE-COLLECTORS-EXCHANGE/checkout')}
+                                onClick={() => navigate('/checkout')}
                                 className="w-full bg-black text-white py-4 font-sans text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
                             >
                                 Proceed to Checkout
@@ -111,7 +111,7 @@ const Cart = () => {
                     <h3 className="text-xl font-serif text-gray-600 mb-2">Your cart is empty</h3>
                     <p className="text-gray-400 mb-6">Add items to your cart to proceed.</p>
                     <Link
-                        to="/THE-COLLECTORS-EXCHANGE/category"
+                        to="/category"
                         className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
                     >
                         Explore The Exchange

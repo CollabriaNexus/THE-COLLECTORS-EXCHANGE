@@ -105,7 +105,7 @@ const FAQ = () => {
                 <div className="mt-16 text-center bg-white p-10 border border-gray-100 shadow-sm">
                     <h2 className="text-2xl font-serif mb-4">Still have questions?</h2>
                     <p className="text-gray-500 mb-6">We're here to help you.</p>
-                    <a href="/THE-COLLECTORS-EXCHANGE/contact"
+                    <a href="/contact"
                         className="inline-block bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors">
                         Contact Us
                     </a>

@@ -22,7 +22,7 @@ const FeaturedProductsCarousel = () => {
         return (
             <Link
                 key={product.id}
-                to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`}
+                to={`/product/${product.id}`}
                 className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 snap-start"
             >
                 <div className="relative aspect-[4/5] bg-heritage-beige overflow-hidden">
@@ -135,10 +135,10 @@ const Home = () => {
                         Verified. Original. Limited. Discover a curated world of rare finds and verified sellers.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                        <Link to="/THE-COLLECTORS-EXCHANGE/category" className="bg-luxury-gold text-black px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white transition-colors duration-300">
+                        <Link to="/category" className="bg-luxury-gold text-black px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white transition-colors duration-300">
                             EXPLORE THE EXCHANGE
                         </Link>
-                        <Link to="/THE-COLLECTORS-EXCHANGE/auction" className="bg-transparent text-white border border-white px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors duration-300">
+                        <Link to="/auction" className="bg-transparent text-white border border-white px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors duration-300">
                             VIEW AUCTIONS
                         </Link>
                     </div>

@@ -44,7 +44,7 @@ const Wishlist = () => {
                 <Helmet><title>Wishlist — The Collectors Exchange</title></Helmet>
                 <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
                 <p className="text-gray-500 mb-6">You need to be logged in to view your wishlist.</p>
-                <Link to="/THE-COLLECTORS-EXCHANGE/account" className="bg-black text-white px-6 py-2 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
+                <Link to="/account" className="bg-black text-white px-6 py-2 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
                     Sign In
                 </Link>
             </div>
@@ -116,7 +116,7 @@ const Wishlist = () => {
                     <h3 className="text-xl font-serif text-gray-600 mb-2">Your wishlist is empty</h3>
                     <p className="text-gray-400 mb-6">Save items you love by clicking the heart icon.</p>
                     <Link
-                        to="/THE-COLLECTORS-EXCHANGE/category"
+                        to="/category"
                         className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
                     >
                         Explore The Exchange

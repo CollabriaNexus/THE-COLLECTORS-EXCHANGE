@@ -131,7 +131,7 @@ const Checkout = () => {
                 <Helmet><title>Checkout — The Collectors Exchange</title></Helmet>
                 <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
                 <p className="text-gray-500 mb-6">You need to be logged in to checkout.</p>
-                <Link to="/THE-COLLECTORS-EXCHANGE/account" className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
+                <Link to="/account" className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
                     Sign In
                 </Link>
             </div>
@@ -153,7 +153,7 @@ const Checkout = () => {
             <div className="container mx-auto py-20 px-6 text-center">
                 <Helmet><title>Checkout — The Collectors Exchange</title></Helmet>
                 <h1 className="text-2xl font-serif mb-4">Your cart is empty</h1>
-                <Link to="/THE-COLLECTORS-EXCHANGE/category" className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
+                <Link to="/category" className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
                     Explore The Exchange
                 </Link>
             </div>
@@ -186,7 +186,7 @@ const Checkout = () => {
                         </div>
                     </div>
                     <Link
-                        to="/THE-COLLECTORS-EXCHANGE/"
+                        to="/"
                         className="inline-block bg-black text-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
                     >
                         Return to The Exchange
@@ -201,7 +201,7 @@ const Checkout = () => {
             <Helmet><title>Checkout — The Collectors Exchange</title></Helmet>
             {/* Breadcrumb */}
             <div className="flex items-center text-xs text-gray-500 uppercase tracking-widest gap-2 mb-8">
-                <Link to="/THE-COLLECTORS-EXCHANGE/cart" className="hover:text-luxury-gold">Cart</Link>
+                <Link to="/cart" className="hover:text-luxury-gold">Cart</Link>
                 <ChevronRight size={12} />
                 <span className="text-gray-800 font-medium">Checkout</span>
             </div>

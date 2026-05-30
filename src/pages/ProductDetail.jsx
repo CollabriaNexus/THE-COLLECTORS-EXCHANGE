@@ -79,7 +79,7 @@ const ProductDetail = () => {
                 <Helmet><title>Product — The Collectors Exchange</title></Helmet>
                 <div className="text-center">
                     <h2 className="text-2xl font-serif text-gray-400">Item Not Found</h2>
-                    <Link to="/THE-COLLECTORS-EXCHANGE/category" className="text-luxury-gold hover:underline mt-4 inline-block">
+                    <Link to="/category" className="text-luxury-gold hover:underline mt-4 inline-block">
                         Return to The Exchange
                     </Link>
                 </div>
@@ -97,9 +97,9 @@ const ProductDetail = () => {
             <div className="border-b border-gray-100 bg-gray-50/50">
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-center text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest gap-1 sm:gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap">
-                        <Link to="/THE-COLLECTORS-EXCHANGE/" className="hover:text-luxury-gold shrink-0">Home</Link>
+                        <Link to="/" className="hover:text-luxury-gold shrink-0">Home</Link>
                         <ChevronRight size={10} className="sm:w-3 sm:h-3 shrink-0" />
-                        <Link to="/THE-COLLECTORS-EXCHANGE/category" className="hover:text-luxury-gold shrink-0">The Exchange</Link>
+                        <Link to="/category" className="hover:text-luxury-gold shrink-0">The Exchange</Link>
                         <ChevronRight size={10} className="sm:w-3 sm:h-3 shrink-0" />
                         <span className="text-gray-800 font-medium truncate">{product.category}</span>
                     </div>
@@ -166,7 +166,7 @@ const ProductDetail = () => {
                         <div className="flex gap-3 sm:gap-4">
                             {!currentUser ? (
                                 <Link
-                                    to="/THE-COLLECTORS-EXCHANGE/account"
+                                    to="/account"
                                     className="flex-1 py-4 sm:py-5 text-[11px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-2 sm:gap-3 bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg"
                                 >
                                     <ShoppingBag size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -328,7 +328,7 @@ const SuggestedProducts = ({ category, currentId }) => {
                         <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal">Suggested <span className="text-luxury-gold italic font-light">Products</span></h2>
                         <p className="text-heritage-bronze/70 font-sans text-sm mt-2">You may also be interested in</p>
                     </div>
-                    <Link to="/THE-COLLECTORS-EXCHANGE/category" className="flex items-center gap-2 text-heritage-charcoal/60 hover:text-luxury-gold text-xs uppercase tracking-widest transition-colors border-b border-transparent hover:border-luxury-gold pb-0.5">
+                    <Link to="/category" className="flex items-center gap-2 text-heritage-charcoal/60 hover:text-luxury-gold text-xs uppercase tracking-widest transition-colors border-b border-transparent hover:border-luxury-gold pb-0.5">
                         View All <ArrowRight size={14} />
                     </Link>
                 </div>
@@ -339,7 +339,7 @@ const SuggestedProducts = ({ category, currentId }) => {
                         return (
                             <Link
                                 key={product.id}
-                                to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`}
+                                to={`/product/${product.id}`}
                                 className="bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500"
                             >
                                 <div className="relative aspect-square bg-heritage-beige overflow-hidden">

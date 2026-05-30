@@ -1,6 +1,5 @@
 {
   "name": "collectors-exchange",
-  "homepage": "https://CollabriaNexus.github.io/THE-COLLECTORS-EXCHANGE",
   "private": true,
   "version": "0.0.0",
   "type": "module",

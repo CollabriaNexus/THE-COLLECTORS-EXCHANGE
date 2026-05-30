@@ -19,7 +19,7 @@ const Header = () => {
 
     const wishlistCount = wishlistItems.length;
 
-    const isHomePage = ['/', '/THE-COLLECTORS-EXCHANGE/'].includes(location.pathname);
+    const isHomePage = ['/'].includes(location.pathname);
     const showNav = !isHomePage || scrolled || videoEnded;
 
     useEffect(() => {
@@ -48,18 +48,18 @@ const Header = () => {
     }, []);
 
     const navItems = [
-        { name: 'About Us', path: '/THE-COLLECTORS-EXCHANGE/about' },
-        { name: 'The Exchange', path: '/THE-COLLECTORS-EXCHANGE/category' },
-        { name: 'The Gallery', path: '/THE-COLLECTORS-EXCHANGE/gallery' },
-        { name: 'Auction', path: '/THE-COLLECTORS-EXCHANGE/auction' },
-        { name: 'Vision', path: '/THE-COLLECTORS-EXCHANGE/vision' },
+        { name: 'About Us', path: '/about' },
+        { name: 'The Exchange', path: '/category' },
+        { name: 'The Gallery', path: '/gallery' },
+        { name: 'Auction', path: '/auction' },
+        { name: 'Vision', path: '/vision' },
     ];
 
     const bottomNav = [
-        { name: 'Shop', path: '/THE-COLLECTORS-EXCHANGE/category', icon: Store },
-        { name: 'Wishlist', path: '/THE-COLLECTORS-EXCHANGE/wishlist', icon: Heart, count: wishlistCount },
-        { name: 'Cart', path: '/THE-COLLECTORS-EXCHANGE/cart', icon: ShoppingBag, count: cartItems.length },
-        { name: 'Account', path: '/THE-COLLECTORS-EXCHANGE/account', icon: User },
+        { name: 'Shop', path: '/category', icon: Store },
+        { name: 'Wishlist', path: '/wishlist', icon: Heart, count: wishlistCount },
+        { name: 'Cart', path: '/cart', icon: ShoppingBag, count: cartItems.length },
+        { name: 'Account', path: '/account', icon: User },
     ];
 
     return (
@@ -68,7 +68,7 @@ const Header = () => {
             <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm text-text-main transition-transform duration-300 ${showNav ? 'translate-y-0' : '-translate-y-full'}`}>
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
                     {/* Logo */}
-                    <Link to="/THE-COLLECTORS-EXCHANGE/" className="text-[11px] xs:text-[13px] sm:text-lg md:text-xl lg:text-2xl font-serif font-bold tracking-tight sm:tracking-wide shrink-0 leading-tight">
+                    <Link to="/" className="text-[11px] xs:text-[13px] sm:text-lg md:text-xl lg:text-2xl font-serif font-bold tracking-tight sm:tracking-wide shrink-0 leading-tight">
                         THE COLLECTORS<br className="hidden xs:block sm:hidden" /> EXCHANGE
                     </Link>
 
@@ -87,7 +87,7 @@ const Header = () => {
 
                     {/* Desktop Icons (hidden on mobile) */}
                     <div className="hidden lg:flex items-center space-x-6">
-                        <Link to="/THE-COLLECTORS-EXCHANGE/wishlist" className="relative hover:text-luxury-gold transition-colors" aria-label="Wishlist">
+                        <Link to="/wishlist" className="relative hover:text-luxury-gold transition-colors" aria-label="Wishlist">
                             <Heart size={20} />
                             {wishlistCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-luxury-gold text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
@@ -95,10 +95,10 @@ const Header = () => {
                                 </span>
                             )}
                         </Link>
-                        <Link to="/THE-COLLECTORS-EXCHANGE/account" className="hover:text-luxury-gold transition-colors" aria-label="Account">
+                        <Link to="/account" className="hover:text-luxury-gold transition-colors" aria-label="Account">
                             <User size={20} />
                         </Link>
-                        <Link to="/THE-COLLECTORS-EXCHANGE/cart" className="relative hover:text-luxury-gold transition-colors" aria-label="Cart">
+                        <Link to="/cart" className="relative hover:text-luxury-gold transition-colors" aria-label="Cart">
                             <ShoppingBag size={20} />
                             {cartItems.length > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">

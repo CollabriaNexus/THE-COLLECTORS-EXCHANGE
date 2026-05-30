@@ -32,28 +32,28 @@ function App() {
       <ErrorBoundary>
       <ToastProvider>
       <Routes>
-        <Route path="/THE-COLLECTORS-EXCHANGE/" element={<Layout />}>
+        <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="about-us" element={<AboutUs />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/about" element={<About />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/category" element={<Category />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/auction" element={<Auction />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/vision" element={<Vision />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/wishlist" element={<Wishlist />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/account" element={<Account />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/cart" element={<Cart />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/privacy" element={<Privacy />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/terms" element={<Terms />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/founders-note" element={<FoundersNote />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/product/:id" element={<ProductDetail />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/gallery" element={<GalleryPage />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/gallery/:id" element={<GalleryDetail />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/gallery/article/:slug" element={<GalleryArticle />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/seller-agreement" element={<SellerAgreement />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/checkout" element={<Checkout />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/vendor-dashboard" element={<VendorDashboard />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/contact" element={<Contact />} />
-          <Route path="/THE-COLLECTORS-EXCHANGE/faq" element={<FAQ />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/category" element={<Category />} />
+          <Route path="/auction" element={<Auction />} />
+          <Route path="/vision" element={<Vision />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/founders-note" element={<FoundersNote />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/gallery" element={<GalleryPage />} />
+          <Route path="/gallery/:id" element={<GalleryDetail />} />
+          <Route path="/gallery/article/:slug" element={<GalleryArticle />} />
+          <Route path="/seller-agreement" element={<SellerAgreement />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="*" element={<div className="container mx-auto py-12 px-6 text-center font-serif text-2xl">404 - Not Found</div>} />
         </Route>
       </Routes>

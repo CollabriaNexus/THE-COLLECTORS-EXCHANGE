@@ -41,7 +41,7 @@ const THEMES = [
 const GalleryCard = ({ item }) => {
     return (
         <Link
-            to={`/THE-COLLECTORS-EXCHANGE/gallery/${item.id}`}
+            to={`/gallery/${item.id}`}
             className="group relative flex flex-col bg-white/5 overflow-hidden transition-all duration-700 hover:shadow-[0_0_30px_rgba(191,155,48,0.15)] rounded-sm border border-[#3D352F] hover:border-[#C9A962]/40"
         >
             {/* The Frame */}

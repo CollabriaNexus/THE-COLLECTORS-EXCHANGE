@@ -77,7 +77,7 @@ const FeaturedProductCard = ({ product }) => {
 
     return (
         <div className="bg-heritage-cream border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 flex flex-col h-full">
-            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-[4/5] md:aspect-[4/5] bg-heritage-beige overflow-hidden shrink-0">
+            <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] md:aspect-[4/5] bg-heritage-beige overflow-hidden shrink-0">
                 {product.image ? (
                     <img
                         src={product.image}
@@ -114,7 +114,7 @@ const FeaturedProductCard = ({ product }) => {
                         </span>
                     )}
                 </div>
-                <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
+                <Link to={`/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
                     <h3 className="font-serif text-sm md:text-xl font-medium text-heritage-charcoal mb-0 leading-tight line-clamp-2">{title}</h3>
                 </Link>
                 <span className="text-heritage-gold-muted font-serif text-sm md:text-lg mt-auto pt-2 md:pt-4">₹{product.price?.toLocaleString()}</span>
@@ -165,7 +165,7 @@ const ArchiveProductCard = ({ product }) => {
 
     return (
         <div className="bg-white border border-gray-100 group hover:shadow-heritage transition-all duration-500 flex flex-col h-full">
-            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-square bg-heritage-beige overflow-hidden shrink-0">
+            <Link to={`/product/${product.id}`} className="block relative aspect-square bg-heritage-beige overflow-hidden shrink-0">
                 {product.image ? (
                     <img
                         src={product.image}
@@ -204,7 +204,7 @@ const ArchiveProductCard = ({ product }) => {
                 <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-2">
                     <span className="text-[9px] sm:text-[11px] text-heritage-bronze/80 uppercase tracking-[0.08em] sm:tracking-[0.12em] truncate">{product.category}</span>
                 </div>
-                <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
+                <Link to={`/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
                     <h3 className="font-serif text-[11px] sm:text-base font-medium text-heritage-charcoal mb-0 sm:mb-1 leading-tight sm:leading-snug line-clamp-1 sm:line-clamp-2">{title}</h3>
                 </Link>
                 <p className="text-heritage-gold-muted font-sans text-[10px] sm:text-sm font-medium mb-1 sm:mb-4 mt-auto">₹{product.price?.toLocaleString()}</p>
