@@ -625,6 +625,18 @@ export default async function adminRoutes(fastify) {
             return reply.status(404).send({ error: 'Product not found' });
         }
 
+        // Delete related records first to avoid foreign key constraint errors
+        await prisma.cartItem.deleteMany({ where: { productId: id } });
+        await prisma.wishlistItem.deleteMany({ where: { productId: id } });
+        await prisma.orderItem.deleteMany({ where: { productId: id } });
+        await prisma.productView.deleteMany({ where: { productId: id } });
+        await prisma.cartEvent.deleteMany({ where: { productId: id } });
+        await prisma.checkoutEvent.deleteMany({ where: { productId: id } });
+        if (existing.auction) {
+            await prisma.auctionBid.deleteMany({ where: { auctionId: existing.auction.id } });
+            await prisma.auction.delete({ where: { id: existing.auction.id } });
+        }
+
         await prisma.product.delete({ where: { id } });
 
         return { message: 'Product deleted successfully' };

@@ -213,11 +213,17 @@ function ProductDetail() {
 
                     {/* Image */}
                     <div className="bg-white rounded-lg shadow-heritage p-6">
-                        <img
-                            src={product.image}
-                            alt={product.title}
-                            className="w-full h-96 object-contain rounded-lg bg-gray-50"
-                        />
+                        {product.image ? (
+                            <img
+                                src={product.image}
+                                alt={product.title}
+                                className="w-full h-96 object-contain rounded-lg bg-gray-50"
+                            />
+                        ) : (
+                            <div className="w-full h-96 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400">
+                                <Package size={64} strokeWidth={1} />
+                            </div>
+                        )}
                     </div>
 
                     {/* Details */}
