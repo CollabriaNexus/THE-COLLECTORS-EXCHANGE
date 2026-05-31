@@ -4,20 +4,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart, useRemoveFromCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
+import { useToast } from '../components/Toast';
 
 const Cart = () => {
     const user = getUser();
     const navigate = useNavigate();
+    const showToast = useToast();
     const { data: cartItems = [], isLoading } = useCart(user?.id);
     const removeMutation = useRemoveFromCart();
 
     const handleRemove = async (productId) => {
         if (!user) return;
+        if (!window.confirm('Remove this item from your cart?')) return;
         try {
             await removeMutation.mutateAsync({ userId: user.id, productId });
             apiClient.post('/analytics/cart', { productId, action: 'REMOVE' }).catch(() => {});
         } catch {
-            alert('Failed to remove item from cart.');
+            showToast('Failed to remove item from cart.', 'error');
         }
     };
 

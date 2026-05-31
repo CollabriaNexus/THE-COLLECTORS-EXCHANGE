@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, Heart, ShoppingBag, ChevronRight, Share2, Info, Loader2, Check, ArrowRight, Gem, Award } from 'lucide-react';
+import { ShieldCheck, Heart, ShoppingBag, ChevronRight, Share2, Info, Loader2, Check, ArrowRight, Gem, Award, ImageOff, XCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useProduct, useProducts } from '../hooks/api/useProducts';
@@ -9,6 +9,7 @@ import { useAddToCart, useCart } from '../hooks/api/useCart';
 import { useAddToWishlist, useRemoveFromWishlist, useWishlist } from '../hooks/api/useWishlist';
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
+import { useToast } from '../components/Toast';
 
 const ProductDetail = () => {
     const { id } = useParams();
@@ -17,6 +18,7 @@ const ProductDetail = () => {
     const [cartFeedback, setCartFeedback] = useState(false);
 
     const currentUser = getUser();
+    const showToast = useToast();
     const { data: cartItems = [] } = useCart(currentUser?.id);
     const { data: wishlistItems = [] } = useWishlist(currentUser?.id);
     const addToCartMutation = useAddToCart();
@@ -26,20 +28,28 @@ const ProductDetail = () => {
     const inCart = cartItems.some(item => item.productId === product?.id);
     const inWishlist = wishlistItems.some(item => item.productId === product?.id);
 
+    const cartFeedbackTimer = useRef(null);
+
     const handleAddToCart = async () => {
         if (!product || !currentUser) return;
         try {
             await addToCartMutation.mutateAsync({ userId: currentUser.id, productId: product.id });
             apiClient.post('/analytics/cart', { productId: product.id, action: 'ADD' }).catch(() => {});
             setCartFeedback(true);
-            setTimeout(() => setCartFeedback(false), 2000);
+            clearTimeout(cartFeedbackTimer.current);
+            cartFeedbackTimer.current = setTimeout(() => setCartFeedback(false), 2000);
         } catch (err) {
-            alert(err?.response?.data?.message || 'Failed to add to cart');
+            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
         }
     };
 
+    useEffect(() => {
+        return () => clearTimeout(cartFeedbackTimer.current);
+    }, []);
+
     const handleWishlistToggle = async () => {
         if (!product || !currentUser) return;
+        if (inWishlist && !window.confirm('Remove this item from your wishlist?')) return;
         try {
             if (inWishlist) {
                 await removeFromWishlistMutation.mutateAsync({ userId: currentUser.id, productId: product.id });
@@ -47,13 +57,14 @@ const ProductDetail = () => {
                 await addToWishlistMutation.mutateAsync({ userId: currentUser.id, productId: product.id });
             }
         } catch (err) {
-            alert(err?.response?.data?.message || 'Failed to update wishlist');
+            showToast(err?.response?.data?.message || 'Failed to update wishlist', 'error');
         }
     };
 
     // Track product view
     const tracked = useRef(false);
     useEffect(() => {
+        tracked.current = false;
         if (product && !tracked.current) {
             tracked.current = true;
             apiClient.post('/analytics/view', {
@@ -61,7 +72,7 @@ const ProductDetail = () => {
                 sessionId: localStorage.getItem('session_id') || `anon_${Date.now()}`,
             }).catch(() => {});
         }
-    }, [product]);
+    }, [product?.id]);
 
     if (isLoading) {
         return (
@@ -87,14 +98,14 @@ const ProductDetail = () => {
         );
     }
 
-    const images = product.images && product.images.length > 0 ? product.images : [product.image];
+    const images = product.images?.length > 0 ? product.images : (product.image ? [product.image] : []);
     const keywords = product.keywords || [];
 
     return (
         <div className="min-h-screen bg-white">
             <Helmet><title>{product.title} — The Collectors Exchange</title></Helmet>
             {/* Breadcrumbs */}
-            <div className="hidden sm:block border-b border-gray-100 bg-gray-50/50">
+            <div className="border-b border-gray-100 bg-gray-50/50">
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-center text-xs text-gray-500 uppercase tracking-widest gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap">
                         <Link to="/" className="hover:text-luxury-gold shrink-0">Home</Link>
@@ -127,11 +138,17 @@ const ProductDetail = () => {
                         )}
                         {/* Main Image */}
                         <div className="relative flex-1 aspect-[4/3] bg-gray-50 overflow-hidden shadow-sm border border-gray-100">
-                            <img
-                                src={images[activeImageIndex]}
-                                alt={product.title}
-                                className="w-full h-full object-contain p-2 sm:p-6 md:p-8"
-                            />
+                            {images.length > 0 ? (
+                                <img
+                                    src={images[activeImageIndex]}
+                                    alt={product.title}
+                                    className="w-full h-full object-contain p-2 sm:p-6 md:p-8"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                    <ImageOff size={48} strokeWidth={1} />
+                                </div>
+                            )}
                             {product.isVerified && (
                                 <div className="absolute top-2 sm:top-6 left-2 sm:left-6 bg-white/90 backdrop-blur-sm border border-gray-200 px-2 sm:px-4 py-1 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-sm">
                                     <ShieldCheck size={12} className="sm:w-4 sm:h-4 text-green-700" />
@@ -195,7 +212,12 @@ const ProductDetail = () => {
 
                         {/* Actions */}
                         <div className="flex gap-2 sm:gap-4">
-                            {!currentUser ? (
+                            {product.status === 'Sold' ? (
+                                <div className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium flex items-center justify-center gap-1.5 sm:gap-3 bg-gray-100 text-gray-400 cursor-default">
+                                    <XCircle size={14} className="sm:w-[18px] sm:h-[18px]" />
+                                    Sold Out
+                                </div>
+                            ) : !currentUser ? (
                                 <Link
                                     to="/account"
                                     className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg"
@@ -203,23 +225,31 @@ const ProductDetail = () => {
                                     <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
                                     Sign In to Acquire
                                 </Link>
+                            ) : inCart ? (
+                                <Link
+                                    to="/cart"
+                                    className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-gray-100 text-gray-400 hover:bg-luxury-gold hover:text-white shadow-lg"
+                                >
+                                    <Check size={14} className="sm:w-[18px] sm:h-[18px]" />
+                                    View in Cart
+                                </Link>
                             ) : (
                                 <button
                                     onClick={handleAddToCart}
-                                    disabled={inCart || addToCartMutation.isPending}
-                                    className={`flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 ${inCart
-                                        ? 'bg-gray-100 text-gray-400 cursor-default'
+                                    disabled={addToCartMutation.isPending}
+                                    className={`flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 ${cartFeedback
+                                        ? 'bg-green-50 text-green-700 cursor-default'
                                         : 'bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg'
                                         }`}
                                 >
                                     {addToCartMutation.isPending ? (
                                         <Loader2 size={14} className="animate-spin sm:w-[18px] sm:h-[18px]" />
-                                    ) : inCart || cartFeedback ? (
+                                    ) : cartFeedback ? (
                                         <Check size={14} className="sm:w-[18px] sm:h-[18px]" />
                                     ) : (
                                         <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
                                     )}
-                                    {inCart ? 'Added to Cart' : cartFeedback ? 'Added!' : 'Acquire Now'}
+                                    {cartFeedback ? 'Added!' : 'Acquire Now'}
                                 </button>
                             )}
                             <button
@@ -324,7 +354,7 @@ const SuggestedProducts = ({ category, currentId }) => {
     const { data, isLoading } = useProducts(category, '', 1, 8);
     const products = (data?.products || []).filter(p => p.id !== currentId).slice(0, 4);
 
-    if (isLoading || products.length === 0) return null;
+    if (products.length === 0 && !isLoading) return null;
 
     return (
         <section className="py-12 sm:py-20 px-4 sm:px-6 bg-heritage-cream border-t border-gray-100">
@@ -340,7 +370,18 @@ const SuggestedProducts = ({ category, currentId }) => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                    {products.map((product) => {
+                    {isLoading ? (
+                        Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="bg-white border border-heritage-beige animate-pulse">
+                                <div className="aspect-square bg-gray-200" />
+                                <div className="p-4 space-y-2">
+                                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                    products.map((product) => {
                         const title = product.title || product.name;
                         return (
                             <Link
@@ -367,7 +408,7 @@ const SuggestedProducts = ({ category, currentId }) => {
                                 </div>
                             </Link>
                         );
-                    })}
+                    }))}
                 </div>
             </div>
         </section>

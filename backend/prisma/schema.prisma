@@ -10,6 +10,127 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============== ENUMS ==============
+
+enum UserType {
+  individual
+  company
+}
+
+enum UserRole {
+  user
+  admin
+  curator
+}
+
+enum KycStatus {
+  none
+  pending
+  verified
+}
+
+enum PhoneVerificationStatus {
+  none
+  pending
+  verified
+  rejected
+}
+
+enum ProductStatus {
+  Pending
+  In_Review
+  Approved
+  Rejected
+  Sold
+}
+
+enum AuthenticityStatus {
+  Pending
+  Verified
+  Rejected
+  Under_Review
+}
+
+enum ListingCategory {
+  normal
+  featured
+  most_rare
+}
+
+enum OrderStatus {
+  Pending
+  Processing
+  Shipped
+  Delivered
+  Cancelled
+}
+
+enum PaymentStatus {
+  Pending
+  Paid
+  Failed
+  Refunded
+}
+
+enum OrderItemStatus {
+  Pending
+  Shipped
+  Delivered
+}
+
+enum VendorType {
+  SINGLE
+  BULK
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum SubscriptionPlan {
+  BULK_MONTHLY
+  BULK_YEARLY
+  FREE
+  CUSTOM_APPROVED
+}
+
+enum SubscriptionStatus {
+  active
+  cancelled
+  expired
+  trialing
+}
+
+enum AuctionStatus {
+  UPCOMING
+  ACTIVE
+  SOLD
+  ENDED
+}
+
+enum TestimonialStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+enum CartAction {
+  ADD
+  REMOVE
+}
+
+// ============== MODELS ==============
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -17,10 +138,10 @@ model User {
   password   String?
   supabaseId String?  @unique
   phone      String?  @unique
-  phoneVerificationStatus String @default("none") // "none", "pending", "verified", "rejected"
-  type      String   @default("individual") // "individual", "company"
-  role      String   @default("user") // "user", "admin", "curator"
-  kycStatus String   @default("none") // "none", "pending", "verified"
+  phoneVerificationStatus PhoneVerificationStatus @default(none)
+  type      UserType @default(individual)
+  role      UserRole @default(user)
+  kycStatus KycStatus @default(none)
   kycData   Json?    @default("{}")
   banned    Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -31,44 +152,42 @@ model User {
   wishlist  WishlistItem[]
   orders    Order[]
   vendor    Vendor?
-  notifications Notification[]
-  bids           AuctionBid[]
-}
-
-model PhoneVerification {
-  id        String   @id @default(cuid())
-  phone     String   @unique
-  code      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  notifications    Notification[]
+  bids             AuctionBid[]
+  pushSubscriptions PushSubscription[]
+  testimonials     Testimonial[]
+  productViews     ProductView[]
+  cartEvents       CartEvent[]
+  checkoutEvents   CheckoutEvent[]
+  auditLogs        AuditLog[]
+  ratings          Rating[]
 }
 
 model Product {
-  id                 String   @id @default(cuid())
+  id                 String           @id @default(cuid())
   title              String
   category           String
   brand              String?
-  listingCategory    String   @default("normal") // "normal", "featured", "most_rare"
+  listingCategory    ListingCategory  @default(normal)
   description        String
   condition          String
   price              Float
   image              String
   images             String[]
   keywords           String[]
-  isVerified         Boolean  @default(false)
-  authenticityStatus String   @default("Pending")
-  
-  // Verification workflow fields
-  status             String   @default("Pending") // "Pending", "In Review", "Approved", "Rejected"
-  isPublished        Boolean  @default(false) // Only true when status is "Approved"
-  rejectionReason    String?  // Reason for rejection (shown to seller)
-  reviewedAt         DateTime? // When admin last reviewed
-  reviewedBy         String?  // Admin who reviewed (optional for future use)
-  
+  isVerified         Boolean          @default(false)
+  authenticityStatus AuthenticityStatus @default(Pending)
+
+  status             ProductStatus    @default(Pending)
+  isPublished        Boolean          @default(false)
+  rejectionReason    String?
+  reviewedAt         DateTime?
+  reviewedBy         String?
+
   sellerId           String
-  seller             User     @relation(fields: [sellerId], references: [id])
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  seller             User             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   cartItems      CartItem[]
   wishlistItems  WishlistItem[]
@@ -77,14 +196,19 @@ model Product {
   productViews   ProductView[]
   cartEvents     CartEvent[]
   checkoutEvents CheckoutEvent[]
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([isPublished])
+  @@index([status])
 }
 
 model CartItem {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
@@ -93,9 +217,9 @@ model CartItem {
 model WishlistItem {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
@@ -117,97 +241,107 @@ model GalleryItem {
 }
 
 model Order {
-  id              String      @id @default(cuid())
+  id              String        @id @default(cuid())
   userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  status          String      @default("Pending") // "Pending", "Processing", "Shipped", "Delivered", "Cancelled"
+  user            User          @relation(fields: [userId], references: [id])
+  status          OrderStatus   @default(Pending)
   totalAmount     Float
   shippingAddress String
   city            String
   state           String
   zipCode         String
   phone           String
-  trackingID      String?     // Delhivery AWB / Tracking ID
-  
-  // Razorpay payment integration fields
-  paymentStatus   String      @default("Pending") // "Pending", "Paid", "Failed", "Refunded"
-  paymentId       String?     // Razorpay payment ID
-  paymentOrderId  String?     // Razorpay Order ID
-  paymentSignature String?    // Razorpay signature
-  
+  trackingID      String?
+
+  paymentStatus   PaymentStatus @default(Pending)
+  paymentId       String?       @unique
+  paymentOrderId  String?
+  paymentSignature String?
+
   items           OrderItem[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id])
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int      @default(1)
-  price     Float    // Price at time of purchase
-  createdAt DateTime @default(now())
+  id         String         @id @default(cuid())
+  orderId    String
+  order      Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product        @relation(fields: [productId], references: [id])
+  quantity   Int            @default(1)
+  price      Float
+  status     OrderItemStatus @default(Pending)
+  trackingID String?
+  createdAt  DateTime       @default(now())
+
+  @@index([orderId])
 }
 
 model Vendor {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  user         User     @relation(fields: [userId], references: [id])
-  type         String   // "SINGLE", "BULK"
-  status       String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED", "SUSPENDED"
-  maxListings  Int      @default(5) // 5 for SINGLE, 999999 for BULK
+  id           String        @id @default(cuid())
+  userId       String        @unique
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         VendorType    @default(SINGLE)
+  status       VendorStatus  @default(PENDING)
+  maxListings  Int           @default(5)
   companyName  String?
   gst          String?
   founderName  String?
   aadhaar      String?
   pan          String?
-  
-  // Document upload URLs (scanned copies)
+
   aadhaarDoc       String?
   panDoc           String?
   gstDoc           String?
   incorporationDoc String?
-  
-  // Seller Agreement digital signature
+
   agreementAccepted   Boolean   @default(false)
   agreementSignedAt   DateTime?
   agreementSignedByName String?
-  
+  signedAgreementDoc  String?
+
   rating       Float    @default(0)
   ratingCount  Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   subscription VendorSubscription?
   payouts       Payout[]
+  ratings       Rating[]
 }
 
 model VendorSubscription {
-  id               String   @id @default(cuid())
-  vendorId         String   @unique
-  vendor           Vendor   @relation(fields: [vendorId], references: [id])
-  plan             String   // "BULK_MONTHLY", "BULK_YEARLY", "FREE", "CUSTOM_APPROVED"
-  status           String   // "active", "cancelled", "expired", "trialing"
-  paymentId        String?  // reference to payment/subscription
+  id               String             @id @default(cuid())
+  vendorId         String             @unique
+  vendor           Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  plan             SubscriptionPlan
+  status           SubscriptionStatus
+  paymentId        String?
   currentPeriodEnd DateTime
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 }
 
 model AuditLog {
   id          String   @id @default(cuid())
   adminId     String
-  action      String   // "APPROVE_KYC", "REJECT_PRODUCT", "SUSPEND_VENDOR", etc.
-  targetType  String   // "User", "Product", "Vendor", etc.
+  admin       User     @relation(fields: [adminId], references: [id])
+  action      String
+  targetType  String
   targetId    String
   details     String?
   createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([targetType, targetId])
 }
 
 model Auction {
-  id             String      @id @default(cuid())
+  id             String        @id @default(cuid())
   title          String
   description    String
   images         String[]
@@ -216,80 +350,99 @@ model Auction {
   reservePrice   Float?
   startDate      DateTime
   endDate        DateTime
-  status         String      @default("UPCOMING") // "UPCOMING", "ACTIVE", "SOLD", "ENDED"
-  productId      String?   @unique
-  product        Product?    @relation(fields: [productId], references: [id])
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  status         AuctionStatus @default(UPCOMING)
+  productId      String?       @unique
+  product        Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   bids           AuctionBid[]
+
+  @@index([status])
+  @@index([endDate])
 }
 
 model AuctionBid {
   id        String   @id @default(cuid())
   auctionId String
-  auction   Auction  @relation(fields: [auctionId], references: [id])
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   amount    Float
   createdAt DateTime @default(now())
+
+  @@index([auctionId])
 }
 
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId, read])
 }
 
 model Testimonial {
-  id         String   @id @default(cuid())
+  id         String           @id @default(cuid())
   userId     String?
+  user       User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   authorName String
   content    String
-  rating     Int      @default(5) // 1-5 star rating
-  images     String[] @default([])
-  status     String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
+  rating     Int              @default(5)
+  images     String[]         @default([])
+  status     TestimonialStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
-// Analytics & Tracking Models
+  @@index([status])
+}
 
 model ProductView {
   id        String   @id @default(cuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  userId    String?  // null if not logged in
-  sessionId String?  // session fingerprint for anonymous users
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String?
   createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([userId])
 }
 
 model CartEvent {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId    String
-  action    String   // "ADD", "REMOVE"
-  createdAt DateTime @default(now())
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    CartAction
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+  @@index([productId])
 }
 
 model CheckoutEvent {
   id        String   @id @default(cuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId    String
-  orderId   String?  // set when checkout completes
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId   String?
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model PushSubscription {
   id         String   @id @default(cuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   endpoint   String
   p256dh     String
   auth       String
@@ -299,16 +452,32 @@ model PushSubscription {
 }
 
 model Payout {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   vendorId    String
-  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+  vendor      Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   amount      Float
-  status      String   @default("PENDING") // "PENDING", "PROCESSING", "PAID", "FAILED"
+  status      PayoutStatus @default(PENDING)
   periodStart DateTime
   periodEnd   DateTime
   paidAt      DateTime?
   note        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([vendorId])
+  @@index([status])
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  userId    String
+  vendorId  String
+  user      User     @relation(fields: [userId], references: [id])
+  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  rating    Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, vendorId])
+  @@index([vendorId])
 }
 

@@ -13,7 +13,7 @@ export default async function wishlistRoutes(fastify) {
             where: { id: userId }
         });
         if (!user || user.supabaseId !== request.user.sub) {
-            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+            return reply.status(403).send({ error: 'You do not have permission to access this resource' });
         }
 
         const wishlist = await prisma.wishlistItem.findMany({
@@ -31,7 +31,7 @@ export default async function wishlistRoutes(fastify) {
             where: { id: userId }
         });
         if (!user || user.supabaseId !== request.user.sub) {
-            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+            return reply.status(403).send({ error: 'You do not have permission to access this resource' });
         }
 
         const wishlistItem = await prisma.wishlistItem.upsert({
@@ -52,7 +52,7 @@ export default async function wishlistRoutes(fastify) {
             where: { id: userId }
         });
         if (!user || user.supabaseId !== request.user.sub) {
-            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+            return reply.status(403).send({ error: 'You do not have permission to access this resource' });
         }
 
         await prisma.wishlistItem.delete({

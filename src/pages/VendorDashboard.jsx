@@ -183,6 +183,7 @@ export default function VendorDashboard() {
             showToast('Please enter a valid amount', 'error');
             return;
         }
+        if (!window.confirm(`Request a payout of ₹${parseFloat(requestAmount).toLocaleString()}?`)) return;
         setRequesting(true);
         try {
             await apiClient.post('/vendor/payouts/request', { amount: parseFloat(requestAmount) });

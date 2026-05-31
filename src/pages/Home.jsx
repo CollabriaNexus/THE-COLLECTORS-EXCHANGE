@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive, ChevronLeft, ChevronRight, ShoppingBag, Award, Gem, Heart, Pause, Play, Quote, QuoteIcon } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import heroVideo from '../assets/hero_section.mp4';
+import heroPoster from '../assets/hero-background.png';
 import verificationAuthenticity from '../assets/verification_authenticity.png';
 import { useProducts } from '../hooks/api/useProducts';
 import { getUser, addToCart, isInCart } from '../utils/storage';
@@ -32,7 +33,7 @@ const FeaturedProductsCarousel = () => {
             >
                 <div className="relative aspect-[4/5] bg-heritage-beige overflow-hidden">
                     {product.image ? (
-                        <img src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+                        <img loading="lazy" src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/40 bg-heritage-beige">
                             <Gem size={48} strokeWidth={1} />
@@ -88,7 +89,7 @@ const FeaturedProductsCarousel = () => {
                     `}</style>
                     <div
                         ref={trackRef}
-                        className={`carousel-track flex gap-6 ${paused ? '' : ''}`}
+                        className="carousel-track flex gap-6"
                         style={{
                             width: 'max-content',
                             animationPlayState: paused ? 'paused' : '',
@@ -120,6 +121,7 @@ const Home = () => {
                 <video
                     ref={homeVideoRef}
                     src={heroVideo}
+                    poster={heroPoster}
                     className="absolute inset-0 w-full h-full object-cover object-top"
                     autoPlay
                     muted
@@ -288,17 +290,17 @@ const TestimonialsSection = () => {
                 <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal mb-10">What Our <span className="text-luxury-gold italic font-light">Collectors</span> Say</h2>
                 <div className="bg-white p-8 sm:p-12 shadow-sm border border-gray-100 relative">
                     <Quote className="text-luxury-gold/20 absolute top-4 left-4 w-12 h-12 sm:w-16 sm:h-16" />
-                    <p className="text-lg sm:text-xl text-gray-700 leading-relaxed font-sans italic mb-6 relative z-10">&ldquo;{t.content}&rdquo;</p>
+                    <p className="text-lg sm:text-xl text-gray-700 leading-relaxed font-sans italic mb-6 relative z-10">{"\u201C"}{t.content}{"\u201D"}</p>
                     {t.images?.length > 0 && (
                         <div className="flex justify-center gap-3 mb-4 overflow-x-auto">
                             {t.images.map((img, i) => (
-                                <img key={i} src={img} alt="" className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded border border-gray-200 flex-shrink-0" />
+                                <img key={i} src={img} alt={`${t.authorName}'s collectible`} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded border border-gray-200 flex-shrink-0" />
                             ))}
                         </div>
                     )}
                     <div className="flex items-center justify-center gap-1 mb-3">
                         {[1,2,3,4,5].map(i => (
-                            <span key={i} className={`text-lg ${i <= t.rating ? 'text-amber-400' : 'text-gray-200'}`}>★</span>
+                            <span key={i} className={`text-lg ${i <= t.rating ? 'text-amber-400' : 'text-gray-200'}`} aria-label={`${i <= t.rating ? 'Filled star' : 'Empty star'}`}>&#9733;</span>
                         ))}
                     </div>
                     <p className="font-serif font-bold text-heritage-charcoal">— {t.authorName}</p>

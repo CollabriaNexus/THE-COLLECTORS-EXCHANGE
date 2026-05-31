@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2 } from 'lucide-react';
+import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2, Sparkles, Box } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
 import { addToCart, isInCart, getUser } from '../utils/storage';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
@@ -20,14 +20,14 @@ const CATEGORIES = [
     {
         id: 'accessories',
         name: 'Accessories',
-        icon: Gem,
+        icon: Sparkles,
         tagline: 'The Perfect Finish',
         description: 'An outfit is a statement. The right accessory makes it iconic. In a world of fast fashion and disposable trends, we choose the "Enduring Truth." We rescue the definitive finishing pieces — the cufflinks, the bags, the belts, and the heirlooms that transform the ordinary into the extraordinary.',
     },
     {
         id: 'collectables',
         name: 'Collectibles',
-        icon: Gem,
+        icon: Box,
         tagline: 'The Curated Pulse',
         description: 'A trend lasts a season. A collectible lasts a lifetime. In a world of digital clutter and "fast-consumption," we choose the "Physical Truth." We don\'t deal in landfill-ready trinkets; we rescue the rare, the nostalgic, and the culturally significant.',
     },
@@ -348,7 +348,7 @@ const Category = () => {
             {/* Category Icons Navigation - Polished with shadow and border */}
             <section className="py-8 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
                 <div className="container mx-auto max-w-5xl">
-                    <div className="flex md:grid md:grid-cols-7 gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory -mx-6 md:mx-0 px-6 md:px-0 md:justify-items-center md:mx-auto">
+                    <div className="flex justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory md:snap-none -mx-6 md:mx-0 px-6 md:px-0">
                         {CATEGORIES.map((category) => {
                             const IconComponent = category.icon;
                             const isSelected = selectedCategory === category.name;

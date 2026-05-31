@@ -29,12 +29,12 @@ export default fp(async function rbacPlugin(fastify, opts) {
     fastify.decorate("requirePermission", function (permission) {
         return async function (request, reply) {
             if (!request.dbUser) {
-                return reply.code(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+                return reply.code(401).send({ error: 'User profile not synchronized' });
             }
 
             const hasPermission = fastify.checkPermission(request.dbUser.role, permission);
             if (!hasPermission) {
-                return reply.code(403).send({ error: 'Forbidden', message: `Access denied: Missing permission '${permission}'` });
+                return reply.code(403).send({ error: `Access denied: Missing permission '${permission}'` });
             }
         };
     });

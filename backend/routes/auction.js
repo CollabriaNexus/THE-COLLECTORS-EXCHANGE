@@ -72,24 +72,29 @@ export default async function auctionRoutes(fastify) {
             return reply.status(400).send({ error: 'Auction has not started' });
         }
 
-        const minBid = auction.currentBid || auction.startingBid;
-        if (amount <= minBid) {
-            return reply.status(400).send({
-                error: 'Bid too low',
-                message: `Bid must be greater than current bid of ₹${minBid}`,
-            });
-        }
+        const bid = await prisma.$transaction(async (tx) => {
+            const freshAuction = await tx.auction.findUnique({ where: { id } });
+            const minBid = freshAuction.currentBid || freshAuction.startingBid;
+            if (amount <= minBid) {
+                return { error: `Bid must be greater than current bid of ₹${minBid}` };
+            }
 
-        const [bid] = await Promise.all([
-            prisma.auctionBid.create({
+            const newBid = await tx.auctionBid.create({
                 data: { auctionId: id, userId, amount },
                 include: { user: { select: { name: true } } },
-            }),
-            prisma.auction.update({
+            });
+
+            await tx.auction.update({
                 where: { id },
                 data: { currentBid: amount },
-            }),
-        ]);
+            });
+
+            return newBid;
+        });
+
+        if (bid.error) {
+            return reply.status(400).send({ error: bid.error });
+        }
 
         return bid;
     });

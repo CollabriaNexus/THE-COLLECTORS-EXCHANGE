@@ -21,6 +21,10 @@ export const UserRegistrationSchema = z.object({
 });
 
 export const UserKycSchema = z.object({
-    userId: z.string(),
     kycData: z.record(z.any()),
+});
+
+export const UpdateProfileSchema = z.object({
+    name: z.string().min(1).optional(),
+    phone: z.string().min(10).optional(),
 });

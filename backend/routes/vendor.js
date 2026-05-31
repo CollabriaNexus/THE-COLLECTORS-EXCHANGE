@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 /**
  * Vendor Routes
  * @param {import('fastify').FastifyInstance} fastify
@@ -9,7 +11,7 @@ export default async function vendorRoutes(fastify) {
     fastify.get('/profile', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const dbUser = request.dbUser;
         if (!dbUser) {
-            return reply.status(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+            return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
         const vendor = await prisma.vendor.findUnique({
@@ -18,14 +20,14 @@ export default async function vendorRoutes(fastify) {
         });
 
         if (!vendor) {
-            return reply.status(404).send({ error: 'Vendor profile not found', message: 'You must complete KYC first.' });
+            return reply.status(404).send({ error: 'Vendor profile not found. You must complete KYC first.' });
         }
 
         // Fetch active listing count
         const activeCount = await prisma.product.count({
             where: {
                 sellerId: dbUser.id,
-                status: { in: ['Pending', 'In Review', 'Approved'] },
+                status: { in: ['Pending', 'In_Review', 'Approved'] },
             }
         });
 
@@ -39,7 +41,7 @@ export default async function vendorRoutes(fastify) {
     fastify.get('/stats', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const dbUser = request.dbUser;
         if (!dbUser) {
-            return reply.status(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+            return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
         const vendor = await prisma.vendor.findUnique({
@@ -266,7 +268,7 @@ export default async function vendorRoutes(fastify) {
 
         const topProducts = Array.from(productMap.values())
             .sort((a, b) => b.totalRevenue - a.totalRevenue)
-            .slice(0, parseInt(limit))
+            .slice(0, parseInt(limit, 10))
             .map(p => ({ ...p, orderCount: p.orderCount.size }));
 
         return topProducts;
@@ -288,20 +290,20 @@ export default async function vendorRoutes(fastify) {
             if (to) where.createdAt.lte = new Date(to);
         }
 
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
         const [payouts, total] = await Promise.all([
             prisma.payout.findMany({
                 where,
                 orderBy: { createdAt: 'desc' },
                 skip,
-                take: parseInt(limit),
+                take: parseInt(limit, 10),
             }),
             prisma.payout.count({ where }),
         ]);
 
         return {
             payouts,
-            pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
+            pagination: { page: parseInt(page, 10), limit: parseInt(limit, 10), total, pages: Math.ceil(total / parseInt(limit, 10)) }
         };
     });
 
@@ -316,6 +318,41 @@ export default async function vendorRoutes(fastify) {
 
         const vendor = await prisma.vendor.findUnique({ where: { userId: dbUser.id } });
         if (!vendor) return reply.status(404).send({ error: 'Vendor profile not found' });
+
+        // Calculate available balance from paid orders
+        const productIds = (await prisma.product.findMany({
+            where: { sellerId: dbUser.id },
+            select: { id: true }
+        })).map(p => p.id);
+
+        const paidOrderItems = await prisma.orderItem.findMany({
+            where: {
+                productId: { in: productIds },
+                order: { paymentStatus: 'Paid', status: { not: 'Cancelled' } }
+            }
+        });
+        const earnedRevenue = paidOrderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+        const pastPayouts = await prisma.payout.aggregate({
+            where: { vendorId: vendor.id, status: { not: 'REJECTED' } },
+            _sum: { amount: true }
+        });
+        const paidOut = pastPayouts._sum.amount || 0;
+        const availableBalance = earnedRevenue - paidOut;
+
+        if (parseFloat(amount) > availableBalance) {
+            return reply.status(422).send({
+                error: `Insufficient balance. Available balance is $${availableBalance.toLocaleString()}`
+            });
+        }
+
+        // Check for existing pending payout request
+        const existingPending = await prisma.payout.findFirst({
+            where: { vendorId: vendor.id, status: 'PENDING' }
+        });
+        if (existingPending) {
+            return reply.status(422).send({ error: 'You already have a pending payout request' });
+        }
 
         const payout = await prisma.payout.create({
             data: {
@@ -339,13 +376,13 @@ export default async function vendorRoutes(fastify) {
         return { message: 'Payout request submitted', payout };
     });
 
-    // Purchase/Verify bulk vendor subscription (simulated Razorpay callback / direct payment)
+    // Purchase/Verify bulk vendor subscription
     fastify.post('/subscribe', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const dbUser = request.dbUser;
-        const { paymentId, plan } = request.body; // e.g. "BULK_MONTHLY", "BULK_YEARLY"
+        const { paymentId, razorpayOrderId, razorpayPaymentId, razorpaySignature, plan } = request.body;
 
         if (!dbUser) {
-            return reply.status(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+            return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
         const vendor = await prisma.vendor.findUnique({
@@ -356,6 +393,21 @@ export default async function vendorRoutes(fastify) {
             return reply.status(404).send({ error: 'Vendor profile not found' });
         }
 
+        // Verify payment
+        const keySecret = process.env.RAZORPAY_KEY_SECRET;
+        if (keySecret) {
+            if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+                return reply.status(400).send({ error: 'Payment verification details are required' });
+            }
+            const hmac = crypto.createHmac('sha256', keySecret);
+            hmac.update(razorpayOrderId + "|" + razorpayPaymentId);
+            if (hmac.digest('hex') !== razorpaySignature) {
+                return reply.status(400).send({ error: 'Invalid payment signature' });
+            }
+        } else if (!paymentId || !paymentId.startsWith('pay_')) {
+            return reply.status(400).send({ error: 'Valid payment ID is required' });
+        }
+
         const currentPeriodEnd = new Date();
         if (plan === 'BULK_YEARLY') {
             currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
@@ -364,7 +416,6 @@ export default async function vendorRoutes(fastify) {
         }
 
         const updatedVendor = await prisma.$transaction(async (tx) => {
-            // Update vendor type to BULK and maxListings to unlimited (999999)
             const v = await tx.vendor.update({
                 where: { userId: dbUser.id },
                 data: {
@@ -373,20 +424,19 @@ export default async function vendorRoutes(fastify) {
                 }
             });
 
-            // Upsert the subscription
             await tx.vendorSubscription.upsert({
                 where: { vendorId: v.id },
                 update: {
                     plan: plan || 'BULK_MONTHLY',
                     status: 'active',
-                    paymentId,
+                    paymentId: razorpayPaymentId || paymentId,
                     currentPeriodEnd,
                 },
                 create: {
                     vendorId: v.id,
                     plan: plan || 'BULK_MONTHLY',
                     status: 'active',
-                    paymentId,
+                    paymentId: razorpayPaymentId || paymentId,
                     currentPeriodEnd,
                 }
             });
@@ -397,7 +447,7 @@ export default async function vendorRoutes(fastify) {
         return { message: 'Subscription activated successfully', vendor: updatedVendor };
     });
 
-    // Rate a vendor (buyers after purchase)
+    // Rate a vendor (buyers after purchase, one rating per user)
     fastify.post('/rate', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const dbUser = request.dbUser;
         const { vendorId, rating } = request.body;
@@ -409,16 +459,45 @@ export default async function vendorRoutes(fastify) {
         const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
         if (!vendor) return reply.status(404).send({ error: 'Vendor not found' });
 
-        const prevRating = vendor.rating * vendor.ratingCount;
-        const newCount = vendor.ratingCount + 1;
-        const newRating = (prevRating + rating) / newCount;
+        // Check user purchased from this vendor
+        const vendorProductIds = (await prisma.product.findMany({
+            where: { sellerId: vendor.userId },
+            select: { id: true }
+        })).map(p => p.id);
 
-        const updated = await prisma.vendor.update({
-            where: { id: vendorId },
-            data: { rating: newRating, ratingCount: newCount },
+        const purchasedItem = await prisma.orderItem.findFirst({
+            where: {
+                productId: { in: vendorProductIds },
+                order: { userId: dbUser.id, paymentStatus: 'Paid', status: { not: 'Cancelled' } }
+            }
+        });
+        if (!purchasedItem) {
+            return reply.status(403).send({ error: 'You must purchase from this vendor before rating' });
+        }
+
+        // Check for existing rating
+        const existingRating = await prisma.rating.findUnique({
+            where: { userId_vendorId: { userId: dbUser.id, vendorId } }
+        });
+        if (existingRating) {
+            return reply.status(422).send({ error: 'You have already rated this vendor' });
+        }
+
+        await prisma.$transaction(async (tx) => {
+            const currentVendor = await tx.vendor.findUnique({ where: { id: vendorId } });
+            await tx.rating.create({
+                data: { userId: dbUser.id, vendorId, rating }
+            });
+            const prevRating = currentVendor.rating * currentVendor.ratingCount;
+            const newCount = currentVendor.ratingCount + 1;
+            const newRating = (prevRating + rating) / newCount;
+            await tx.vendor.update({
+                where: { id: vendorId },
+                data: { rating: newRating, ratingCount: newCount },
+            });
         });
 
-        return { message: 'Rating submitted', rating: updated.rating, ratingCount: updated.ratingCount };
+        return { message: 'Rating submitted' };
     });
 
     // Get vendor's sold orders (orders containing vendor's products)
@@ -432,7 +511,7 @@ export default async function vendorRoutes(fastify) {
         const orderItems = await prisma.orderItem.findMany({
             where: { productId: { in: productIds } },
             include: {
-                order: { include: { user: { select: { name: true, email: true, phone: true } } } },
+                order: { include: { user: { select: { name: true } } } },
                 product: { select: { id: true, title: true, image: true, price: true } },
             },
             orderBy: { createdAt: 'desc' },
@@ -449,16 +528,30 @@ export default async function vendorRoutes(fastify) {
 
         const orderItem = await prisma.orderItem.findUnique({
             where: { id: orderItemId },
-            include: { product: true, order: true },
+            include: { product: true, order: { include: { items: true } } },
         });
 
         if (!orderItem) return reply.status(404).send({ error: 'Order item not found' });
         if (orderItem.product.sellerId !== dbUser.id) return reply.status(403).send({ error: 'Not your product' });
+        if (orderItem.status === 'Shipped') return reply.status(422).send({ error: 'Already marked as shipped' });
 
-        await prisma.order.update({
-            where: { id: orderItem.orderId },
-            data: { trackingID, status: 'Shipped' },
+        // Update the individual order item status only
+        await prisma.orderItem.update({
+            where: { id: orderItemId },
+            data: { status: 'Shipped', trackingID: trackingID || null },
         });
+
+        // Check if all items in the order are now shipped to update order-level status
+        const allItems = await prisma.orderItem.findMany({
+            where: { orderId: orderItem.orderId }
+        });
+        const allShipped = allItems.every(item => item.status === 'Shipped');
+        if (allShipped) {
+            await prisma.order.update({
+                where: { id: orderItem.orderId },
+                data: { status: 'Shipped' },
+            });
+        }
 
         return { message: 'Marked as shipped', trackingID };
     });

@@ -6,29 +6,37 @@ import { useCart } from '../hooks/api/useCart';
 import { useCreateOrder, useVerifyPayment } from '../hooks/api/useCheckout';
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
+import { useToast } from '../components/Toast';
 
 const Checkout = () => {
     const navigate = useNavigate();
     const currentUser = getUser();
     const { data: cartItems = [], isLoading: cartLoading } = useCart(currentUser?.id);
+    const showToast = useToast();
     const createOrderMutation = useCreateOrder();
     const verifyPaymentMutation = useVerifyPayment();
 
     const [orderSuccess, setOrderSuccess] = useState(null);
     const [form, setForm] = useState({
         shippingAddress: '',
+        recipientName: currentUser?.name || '',
         city: '',
         state: '',
         zipCode: '',
+        country: 'India',
         phone: currentUser?.phone || '',
     });
     const [errors, setErrors] = useState({});
 
     // Load Razorpay script
+    const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+    const [razorpayError, setRazorpayError] = useState(false);
     useEffect(() => {
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
+        script.onload = () => setRazorpayLoaded(true);
+        script.onerror = () => setRazorpayError(true);
         document.body.appendChild(script);
         return () => document.body.removeChild(script);
     }, []);
@@ -38,10 +46,12 @@ const Checkout = () => {
 
     const validate = () => {
         const newErrors = {};
+        if (!form.recipientName.trim()) newErrors.recipientName = 'Recipient name is required';
         if (!form.shippingAddress.trim()) newErrors.shippingAddress = 'Address is required';
         if (!form.city.trim()) newErrors.city = 'City is required';
         if (!form.state.trim()) newErrors.state = 'State is required';
         if (!form.zipCode.trim()) newErrors.zipCode = 'PIN code is required';
+        if (!form.country.trim()) newErrors.country = 'Country is required';
         if (!form.phone.trim() || form.phone.length < 10) newErrors.phone = 'Valid phone number is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -82,6 +92,11 @@ const Checkout = () => {
                 return;
             }
 
+            if (!razorpayLoaded) {
+                showToast('Payment gateway failed to load. Please disable ad blockers or try again.', 'error');
+                return;
+            }
+
             // Live Razorpay flow
             const options = {
                 key: orderData.keyId,
@@ -106,7 +121,7 @@ const Checkout = () => {
                         });
                         setOrderSuccess(verifyData.order);
                     } catch {
-                        alert('Payment verification failed. Please contact support.');
+                        showToast('Payment verification failed. Please contact support.', 'error');
                     }
                 },
                 modal: {
@@ -119,7 +134,7 @@ const Checkout = () => {
             const rzp = new window.Razorpay(options);
             rzp.open();
         } catch (err) {
-            alert(err?.response?.data?.error || err.message || 'Failed to create order');
+            showToast(err?.response?.data?.error || err.message || 'Failed to create order', 'error');
         }
     };
 
@@ -214,12 +229,26 @@ const Checkout = () => {
                         <div className="bg-white border border-gray-100 shadow-sm p-8">
                             <h2 className="text-xl font-serif font-bold text-heritage-charcoal mb-6">Shipping Details</h2>
 
-                            <div className="space-y-5">
+                            <div className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                    <label htmlFor="recipientName" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Recipient Name</label>
+                                    <input
+                                        id="recipientName"
+                                        type="text"
+                                        value={form.recipientName}
+                                        onChange={e => setForm({ ...form, recipientName: e.target.value })}
+                                        placeholder="Full name"
+                                        className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.recipientName ? 'border-red-400' : 'border-gray-200'}`}
+                                    />
+                                    {errors.recipientName && <p className="text-red-500 text-xs mt-1">{errors.recipientName}</p>}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="shippingAddress" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                         Street Address
                                     </label>
                                     <input
+                                        id="shippingAddress"
                                         type="text"
                                         value={form.shippingAddress}
                                         onChange={e => setForm({ ...form, shippingAddress: e.target.value })}
@@ -231,8 +260,9 @@ const Checkout = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">City</label>
+                                        <label htmlFor="city" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">City</label>
                                         <input
+                                            id="city"
                                             type="text"
                                             value={form.city}
                                             onChange={e => setForm({ ...form, city: e.target.value })}
@@ -242,8 +272,9 @@ const Checkout = () => {
                                         {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">State</label>
+                                        <label htmlFor="state" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">State</label>
                                         <input
+                                            id="state"
                                             type="text"
                                             value={form.state}
                                             onChange={e => setForm({ ...form, state: e.target.value })}
@@ -254,10 +285,11 @@ const Checkout = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">PIN Code</label>
+                                        <label htmlFor="zipCode" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">PIN Code</label>
                                         <input
+                                            id="zipCode"
                                             type="text"
                                             value={form.zipCode}
                                             onChange={e => setForm({ ...form, zipCode: e.target.value })}
@@ -267,8 +299,21 @@ const Checkout = () => {
                                         {errors.zipCode && <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
+                                        <label htmlFor="country" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Country</label>
                                         <input
+                                            id="country"
+                                            type="text"
+                                            value={form.country}
+                                            onChange={e => setForm({ ...form, country: e.target.value })}
+                                            placeholder="India"
+                                            className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.country ? 'border-red-400' : 'border-gray-200'}`}
+                                        />
+                                        {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
+                                    </div>
+                                    <div>
+                                        <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
+                                        <input
+                                            id="phone"
                                             type="tel"
                                             value={form.phone}
                                             onChange={e => setForm({ ...form, phone: e.target.value })}
@@ -334,9 +379,12 @@ const Checkout = () => {
 
                             <div className="flex justify-between pt-4 border-t border-gray-100 font-serif font-bold text-lg mt-4 mb-8">
                                 <span>Total</span>
-                                <span>₹{total.toFixed(2)}</span>
+                                <span>₹{total.toLocaleString('en-IN')}</span>
                             </div>
 
+                            {razorpayError && (
+                                <p className="text-xs text-red-600 text-center mb-2">Payment gateway failed to load. Please disable ad blockers and refresh.</p>
+                            )}
                             <button
                                 type="submit"
                                 disabled={createOrderMutation.isPending || verifyPaymentMutation.isPending}

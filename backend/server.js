@@ -43,26 +43,33 @@ fastify.register(rateLimit, {
     timeWindow: '1 minute',
 });
 fastify.register(cors, {
-    origin: true,
+    origin: [
+        process.env.FRONTEND_URL || 'http://localhost:5173',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'https://thecollectorsexchange.in',
+        'https://tce-admin.pages.dev',
+    ].filter(Boolean),
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    credentials: true,
 });
 
 // Zod Error Handler
 fastify.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {
         return reply.status(400).send({
-            statusCode: 400,
-            error: 'Bad Request',
+            error: 'Validation Error',
+            message: 'Request validation failed',
             issues: error.issues,
         });
     }
 
     // Default handler for other errors
     request.log.error(error);
+    const isProduction = process.env.NODE_ENV === 'production';
     reply.status(error.statusCode || 500).send({
-        statusCode: error.statusCode || 500,
         error: error.name || 'Internal Server Error',
-        message: error.message,
+        message: isProduction && reply.statusCode >= 500 ? 'An unexpected error occurred' : error.message,
     });
 });
 

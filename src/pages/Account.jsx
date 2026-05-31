@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Image as ImageIcon, Tag, Info, Loader2, Mail, X, ShoppingBag, Store, Crown, Check, CreditCard, Upload, Bell, BarChart3, Eye, Edit3, Download } from 'lucide-react';
+import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, Crown, Check, CreditCard, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Papa from 'papaparse';
@@ -11,295 +11,30 @@ import { useMe, useRegisterUser, useSubmitKyc, useUpdateProfile } from '../hooks
 import { useAddProduct, useDeleteProduct, useAddBulkProducts, useUpdateProduct, useMarkAsSold } from '../hooks/api/useProducts';
 import { useMyOrders } from '../hooks/api/useOrders';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
-import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/api/useNotifications';
 import { supabase } from '../utils/supabase';
 import { uploadProductImage, uploadKycDocument, uploadTestimonialImage } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
-import { useVendorProfile, useVendorStats, useVendorPayouts, useVendorOrders, useShipOrderItem, useVendorSubscribe } from '../hooks/api/useVendor';
+import { useVendorProfile, useVendorStats } from '../hooks/api/useVendor';
 import { useTestimonials, useSubmitTestimonial } from '../hooks/api/useTestimonials';
-
-// Helper Component for Phone Verification (Manual WhatsApp flow)
-const WhatsAppNumber = '+919999999999'; // <-- Replace with actual WhatsApp number
-
-const PhoneVerification = ({ onVerified }) => {
-    const [phone, setPhone] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
-
-    const handleSubmit = async () => {
-        if (!phone || phone.length < 10) return alert("Please enter a valid phone number");
-        setLoading(true);
-        try {
-            await apiClient.post('/users/phone/submit', { phone });
-            setSubmitted(true);
-        } catch (err) {
-            alert(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (submitted) {
-        return (
-            <div className="bg-amber-50 border border-amber-200 p-4">
-                <p className="text-sm text-amber-800 font-medium mb-1">Phone Submitted for Verification</p>
-                <p className="text-xs text-amber-700">Our team will verify your number shortly. This usually takes a few hours.</p>
-            </div>
-        );
-    }
-
-    return (
-        <div className="bg-gray-50 border border-gray-100 p-4 space-y-3">
-            <div>
-                <label className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Your Phone Number</label>
-                <input
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    className="w-full p-3 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
-                />
-            </div>
-            <div className="bg-blue-50 border border-blue-100 p-3">
-                <p className="text-xs text-blue-700 font-medium mb-1">Step 1: Send us a WhatsApp message</p>
-                <p className="text-xs text-blue-600 mb-2">
-                    Send a message to <strong>{WhatsAppNumber}</strong> on WhatsApp with your name and the phone number above so we can verify you.
-                </p>
-                <a
-                    href={`https://wa.me/${WhatsAppNumber.replace(/\D/g, '')}?text=Hi%2C%20I%20want%20to%20verify%20my%20phone%20number%3A%20${encodeURIComponent(phone)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded border border-green-200 hover:bg-green-100 transition-colors"
-                >
-                    Open WhatsApp
-                </a>
-            </div>
-            <p className="text-[11px] text-gray-400">Step 2: After sending the message, click submit below.</p>
-            <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full py-3 bg-heritage-charcoal text-white text-xs uppercase tracking-widest hover:bg-luxury-gold transition-colors"
-            >
-                {loading ? 'Submitting...' : 'I\'ve Sent the Message — Submit for Verification'}
-            </button>
-        </div>
-    );
-};
-
-const LoginForm = () => {
-    const [email, setEmail] = useState('');
-    const [otp, setOtp] = useState('');
-    const [step, setStep] = useState('email'); // 'email', 'otp'
-    const [loading, setLoading] = useState(false);
-
-    const handleSendOtp = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                // Removing shouldCreateUser: false to allow new users to sign up via OTP
-            });
-            if (error) throw error;
-            alert('Login Code sent to your email!');
-            setStep('otp');
-        } catch (error) {
-            alert(error.message || 'Failed to send OTP');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleVerifyOtp = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const { error } = await supabase.auth.verifyOtp({
-                email,
-                token: otp,
-                type: 'email'
-            });
-            if (error) throw error;
-            // Success handled by onAuthStateChange in parent
-        } catch (error) {
-            alert(error.message || 'Invalid Code');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (step === 'email') {
-        return (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-                <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
-                    <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
-                        placeholder="vip@example.com"
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-black text-white py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-2"
-                >
-                    {loading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
-                    Send Login Code
-                </button>
-            </form>
-        );
-    }
-
-    return (
-        <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <div className="text-center mb-4">
-                <p className="text-sm text-gray-600">Enter the code sent to <span className="font-semibold">{email}</span></p>
-                <button type="button" onClick={() => setStep('email')} className="text-xs text-luxury-gold hover:underline mt-1">Change Email</button>
-            </div>
-            <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">6-Digit Code</label>
-                <input
-                    type="text"
-                    required
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors text-center text-lg tracking-widest"
-                    placeholder="123456"
-                />
-            </div>
-            <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-black text-white py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-2"
-            >
-                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Verify & Sign In'}
-            </button>
-        </form>
-    );
-};
-
-const NotificationsPanel = () => {
-    const { data: notifications = [], isLoading } = useNotifications(!!getUser());
-    const markReadMutation = useMarkNotificationRead();
-    const markAllReadMutation = useMarkAllNotificationsRead();
-
-    if (isLoading) {
-        return (
-            <div className="bg-white p-8 shadow-sm border border-gray-100 flex justify-center">
-                <Loader2 className="animate-spin text-luxury-gold" size={32} />
-            </div>
-        );
-    }
-
-    return (
-        <div className="bg-white p-8 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h2 className="text-2xl font-serif mb-1">Notifications</h2>
-                    <p className="text-gray-500 text-sm">Stay informed about your account and listings</p>
-                </div>
-                {notifications.some(n => !n.read) && (
-                    <button
-                        onClick={() => markAllReadMutation.mutate()}
-                        className="text-xs text-luxury-gold hover:underline uppercase tracking-wider"
-                    >
-                        Mark All Read
-                    </button>
-                )}
-            </div>
-
-            {notifications.length === 0 ? (
-                <div className="text-center py-16">
-                    <Bell size={48} className="mx-auto text-gray-200 mb-4" />
-                    <p className="text-gray-400 font-serif text-lg">No notifications yet.</p>
-                    <p className="text-gray-400 text-sm mt-1">We'll notify you about orders, verification updates, and more.</p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {notifications.map((notification) => (
-                        <div
-                            key={notification.id}
-                            className={`p-4 border transition-colors ${notification.read ? 'bg-white border-gray-100' : 'bg-luxury-gold/5 border-luxury-gold/20'}`}
-                            onClick={() => { if (!notification.read) markReadMutation.mutate(notification.id); }}
-                        >
-                            <div className="flex justify-between items-start gap-4">
-                                <div className="flex-1 min-w-0">
-                                    <h4 className={`text-sm font-medium ${notification.read ? 'text-gray-600' : 'text-heritage-charcoal'}`}>
-                                        {notification.title}
-                                    </h4>
-                                    <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
-                                </div>
-                                <div className="flex items-center gap-3 flex-shrink-0">
-                                    <span className="text-xs text-gray-400 whitespace-nowrap">
-                                        {new Date(notification.createdAt).toLocaleDateString()}
-                                    </span>
-                                    {!notification.read && <div className="w-2 h-2 rounded-full bg-luxury-gold" />}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const DocUploadField = ({ label, placeholder, value, docUrl, docType, uploading, onValueChange, onFileUpload }) => (
-    <div className="mb-6 last:mb-0">
-        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">{label}</label>
-        <div className="flex gap-3 items-start">
-            <div className="flex-grow space-y-2">
-                {placeholder && (
-                    <input
-                        type="text"
-                        placeholder={placeholder}
-                        value={value || ''}
-                        onChange={(e) => onValueChange(e.target.value)}
-                        className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
-                    />
-                )}
-                <div className="flex gap-2 items-center">
-                    <label className={`flex items-center gap-2 px-4 py-3 border border-dashed border-gray-300 cursor-pointer hover:border-luxury-gold transition-colors text-sm ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <Upload size={16} className="text-gray-400" />
-                        <span className="text-gray-500">{uploading ? 'Uploading...' : docUrl ? 'Replace Scan' : 'Upload Scanned Copy'}</span>
-                        <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            className="hidden"
-                            disabled={uploading}
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) onFileUpload(file);
-                                e.target.value = '';
-                            }}
-                        />
-                    </label>
-                    {docUrl && (
-                        <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-luxury-gold hover:underline flex items-center gap-1">
-                            <ImageIcon size={14} /> View
-                        </a>
-                    )}
-                </div>
-            </div>
-        </div>
-    </div>
-);
+import PhoneVerification from '../components/account/PhoneVerification';
+import LoginForm from '../components/account/LoginForm';
+import NotificationsPanel from '../components/account/NotificationsPanel';
+import DocUploadField from '../components/account/DocUploadField';
 
 const CATEGORIES = ['Timepieces', 'Accessories', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'];
 const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
+const WhatsAppNumber = '+916362771355';
 
 const Account = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [localUser, setLocalUserState] = useState(null);
+    const [sessionChecked, setSessionChecked] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
     const [showCompanyPopup, setShowCompanyPopup] = useState(false);
     const [regForm, setRegForm] = useState({ name: '', email: '', phone: '', password: '', type: 'individual' });
-    const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '', aadhaarDoc: '', panDoc: '', gstDoc: '', incorporationDoc: '', signedByName: '' });
+    const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '', aadhaarDoc: '', panDoc: '', gstDoc: '', incorporationDoc: '', signedByName: '', signedAgreementDoc: '' });
+    const [tncAccepted, setTncAccepted] = useState(false);
     const [productForm, setProductForm] = useState({
         title: '',
         category: CATEGORIES[0],
@@ -339,18 +74,14 @@ const Account = () => {
     // API Hooks
     const queryClient = useQueryClient();
     const [descPreview, setDescPreview] = useState(false);
-    const { data: user, isLoading: isUserLoading } = useMe();
+    const { data: userQuery } = useMe();
+    const user = userQuery || localUser;
     const { data: vendorProfile } = useVendorProfile();
     const { data: vendorStats } = useVendorStats();
-    const { data: vendorPayoutsData } = useVendorPayouts();
-    const { data: vendorOrderItems } = useVendorOrders();
-    const shipOrderItem = useShipOrderItem();
-    const [shippingTracking, setShippingTracking] = useState({});
     const submitTestimonial = useSubmitTestimonial();
     const [testimonialForm, setTestimonialForm] = useState({ content: '', authorName: '', rating: 5, images: [] });
     const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
     const [testimonialImageUploading, setTestimonialImageUploading] = useState(false);
-    const subscribeMutation = useVendorSubscribe();
     const { mutateAsync: registerUser, isPending: isRegisterPending } = useRegisterUser();
     const kycMutation = useSubmitKyc();
     const addProductMutation = useAddProduct();
@@ -365,7 +96,7 @@ const Account = () => {
     const updateProfileMutation = useUpdateProfile();
     const updateProductMutation = useUpdateProduct();
     const [editingProductId, setEditingProductId] = useState(null);
-    const [editProductForm, setEditProductForm] = useState({ title: '', description: '', price: '', condition: '', category: '', keywords: '' });
+    const [editProductForm, setEditProductForm] = useState({ title: '', description: '', price: '', condition: '', category: '', keywords: '', image: '', images: [] });
 
     const handleAuthChange = useCallback(async (session) => {
         if (session) {
@@ -396,18 +127,18 @@ const Account = () => {
         // Initial session check
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
+            const storedUser = getUser();
+            if (storedUser) setLocalUserState(storedUser);
             if (session) {
                 handleAuthChange(session);
-            } else {
-                const storedUser = getUser();
-                if (storedUser) setLocalUserState(storedUser);
             }
+            setSessionChecked(true);
         };
 
         checkSession();
 
         // Auth listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             handleAuthChange(session);
         });
 
@@ -421,7 +152,7 @@ const Account = () => {
                 redirectTo: window.location.origin + '/account'
             }
         });
-        if (error) alert(error.message);
+        if (error) { showToast(error.message, 'error'); return; }
         if (data?.url) {
             window.location.href = data.url;
         }
@@ -450,7 +181,7 @@ const Account = () => {
             };
             setIsRegistering(false);
         } catch (err) {
-            alert(err.message || 'Registration failed. Please try again.');
+            showToast(err.message || 'Registration failed. Please try again.', 'error');
         }
     };
 
@@ -465,11 +196,17 @@ const Account = () => {
             return;
         }
 
+        if (!tncAccepted) {
+            showToast('Please accept the Terms & Conditions.', 'error');
+            return;
+        }
+
         const kycData = {
             ...base,
             agreementAccepted: true,
             agreementSignedByName: kycForm.signedByName.trim(),
             agreementSignedAt: new Date().toISOString(),
+            signedAgreementDoc: kycForm.signedAgreementDoc || '',
         };
 
         try {
@@ -485,7 +222,7 @@ const Account = () => {
         setKycDocUploading(prev => ({ ...prev, [docType]: true }));
         try {
             const url = await uploadKycDocument(file, docType);
-            const fieldMap = { aadhaar: 'aadhaarDoc', pan: 'panDoc', gst: 'gstDoc', incorporation: 'incorporationDoc' };
+            const fieldMap = { aadhaar: 'aadhaarDoc', pan: 'panDoc', gst: 'gstDoc', incorporation: 'incorporationDoc', signedAgreement: 'signedAgreementDoc' };
             setKycForm(prev => ({ ...prev, [fieldMap[docType]]: url }));
             showToast(`${docType.charAt(0).toUpperCase() + docType.slice(1)} document uploaded successfully`, 'success');
         } catch (err) {
@@ -501,24 +238,9 @@ const Account = () => {
         setLocalUserState(prev => ({ ...prev, phone: newPhone, phoneVerificationStatus: 'pending' }));
     };
 
-    const handleVendorSubscribe = async (plan) => {
-        const proceed = window.confirm(`Subscribe to ${plan.replace('_', ' ')}? In mock mode, this simulates a successful payment.`);
-        if (!proceed) return;
-
-        try {
-            await subscribeMutation.mutateAsync({
-                paymentId: `pay_mock_${Date.now()}`,
-                plan,
-            });
-            showToast(`Successfully upgraded to ${plan.replace('_', ' ')}!`, 'success');
-        } catch {
-            showToast('Subscription failed. Please try again.', 'error');
-        }
-    };
-
     // Image URL handling
     const [imageUploading, setImageUploading] = useState(false);
-    const [kycDocUploading, setKycDocUploading] = useState({ aadhaar: false, pan: false, gst: false, incorporation: false });
+    const [kycDocUploading, setKycDocUploading] = useState({ aadhaar: false, pan: false, gst: false, incorporation: false, signedAgreement: false });
 
     const handleImageUrlChange = (index, value) => {
         const newUrls = [...productForm.imageUrls];
@@ -545,7 +267,7 @@ const Account = () => {
             handleImageUrlChange(index, url);
         } catch (err) {
             console.error('Upload failed:', err);
-            alert('Failed to upload image. Please try again or use a URL directly.');
+            showToast('Failed to upload image. Please try again or use a URL directly.', 'error');
         } finally {
             setImageUploading(false);
         }
@@ -687,12 +409,14 @@ const Account = () => {
             condition: product.condition || '',
             category: product.category || '',
             keywords: (product.keywords || []).join(', '),
+            image: product.image || '',
+            images: product.images || [],
         });
     };
 
     const handleCancelEdit = () => {
         setEditingProductId(null);
-        setEditProductForm({ title: '', description: '', price: '', condition: '', category: '', keywords: '' });
+        setEditProductForm({ title: '', description: '', price: '', condition: '', category: '', keywords: '', image: '', images: [] });
     };
 
     const handleSaveEdit = async (productId) => {
@@ -706,6 +430,8 @@ const Account = () => {
                     condition: editProductForm.condition,
                     category: editProductForm.category,
                     keywords: editProductForm.keywords.split(',').map(k => k.trim()).filter(Boolean),
+                    image: editProductForm.image || undefined,
+                    images: editProductForm.images.length > 0 ? editProductForm.images : undefined,
                 },
             });
             showToast('Product updated! It will be re-reviewed.', 'success');
@@ -723,7 +449,7 @@ const Account = () => {
         setActiveTab('profile');
     };
 
-    if (isUserLoading && localUser) {
+    if (!sessionChecked) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-secondary-bg">
                 <Helmet><title>My Account — The Collectors Exchange</title></Helmet>
@@ -807,17 +533,17 @@ const Account = () => {
                                     <div className="font-serif font-medium">Individual</div>
                                     <div className="text-xs text-gray-500 mt-1">For private collectors</div>
                                 </label>
-                                <label className={`cursor-pointer p-4 border transition-all border-gray-200 hover:border-luxury-gold/50`}>
+                                <label className={`cursor-pointer p-4 border transition-all ${regForm.type === 'company' ? 'border-luxury-gold bg-luxury-gold/5 opacity-50' : 'border-gray-200 opacity-50 hover:border-luxury-gold/50'}`}>
                                     <input
                                         type="radio"
                                         name="type"
                                         value="company"
-                                        checked={false}
+                                        checked={regForm.type === 'company'}
                                         onChange={() => setShowCompanyPopup(true)}
                                         className="hidden"
                                     />
-                                    <div className="font-serif font-medium">Company</div>
-                                    <div className="text-xs text-gray-500 mt-1">For businesses</div>
+                                    <div className="font-serif font-medium">Company <span className="text-xs font-sans font-normal text-amber-600">— contact us</span></div>
+                                    <div className="text-xs text-gray-500 mt-1">For businesses (email required)</div>
                                 </label>
                             </div>
                         </div>
@@ -1150,6 +876,31 @@ const Account = () => {
                                             </p>
                                         </div>
 
+                                        <div className="mt-4 flex items-center gap-4">
+                                            <a
+                                                href={`${import.meta.env.VITE_API_URL}/users/seller-agreement/pdf`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 bg-heritage-charcoal text-white px-5 py-3 text-xs uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+                                            >
+                                                <Download size={14} />
+                                                Download Seller Agreement (PDF)
+                                            </a>
+                                        </div>
+
+                                        <div className="mt-4">
+                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Upload Signed Agreement</label>
+                                            <p className="text-xs text-gray-400 mb-2">Print, sign, scan, and upload the signed agreement as a PDF</p>
+                                            <DocUploadField
+                                                label="Signed Agreement"
+                                                docUrl={kycForm.signedAgreementDoc}
+                                                docType="signedAgreement"
+                                                uploading={kycDocUploading.signedAgreement}
+                                                hideTextInput
+                                                onFileUpload={(file) => handleKycDocUpload('signedAgreement', file)}
+                                            />
+                                        </div>
+
                                         <div className="mt-4">
                                             <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Digital Signature</label>
                                             <p className="text-xs text-gray-400 mb-2">Type your full legal name as your electronic signature</p>
@@ -1164,6 +915,19 @@ const Account = () => {
                                             <p className="text-xs text-gray-400 mt-1">
                                                 By typing your name above, you electronically sign the Seller Agreement.
                                             </p>
+                                        </div>
+
+                                        <div className="mt-6 flex items-start gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id="tnc"
+                                                checked={tncAccepted}
+                                                onChange={(e) => setTncAccepted(e.target.checked)}
+                                                className="mt-1 h-4 w-4 border-gray-300 rounded"
+                                            />
+                                            <label htmlFor="tnc" className="text-sm text-gray-600 leading-relaxed">
+                                                I confirm that I have read, downloaded, signed, and uploaded the Seller Agreement. I agree to the Terms & Conditions and confirm that all information provided is accurate and truthful.
+                                            </label>
                                         </div>
                                     </div>
 
@@ -1229,7 +993,7 @@ const Account = () => {
 
                                         <div>
                                             <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                                                Listing Price (USD) <span className="text-luxury-gold">*</span>
+                                                Listing Price (₹) <span className="text-luxury-gold">*</span>
                                             </label>
                                             <input
                                                 type="number"
@@ -1542,6 +1306,19 @@ const Account = () => {
                                                             <input value={editProductForm.title} onChange={e => setEditProductForm({...editProductForm, title: e.target.value})} className="w-full p-3 border border-gray-200 text-sm" />
                                                         </div>
                                                         <div className="md:col-span-2">
+                                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Main Image URL</label>
+                                                            <input value={editProductForm.image} onChange={e => setEditProductForm({...editProductForm, image: e.target.value})} className="w-full p-3 border border-gray-200 text-sm" placeholder="https://..." />
+                                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                                {editProductForm.images.map((url, i) => (
+                                                                    <div key={i} className="relative w-14 h-14">
+                                                                        <img src={url} alt="" className="w-full h-full object-cover rounded border" />
+                                                                        <button type="button" onClick={() => setEditProductForm({...editProductForm, images: editProductForm.images.filter((_, j) => j !== i)})} className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">&times;</button>
+                                                                    </div>
+                                                                ))}
+                                                                <button type="button" onClick={() => { const url = prompt('Enter image URL:'); if (url) setEditProductForm({...editProductForm, images: [...editProductForm.images, url]}); }} className="w-14 h-14 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 hover:border-luxury-gold hover:text-luxury-gold transition-colors text-xl">+</button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="md:col-span-2">
                                                             <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Description</label>
                                                             <textarea rows={4} value={editProductForm.description} onChange={e => setEditProductForm({...editProductForm, description: e.target.value})} className="w-full p-3 border border-gray-200 text-sm" />
                                                         </div>
@@ -1588,7 +1365,7 @@ const Account = () => {
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-1 rounded"><ShieldCheck size={10} /> Authenticated</span>
                                                         ) : product.status === 'Approved' ? (
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">Published</span>
-                                                        ) : product.status === 'In Review' ? (
+                                                        ) : product.status === 'In_Review' ? (
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-purple-700 bg-purple-50 px-2 py-1 rounded">In Review</span>
                                                         ) : (
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">Pending</span>
@@ -1614,8 +1391,8 @@ const Account = () => {
                                                         <span className="text-[10px] text-gray-400">{product.condition}</span>
                                                         <div className="flex items-center gap-1">
                                                             <button type="button" onClick={() => handleStartEdit(product)} className={`transition-colors p-1 ${product.status === 'Rejected' ? 'text-orange-500 hover:text-orange-700 bg-orange-50 rounded' : 'text-gray-400 hover:text-luxury-gold'}`} title="Edit listing"><Edit3 size={14} /></button>
-                                                            <button type="button" onClick={() => markAsSoldMutation.mutate(product.id)} className="text-gray-400 hover:text-green-600 transition-colors p-1" title="Mark as sold"><Tag size={14} /></button>
-                                                            <button type="button" onClick={() => handleDeleteProduct(product.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Delete listing"><Trash2 size={14} /></button>
+                                                            <button type="button" onClick={() => markAsSoldMutation.mutate(product.id)} disabled={markAsSoldMutation.isPending} className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30" title="Mark as sold">{markAsSoldMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}</button>
+                                                            <button type="button" onClick={() => handleDeleteProduct(product.id)} disabled={deleteProductMutation.isPending} className="text-gray-400 hover:text-red-500 transition-colors p-1 disabled:opacity-30" title="Delete listing">{deleteProductMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1678,12 +1455,12 @@ const Account = () => {
                                             <img src={item.product?.image || 'https://via.placeholder.com/60'} alt={item.product?.title} className="w-14 h-14 object-cover bg-gray-50" />
                                             <div className="flex-grow min-w-0">
                                                 <p className="text-sm font-medium truncate">{item.product?.title}</p>
-                                                <p className="text-xs text-gray-500">Qty: {item.quantity} &middot; ${item.price?.toLocaleString()}</p>
+                                                <p className="text-xs text-gray-500">Qty: {item.quantity} &middot; ₹{item.price?.toLocaleString()}</p>
                                             </div>
                                         </div>
                                     ))}
                                     <div className="flex justify-between items-center pt-3 border-t border-gray-100 mt-3">
-                                        <p className="text-sm text-gray-600">Total: <span className="font-semibold">${order.totalAmount?.toLocaleString()}</span></p>
+                                        <p className="text-sm text-gray-600">Total: <span className="font-semibold">₹{order.totalAmount?.toLocaleString()}</span></p>
                                         {order.trackingID && (
                                             <span className="text-xs text-gray-500">Tracking: {order.trackingID}</span>
                                         )}
@@ -1729,7 +1506,7 @@ const Account = () => {
                                                 const urls = await Promise.all(files.map(f => uploadTestimonialImage(f)));
                                                 setTestimonialForm(prev => ({ ...prev, images: [...prev.images, ...urls] }));
                                             } catch {
-                                                alert('Failed to upload one or more images');
+                                                showToast('Failed to upload one or more images', 'error');
                                             }
                                             setTestimonialImageUploading(false);
                                         }}
@@ -1754,13 +1531,13 @@ const Account = () => {
                                 <button
                                     type="button"
                                     onClick={async () => {
-                                        if (!testimonialForm.content || testimonialForm.content.length < 10) { alert('Please write at least 10 characters.'); return; }
+                                        if (!testimonialForm.content || testimonialForm.content.length < 10) { showToast('Please write at least 10 characters.', 'error'); return; }
                                         try {
                                             await submitTestimonial.mutateAsync(testimonialForm);
                                             setTestimonialSubmitted(true);
                                         } catch (err) {
                                             const msg = err?.response?.data?.error || 'Failed to submit testimonial';
-                                            alert(msg);
+                                            showToast(msg, 'error');
                                         }
                                     }}
                                     disabled={submitTestimonial.isPending || testimonialImageUploading}
@@ -1794,8 +1571,8 @@ const Account = () => {
                                 <div className="w-20 h-20 rounded-full bg-heritage-cream mx-auto flex items-center justify-center mb-4 text-heritage-bronze">
                                     <User size={32} />
                                 </div>
-                                <h2 className="font-serif text-xl mb-1">{user.name}</h2>
-                                <p className="text-xs text-gray-500 uppercase tracking-widest border px-2 py-0.5 inline-block rounded-sm border-gray-200">{user.type}</p>
+                                <h2 className="font-serif text-xl mb-1">{localUser.name}</h2>
+                                <p className="text-xs text-gray-500 uppercase tracking-widest border px-2 py-0.5 inline-block rounded-sm border-gray-200">{localUser.type}</p>
                             </div>
                             <nav className="p-4 space-y-1">
                                 <button

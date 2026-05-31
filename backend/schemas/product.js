@@ -11,7 +11,7 @@ const getSupabaseHost = () => {
 
 const supabaseHost = getSupabaseHost();
 
-export const CATEGORIES = ['Timepieces', 'Accessories', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'] as const;
+export const CATEGORIES = ['Timepieces', 'Accessories', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'];
 
 export const ProductSchema = z.object({
     id: z.string().optional(),
@@ -34,5 +34,18 @@ export const ProductSchema = z.object({
 
 export const ProductIdParam = z.object({
     id: z.string(),
+});
+
+export const AdminProductUpdateSchema = z.object({
+    brand: z.string().optional(),
+    listingCategory: z.string().optional(),
+    category: z.enum(CATEGORIES).optional(),
+    title: z.string().min(1).optional(),
+    description: z.string().min(1).optional(),
+    price: z.number().positive().optional(),
+    condition: z.string().min(1).optional(),
+    image: z.string().optional(),
+    images: z.array(z.string()).optional(),
+    keywords: z.array(z.string()).optional(),
 });
 

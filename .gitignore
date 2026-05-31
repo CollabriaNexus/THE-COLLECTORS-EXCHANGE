@@ -27,3 +27,7 @@ dist-ssr
 
 .kiro/
 
+# Environment files
+.env
+backend/.env
+

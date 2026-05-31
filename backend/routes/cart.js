@@ -13,7 +13,7 @@ export default async function cartRoutes(fastify) {
             where: { id: userId }
         });
         if (!user || user.supabaseId !== request.user.sub) {
-            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+            return reply.status(403).send({ error: 'You do not have permission to access this resource' });
         }
 
         const cart = await prisma.cartItem.findMany({
@@ -31,7 +31,7 @@ export default async function cartRoutes(fastify) {
             where: { id: userId }
         });
         if (!user || user.supabaseId !== request.user.sub) {
-            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+            return reply.status(403).send({ error: 'You do not have permission to access this resource' });
         }
 
         const cartItem = await prisma.cartItem.upsert({
@@ -52,7 +52,7 @@ export default async function cartRoutes(fastify) {
             where: { id: userId }
         });
         if (!user || user.supabaseId !== request.user.sub) {
-            return reply.status(403).send({ error: 'Forbidden', message: 'You do not have permission to access this resource' });
+            return reply.status(403).send({ error: 'You do not have permission to access this resource' });
         }
 
         await prisma.cartItem.delete({

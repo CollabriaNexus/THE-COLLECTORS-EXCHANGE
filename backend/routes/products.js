@@ -24,6 +24,7 @@ export default async function productRoutes(fastify) {
             if (token) {
                 try {
                     await fastify.authenticate(request, reply);
+                    if (reply.sent) return;
                     if (request.dbUser && request.dbUser.id === sellerId) {
                         isOwner = true;
                     }
@@ -61,7 +62,7 @@ export default async function productRoutes(fastify) {
             prisma.product.findMany({
                 where,
                 orderBy: { createdAt: 'desc' },
-                include: { seller: { select: { name: true, email: true, type: true, role: true, vendor: { select: { id: true, rating: true, ratingCount: true } } } } },
+                include: { seller: { select: { name: true, type: true, role: true, vendor: { select: { id: true, rating: true, ratingCount: true } } } } },
                 skip: (pageNum - 1) * limitNum,
                 take: limitNum,
             }),
@@ -74,9 +75,9 @@ export default async function productRoutes(fastify) {
     // Get product by ID
     fastify.get('/:id', async (request, reply) => {
         const { id } = ProductIdParam.parse(request.params);
-        const product = await prisma.product.findUnique({
-            where: { id },
-            include: { seller: { select: { name: true, email: true, type: true, role: true, vendor: { select: { id: true, rating: true, ratingCount: true } } } } }
+        const product = await prisma.product.findFirst({
+            where: { id, isPublished: true },
+            include: { seller: { select: { name: true, type: true, role: true, vendor: { select: { id: true, rating: true, ratingCount: true } } } } }
         });
 
         if (!product) {
@@ -92,17 +93,17 @@ export default async function productRoutes(fastify) {
         const dbUser = request.dbUser;
 
         if (!dbUser) {
-            return reply.status(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+            return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
         // Verify sellerId matches logged-in user CUID
         if (productData.sellerId !== dbUser.id) {
-            return reply.status(403).send({ error: 'Forbidden', message: 'Seller ID mismatch' });
+            return reply.status(403).send({ error: 'Seller ID mismatch' });
         }
 
         // Verify KYC status
         if (dbUser.kycStatus !== 'verified') {
-            return reply.status(403).send({ error: 'Forbidden', message: 'Seller KYC verification is required to list products.' });
+            return reply.status(403).send({ error: 'Seller KYC verification is required to list products.' });
         }
 
         // Fetch or create vendor profile
@@ -112,14 +113,14 @@ export default async function productRoutes(fastify) {
                 data: {
                     userId: dbUser.id,
                     type: dbUser.type === 'company' ? 'BULK' : 'SINGLE',
-                    status: 'APPROVED',
+                    status: 'PENDING',
                     maxListings: dbUser.type === 'company' ? 999999 : 5,
                 }
             });
         }
 
         if (vendor.status !== 'APPROVED') {
-            return reply.status(403).send({ error: 'Forbidden', message: `Vendor account status: ${vendor.status}` });
+            return reply.status(403).send({ error: `Vendor account status: ${vendor.status}` });
         }
 
         // Check active listing count for SINGLE type vendor
@@ -127,14 +128,13 @@ export default async function productRoutes(fastify) {
             const activeCount = await prisma.product.count({
                 where: {
                     sellerId: dbUser.id,
-                    status: { in: ['Pending', 'In Review', 'Approved'] },
+                    status: { in: ['Pending', 'In_Review', 'Approved'] },
                 }
             });
 
             if (activeCount >= vendor.maxListings) {
                 return reply.status(422).send({
-                    error: 'Unprocessable Entity',
-                    message: `Listing limit reached. Single sellers can have at most ${vendor.maxListings} active products.`
+                    error: `Listing limit reached. Single sellers can have at most ${vendor.maxListings} active products.`
                 });
             }
         }
@@ -159,7 +159,7 @@ export default async function productRoutes(fastify) {
         const dbUser = request.dbUser;
 
         if (!dbUser) {
-            return reply.status(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+            return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
         const existingProduct = await prisma.product.findUnique({
@@ -170,13 +170,19 @@ export default async function productRoutes(fastify) {
             return reply.status(404).send({ error: 'Product not found' });
         }
 
+        // Prevent modifying a sold product
+        if (existingProduct.status === 'Sold') {
+            return reply.status(422).send({ error: 'Cannot modify a sold product' });
+        }
+
         // Ensure user is the owner or an admin
         if (existingProduct.sellerId !== dbUser.id && dbUser.role !== 'admin' && dbUser.role !== 'curator') {
-            return reply.status(403).send({ error: 'Forbidden', message: 'Not authorized to update this product' });
+            return reply.status(403).send({ error: 'Not authorized to update this product' });
         }
 
         // If updated by seller, reset approval status back to Pending
-        const updateData = { ...productData };
+        const { sellerId, ...safeData } = productData;
+        const updateData = { ...safeData };
         if (dbUser.role !== 'admin' && dbUser.role !== 'curator') {
             updateData.status = 'Pending';
             updateData.isPublished = false;
@@ -197,7 +203,7 @@ export default async function productRoutes(fastify) {
         const dbUser = request.dbUser;
 
         if (!dbUser) {
-            return reply.status(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+            return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
         const existingProduct = await prisma.product.findUnique({
@@ -210,7 +216,7 @@ export default async function productRoutes(fastify) {
 
         // Ensure user is the owner or an admin
         if (existingProduct.sellerId !== dbUser.id && dbUser.role !== 'admin') {
-            return reply.status(403).send({ error: 'Forbidden', message: 'Not authorized to delete this product' });
+            return reply.status(403).send({ error: 'Not authorized to delete this product' });
         }
 
         await prisma.product.delete({
@@ -226,28 +232,32 @@ export default async function productRoutes(fastify) {
         const dbUser = request.dbUser;
 
         if (!dbUser) {
-            return reply.status(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+            return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
         if (!Array.isArray(products) || products.length === 0) {
-            return reply.status(400).send({ error: 'Bad Request', message: 'Products array is required and must not be empty.' });
+            return reply.status(400).send({ error: 'Products array is required and must not be empty.' });
+        }
+
+        if (products.length > 100) {
+            return reply.status(422).send({ error: 'Batch limit exceeded. Maximum 100 products per bulk request.' });
         }
 
         if (dbUser.kycStatus !== 'verified') {
-            return reply.status(403).send({ error: 'Forbidden', message: 'Seller KYC verification is required.' });
+            return reply.status(403).send({ error: 'Seller KYC verification is required.' });
         }
 
         let vendor = dbUser.vendor || await prisma.vendor.create({
             data: {
                 userId: dbUser.id,
                 type: 'BULK',
-                status: 'APPROVED',
+                status: 'PENDING',
                 maxListings: 999999,
             }
         });
 
         if (vendor.type !== 'BULK') {
-            return reply.status(403).send({ error: 'Forbidden', message: 'Bulk upload is only available for BULK vendors.' });
+            return reply.status(403).send({ error: 'Bulk upload is only available for BULK vendors.' });
         }
 
         const created = [];
@@ -289,6 +299,7 @@ export default async function productRoutes(fastify) {
         const existing = await prisma.product.findUnique({ where: { id } });
         if (!existing) return reply.status(404).send({ error: 'Product not found' });
         if (existing.sellerId !== dbUser.id) return reply.status(403).send({ error: 'Not your product' });
+        if (existing.status === 'Sold') return reply.status(422).send({ error: 'Product is already sold' });
         const updated = await prisma.product.update({ where: { id }, data: { status: 'Sold', isPublished: false } });
         return updated;
     });

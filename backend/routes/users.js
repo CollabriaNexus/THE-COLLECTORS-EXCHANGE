@@ -1,4 +1,4 @@
-import { UserRegistrationSchema, UserKycSchema } from '../schemas/user.js';
+import { UserRegistrationSchema, UserKycSchema, UpdateProfileSchema } from '../schemas/user.js';
 
 /**
  * User Routes
@@ -73,9 +73,15 @@ export default async function userRoutes(fastify) {
         return user;
     });
 
-    // Get user by ID
+    // Get user by ID (own data only, or admin)
     fastify.get('/:id', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { id } = request.params;
+        const dbUser = request.dbUser;
+
+        if (dbUser.id !== id && dbUser.role !== 'admin' && dbUser.role !== 'superadmin') {
+            return reply.status(403).send({ error: 'Forbidden' });
+        }
+
         const user = await prisma.user.findUnique({
             where: { id },
             include: {
@@ -87,6 +93,12 @@ export default async function userRoutes(fastify) {
 
         if (!user) {
             return reply.status(404).send({ error: 'User not found' });
+        }
+
+        // Strip sensitive data for non-owner viewing
+        if (dbUser.id !== id) {
+            delete user.cart;
+            delete user.wishlist;
         }
 
         return user;
@@ -119,16 +131,12 @@ export default async function userRoutes(fastify) {
     // Update current user's profile
     fastify.patch('/me', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const supabaseId = request.user.sub;
-        const { name, phone } = request.body;
+        const data = UpdateProfileSchema.parse(request.body);
 
         const existingUser = await prisma.user.findUnique({ where: { supabaseId } });
         if (!existingUser) {
             return reply.status(404).send({ error: 'User not found' });
         }
-
-        const data = {};
-        if (name !== undefined) data.name = name;
-        if (phone !== undefined) data.phone = phone;
 
         const updatedUser = await prisma.user.update({
             where: { supabaseId },
@@ -191,10 +199,11 @@ export default async function userRoutes(fastify) {
 
     // Submit KYC
     fastify.post('/kyc', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { userId, kycData } = UserKycSchema.parse(request.body);
+        const { kycData } = UserKycSchema.parse(request.body);
+        const dbUser = request.dbUser;
 
         const updatedUser = await prisma.user.update({
-            where: { id: userId },
+            where: { id: dbUser.id },
             data: {
                 kycData,
                 kycStatus: 'pending', // Pending manual review
@@ -206,13 +215,14 @@ export default async function userRoutes(fastify) {
 
     // Accept Seller Agreement (digital signature)
     fastify.post('/seller-agreement/accept', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { userId, signedByName } = request.body;
+        const dbUser = request.dbUser;
+        const { signedByName } = request.body;
 
-        if (!userId || !signedByName) {
-            return reply.status(400).send({ error: 'userId and signedByName are required' });
+        if (!signedByName) {
+            return reply.status(400).send({ error: 'signedByName is required' });
         }
 
-        const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+        const existingUser = await prisma.user.findUnique({ where: { id: dbUser.id } });
         if (!existingUser) {
             return reply.status(404).send({ error: 'User not found' });
         }
@@ -222,7 +232,7 @@ export default async function userRoutes(fastify) {
             : {};
 
         const updatedUser = await prisma.user.update({
-            where: { id: userId },
+            where: { id: dbUser.id },
             data: {
                 kycData: {
                     ...currentKycData,
@@ -239,6 +249,27 @@ export default async function userRoutes(fastify) {
             signedAt: new Date().toISOString(),
             user: updatedUser,
         };
+    });
+
+    // Download Seller Agreement PDF
+    fastify.get('/seller-agreement/pdf', async (request, reply) => {
+        const pdfUrl = process.env.SELLER_AGREEMENT_PDF_URL;
+        if (pdfUrl) {
+            return reply.redirect(302, pdfUrl);
+        }
+
+        const { readFile } = await import('fs/promises');
+        try {
+            const { fileURLToPath } = await import('url');
+            const { dirname, resolve } = await import('path');
+            const __dirname = dirname(fileURLToPath(import.meta.url));
+            const pdfBuffer = await readFile(resolve(__dirname, '..', '..', 'seller-agreement.pdf'));
+            reply.header('Content-Type', 'application/pdf');
+            reply.header('Content-Disposition', 'attachment; filename="Seller-Agreement-TCE.pdf"');
+            return reply.send(pdfBuffer);
+        } catch {
+            return reply.status(404).send({ error: 'Agreement PDF not available' });
+        }
     });
 
     // ============== PUSH NOTIFICATIONS ==============

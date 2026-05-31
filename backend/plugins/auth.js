@@ -32,20 +32,20 @@ export default fp(async function authPlugin(fastify, opts) {
                 request.dbUser = null;
             } else {
                 if (dbUser.banned) {
-                    return reply.code(403).send({ error: 'Forbidden', message: 'Your account has been banned. Please contact support.' });
+                    return reply.code(403).send({ error: 'Your account has been banned. Please contact support.' });
                 }
                 request.dbUser = dbUser;
             }
         } catch (err) {
             request.log.error(err);
-            reply.code(401).send({ error: 'Unauthorized', message: err.message });
+            return reply.code(401).send({ error: err.message });
         }
     });
 
     // Enforce verified DB user exists
     fastify.decorate("requireDbUser", async function (request, reply) {
         if (!request.dbUser) {
-            return reply.code(401).send({ error: 'Unauthorized', message: 'User profile not synchronized' });
+            return reply.code(401).send({ error: 'User profile not synchronized' });
         }
     });
 
@@ -55,7 +55,7 @@ export default fp(async function authPlugin(fastify, opts) {
         if (reply.sent) return;
 
         if (!request.dbUser || (request.dbUser.role !== 'admin' && request.dbUser.role !== 'curator')) {
-            return reply.code(403).send({ error: 'Forbidden', message: 'Access denied: Admin or Curator role required' });
+            return reply.code(403).send({ error: 'Access denied: Admin or Curator role required' });
         }
     });
 
@@ -65,7 +65,7 @@ export default fp(async function authPlugin(fastify, opts) {
         if (reply.sent) return;
 
         if (!request.dbUser || request.dbUser.role !== 'admin') {
-            return reply.code(403).send({ error: 'Forbidden', message: 'Access denied: Super Admin role required' });
+            return reply.code(403).send({ error: 'Access denied: Super Admin role required' });
         }
     });
 
@@ -75,13 +75,12 @@ export default fp(async function authPlugin(fastify, opts) {
         if (reply.sent) return;
 
         if (!request.dbUser || !request.dbUser.vendor) {
-            return reply.code(403).send({ error: 'Forbidden', message: 'Access denied: Vendor account required' });
+            return reply.code(403).send({ error: 'Access denied: Vendor account required' });
         }
 
         if (request.dbUser.vendor.status !== 'APPROVED') {
             return reply.code(403).send({ 
-                error: 'Forbidden', 
-                message: `Vendor account is not approved. Current status: ${request.dbUser.vendor.status}` 
+                error: `Vendor account is not approved. Current status: ${request.dbUser.vendor.status}` 
             });
         }
     });

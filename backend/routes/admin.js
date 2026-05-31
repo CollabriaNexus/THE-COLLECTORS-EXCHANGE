@@ -1,5 +1,5 @@
-import { KYCRequestIdParam, KYCApprovalSchema, KYCRejectionSchema } from '../schemas/admin.js';
-import { CATEGORIES } from '../schemas/product.js';
+import { KYCRequestIdParam, KYCApprovalSchema, KYCRejectionSchema, CreatePayoutSchema, UpdatePayoutStatusSchema } from '../schemas/admin.js';
+import { CATEGORIES, AdminProductUpdateSchema } from '../schemas/product.js';
 
 /**
  * Admin Routes
@@ -182,6 +182,7 @@ export default async function adminRoutes(fastify) {
                     agreementAccepted: currentKycData.agreementAccepted === true,
                     agreementSignedAt: currentKycData.agreementSignedAt ? new Date(currentKycData.agreementSignedAt) : null,
                     agreementSignedByName: currentKycData.agreementSignedByName || null,
+                    signedAgreementDoc: currentKycData.signedAgreementDoc || null,
                 }
             });
 
@@ -429,9 +430,24 @@ export default async function adminRoutes(fastify) {
         const { id } = request.params;
         const { role } = request.body;
 
+        // Prevent self-demotion
+        if (id === request.dbUser.id) {
+            return reply.status(422).send({ error: 'Cannot change your own role' });
+        }
+
         if (!['user', 'admin', 'curator'].includes(role)) {
             return reply.status(400).send({ error: 'Invalid role' });
         }
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: request.dbUser.id,
+                action: 'CHANGE_USER_ROLE',
+                targetType: 'User',
+                targetId: id,
+                details: `Changed role to ${role}`,
+            }
+        });
 
         const updatedUser = await prisma.user.update({
             where: { id },
@@ -473,7 +489,6 @@ export default async function adminRoutes(fastify) {
                     select: {
                         id: true,
                         name: true,
-                        email: true,
                     },
                 },
             },
@@ -494,8 +509,6 @@ export default async function adminRoutes(fastify) {
                     select: {
                         id: true,
                         name: true,
-                        email: true,
-                        phone: true,
                     },
                 },
             },
@@ -515,7 +528,7 @@ export default async function adminRoutes(fastify) {
         const updatedProduct = await prisma.product.update({
             where: { id },
             data: {
-                status: 'In Review',
+                status: 'In_Review',
                 reviewedAt: new Date(),
             },
         });
@@ -589,7 +602,7 @@ export default async function adminRoutes(fastify) {
         const { id } = request.params;
         const { status: authStatus } = request.body;
 
-        const validStatuses = ['Pending', 'Verified', 'Rejected', 'Under Review'];
+        const validStatuses = ['Pending', 'Verified', 'Rejected', 'Under_Review'];
         if (!validStatuses.includes(authStatus)) {
             return reply.status(400).send({ error: 'Invalid authenticity status' });
         }
@@ -646,27 +659,12 @@ export default async function adminRoutes(fastify) {
     // Update product (brand, listingCategory, etc.)
     fastify.patch('/products/:id', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
         const { id } = request.params;
-        const { brand, listingCategory, category, title, description, price, condition, image, images, keywords } = request.body;
+        const data = AdminProductUpdateSchema.parse(request.body);
 
         const existing = await prisma.product.findUnique({ where: { id } });
         if (!existing) {
             return reply.status(404).send({ error: 'Product not found' });
         }
-
-        const data = {};
-        if (brand !== undefined) data.brand = brand;
-        if (listingCategory !== undefined) data.listingCategory = listingCategory;
-        if (category !== undefined) {
-            if (!CATEGORIES.includes(category)) return reply.status(400).send({ error: `Invalid category. Must be one of: ${CATEGORIES.join(', ')}` });
-            data.category = category;
-        }
-        if (title !== undefined) data.title = title;
-        if (description !== undefined) data.description = description;
-        if (price !== undefined) data.price = parseFloat(price);
-        if (condition !== undefined) data.condition = condition;
-        if (image !== undefined) data.image = image;
-        if (images !== undefined) data.images = images;
-        if (keywords !== undefined) data.keywords = keywords;
 
         const updated = await prisma.product.update({ where: { id }, data });
 
@@ -729,7 +727,7 @@ export default async function adminRoutes(fastify) {
         const order = await prisma.order.findUnique({
             where: { id },
             include: {
-                user: true,
+                user: { select: { id: true, name: true, email: true, phone: true, type: true, role: true } },
                 items: {
                     include: {
                         product: true,
@@ -813,12 +811,8 @@ export default async function adminRoutes(fastify) {
 
     // Create a payout for a vendor
     fastify.post('/payouts', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
-        const { vendorId, amount, periodStart, periodEnd, note } = request.body;
+        const { vendorId, amount, periodStart, periodEnd, note } = CreatePayoutSchema.parse(request.body);
         const adminUser = request.dbUser;
-
-        if (!vendorId || !amount || !periodStart || !periodEnd) {
-            return reply.status(400).send({ error: 'vendorId, amount, periodStart, and periodEnd are required' });
-        }
 
         const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
         if (!vendor) {
@@ -859,13 +853,8 @@ export default async function adminRoutes(fastify) {
     // Update payout status
     fastify.patch('/payouts/:id/status', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
         const { id } = request.params;
-        const { status } = request.body;
+        const { status } = UpdatePayoutStatusSchema.parse(request.body);
         const adminUser = request.dbUser;
-
-        const validStatuses = ['PENDING', 'PROCESSING', 'PAID', 'FAILED'];
-        if (!validStatuses.includes(status)) {
-            return reply.status(400).send({ error: 'Invalid payout status' });
-        }
 
         const data = { status };
         if (status === 'PAID') {
@@ -914,21 +903,21 @@ export default async function adminRoutes(fastify) {
         if (status) where.status = status;
         if (vendorId) where.vendorId = vendorId;
 
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
         const [payouts, total] = await Promise.all([
             prisma.payout.findMany({
                 where,
                 include: { vendor: { include: { user: { select: { name: true, email: true } } } } },
                 orderBy: { createdAt: 'desc' },
                 skip,
-                take: parseInt(limit),
+                take: parseInt(limit, 10),
             }),
             prisma.payout.count({ where }),
         ]);
 
         return {
             payouts,
-            pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
+            pagination: { page: parseInt(page, 10), limit: parseInt(limit, 10), total, pages: Math.ceil(total / parseInt(limit, 10)) }
         };
     });
 
