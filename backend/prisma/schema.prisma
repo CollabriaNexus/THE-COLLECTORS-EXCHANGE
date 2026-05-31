@@ -17,6 +17,7 @@ model User {
   password   String?
   supabaseId String?  @unique
   phone      String?  @unique
+  phoneVerificationStatus String @default("none") // "none", "pending", "verified", "rejected"
   type      String   @default("individual") // "individual", "company"
   role      String   @default("user") // "user", "admin", "curator"
   kycStatus String   @default("none") // "none", "pending", "verified"

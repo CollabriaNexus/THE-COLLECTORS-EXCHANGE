@@ -19,20 +19,20 @@ import { useToast } from '../components/Toast';
 import { useVendorProfile, useVendorStats, useVendorPayouts, useVendorOrders, useShipOrderItem, useVendorSubscribe } from '../hooks/api/useVendor';
 import { useTestimonials, useSubmitTestimonial } from '../hooks/api/useTestimonials';
 
-// Helper Component for Phone Verification
+// Helper Component for Phone Verification (Manual WhatsApp flow)
+const WhatsAppNumber = '+919999999999'; // <-- Replace with actual WhatsApp number
+
 const PhoneVerification = ({ onVerified }) => {
     const [phone, setPhone] = useState('');
-    const [otp, setOtp] = useState('');
-    const [step, setStep] = useState('input'); // 'input', 'verify'
     const [loading, setLoading] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
 
-    const sendOtp = async () => {
+    const handleSubmit = async () => {
         if (!phone || phone.length < 10) return alert("Please enter a valid phone number");
         setLoading(true);
         try {
-            await apiClient.post('/users/otp/send', { phone });
-            alert(`OTP Sent! (Simulation: Check Backend Console)`);
-            setStep('verify');
+            await apiClient.post('/users/phone/submit', { phone });
+            setSubmitted(true);
         } catch (err) {
             alert(err.response?.data?.error || err.message);
         } finally {
@@ -40,63 +40,49 @@ const PhoneVerification = ({ onVerified }) => {
         }
     };
 
-    const verifyOtp = async () => {
-        if (!otp) return alert("Please enter OTP");
-        setLoading(true);
-        try {
-            await apiClient.post('/users/otp/verify', { phone, code: otp });
-            alert("Phone Verified Successfully!");
-            onVerified(phone);
-        } catch (err) {
-            alert(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+    if (submitted) {
+        return (
+            <div className="bg-amber-50 border border-amber-200 p-4">
+                <p className="text-sm text-amber-800 font-medium mb-1">Phone Submitted for Verification</p>
+                <p className="text-xs text-amber-700">Our team will verify your number shortly. This usually takes a few hours.</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="bg-gray-50 border border-gray-100 p-4">
-            {step === 'input' ? (
-                <div className="flex gap-2">
-                    <input
-                        type="tel"
-                        placeholder="Enter Phone Number"
-                        value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                        className="flex-grow p-3 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
-                    />
-                    <button
-                        onClick={sendOtp}
-                        disabled={loading}
-                        className="bg-black text-white px-4 py-2 text-xs uppercase tracking-widest hover:bg-luxury-gold transition-colors"
-                    >
-                        {loading ? 'Sending...' : 'Send OTP'}
-                    </button>
-                </div>
-            ) : (
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        placeholder="Enter 6-digit OTP"
-                        value={otp}
-                        onChange={e => setOtp(e.target.value)}
-                        className="flex-grow p-3 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
-                    />
-                    <button
-                        onClick={verifyOtp}
-                        disabled={loading}
-                        className="bg-heritage-charcoal text-white px-4 py-2 text-xs uppercase tracking-widest hover:bg-green-600 transition-colors"
-                    >
-                        {loading ? 'Verifying...' : 'Verify'}
-                    </button>
-                    <button
-                        onClick={() => setStep('input')}
-                        className="text-gray-400 text-xs hover:text-gray-600"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            )}
+        <div className="bg-gray-50 border border-gray-100 p-4 space-y-3">
+            <div>
+                <label className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Your Phone Number</label>
+                <input
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    className="w-full p-3 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
+                />
+            </div>
+            <div className="bg-blue-50 border border-blue-100 p-3">
+                <p className="text-xs text-blue-700 font-medium mb-1">Step 1: Send us a WhatsApp message</p>
+                <p className="text-xs text-blue-600 mb-2">
+                    Send a message to <strong>{WhatsAppNumber}</strong> on WhatsApp with your name and the phone number above so we can verify you.
+                </p>
+                <a
+                    href={`https://wa.me/${WhatsAppNumber.replace(/\D/g, '')}?text=Hi%2C%20I%20want%20to%20verify%20my%20phone%20number%3A%20${encodeURIComponent(phone)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded border border-green-200 hover:bg-green-100 transition-colors"
+                >
+                    Open WhatsApp
+                </a>
+            </div>
+            <p className="text-[11px] text-gray-400">Step 2: After sending the message, click submit below.</p>
+            <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full py-3 bg-heritage-charcoal text-white text-xs uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+            >
+                {loading ? 'Submitting...' : 'I\'ve Sent the Message — Submit for Verification'}
+            </button>
         </div>
     );
 };
@@ -511,10 +497,8 @@ const Account = () => {
     };
 
     const handlePhoneVerified = (newPhone) => {
-        // Update local state immediately for UI feedback
-        // In a real app, react-query invalidation would re-fetch user
-        setLocalUser(prev => ({ ...prev, phone: newPhone }));
-        setLocalUserState(prev => ({ ...prev, phone: newPhone }));
+        setLocalUser(prev => ({ ...prev, phone: newPhone, phoneVerificationStatus: 'pending' }));
+        setLocalUserState(prev => ({ ...prev, phone: newPhone, phoneVerificationStatus: 'pending' }));
     };
 
     const handleVendorSubscribe = async (plan) => {
@@ -996,10 +980,10 @@ const Account = () => {
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
                                     {user.phone ? (
-                                        <div className="p-4 bg-green-50 border border-green-100 text-green-800 flex justify-between items-center">
+                                        <div className={`p-4 border flex justify-between items-center ${user.phoneVerificationStatus === 'verified' ? 'bg-green-50 border-green-100 text-green-800' : user.phoneVerificationStatus === 'pending' ? 'bg-amber-50 border-amber-200 text-amber-800' : user.phoneVerificationStatus === 'rejected' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-gray-50 border-gray-100 text-gray-800'}`}>
                                             <span>{user.phone}</span>
                                             <span className="text-xs uppercase tracking-widest font-bold flex items-center gap-1">
-                                                <ShieldCheck size={14} /> Verified
+                                                {user.phoneVerificationStatus === 'verified' ? <><ShieldCheck size={14} /> Verified</> : user.phoneVerificationStatus === 'pending' ? <>Pending Verification</> : user.phoneVerificationStatus === 'rejected' ? <>Rejected</> : <ShieldCheck size={14} />}
                                             </span>
                                         </div>
                                     ) : (

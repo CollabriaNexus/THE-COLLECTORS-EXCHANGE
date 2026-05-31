@@ -17,6 +17,7 @@ import GalleryManager from './pages/GalleryManager';
 import Payouts from './pages/Payouts';
 import TCEStore from './pages/TCEStore';
 import Testimonials from './pages/Testimonials';
+import PhoneVerifications from './pages/PhoneVerifications';
 import AdminLayout from './components/AdminLayout';
 
 // Protected Route wrapper
@@ -125,6 +126,12 @@ function App() {
             <Route path="/testimonials" element={
                 <ProtectedRoute>
                     <Testimonials />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/phone-verifications" element={
+                <ProtectedRoute>
+                    <PhoneVerifications />
                 </ProtectedRoute>
             } />
 

@@ -288,61 +288,71 @@ export default async function userRoutes(fastify) {
         return { message: 'Unsubscribed' };
     });
 
-    // --- Phone Verification ---
+    // --- Manual Phone Verification (WhatsApp) ---
 
-    // Send OTP
-    fastify.post('/otp/send', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { phone } = request.body; // Simple validation: check if provided
+    // User submits phone for manual verification
+    fastify.post('/phone/submit', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { phone } = request.body;
         if (!phone || phone.length < 10) return reply.status(400).send({ error: 'Invalid phone number' });
 
-        // 1. Check uniqueness
+        const supabaseId = request.user.sub;
+
+        // Check uniqueness - allow if same user
         const existingUser = await prisma.user.findFirst({ where: { phone } });
-        // Allow re-verification if it's the SAME user
-        if (existingUser && existingUser.supabaseId !== request.user.sub) {
+        if (existingUser && existingUser.supabaseId !== supabaseId) {
             return reply.status(409).send({ error: 'Phone number already registered' });
         }
 
-        // 2. Generate OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-
-        // 3. Store OTP
-        // Upsert to handle retries
-        await prisma.phoneVerification.upsert({
-            where: { phone },
-            update: { code: otp, expiresAt },
-            create: { phone, code: otp, expiresAt },
+        // Save phone with pending status
+        const updated = await prisma.user.update({
+            where: { supabaseId },
+            data: { phone, phoneVerificationStatus: 'pending' },
+            select: { id: true, phone: true, phoneVerificationStatus: true },
         });
 
-        // 4. Send (Log) OTP
-        console.log(`[OTP SIMULATION] Sending OTP ${otp} to ${phone}`);
-
-        return { message: 'OTP sent successfully', simulation: 'Check server console' };
+        return { message: 'Phone submitted for verification', user: updated };
     });
 
-    // Verify OTP
-    fastify.post('/otp/verify', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { phone, code } = request.body;
-        if (!phone || !code) return reply.status(400).send({ error: 'Missing phone or code' });
-
-        // 1. Find OTP Record
-        const record = await prisma.phoneVerification.findUnique({ where: { phone } });
-
-        if (!record) return reply.status(400).send({ error: 'Invalid or expired OTP' });
-        if (record.code !== code) return reply.status(400).send({ error: 'Invalid OTP' });
-        if (new Date() > record.expiresAt) return reply.status(400).send({ error: 'OTP expired' });
-
-        // 2. Update User
-        const supabaseId = request.user.sub;
-
-        const updatedUser = await prisma.user.update({
-            where: { supabaseId },
-            data: { phone },
+    // Admin: get pending phone verifications
+    fastify.get('/phone/verifications', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        if (request.dbUser.role !== 'admin' && request.dbUser.role !== 'curator') {
+            return reply.status(403).send({ error: 'Admin only' });
+        }
+        const { status } = request.query;
+        const where = status ? { phoneVerificationStatus: status } : { phoneVerificationStatus: { not: 'none' } };
+        const users = await prisma.user.findMany({
+            where,
+            select: { id: true, name: true, email: true, phone: true, phoneVerificationStatus: true, createdAt: true },
+            orderBy: { updatedAt: 'desc' },
         });
+        return users;
+    });
 
-        // 3. Cleanup OTP
-        await prisma.phoneVerification.delete({ where: { phone } });
+    // Admin: approve phone verification
+    fastify.patch('/phone/:userId/approve', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        if (request.dbUser.role !== 'admin' && request.dbUser.role !== 'curator') {
+            return reply.status(403).send({ error: 'Admin only' });
+        }
+        const { userId } = request.params;
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data: { phoneVerificationStatus: 'verified' },
+            select: { id: true, name: true, phone: true, phoneVerificationStatus: true },
+        });
+        return { message: 'Phone verified', user: updated };
+    });
 
-        return { message: 'Phone verified successfully', user: updatedUser };
+    // Admin: reject phone verification
+    fastify.patch('/phone/:userId/reject', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        if (request.dbUser.role !== 'admin' && request.dbUser.role !== 'curator') {
+            return reply.status(403).send({ error: 'Admin only' });
+        }
+        const { userId } = request.params;
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data: { phoneVerificationStatus: 'rejected' },
+            select: { id: true, name: true, phone: true, phoneVerificationStatus: true },
+        });
+        return { message: 'Phone rejected', user: updated };
     });
 }
