@@ -14,8 +14,8 @@ export const useTestimonials = () => {
 export const useSubmitTestimonial = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ authorName, content, rating }) => {
-            const { data } = await apiClient.post('/testimonials', { authorName, content, rating });
+        mutationFn: async ({ authorName, content, rating, images }) => {
+            const { data } = await apiClient.post('/testimonials', { authorName, content, rating, images });
             return data;
         },
         onSuccess: () => {

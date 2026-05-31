@@ -34,8 +34,7 @@ const Checkout = () => {
     }, []);
 
     const subtotal = cartItems.reduce((sum, item) => sum + (item.product?.price || 0), 0);
-    const platformFee = subtotal * 0.05;
-    const total = subtotal + platformFee;
+    const total = subtotal;
 
     const validate = () => {
         const newErrors = {};
@@ -326,10 +325,6 @@ const Checkout = () => {
                                 <div className="flex justify-between">
                                     <span>Subtotal ({cartItems.length} items)</span>
                                     <span>₹{subtotal.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>Platform Verification Fee (5%)</span>
-                                    <span>₹{platformFee.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Shipping</span>

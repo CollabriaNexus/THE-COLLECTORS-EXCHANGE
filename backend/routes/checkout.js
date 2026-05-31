@@ -179,7 +179,8 @@ export default async function checkoutRoutes(fastify) {
                 status: 'Processing',
                 paymentId: razorpayPaymentId || `pay_mock_${Math.random().toString(36).substring(2, 11)}`,
                 paymentSignature: razorpaySignature || `sig_mock_${Math.random().toString(36).substring(2, 11)}`,
-            }
+            },
+            include: { items: true }
         });
 
         // Clear the user's cart in the DB after successful payment
@@ -187,12 +188,31 @@ export default async function checkoutRoutes(fastify) {
             where: { userId: dbUser.id }
         });
 
+        // Mark purchased products as Sold and remove from public view
+        for (const item of updatedOrder.items || []) {
+            await prisma.product.update({
+                where: { id: item.productId },
+                data: {
+                    status: 'Sold',
+                    isPublished: false,
+                }
+            });
+            // Remove from all users' carts
+            await prisma.cartItem.deleteMany({
+                where: { productId: item.productId }
+            });
+            // Remove from all users' wishlists
+            await prisma.wishlistItem.deleteMany({
+                where: { productId: item.productId }
+            });
+        }
+
         // Notify buyer that order is confirmed
         await prisma.notification.create({
             data: {
                 userId: dbUser.id,
-                title: 'Order Confirmed 🎉',
-                message: `Your order has been placed and payment received. We will process it shortly.`,
+                title: 'Order Confirmed',
+                message: 'Your order has been placed and payment received. We will process it shortly.',
             }
         });
 

@@ -397,6 +397,30 @@ export default async function vendorRoutes(fastify) {
         return { message: 'Subscription activated successfully', vendor: updatedVendor };
     });
 
+    // Rate a vendor (buyers after purchase)
+    fastify.post('/rate', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const dbUser = request.dbUser;
+        const { vendorId, rating } = request.body;
+
+        if (!vendorId || !rating || rating < 1 || rating > 5) {
+            return reply.status(400).send({ error: 'Valid vendorId and rating (1-5) required' });
+        }
+
+        const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
+        if (!vendor) return reply.status(404).send({ error: 'Vendor not found' });
+
+        const prevRating = vendor.rating * vendor.ratingCount;
+        const newCount = vendor.ratingCount + 1;
+        const newRating = (prevRating + rating) / newCount;
+
+        const updated = await prisma.vendor.update({
+            where: { id: vendorId },
+            data: { rating: newRating, ratingCount: newCount },
+        });
+
+        return { message: 'Rating submitted', rating: updated.rating, ratingCount: updated.ratingCount };
+    });
+
     // Get vendor's sold orders (orders containing vendor's products)
     fastify.get('/orders', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const dbUser = request.dbUser;

@@ -18,6 +18,13 @@ const CATEGORIES = [
         description: 'Your phone tells the time. A mechanical watch tells a story. In a world of flickering screens and disposable tech, we choose the "Mechanical Truth." We don\'t sell battery-powered fashion; we rescue 17-jewel heartbeats that never need a plug or an algorithm to live.',
     },
     {
+        id: 'accessories',
+        name: 'Accessories',
+        icon: Gem,
+        tagline: 'The Perfect Finish',
+        description: 'An outfit is a statement. The right accessory makes it iconic. In a world of fast fashion and disposable trends, we choose the "Enduring Truth." We rescue the definitive finishing pieces — the cufflinks, the bags, the belts, and the heirlooms that transform the ordinary into the extraordinary.',
+    },
+    {
         id: 'collectables',
         name: 'Collectibles',
         icon: Gem,
@@ -341,7 +348,7 @@ const Category = () => {
             {/* Category Icons Navigation - Polished with shadow and border */}
             <section className="py-8 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
                 <div className="container mx-auto max-w-5xl">
-                    <div className="flex md:grid md:grid-cols-6 gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory -mx-6 md:mx-0 px-6 md:px-0">
+                    <div className="flex md:grid md:grid-cols-7 gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory -mx-6 md:mx-0 px-6 md:px-0 md:justify-items-center md:mx-auto">
                         {CATEGORIES.map((category) => {
                             const IconComponent = category.icon;
                             const isSelected = selectedCategory === category.name;

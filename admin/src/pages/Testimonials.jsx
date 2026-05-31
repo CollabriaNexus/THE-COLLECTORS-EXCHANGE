@@ -83,6 +83,13 @@ function Testimonials() {
                                     <span className="text-xs text-gray-400">{new Date(t.createdAt).toLocaleDateString()}</span>
                                 </div>
                                 <p className="text-sm text-gray-600 leading-relaxed">{t.content}</p>
+                                {t.images?.length > 0 && (
+                                    <div className="flex gap-2 mt-2">
+                                        {t.images.map((img, i) => (
+                                            <img key={i} src={img} alt="" className="w-14 h-14 object-cover rounded border border-gray-200" />
+                                        ))}
+                                    </div>
+                                )}
                                 <p className="text-xs text-gray-400 mt-2">
                                     Status: <span className={`font-medium ${t.status === 'APPROVED' ? 'text-green-600' : t.status === 'REJECTED' ? 'text-red-600' : 'text-amber-600'}`}>{t.status}</span>
                                 </p>

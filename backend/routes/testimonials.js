@@ -10,9 +10,9 @@ export default async function testimonialsRoutes(fastify) {
         return testimonials;
     });
 
-    // Authenticated user: submit a testimonial
+    // Authenticated user: submit a testimonial (must have purchased something)
     fastify.post('/', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { authorName, content, rating } = request.body;
+        const { authorName, content, rating, images } = request.body;
         const userId = request.dbUser.id;
 
         if (!content || content.trim().length < 10) {
@@ -22,12 +22,22 @@ export default async function testimonialsRoutes(fastify) {
             return reply.status(400).send({ error: 'Rating must be between 1 and 5' });
         }
 
+        // Verify user has at least one paid order
+        const paidOrder = await prisma.order.findFirst({
+            where: { userId, paymentStatus: 'Paid' },
+            select: { id: true },
+        });
+        if (!paidOrder) {
+            return reply.status(403).send({ error: 'Only verified purchasers can submit testimonials' });
+        }
+
         const testimonial = await prisma.testimonial.create({
             data: {
                 userId,
                 authorName: authorName || request.dbUser.name || 'Anonymous',
                 content: content.trim(),
                 rating: rating || 5,
+                images: images || [],
                 status: 'PENDING',
             },
         });

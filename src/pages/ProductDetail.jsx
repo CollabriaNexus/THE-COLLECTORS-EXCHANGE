@@ -182,6 +182,14 @@ const ProductDetail = () => {
                                 {product.seller.type === 'company' && (
                                     <span className="text-[9px] sm:text-[10px] text-luxury-gold uppercase tracking-wider">Verified Company</span>
                                 )}
+                                {product.seller.vendor && product.seller.vendor.ratingCount > 0 && (
+                                    <div className="flex items-center gap-1 mt-1">
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <span key={star} className={`text-xs ${star <= Math.round(product.seller.vendor.rating) ? 'text-amber-400' : 'text-gray-300'}`}>&#9733;</span>
+                                        ))}
+                                        <span className="text-[10px] text-gray-400 ml-1">({product.seller.vendor.ratingCount})</span>
+                                    </div>
+                                )}
                             </div>
                         )}
 

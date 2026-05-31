@@ -241,6 +241,53 @@ export default async function userRoutes(fastify) {
         };
     });
 
+    // ============== PUSH NOTIFICATIONS ==============
+
+    // Save push subscription
+    fastify.post('/push-subscribe', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        const { endpoint, keys } = request.body;
+        if (!endpoint || !keys?.p256dh || !keys?.auth) {
+            return reply.status(400).send({ error: 'Invalid subscription' });
+        }
+
+        await prisma.pushSubscription.upsert({
+            where: { userId_endpoint: { userId: user.id, endpoint } },
+            update: { p256dh: keys.p256dh, auth: keys.auth },
+            create: {
+                userId: user.id,
+                endpoint,
+                p256dh: keys.p256dh,
+                auth: keys.auth,
+            },
+        });
+
+        return { message: 'Subscribed' };
+    });
+
+    // Unsubscribe
+    fastify.delete('/push-subscribe', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        const { endpoint } = request.body;
+        if (endpoint) {
+            await prisma.pushSubscription.deleteMany({
+                where: { userId: user.id, endpoint }
+            });
+        } else {
+            await prisma.pushSubscription.deleteMany({
+                where: { userId: user.id }
+            });
+        }
+
+        return { message: 'Unsubscribed' };
+    });
+
     // --- Phone Verification ---
 
     // Send OTP

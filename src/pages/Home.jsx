@@ -289,6 +289,13 @@ const TestimonialsSection = () => {
                 <div className="bg-white p-8 sm:p-12 shadow-sm border border-gray-100 relative">
                     <Quote className="text-luxury-gold/20 absolute top-4 left-4 w-12 h-12 sm:w-16 sm:h-16" />
                     <p className="text-lg sm:text-xl text-gray-700 leading-relaxed font-sans italic mb-6 relative z-10">&ldquo;{t.content}&rdquo;</p>
+                    {t.images?.length > 0 && (
+                        <div className="flex justify-center gap-3 mb-4 overflow-x-auto">
+                            {t.images.map((img, i) => (
+                                <img key={i} src={img} alt="" className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded border border-gray-200 flex-shrink-0" />
+                            ))}
+                        </div>
+                    )}
                     <div className="flex items-center justify-center gap-1 mb-3">
                         {[1,2,3,4,5].map(i => (
                             <span key={i} className={`text-lg ${i <= t.rating ? 'text-amber-400' : 'text-gray-200'}`}>★</span>

@@ -13,7 +13,7 @@ import { useMyOrders } from '../hooks/api/useOrders';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/api/useNotifications';
 import { supabase } from '../utils/supabase';
-import { uploadProductImage, uploadKycDocument } from '../utils/storage';
+import { uploadProductImage, uploadKycDocument, uploadTestimonialImage } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useVendorProfile, useVendorStats, useVendorPayouts, useVendorOrders, useShipOrderItem, useVendorSubscribe } from '../hooks/api/useVendor';
@@ -304,7 +304,7 @@ const DocUploadField = ({ label, placeholder, value, docUrl, docType, uploading,
     </div>
 );
 
-const CATEGORIES = ['Timepieces', 'Sneakers', 'Collectables', 'Currencies', 'Pop Collection', 'Toys', 'Antiques', 'Limited Editions'];
+const CATEGORIES = ['Timepieces', 'Accessories', 'Sneakers', 'Collectables', 'Currencies', 'Pop Collection', 'Toys', 'Antiques', 'Limited Editions'];
 const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
 
 const Account = () => {
@@ -361,8 +361,9 @@ const Account = () => {
     const shipOrderItem = useShipOrderItem();
     const [shippingTracking, setShippingTracking] = useState({});
     const submitTestimonial = useSubmitTestimonial();
-    const [testimonialForm, setTestimonialForm] = useState({ content: '', authorName: '', rating: 5 });
+    const [testimonialForm, setTestimonialForm] = useState({ content: '', authorName: '', rating: 5, images: [] });
     const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
+    const [testimonialImageUploading, setTestimonialImageUploading] = useState(false);
     const subscribeMutation = useVendorSubscribe();
     const { mutateAsync: registerUser, isPending: isRegisterPending } = useRegisterUser();
     const kycMutation = useSubmitKyc();
@@ -1595,14 +1596,18 @@ const Account = () => {
                                                 <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
                                                     <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                                                     <div className="absolute top-2 right-2">
-                                                        {product.status === 'Rejected' ? (
+                                                        {product.status === 'Sold' ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] text-gray-700 bg-gray-100 px-2 py-1 rounded"><Tag size={10} /> Sold</span>
+                                                        ) : product.status === 'Rejected' ? (
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-red-700 bg-red-50 px-2 py-1 rounded"><XCircle size={10} /> Rejected</span>
                                                         ) : product.authenticityStatus === 'Verified' ? (
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-1 rounded"><ShieldCheck size={10} /> Authenticated</span>
                                                         ) : product.status === 'Approved' ? (
                                                             <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">Published</span>
+                                                        ) : product.status === 'In Review' ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] text-purple-700 bg-purple-50 px-2 py-1 rounded">In Review</span>
                                                         ) : (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">Pending Review</span>
+                                                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">Pending</span>
                                                         )}
                                                     </div>
                                                     {product.status === 'Approved' && (
@@ -1726,14 +1731,55 @@ const Account = () => {
                                     <label className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Your Testimonial</label>
                                     <textarea rows={4} value={testimonialForm.content} onChange={e => setTestimonialForm(prev => ({ ...prev, content: e.target.value }))} placeholder="Share your experience with The Collectors Exchange..." className="w-full p-3 border border-gray-200 text-sm resize-none" />
                                 </div>
+                                <div className="mb-4">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider block mb-1">Images (optional)</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={async (e) => {
+                                            const files = Array.from(e.target.files);
+                                            if (!files.length) return;
+                                            setTestimonialImageUploading(true);
+                                            try {
+                                                const urls = await Promise.all(files.map(f => uploadTestimonialImage(f)));
+                                                setTestimonialForm(prev => ({ ...prev, images: [...prev.images, ...urls] }));
+                                            } catch {
+                                                alert('Failed to upload one or more images');
+                                            }
+                                            setTestimonialImageUploading(false);
+                                        }}
+                                        className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:border-0 file:text-xs file:bg-gray-100 file:hover:bg-gray-200 file:cursor-pointer"
+                                    />
+                                    {testimonialImageUploading && <p className="text-xs text-gray-400 mt-1">Uploading...</p>}
+                                    {testimonialForm.images.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {testimonialForm.images.map((url, i) => (
+                                                <div key={i} className="relative w-16 h-16">
+                                                    <img src={url} alt="" className="w-full h-full object-cover rounded border" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setTestimonialForm(prev => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))}
+                                                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
+                                                    >&times;</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                                 <button
                                     type="button"
                                     onClick={async () => {
                                         if (!testimonialForm.content || testimonialForm.content.length < 10) { alert('Please write at least 10 characters.'); return; }
-                                        await submitTestimonial.mutateAsync(testimonialForm);
-                                        setTestimonialSubmitted(true);
+                                        try {
+                                            await submitTestimonial.mutateAsync(testimonialForm);
+                                            setTestimonialSubmitted(true);
+                                        } catch (err) {
+                                            const msg = err?.response?.data?.error || 'Failed to submit testimonial';
+                                            alert(msg);
+                                        }
                                     }}
-                                    disabled={submitTestimonial.isPending}
+                                    disabled={submitTestimonial.isPending || testimonialImageUploading}
                                     className="px-6 py-3 bg-heritage-charcoal text-white text-xs uppercase tracking-widest hover:bg-heritage-brown transition-colors"
                                 >
                                     {submitTestimonial.isPending ? 'Submitting...' : 'Submit Testimonial'}
@@ -1746,105 +1792,7 @@ const Account = () => {
         case 'notifications':
             return <NotificationsPanel />;
         case 'payouts':
-            return (
-                <div className="bg-white p-8 shadow-sm border border-gray-100">
-                    <h2 className="text-2xl font-serif mb-2">Payouts</h2>
-                    <p className="text-gray-500 text-sm mb-8">Track your earnings and payout requests</p>
-                    {vendorStats ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                            <div className="bg-green-50 p-4 border border-green-100">
-                                <p className="text-2xl font-serif font-bold text-green-700">₹{(vendorStats.totalSales || 0).toLocaleString()}</p>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Total Earnings</p>
-                            </div>
-                            <div className="bg-blue-50 p-4 border border-blue-100">
-                                <p className="text-2xl font-serif font-bold text-blue-700">{vendorStats.totalItemsSold || 0}</p>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Items Sold</p>
-                            </div>
-                            <div className="bg-amber-50 p-4 border border-amber-100">
-                                <p className="text-2xl font-serif font-bold text-amber-700">{vendorStats.uniqueOrders || 0}</p>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Unique Orders</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-center py-12 bg-gray-50 border border-gray-100 border-dashed mb-8">
-                            <p className="text-gray-500 font-serif">No sales data yet.</p>
-                            <p className="text-gray-400 text-sm mt-1">Earnings will appear once items are sold.</p>
-                        </div>
-                    )}
-                    <div className="border-t border-gray-100 pt-6">
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">Payout History</h3>
-                        {vendorPayoutsData?.payouts?.length > 0 ? (
-                            <div className="space-y-3">
-                                {vendorPayoutsData.payouts.map(payout => (
-                                    <div key={payout.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100">
-                                        <div>
-                                            <p className="font-medium text-sm">₹{parseFloat(payout.amount).toLocaleString()}</p>
-                                            <p className="text-xs text-gray-500">{new Date(payout.createdAt).toLocaleDateString()}</p>
-                                        </div>
-                                        <span className={`text-xs px-2 py-1 rounded ${payout.status === 'completed' ? 'bg-green-50 text-green-700' : payout.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                                            {payout.status}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-400 italic">No payouts yet.</p>
-                        )}
-                    </div>
-
-                    <div className="border-t border-gray-100 pt-6 mt-6">
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">Sold Items — Shipping</h3>
-                        {vendorOrderItems?.length > 0 ? (
-                            <div className="space-y-3">
-                                {vendorOrderItems.map(item => (
-                                    <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100">
-                                        <div className="flex items-center gap-4 flex-1">
-                                            <img src={item.product?.image || ''} alt={item.product?.title} className="w-12 h-12 object-cover bg-gray-100 rounded" />
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium">{item.product?.title}</p>
-                                                <p className="text-xs text-gray-500">
-                                                    Buyer: {item.order?.user?.name || item.order?.user?.email} · ₹{item.price?.toLocaleString()}
-                                                </p>
-                                                <p className="text-xs text-gray-400">
-                                                    Order status: {item.order?.status} · Tracking: {item.order?.trackingID || '—'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        {item.order?.status !== 'Shipped' && item.order?.status !== 'Delivered' ? (
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Tracking ID"
-                                                    value={shippingTracking[item.id] || ''}
-                                                    onChange={e => setShippingTracking(prev => ({ ...prev, [item.id]: e.target.value }))}
-                                                    className="w-28 p-2 text-xs border border-gray-200"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={async () => {
-                                                        const tid = shippingTracking[item.id];
-                                                        if (!tid) { alert('Enter a tracking ID'); return; }
-                                                        await shipOrderItem.mutateAsync({ orderItemId: item.id, trackingID: tid });
-                                                        setShippingTracking(prev => ({ ...prev, [item.id]: '' }));
-                                                    }}
-                                                    disabled={shipOrderItem.isPending}
-                                                    className="text-xs px-3 py-2 bg-heritage-charcoal text-white hover:bg-heritage-brown"
-                                                >
-                                                    Ship
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <span className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded">Shipped</span>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-400 italic">No items sold yet.</p>
-                        )}
-                    </div>
-                </div>
-            );
+            return null;
         default:
             return null;
         }
@@ -1896,14 +1844,7 @@ const Account = () => {
                                 >
                                     <Bell size={18} /> Notifications
                                 </button>
-                                {vendorProfile && (
-                                    <button
-                                        onClick={() => setActiveTab('payouts')}
-                                        className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'payouts' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                                    >
-                                        <CreditCard size={18} /> Payouts
-                                    </button>
-                                )}
+
                                 {vendorProfile?.status === 'APPROVED' && (
                                     <Link
                                         to="/vendor-dashboard"

@@ -147,7 +147,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                 <p className="text-sm font-bold text-heritage-charcoal mb-2">{label}</p>
                 {payload.map((entry, i) => (
                     <p key={i} className="text-sm" style={{ color: entry.color }}>
-                        {entry.name}: {entry.name === 'Sales' ? `$${entry.value.toLocaleString()}` : entry.value}
+                        {entry.name}:                         {entry.name === 'Sales' ? `₹${entry.value.toLocaleString()}` : entry.value}
                     </p>
                 ))}
             </div>
@@ -234,8 +234,8 @@ export default function VendorDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <StatCard title="Order Count" value={overview?.orderCount} icon={ShoppingBag} color="bg-blue-500" loading={isLoading} change={changePct} error={overviewError} onRetry={refetchOverview} />
                     <StatCard title="Items Sold" value={overview?.saleCount} icon={Package} color="bg-green-500" loading={isLoading} error={overviewError} onRetry={refetchOverview} />
-                    <StatCard title="Total Revenue" value={overview?.totalRevenue?.toLocaleString()} icon={TrendingUp} color="bg-purple-500" prefix="$" loading={isLoading} error={overviewError} onRetry={refetchOverview} />
-                    <StatCard title="Pending Payout" value={overview?.pendingPayout?.toLocaleString()} icon={DollarSign} color="bg-amber-500" prefix="$" loading={isLoading} error={overviewError} onRetry={refetchOverview} />
+                    <StatCard title="Total Revenue" value={overview?.totalRevenue?.toLocaleString()} icon={TrendingUp} color="bg-purple-500" prefix="₹" loading={isLoading} error={overviewError} onRetry={refetchOverview} />
+                    <StatCard title="Pending Payout" value={overview?.pendingPayout?.toLocaleString()} icon={DollarSign} color="bg-amber-500" prefix="₹" loading={isLoading} error={overviewError} onRetry={refetchOverview} />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
@@ -252,7 +252,7 @@ export default function VendorDashboard() {
                                 <LineChart data={salesGraph}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                     <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => { const parts = d.split('-'); return `${parts[2]}/${parts[1]}`; }} />
-                                    <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `$${v}`} />
+                                    <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${v}`} />
                                     <Tooltip content={<CustomTooltip />} />
                                     <Line type="monotone" dataKey="sales" name="Sales" stroke="#D4AF37" strokeWidth={2} dot={{ r: 3, fill: '#D4AF37' }} activeDot={{ r: 5 }} />
                                     <Line type="monotone" dataKey="orders" name="Orders" stroke="#2563EB" strokeWidth={2} dot={false} />
@@ -325,7 +325,7 @@ export default function VendorDashboard() {
                                             <p className="text-xs text-gray-500">{product.quantitySold} sold</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm font-bold text-heritage-charcoal">${product.totalRevenue?.toLocaleString()}</p>
+                                            <p className="text-sm font-bold text-heritage-charcoal">₹{product.totalRevenue?.toLocaleString()}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -361,7 +361,7 @@ export default function VendorDashboard() {
                         <div className="bg-amber-50 border border-amber-200 rounded p-4 mb-6">
                             <p className="text-xs font-bold uppercase tracking-widest text-amber-800 mb-2">Request a Payout</p>
                             <div className="flex gap-2">
-                                <input type="number" min="1" placeholder="Amount ($)" value={requestAmount} onChange={(e) => setRequestAmount(e.target.value)} className="flex-grow p-2.5 border border-amber-200 text-sm rounded" />
+                                <input type="number" min="1" placeholder="Amount (₹)" value={requestAmount} onChange={(e) => setRequestAmount(e.target.value)} className="flex-grow p-2.5 border border-amber-200 text-sm rounded" />
                                 <button onClick={handleRequestPayout} disabled={requesting} className="bg-amber-600 text-white px-4 py-2 text-xs uppercase tracking-widest rounded hover:bg-amber-700 transition-colors flex items-center gap-1">
                                     {requesting && <Loader2 size={12} className="animate-spin" />}
                                     Request
@@ -384,7 +384,7 @@ export default function VendorDashboard() {
                                     {payoutsData.payouts.map(payout => (
                                         <div key={payout.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                                             <div>
-                                                <p className="text-sm font-medium text-heritage-charcoal">${payout.amount?.toLocaleString()}</p>
+                                                    <p className="text-sm font-medium text-heritage-charcoal">₹{payout.amount?.toLocaleString()}</p>
                                                 <p className="text-xs text-gray-500">
                                                     {new Date(payout.periodStart).toLocaleDateString()} — {new Date(payout.periodEnd).toLocaleDateString()}
                                                 </p>
@@ -442,7 +442,7 @@ export default function VendorDashboard() {
                             { label: 'Total Listings', value: overview?.totalListings || 0, color: 'text-heritage-charcoal' },
                             { label: 'Active', value: overview?.activeListings || 0, color: 'text-green-600' },
                             { label: 'Orders', value: overview?.orderCount || 0, color: 'text-amber-600' },
-                            { label: 'Paid Revenue', value: `$${overview?.paidRevenue?.toLocaleString() || '0'}`, color: 'text-purple-600' },
+                            { label: 'Paid Revenue', value: `₹${overview?.paidRevenue?.toLocaleString() || '0'}`, color: 'text-purple-600' },
                         ].map(item => (
                             <div key={item.label} className="text-center">
                                 {isLoading ? (

@@ -61,7 +61,7 @@ export default async function productRoutes(fastify) {
             prisma.product.findMany({
                 where,
                 orderBy: { createdAt: 'desc' },
-                include: { seller: { select: { name: true, email: true, type: true, role: true } } },
+                include: { seller: { select: { name: true, email: true, type: true, role: true, vendor: { select: { id: true, rating: true, ratingCount: true } } } } },
                 skip: (pageNum - 1) * limitNum,
                 take: limitNum,
             }),
@@ -76,7 +76,7 @@ export default async function productRoutes(fastify) {
         const { id } = ProductIdParam.parse(request.params);
         const product = await prisma.product.findUnique({
             where: { id },
-            include: { seller: { select: { name: true, email: true, type: true, role: true } } }
+            include: { seller: { select: { name: true, email: true, type: true, role: true, vendor: { select: { id: true, rating: true, ratingCount: true } } } } }
         });
 
         if (!product) {

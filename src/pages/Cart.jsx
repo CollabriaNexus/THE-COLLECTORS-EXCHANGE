@@ -32,8 +32,7 @@ const Cart = () => {
     }
 
     const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price || 0), 0);
-    const platformFee = subtotal * 0.05; // 5% fee
-    const total = subtotal + platformFee;
+    const total = subtotal;
 
     return (
         <div className="container mx-auto py-12 px-6">
@@ -79,10 +78,6 @@ const Cart = () => {
                                 <div className="flex justify-between">
                                     <span>Subtotal ({cartItems.length} items)</span>
                                     <span>₹{subtotal.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>Platform Verification Fee (5%)</span>
-                                    <span>₹{platformFee.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Shipping</span>
