@@ -11,10 +11,12 @@ const getSupabaseHost = () => {
 
 const supabaseHost = getSupabaseHost();
 
+export const CATEGORIES = ['Timepieces', 'Accessories', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'] as const;
+
 export const ProductSchema = z.object({
     id: z.string().optional(),
     title: z.string().min(1),
-    category: z.string().min(1),
+    category: z.enum(CATEGORIES),
     description: z.string().min(1),
     condition: z.string().min(1),
     price: z.number().positive(),

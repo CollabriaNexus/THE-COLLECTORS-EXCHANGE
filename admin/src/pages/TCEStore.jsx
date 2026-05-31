@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { useTCEProducts, useCreateProduct, useEditProduct } from '../hooks/api/useProducts';
 import { uploadProductImage } from '../utils/storage';
 
-const CATEGORIES = ['Timepieces', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'];
+const CATEGORIES = ['Timepieces', 'Accessories', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'];
 const CONDITIONS = ['Mint', 'Excellent', 'Good', 'Fair', 'Poor'];
 
 const TCEStore = () => {

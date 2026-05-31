@@ -1,4 +1,5 @@
 import { KYCRequestIdParam, KYCApprovalSchema, KYCRejectionSchema } from '../schemas/admin.js';
+import { CATEGORIES } from '../schemas/product.js';
 
 /**
  * Admin Routes
@@ -655,7 +656,10 @@ export default async function adminRoutes(fastify) {
         const data = {};
         if (brand !== undefined) data.brand = brand;
         if (listingCategory !== undefined) data.listingCategory = listingCategory;
-        if (category !== undefined) data.category = category;
+        if (category !== undefined) {
+            if (!CATEGORIES.includes(category)) return reply.status(400).send({ error: `Invalid category. Must be one of: ${CATEGORIES.join(', ')}` });
+            data.category = category;
+        }
         if (title !== undefined) data.title = title;
         if (description !== undefined) data.description = description;
         if (price !== undefined) data.price = parseFloat(price);
@@ -943,6 +947,9 @@ export default async function adminRoutes(fastify) {
         const { title, category, description, condition, price, image, images, keywords, brand } = request.body;
         if (!title || !category || !description || !condition || !price) {
             return reply.status(400).send({ error: 'Missing required fields' });
+        }
+        if (!CATEGORIES.includes(category)) {
+            return reply.status(400).send({ error: `Invalid category. Must be one of: ${CATEGORIES.join(', ')}` });
         }
         const product = await prisma.product.create({
             data: {

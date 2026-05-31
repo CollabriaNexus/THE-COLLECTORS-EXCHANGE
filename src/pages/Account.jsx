@@ -290,7 +290,7 @@ const DocUploadField = ({ label, placeholder, value, docUrl, docType, uploading,
     </div>
 );
 
-const CATEGORIES = ['Timepieces', 'Accessories', 'Sneakers', 'Collectables', 'Currencies', 'Pop Collection', 'Toys', 'Antiques', 'Limited Editions'];
+const CATEGORIES = ['Timepieces', 'Accessories', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'];
 const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
 
 const Account = () => {
