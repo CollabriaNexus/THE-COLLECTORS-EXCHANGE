@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Heart, Trash2, ShoppingBag, ShieldCheck, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
@@ -27,7 +28,7 @@ const Wishlist = () => {
         if (!user?.id) return;
         try {
             await addToCartMutation.mutateAsync({ userId: user.id, productId });
-            alert('Added to cart!');
+            // Silently succeed — button state will update via query invalidation
         } catch (error) {
             console.error('Failed to add to cart', error);
         }
@@ -40,9 +41,10 @@ const Wishlist = () => {
     if (!user) {
         return (
             <div className="container mx-auto py-20 px-6 text-center">
+                <Helmet><title>Wishlist — The Collectors Exchange</title></Helmet>
                 <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
                 <p className="text-gray-500 mb-6">You need to be logged in to view your wishlist.</p>
-                <Link to="/THE-COLLECTORS-EXCHANGE/account" className="bg-black text-white px-6 py-2 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
+                <Link to="/account" className="bg-black text-white px-6 py-2 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
                     Sign In
                 </Link>
             </div>
@@ -52,6 +54,7 @@ const Wishlist = () => {
     if (isLoading) {
         return (
             <div className="container mx-auto py-20 text-center">
+                <Helmet><title>Wishlist — The Collectors Exchange</title></Helmet>
                 <Loader2 className="animate-spin mx-auto text-luxury-gold mb-4" size={40} />
                 <p className="font-serif italic text-gray-400">Loading your collection...</p>
             </div>
@@ -60,6 +63,7 @@ const Wishlist = () => {
 
     return (
         <div className="container mx-auto py-12 px-6">
+            <Helmet><title>Wishlist — The Collectors Exchange</title></Helmet>
             <h1 className="text-4xl font-serif mb-8 text-center md:text-left">My Wishlist</h1>
 
             {wishlistItems.length > 0 ? (
@@ -84,7 +88,7 @@ const Wishlist = () => {
                             <div className="p-6">
                                 <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">{product.category}</p>
                                 <h3 className="font-serif text-lg font-medium mb-2">{product.title}</h3>
-                                <p className="text-xl font-semibold mb-4">${product.price?.toLocaleString()}</p>
+                                <p className="text-xl font-semibold mb-4">₹{product.price?.toLocaleString()}</p>
 
                                 <div className="flex gap-3">
                                     <button
@@ -112,7 +116,7 @@ const Wishlist = () => {
                     <h3 className="text-xl font-serif text-gray-600 mb-2">Your wishlist is empty</h3>
                     <p className="text-gray-400 mb-6">Save items you love by clicking the heart icon.</p>
                     <Link
-                        to="/THE-COLLECTORS-EXCHANGE/category"
+                        to="/category"
                         className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
                     >
                         Explore The Exchange

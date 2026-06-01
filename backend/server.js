@@ -2,17 +2,27 @@ import Fastify from 'fastify';
 import { ZodError } from 'zod';
 import dotenv from 'dotenv';
 import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import prismaPlugin from './plugins/prisma.js';
+import authPlugin from './plugins/auth.js';
+import rbacPlugin from './plugins/rbac.js';
 import productRoutes from './routes/products.js';
 import galleryRoutes from './routes/gallery.js';
 import cartRoutes from './routes/cart.js';
 import wishlistRoutes from './routes/wishlist.js';
 import userRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
-
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import vendorRoutes from './routes/vendor.js';
+import checkoutRoutes from './routes/checkout.js';
+import auctionRoutes from './routes/auction.js';
+import analyticsRoutes from './routes/analytics.js';
+import contactRoutes from './routes/contact.js';
+import testimonialRoutes from './routes/testimonials.js';
 
 dotenv.config();
+
+
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 if (!SUPABASE_URL) {
@@ -20,54 +30,53 @@ if (!SUPABASE_URL) {
     process.exit(1);
 }
 
-const JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
-
 const fastify = Fastify({
     logger: true,
 });
 
-// Register Plugins
-fastify.register(cors, {
-    origin: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+// Register Security & Utility Plugins
+fastify.register(helmet, {
+    contentSecurityPolicy: false, // Disables CSP if serving static files, customize as needed
 });
-
-fastify.decorate("authenticate", async function (request, reply) {
-    try {
-        const token = request.headers.authorization?.split(' ')[1];
-        if (!token) {
-            throw new Error('No token provided');
-        }
-
-        const { payload } = await jwtVerify(token, JWKS);
-        request.user = payload;
-    } catch (err) {
-        request.log.error(err);
-        reply.code(401).send({ error: 'Unauthorized', message: err.message });
-    }
+fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+});
+fastify.register(cors, {
+    origin: [
+        process.env.FRONTEND_URL || 'http://localhost:5173',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'https://thecollectorsexchange.in',
+        'https://tce-admin.pages.dev',
+    ].filter(Boolean),
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    credentials: true,
 });
 
 // Zod Error Handler
-
 fastify.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {
         return reply.status(400).send({
-            statusCode: 400,
-            error: 'Bad Request',
+            error: 'Validation Error',
+            message: 'Request validation failed',
             issues: error.issues,
         });
     }
 
     // Default handler for other errors
     request.log.error(error);
+    const isProduction = process.env.NODE_ENV === 'production';
     reply.status(error.statusCode || 500).send({
-        statusCode: error.statusCode || 500,
         error: error.name || 'Internal Server Error',
-        message: error.message,
+        message: isProduction && reply.statusCode >= 500 ? 'An unexpected error occurred' : error.message,
     });
 });
 
+// Core Dependencies & Auth Plugins
 fastify.register(prismaPlugin);
+fastify.register(authPlugin);
+fastify.register(rbacPlugin);
 
 // Register Routes
 fastify.register(productRoutes, { prefix: '/api/products' });
@@ -76,6 +85,14 @@ fastify.register(cartRoutes, { prefix: '/api/cart' });
 fastify.register(wishlistRoutes, { prefix: '/api/wishlist' });
 fastify.register(userRoutes, { prefix: '/api/users' });
 fastify.register(adminRoutes, { prefix: '/api/admin' });
+fastify.register(vendorRoutes, { prefix: '/api/vendor' });
+fastify.register(checkoutRoutes, { prefix: '/api/checkout' });
+fastify.register(auctionRoutes, { prefix: '/api/auctions' });
+fastify.register(analyticsRoutes, { prefix: '/api/analytics' });
+fastify.register(contactRoutes, { prefix: '/api/contact' });
+fastify.register(testimonialRoutes, { prefix: '/api/testimonials' });
+
+
 
 // Health Check
 fastify.get('/health', async (request, reply) => {

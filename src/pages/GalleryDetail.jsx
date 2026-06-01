@@ -26,7 +26,7 @@ const GalleryDetail = () => {
             <div className="min-h-screen bg-[#F9F7F5] flex items-center justify-center p-6">
                 <div className="text-center">
                     <h2 className="text-2xl font-serif text-gray-400 mb-4">Archive Record Not Found</h2>
-                    <Link to="/THE-COLLECTORS-EXCHANGE/gallery" className="text-amber-800 uppercase tracking-widest text-xs font-bold hover:underline">
+                    <Link to="/gallery" className="text-amber-800 uppercase tracking-widest text-xs font-bold hover:underline">
                         Return to Archive
                     </Link>
                 </div>
@@ -42,7 +42,7 @@ const GalleryDetail = () => {
             <div className="border-b border-gray-200 bg-white/50 sticky top-0 z-50 backdrop-blur-md">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
                     <Link
-                        to="/THE-COLLECTORS-EXCHANGE/gallery"
+                        to="/gallery"
                         className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
                     >
                         <ChevronLeft size={16} />

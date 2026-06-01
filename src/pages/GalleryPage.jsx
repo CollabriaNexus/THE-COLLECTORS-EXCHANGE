@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Landmark, Compass, Award, History, Gem, Info, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useGallery } from '../hooks/api/useGallery';
@@ -40,8 +41,8 @@ const THEMES = [
 const GalleryCard = ({ item }) => {
     return (
         <Link
-            to={`/THE-COLLECTORS-EXCHANGE/gallery/${item.id}`}
-            className="group relative flex flex-col bg-white overflow-hidden transition-all duration-700 hover:shadow-heritage-hover rounded-sm border border-gray-100 hover:border-luxury-gold/30"
+            to={`/gallery/${item.id}`}
+            className="group relative flex flex-col bg-white/5 overflow-hidden transition-all duration-700 hover:shadow-[0_0_30px_rgba(191,155,48,0.15)] rounded-sm border border-[#3D352F] hover:border-[#C9A962]/40"
         >
             {/* The Frame */}
             <div className="p-4 flex flex-col items-center">
@@ -74,40 +75,51 @@ const GalleryPage = () => {
     const { data: galleryItems = [], isLoading } = useGallery();
 
     return (
-        <div className="min-h-screen bg-white relative overflow-hidden">
-            <div className="relative z-10">
-                {/* Hero Section - Museum Archival Style */}
-                <section className="relative h-[90vh] flex flex-col items-center justify-center overflow-hidden">
-                    {/* Background Image */}
-                    <div className="absolute inset-0 z-0">
-                        <img 
-                            src={galleryHero} 
-                            alt="Museum Gallery" 
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/30"></div>
-                    </div>
+        <div className="min-h-screen bg-[#1A1816] relative overflow-hidden">
+            <Helmet><title>Gallery — The Collectors Exchange</title></Helmet>
+            {/* ... heritage background ... */}
+            <div className="fixed inset-0 pointer-events-none opacity-20 mix-blend-overlay" style={{
+                backgroundImage: 'url("https://www.transparenttextures.com/patterns/pinstriped-suit.png")',
+            }}></div>
+            <div className="fixed inset-0 pointer-events-none shadow-[inset_0_0_200px_rgba(0,0,0,0.8)]"></div>
 
-                    {/* Centered Branding (Behind or to the left of the card) */}
-                    <div className="absolute left-1/2 top-1/2 -translate-x-full -translate-y-1/2 z-10 hidden md:block">
-                        <h5 className="text-white tracking-[1em] font-sans text-[12px] font-light uppercase opacity-40 whitespace-nowrap rotate-[-90deg] origin-right translate-x-[-150%]">
-                            Educational Archive
+            <div className="relative z-10 pb-24">
+                <section
+                    className="relative h-[45vh] sm:h-[55vh] lg:h-[65vh] min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] flex items-center justify-center overflow-hidden"
+                    style={{
+                        backgroundImage: `url(${galleryHero})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
+                >
+                    <div className="absolute inset-0 bg-black/30"></div>
+                    <div className="relative z-10 text-center px-4 sm:px-6">
+                        <h5 className="text-white/70 tracking-[0.3em] sm:tracking-[0.4em] font-sans text-[10px] sm:text-xs font-bold uppercase mb-4 sm:mb-6">
+                            Where History Breathes Again
                         </h5>
+                        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif text-white font-normal tracking-tight">
+                            The Gallery
+                        </h1>
                     </div>
 
-                    {/* Glassmorphism Quote Card - Prominent and Central-Right */}
-                    <div className="relative z-20 w-full max-w-6xl px-6 flex justify-end">
-                        <div className="bg-[#5C4D3C]/30 backdrop-blur-2xl border border-white/10 p-12 md:p-20 shadow-[0_40px_100px_rgba(0,0,0,0.4)] max-w-2xl transform translate-y-10">
-                            <p className="font-serif italic text-3xl md:text-5xl text-white leading-[1.15] mb-12 drop-shadow-lg tracking-tight">
-                                "The past is a foreign country; they do things differently there."
-                            </p>
-                            <div className="flex items-center gap-6">
-                                <div className="h-px w-12 bg-white/40"></div>
-                                <p className="text-[11px] md:text-xs uppercase tracking-[0.5em] text-white font-bold opacity-80">
-                                    - L.P. Hartley, The Go-Between
-                                </p>
+                    <div className="absolute bottom-4 sm:bottom-12 left-4 sm:left-auto right-4 sm:right-12 bg-white/10 backdrop-blur-md border border-white/20 p-4 sm:p-6 text-white text-left max-w-[calc(100%-2rem)] sm:max-w-sm">
+                        <p className="font-serif italic text-sm sm:text-lg mb-2">"History isn't meant to be trapped in the past. It is meant to be touched, held, and lived in the present."</p>
+                        <p className="text-[10px] sm:text-xs uppercase tracking-widest text-white/50">— The Collectors Exchange</p>
+                    </div>
+                </section>
+
+                <section className="py-24 px-6 border-b border-[#3D352F]/30">
+                    <div className="container mx-auto max-w-4xl text-center">
+                        <div className="flex justify-center mb-8">
+                            <div className="w-12 h-px bg-[#C9A962]/20"></div>
+                            <div className="mx-4 text-[#C9A962]/40">
+                                <Landmark size={20} strokeWidth={1} />
                             </div>
                         </div>
+                        <h2 className="text-4xl font-serif text-[#E5E1DA] mb-8 leading-tight tracking-wide">A Museum Without Walls</h2>
+                        <p className="text-lg text-[#9C8B7E] font-light leading-relaxed max-w-2xl mx-auto">
+                            In a world obsessed with the "new" and the "now," the Gallery is our tribute to the "forever." This is more than a marketplace; it is a digital archive of the mechanical heartbeats, the hand-forged artifacts, and the timeless treasures that have survived the decades. Every article showcased here has been found in the needle-in-a-haystack search across the country and brought here for you to witness. As you scroll, you aren't just looking at products; you are walking through the corridors of time.
+                        </p>
                     </div>
                 </section>
 

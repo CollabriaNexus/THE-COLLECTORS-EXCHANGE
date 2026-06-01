@@ -88,6 +88,56 @@ export const useRejectProduct = () => {
 };
 
 /**
+ * Hook to delete product
+ */
+export const useDeleteProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (id) => {
+            const { data } = await apiClient.delete(`/admin/products/${id}`);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProduct'] });
+        },
+    });
+};
+
+/**
+ * Hook to update product (brand, listingCategory, category)
+ */
+export const useUpdateProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id, ...fields }) => {
+            const { data } = await apiClient.patch(`/admin/products/${id}`, fields);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProduct'] });
+        },
+    });
+};
+
+/**
+ * Hook to fetch all unique brands
+ */
+export const useBrands = () => {
+    return useQuery({
+        queryKey: ['adminBrands'],
+        queryFn: async () => {
+            const { data } = await apiClient.get('/admin/brands');
+            return data;
+        },
+        staleTime: 60000,
+    });
+};
+
+/**
  * Hook to update authenticity status
  */
 export const useUpdateAuthenticityStatus = () => {
@@ -100,6 +150,56 @@ export const useUpdateAuthenticityStatus = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProduct'] });
+        },
+    });
+};
+
+/**
+ * Hook to fetch TCE Store products
+ */
+export const useTCEProducts = () => {
+    return useQuery({
+        queryKey: ['adminTCEProducts'],
+        queryFn: async () => {
+            const { data } = await apiClient.get('/admin/products/tce-store');
+            return data;
+        },
+    });
+};
+
+/**
+ * Hook to create a TCE Store product
+ */
+export const useCreateProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (productData) => {
+            const { data } = await apiClient.post('/admin/products', productData);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+            queryClient.invalidateQueries({ queryKey: ['adminTCEProducts'] });
+        },
+    });
+};
+
+/**
+ * Hook to edit a TCE Store product (full update)
+ */
+export const useEditProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id, ...fields }) => {
+            const { data } = await apiClient.patch(`/admin/products/${id}`, fields);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+            queryClient.invalidateQueries({ queryKey: ['adminTCEProducts'] });
             queryClient.invalidateQueries({ queryKey: ['adminProduct'] });
         },
     });

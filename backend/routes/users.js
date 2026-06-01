@@ -1,4 +1,4 @@
-import { UserRegistrationSchema, UserKycSchema } from '../schemas/user.js';
+import { UserRegistrationSchema, UserKycSchema, UpdateProfileSchema } from '../schemas/user.js';
 
 /**
  * User Routes
@@ -58,6 +58,11 @@ export default async function userRoutes(fastify) {
                 products: true,
                 cart: { include: { product: true } },
                 wishlist: { include: { product: true } },
+                orders: {
+                    include: { items: { include: { product: true } } },
+                    orderBy: { createdAt: 'desc' },
+                },
+                vendor: { include: { subscription: true } },
             },
         });
 
@@ -68,9 +73,15 @@ export default async function userRoutes(fastify) {
         return user;
     });
 
-    // Get user by ID
+    // Get user by ID (own data only, or admin)
     fastify.get('/:id', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { id } = request.params;
+        const dbUser = request.dbUser;
+
+        if (dbUser.id !== id && dbUser.role !== 'admin' && dbUser.role !== 'superadmin') {
+            return reply.status(403).send({ error: 'Forbidden' });
+        }
+
         const user = await prisma.user.findUnique({
             where: { id },
             include: {
@@ -84,15 +95,115 @@ export default async function userRoutes(fastify) {
             return reply.status(404).send({ error: 'User not found' });
         }
 
+        // Strip sensitive data for non-owner viewing
+        if (dbUser.id !== id) {
+            delete user.cart;
+            delete user.wishlist;
+        }
+
         return user;
+    });
+
+    // Get current authenticated user's orders
+    fastify.get('/orders', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+
+        const user = await prisma.user.findUnique({
+            where: { supabaseId },
+            select: { id: true }
+        });
+
+        if (!user) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const orders = await prisma.order.findMany({
+            where: { userId: user.id },
+            include: {
+                items: { include: { product: true } }
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return orders;
+    });
+
+    // Update current user's profile
+    fastify.patch('/me', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const data = UpdateProfileSchema.parse(request.body);
+
+        const existingUser = await prisma.user.findUnique({ where: { supabaseId } });
+        if (!existingUser) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { supabaseId },
+            data,
+        });
+
+        return updatedUser;
+    });
+
+    // ============== NOTIFICATIONS ==============
+
+    // Get user notifications
+    fastify.get('/notifications', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        const notifications = await prisma.notification.findMany({
+            where: { userId: user.id },
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+        });
+
+        return notifications;
+    });
+
+    // Mark all notifications as read — MUST be before /:id/read to avoid route conflict
+    fastify.patch('/notifications/read-all', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        await prisma.notification.updateMany({
+            where: { userId: user.id, read: false },
+            data: { read: true },
+        });
+
+        return { message: 'All notifications marked as read' };
+    });
+
+    // Mark a single notification as read
+    fastify.patch('/notifications/:id/read', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { id } = request.params;
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        const notification = await prisma.notification.findUnique({ where: { id } });
+        if (!notification || notification.userId !== user.id) {
+            return reply.status(404).send({ error: 'Notification not found' });
+        }
+
+        const updated = await prisma.notification.update({
+            where: { id },
+            data: { read: true },
+        });
+
+        return updated;
     });
 
     // Submit KYC
     fastify.post('/kyc', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { userId, kycData } = UserKycSchema.parse(request.body);
+        const { kycData } = UserKycSchema.parse(request.body);
+        const dbUser = request.dbUser;
 
         const updatedUser = await prisma.user.update({
-            where: { id: userId },
+            where: { id: dbUser.id },
             data: {
                 kycData,
                 kycStatus: 'pending', // Pending manual review
@@ -102,63 +213,177 @@ export default async function userRoutes(fastify) {
         return updatedUser;
     });
 
-    // --- Phone Verification ---
+    // Accept Seller Agreement (digital signature)
+    fastify.post('/seller-agreement/accept', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const dbUser = request.dbUser;
+        const { signedByName } = request.body;
 
-    // Send OTP
-    fastify.post('/otp/send', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { phone } = request.body; // Simple validation: check if provided
+        if (!signedByName) {
+            return reply.status(400).send({ error: 'signedByName is required' });
+        }
+
+        const existingUser = await prisma.user.findUnique({ where: { id: dbUser.id } });
+        if (!existingUser) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const currentKycData = typeof existingUser.kycData === 'object' && existingUser.kycData !== null
+            ? existingUser.kycData
+            : {};
+
+        const updatedUser = await prisma.user.update({
+            where: { id: dbUser.id },
+            data: {
+                kycData: {
+                    ...currentKycData,
+                    agreementAccepted: true,
+                    agreementSignedByName: signedByName,
+                    agreementSignedAt: new Date().toISOString(),
+                },
+            },
+        });
+
+        return {
+            message: 'Seller Agreement accepted successfully',
+            signedByName,
+            signedAt: new Date().toISOString(),
+            user: updatedUser,
+        };
+    });
+
+    // Download Seller Agreement PDF
+    fastify.get('/seller-agreement/pdf', async (request, reply) => {
+        const pdfUrl = process.env.SELLER_AGREEMENT_PDF_URL;
+        if (pdfUrl) {
+            return reply.redirect(302, pdfUrl);
+        }
+
+        const { readFile } = await import('fs/promises');
+        try {
+            const { fileURLToPath } = await import('url');
+            const { dirname, resolve } = await import('path');
+            const __dirname = dirname(fileURLToPath(import.meta.url));
+            const pdfBuffer = await readFile(resolve(__dirname, '..', '..', 'seller-agreement.pdf'));
+            reply.header('Content-Type', 'application/pdf');
+            reply.header('Content-Disposition', 'attachment; filename="Seller-Agreement-TCE.pdf"');
+            return reply.send(pdfBuffer);
+        } catch {
+            return reply.status(404).send({ error: 'Agreement PDF not available' });
+        }
+    });
+
+    // ============== PUSH NOTIFICATIONS ==============
+
+    // Save push subscription
+    fastify.post('/push-subscribe', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        const { endpoint, keys } = request.body;
+        if (!endpoint || !keys?.p256dh || !keys?.auth) {
+            return reply.status(400).send({ error: 'Invalid subscription' });
+        }
+
+        await prisma.pushSubscription.upsert({
+            where: { userId_endpoint: { userId: user.id, endpoint } },
+            update: { p256dh: keys.p256dh, auth: keys.auth },
+            create: {
+                userId: user.id,
+                endpoint,
+                p256dh: keys.p256dh,
+                auth: keys.auth,
+            },
+        });
+
+        return { message: 'Subscribed' };
+    });
+
+    // Unsubscribe
+    fastify.delete('/push-subscribe', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const supabaseId = request.user.sub;
+        const user = await prisma.user.findUnique({ where: { supabaseId }, select: { id: true } });
+        if (!user) return reply.status(404).send({ error: 'User not found' });
+
+        const { endpoint } = request.body;
+        if (endpoint) {
+            await prisma.pushSubscription.deleteMany({
+                where: { userId: user.id, endpoint }
+            });
+        } else {
+            await prisma.pushSubscription.deleteMany({
+                where: { userId: user.id }
+            });
+        }
+
+        return { message: 'Unsubscribed' };
+    });
+
+    // --- Manual Phone Verification (WhatsApp) ---
+
+    // User submits phone for manual verification
+    fastify.post('/phone/submit', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { phone } = request.body;
         if (!phone || phone.length < 10) return reply.status(400).send({ error: 'Invalid phone number' });
 
-        // 1. Check uniqueness
+        const supabaseId = request.user.sub;
+
+        // Check uniqueness - allow if same user
         const existingUser = await prisma.user.findFirst({ where: { phone } });
-        // Allow re-verification if it's the SAME user (e.g. they want to verify the number they already lay claim to - though usually for changing number)
-        // For now: Strictly unique across OTHER users.
-        if (existingUser && existingUser.id !== request.user.sub) {
+        if (existingUser && existingUser.supabaseId !== supabaseId) {
             return reply.status(409).send({ error: 'Phone number already registered' });
         }
 
-        // 2. Generate OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-
-        // 3. Store OTP
-        // Upsert to handle retries
-        await prisma.phoneVerification.upsert({
-            where: { phone },
-            update: { code: otp, expiresAt },
-            create: { phone, code: otp, expiresAt },
+        // Save phone with pending status
+        const updated = await prisma.user.update({
+            where: { supabaseId },
+            data: { phone, phoneVerificationStatus: 'pending' },
+            select: { id: true, phone: true, phoneVerificationStatus: true },
         });
 
-        // 4. Send (Log) OTP
-        console.log(`[OTP SIMULATION] Sending OTP ${otp} to ${phone}`);
-
-        return { message: 'OTP sent successfully', simulation: 'Check server console' };
+        return { message: 'Phone submitted for verification', user: updated };
     });
 
-    // Verify OTP
-    fastify.post('/otp/verify', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { phone, code } = request.body;
-        if (!phone || !code) return reply.status(400).send({ error: 'Missing phone or code' });
-
-        // 1. Find OTP Record
-        const record = await prisma.phoneVerification.findUnique({ where: { phone } });
-
-        if (!record) return reply.status(400).send({ error: 'Invalid or expired OTP' });
-        if (record.code !== code) return reply.status(400).send({ error: 'Invalid OTP' });
-        if (new Date() > record.expiresAt) return reply.status(400).send({ error: 'OTP expired' });
-
-        // 2. Update User
-        // request.user.sub comes from the JWT via fastify.authenticate decorator
-        const userId = request.user.sub;
-
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: { phone },
+    // Admin: get pending phone verifications
+    fastify.get('/phone/verifications', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        if (request.dbUser.role !== 'admin' && request.dbUser.role !== 'curator') {
+            return reply.status(403).send({ error: 'Admin only' });
+        }
+        const { status } = request.query;
+        const where = status ? { phoneVerificationStatus: status } : { phoneVerificationStatus: { not: 'none' } };
+        const users = await prisma.user.findMany({
+            where,
+            select: { id: true, name: true, email: true, phone: true, phoneVerificationStatus: true, createdAt: true },
+            orderBy: { updatedAt: 'desc' },
         });
+        return users;
+    });
 
-        // 3. Cleanup OTP
-        await prisma.phoneVerification.delete({ where: { phone } });
+    // Admin: approve phone verification
+    fastify.patch('/phone/:userId/approve', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        if (request.dbUser.role !== 'admin' && request.dbUser.role !== 'curator') {
+            return reply.status(403).send({ error: 'Admin only' });
+        }
+        const { userId } = request.params;
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data: { phoneVerificationStatus: 'verified' },
+            select: { id: true, name: true, phone: true, phoneVerificationStatus: true },
+        });
+        return { message: 'Phone verified', user: updated };
+    });
 
-        return { message: 'Phone verified successfully', user: updatedUser };
+    // Admin: reject phone verification
+    fastify.patch('/phone/:userId/reject', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        if (request.dbUser.role !== 'admin' && request.dbUser.role !== 'curator') {
+            return reply.status(403).send({ error: 'Admin only' });
+        }
+        const { userId } = request.params;
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data: { phoneVerificationStatus: 'rejected' },
+            select: { id: true, name: true, phone: true, phoneVerificationStatus: true },
+        });
+        return { message: 'Phone rejected', user: updated };
     });
 }

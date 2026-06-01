@@ -1,90 +1,108 @@
 import React from 'react';
-import Bullet from '../components/Bullet';
 
 const Terms = () => {
     return (
-        <div className="min-h-screen bg-heritage-cream text-heritage-charcoal py-24 px-6 md:px-12 lg:px-24">
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="mb-16 border-b border-heritage-bronze/10 pb-12">
-                    <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-4 block">Institutional Framework</span>
-                    <h1 className="text-5xl md:text-6xl font-serif font-normal mb-6 tracking-tight">Custodianship Agreement</h1>
-                    <p className="text-heritage-charcoal/50 font-sans text-sm tracking-widest uppercase">Effective Date: 31st December 2025</p>
-                    <div className="w-20 h-0.5 bg-luxury-gold/40 mt-8"></div>
-                </div>
+        <div className="min-h-screen bg-white text-black py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
+            {/* Header */}
+            <div className="mb-12 border-b border-gray-200 pb-8">
+                <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">THE COLLECTORS EXCHANGE: CUSTODIANSHIP AGREEMENT</h1>
+                <p className="text-gray-500 font-sans">Last Updated: April 2026</p>
+                <div className="w-20 h-1 bg-luxury-gold mt-6"></div>
+            </div>
 
-                {/* Introduction */}
-                <div className="mb-16 font-serif italic text-xl text-heritage-charcoal/80 leading-relaxed border-l-2 border-luxury-gold/20 pl-8">
-                    <p>
-                        "This agreement establishes the professional protocols and ethical mandates for the stewardship, verification, and exchange of heritage assets within the House of Heritage archive."
-                    </p>
-                </div>
+            {/* Introduction */}
+            <div className="mb-10 font-sans text-gray-700 leading-relaxed">
+                <p className="mb-4 italic text-lg font-serif text-black">
+                    Welcome to The Collectors Exchange. By acquiring an article from our collection, you are entering into a relationship built on the "Truth of Heritage."
+                </p>
+                <p>
+                    This document outlines our mutual responsibilities to the history we preserve.
+                </p>
+            </div>
 
-                {/* Sections */}
-                <div className="space-y-16 font-sans text-heritage-charcoal/80">
-                    <section>
-                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">01. Nature of the Registry</h2>
-                        <p className="mb-4 leading-relaxed">The House of Heritage (formerly The Collectors’ Exchange) operates as a sovereign archival registry for heritage assets, provenance-backed horology, and cultural artefacts.</p>
-                        <p className="mb-4 leading-relaxed">All entries into the registry are subject to institutional verification and are stewarded by:</p>
-                        <ul className="space-y-3 mb-6">
-                            <li className="flex items-start gap-4">
-                                <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>The Institution as the primary repository</span>
-                            </li>
-                            <li className="flex items-start gap-4">
-                                <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Sovereign Stewards (Private Collectors)</span>
-                            </li>
-                            <li className="flex items-start gap-4">
-                                <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Archival Originators (Creators and Heritage Brands)</span>
-                            </li>
-                        </ul>
-                    </section>
+            {/* Sections */}
+            <div className="space-y-10 font-sans text-gray-800">
+                <section>
+                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">1. The Authenticity Pledge (The "Doctor vs. Cobbler" Rule)</h2>
+                    <p className="mb-3 text-gray-700">We reject "misbranding." Every article sold through The Collectors Exchange undergoes a rigorous internal verification process to ensure it is exactly what we claim it to be.</p>
+                    <p className="mb-2 font-medium text-black">The Guarantee:</p>
+                    <p className="mb-3 text-gray-700">We guarantee the authenticity of the mechanical heartbeat and historical provenance of our articles.</p>
+                    <p className="mb-2 font-medium text-black">The Recourse:</p>
+                    <p className="text-gray-700">If an article is proven by a certified independent third-party expert to be a modern imitation or "misbranded" contrary to our description, The Collectors Exchange will provide a full recovery of the purchase price. We do not sell "luxury labels"; we sell "historic truths."</p>
+                </section>
 
-                    <section>
-                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">02. Verification Protocols</h2>
-                        <p className="mb-4 leading-relaxed">Every asset submitted for registration undergoes a rigorous multi-stage authentication process to establish historical continuity and provenance.</p>
-                        <ul className="space-y-3 mb-6">
-                            <li className="flex items-start gap-4">
-                                <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Physical Archive Inspection</span>
-                            </li>
-                            <li className="flex items-start gap-4">
-                                <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Provenance Documentation Audit</span>
-                            </li>
-                            <li className="flex items-start gap-4">
-                                <Bullet className="text-luxury-gold mt-1.5" />
-                                <span>Sovereign Verification Marking</span>
-                            </li>
-                        </ul>
-                        <p className="text-sm italic opacity-60">Verification reflects a professional archival opinion based on the historical evidence provided at the time of entry.</p>
-                    </section>
+                <section>
+                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">2. Condition of Heritage Articles</h2>
+                    <p className="mb-3 text-gray-700">You are acquiring pieces of time. Most articles in our collection, specifically Timepieces, Antiques, and Collectibles, are "pre-owned" and sourced from the streets, pawn shops, and private collections of India.</p>
+                    <p className="mb-2 font-medium text-black">Patina & History:</p>
+                    <p className="mb-3 text-gray-700">Visible wear, aging, and "character marks" are considered part of the article's history, not defects.</p>
+                    <p className="mb-2 font-medium text-black">Functional State:</p>
+                    <p className="text-gray-700">While we ensure that all mechanical items (like watches) are in working order at the time of sale, they are vintage machines. They require the care of a custodian, not the rough handling of a consumer.</p>
+                </section>
 
-                    <section>
-                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">03. Stewardship Responsibilities</h2>
-                        <p className="mb-4 leading-relaxed">Stewards (Sellers) warrant the absolute accuracy of the provenance provided and the legal right to transfer custodianship of the heritage asset.</p>
-                        <p className="mb-4 leading-relaxed">Acquirers (Buyers) acknowledge that they are assuming the role of custodian for a historical asset, subject to the preservation standards of the institution.</p>
-                    </section>
+                <section>
+                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">3. The Stewardship & Annual Health Check</h2>
+                    <p className="mb-3 text-gray-700">Unique to our brand, our responsibility does not end at your doorstep.</p>
+                    <p className="mb-2 font-medium text-black">The Annual Review:</p>
+                    <p className="mb-3 text-gray-700">Every 12 months, The Collectors Exchange will attempt to contact the Custodian (the buyer) to check on the "health" of the article.</p>
+                    <p className="mb-2 font-medium text-black">Scope:</p>
+                    <p className="text-gray-700">This is a consultation service. We provide advice on preservation, storage, and maintenance. While we may offer cleaning or servicing for a fee, the Annual Health Check is a commitment to the item's longevity, not a lifetime free repair warranty.</p>
+                </section>
 
-                    <section>
-                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">04. Archival Fees & Transfers</h2>
-                        <p className="mb-4 leading-relaxed">All transfers of custodianship involve archival processing fees, verification costs, and secure heritage transport arrangements, as disclosed during the acquisition process.</p>
-                    </section>
+                <section>
+                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">4. Ethical Sourcing & The "Street" Mandate</h2>
+                    <p className="mb-3 text-gray-700">We "collect the streets" to find the needle in the haystack.</p>
+                    <p className="mb-2 font-medium text-black">Provenance:</p>
+                    <p className="mb-3 text-gray-700">We verify that every item we source from pawn shops or local markets is acquired legally and ethically.</p>
+                    <p className="mb-2 font-medium text-black">Title:</p>
+                    <p className="text-gray-700">Upon full payment, the legal title and "Custodianship" of the article pass to you. You are now the protector of that piece of Indian history.</p>
+                </section>
 
-                    <section>
-                        <h2 className="text-2xl font-serif font-semibold mb-6 text-heritage-charcoal tracking-wide uppercase text-xs tracking-[0.2em]">05. Governing Mandate</h2>
-                        <p className="mb-4 leading-relaxed">This agreement is governed by the sovereign laws of the jurisdiction of operation. Any disputes regarding historical misrepresentation or inauthenticity are subject to the Institution's internal Archival Audit Board.</p>
-                    </section>
-                </div>
+                <section>
+                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">5. Transfer of Custodianship (Returns & Exchanges)</h2>
+                    <p className="mb-3 text-gray-700">Because our articles are unique, historical, and often one-of-a-kind, we do not operate a "mass-market" return policy.</p>
+                    <p className="mb-2 font-medium text-black">Finality:</p>
+                    <p className="mb-3 text-gray-700">All sales are considered a transfer of heritage and are final once the article has been inspected and accepted by the Custodian.</p>
+                    <p className="mb-2 font-medium text-black">Inspection Period:</p>
+                    <p className="text-gray-700">For online acquisitions, the Custodian has 48 hours from delivery to report any discrepancies between the article received and the "Truth" described on our platform.</p>
+                </section>
 
-                {/* Footer Note */}
-                <div className="mt-24 pt-12 border-t border-heritage-bronze/10 text-center">
-                    <p className="font-serif italic text-heritage-charcoal/40 text-lg">
-                        "Integrity is the bedrock of heritage."
-                    </p>
-                </div>
+                <section>
+                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">6. The Custodian's Responsibility</h2>
+                    <p className="mb-3 text-gray-700">By purchasing from us, you agree to:</p>
+                    <ul className="space-y-2 text-gray-700 mb-3">
+                        <li className="flex items-start gap-3">
+                            <span className="text-luxury-gold mt-1.5">•</span>
+                            <span>Treat the article with the respect due to a piece of Indian heritage.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <span className="text-luxury-gold mt-1.5">•</span>
+                            <span>Avoid "cheap" or unverified repairs that could damage the historical value of the article.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <span className="text-luxury-gold mt-1.5">•</span>
+                            <span>Notify us if you intend to sell the item in the future, as we often maintain a "Registry of History" for the pieces we have rescued.</span>
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">7. Limitations of Modern Technology</h2>
+                    <p className="text-gray-700">While we use digital platforms to reach "netizens," we are not an "innovation company." We are a traditional business. We are not liable for minor color variations caused by your screen settings or for the "digital noise" of the internet. The "Truth" of the article is found in its physical form, not its digital image.</p>
+                </section>
+
+                <section>
+                    <h2 className="text-2xl font-serif font-semibold mb-4 text-black">8. Governing Law</h2>
+                    <p className="text-gray-700">This Exchange is rooted in Indian values and is governed by the laws of the Republic of India. Any disputes will be settled with the integrity our ancestors taught us, through mediation, or under the jurisdiction of the courts in Bangalore, Karnataka.</p>
+                </section>
+            </div>
+
+            {/* Founder's Closing Note */}
+            <div className="mt-16 p-8 bg-heritage-cream border border-luxury-gold/20 rounded-sm">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-luxury-gold mb-4">Founder's Closing Note</h3>
+                <p className="font-serif italic text-lg text-heritage-charcoal leading-relaxed">
+                    "These terms are not here to hide behind. They are here to ensure that both the seller and the buyer remain honest to the history we are holding in our hands. If you seek a startup bubble, look elsewhere. If you seek the Truth, welcome to the Exchange."
+                </p>
             </div>
         </div>
     );

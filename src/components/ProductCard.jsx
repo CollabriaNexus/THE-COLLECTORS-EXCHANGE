@@ -33,7 +33,7 @@ const ProductCard = ({ product, onUpdate }) => {
 
     return (
         <div className="bg-white border border-gray-100 group hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
-            <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block relative aspect-square bg-gray-100 overflow-hidden cursor-pointer shrink-0">
+            <Link to={`/product/${product.id}`} className="block relative aspect-square bg-gray-100 overflow-hidden cursor-pointer shrink-0">
                 {product.image ? (
                     <img
                         src={product.image}
@@ -65,10 +65,10 @@ const ProductCard = ({ product, onUpdate }) => {
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
                     <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">{product.category}</div>
-                    <Link to={`/THE-COLLECTORS-EXCHANGE/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
+                    <Link to={`/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
                         <h3 className="font-serif text-lg font-medium mb-2">{title}</h3>
                     </Link>
-                    <p className="text-luxury-gold font-sans font-semibold mb-4">${product.price?.toLocaleString()}</p>
+                    <p className="text-luxury-gold font-sans font-semibold mb-4">₹{product.price?.toLocaleString()}</p>
                 </div>
 
                 {/* Add to Cart Button */}

@@ -16,18 +16,15 @@ function Login() {
     useEffect(() => {
         const checkSession = async () => {
             try {
-                // Check if user is already logged in
                 const existingUser = getUser();
                 if (existingUser && existingUser.role === 'admin') {
                     navigate('/', { replace: true });
                     return;
                 }
 
-                // Check for active Supabase session (OAuth callback)
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session) {
-                    // Session exists, verify admin role
                     const token = session.access_token;
                     setAuthToken(token);
 
@@ -49,7 +46,6 @@ function Login() {
                         setUser(userData);
                         navigate('/', { replace: true });
                     } catch (userError) {
-                        // User doesn't exist in database
                         if (userError.response?.status === 404) {
                             setError('Account not found in database. Please register on the main app first, then contact an administrator to grant admin access.');
                         } else {
@@ -64,6 +60,22 @@ function Login() {
         };
 
         checkSession();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+            checkSession();
+        });
+
+        const handleStorage = (e) => {
+            if (e.key && e.key.startsWith('sb-')) {
+                checkSession();
+            }
+        };
+        window.addEventListener('storage', handleStorage);
+
+        return () => {
+            subscription.unsubscribe();
+            window.removeEventListener('storage', handleStorage);
+        };
     }, [navigate]);
 
     const handleLogin = async (e) => {
@@ -110,18 +122,18 @@ function Login() {
         setLoading(true);
 
         try {
-            // 1. Sign in with Google OAuth
-            const { error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/`,
+                    redirectTo: `${window.location.origin}/login`,
                 },
             });
 
             if (error) throw error;
 
-            // Note: After OAuth redirect, the app will reload and the session will be checked
-            // The actual admin verification happens in the callback handling
+            if (data?.url) {
+                window.location.href = data.url;
+            }
         } catch (err) {
             console.error('Google login error:', err);
             setError(err.message || 'Failed to login with Google.');

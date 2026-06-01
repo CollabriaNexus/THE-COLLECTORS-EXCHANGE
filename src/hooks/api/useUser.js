@@ -17,6 +17,20 @@ export const useUser = (id) => {
 };
 
 /**
+ * Hook to fetch the currently authenticated user via /users/me
+ */
+export const useMe = () => {
+    return useQuery({
+        queryKey: ['user', 'me'],
+        queryFn: async () => {
+            const { data } = await apiClient.get('/users/me');
+            return data;
+        },
+        retry: false,
+    });
+};
+
+/**
  * Hook to register a new user
  */
 export const useRegisterUser = () => {
@@ -40,6 +54,23 @@ export const useSubmitKyc = () => {
         },
         onSuccess: (_, { userId }) => {
             queryClient.invalidateQueries({ queryKey: ['users', userId] });
+            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+        },
+    });
+};
+
+/**
+ * Hook to update user profile
+ */
+export const useUpdateProfile = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data) => {
+            const { data: result } = await apiClient.patch('/users/me', data);
+            return result;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
         },
     });
 };

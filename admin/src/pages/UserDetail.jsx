@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Package, ShoppingCart, Heart } from 'lucide-react';
-import { useUserDetail, useUpdateUserRole } from '../hooks/api/useUsers';
+import { ArrowLeft, User, Package, ShoppingCart, Heart, Ban, CheckCircle } from 'lucide-react';
+import { useUserDetail, useUpdateUserRole, useWhitelistVendor, useBanUser, useUnbanUser } from '../hooks/api/useUsers';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
@@ -16,6 +16,9 @@ function UserDetail() {
 
     const { data: user, isLoading } = useUserDetail(id);
     const updateRoleMutation = useUpdateUserRole();
+    const whitelistVendorMutation = useWhitelistVendor();
+    const banMutation = useBanUser();
+    const unbanMutation = useUnbanUser();
 
     const handleUpdateRole = async () => {
         if (!selectedRole) return;
@@ -30,6 +33,40 @@ function UserDetail() {
             setError(err.message || 'Failed to update role');
         }
     };
+
+    const handleWhitelistVendor = async () => {
+        setError('');
+        try {
+            await whitelistVendorMutation.mutateAsync({ userId: id, plan: 'CUSTOM_APPROVED' });
+            setSuccess('User whitelisted as Bulk Vendor successfully!');
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Failed to whitelist vendor');
+        }
+    };
+
+    const handleBan = async () => {
+        setError('');
+        try {
+            await banMutation.mutateAsync(id);
+            setSuccess('User banned successfully');
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Failed to ban user');
+        }
+    };
+
+    const handleUnban = async () => {
+        setError('');
+        try {
+            await unbanMutation.mutateAsync(id);
+            setSuccess('User unbanned successfully');
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Failed to unban user');
+        }
+    };
+
 
     if (isLoading) {
         return (
@@ -118,6 +155,14 @@ function UserDetail() {
                             <dd className="mt-1"><StatusBadge status={user.kycStatus} /></dd>
                         </div>
                         <div>
+                            <dt className="text-sm font-semibold text-heritage-dark">Account Status</dt>
+                            <dd className="mt-1">
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${user.banned ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                    {user.banned ? 'Banned' : 'Active'}
+                                </span>
+                            </dd>
+                        </div>
+                        <div>
                             <dt className="text-sm font-semibold text-heritage-dark">Registered</dt>
                             <dd className="text-sm text-gray-700 mt-1">
                                 {new Date(user.createdAt).toLocaleString()}
@@ -126,7 +171,7 @@ function UserDetail() {
                     </div>
 
                     {/* Actions */}
-                    <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="mt-6 pt-6 border-t border-gray-200 space-y-4">
                         <button
                             onClick={() => {
                                 setSelectedRole(user.role);
@@ -136,8 +181,56 @@ function UserDetail() {
                         >
                             Change Role
                         </button>
+
+                        {/* Ban / Unban Button */}
+                    <div className="pt-4 border-t border-gray-200">
+                        {user.banned ? (
+                            <button
+                                onClick={handleUnban}
+                                disabled={unbanMutation.isPending}
+                                className="w-full flex items-center justify-center gap-2 bg-green-50 text-green-700 py-2 rounded-md font-medium hover:bg-green-100 transition-colors"
+                            >
+                                <CheckCircle size={18} />
+                                {unbanMutation.isPending ? 'Unbanning...' : 'Unban User'}
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleBan}
+                                disabled={banMutation.isPending}
+                                className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-700 py-2 rounded-md font-medium hover:bg-red-100 transition-colors"
+                            >
+                                <Ban size={18} />
+                                {banMutation.isPending ? 'Banning...' : 'Ban User'}
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Whitelist Vendor Button */}
+                        {user.kycStatus === 'verified' && (
+                            <div className="pt-4 border-t border-gray-100">
+                                <h4 className="text-sm font-semibold text-heritage-charcoal mb-2 font-serif">Vendor Subscription</h4>
+                                <div className="bg-gray-50 p-3 rounded border border-gray-100 mb-3 text-xs text-gray-600 space-y-1">
+                                    <p><strong>Vendor Status:</strong> <span className="capitalize">{user.vendor?.status || 'None'}</span></p>
+                                    <p><strong>Vendor Type:</strong> <span className="capitalize">{user.vendor?.type || 'Not initialized'}</span></p>
+                                    <p><strong>Max Listings:</strong> {user.vendor?.maxListings ?? 5}</p>
+                                    {user.vendor?.subscription && (
+                                        <p><strong>Plan:</strong> {user.vendor.subscription.plan} ({user.vendor.subscription.status})</p>
+                                    )}
+                                </div>
+                                {user.vendor?.type !== 'BULK' && (
+                                    <button
+                                        onClick={handleWhitelistVendor}
+                                        disabled={whitelistVendorMutation.isPending}
+                                        className="w-full border border-heritage-charcoal text-heritage-charcoal py-2 rounded-md font-medium hover:bg-heritage-charcoal hover:text-white transition-all text-sm uppercase tracking-wider"
+                                    >
+                                        {whitelistVendorMutation.isPending ? 'Whitelisting...' : 'Whitelist as Bulk Vendor'}
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
+
 
                 {/* Stats */}
                 <div className="lg:col-span-2 space-y-6">
@@ -160,7 +253,7 @@ function UserDetail() {
                                         />
                                         <div>
                                             <p className="font-medium text-sm">{product.title}</p>
-                                            <p className="text-xs text-gray-500">${product.price}</p>
+                                            <p className="text-xs text-gray-500">₹{product.price}</p>
                                         </div>
                                     </div>
                                 ))}

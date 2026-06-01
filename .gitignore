@@ -24,3 +24,10 @@ dist-ssr
 *.sw?
 
 .agent/*
+
+.kiro/
+
+# Environment files
+.env
+backend/.env
+

@@ -14,63 +14,61 @@ const FoundersNote = () => {
                 </div>
             </section>
 
-            {/* Main Content Section */}
-            <section className="py-24 px-6">
-                <div className="container mx-auto max-w-6xl">
-                    <div className="grid md:grid-cols-2 gap-20 items-start">
-                        <div className="space-y-12 order-2 md:order-1">
-                            <div className="relative">
-                                <Quote className="absolute -top-12 -left-12 text-luxury-gold/10 w-24 h-24 -z-0" strokeWidth={0.5} />
-                                <div className="space-y-8 text-xl md:text-2xl text-heritage-charcoal/90 font-serif italic leading-relaxed relative z-10">
-                                    <p>
-                                        "Growing up, I was always fascinated by the stories objects tell. A simple watch isn’t just about keeping time; it’s about the person who wore it, the milestones they reached, and the legacy they left behind."
-                                    </p>
-                                    <p>
-                                        "At The Collectors Exchange, we don’t just sell items. We connect you with pieces of history that have been carefully sourced and verified. Our goal is to make these treasures accessible to collectors worldwide while ensuring that the essence of their origin remains intact."
-                                    </p>
-                                    <p>
-                                        "Thank you for being a part of our journey."
-                                    </p>
-                                </div>
-                            </div>
+                {/* Founder's Message */}
+                <section className="mb-20 text-center md:text-left">
+                    <h1 className="text-4xl md:text-5xl font-serif mb-12">A Message from Our Founder</h1>
 
-                            <div className="pt-12 border-t border-heritage-bronze/10">
-                                <div className="space-y-2">
-                                    <h3 className="text-3xl font-serif text-heritage-charcoal">Prithwis S.</h3>
-                                    <p className="text-xs uppercase tracking-[0.4em] text-luxury-gold font-bold">Founder, The Collectors Exchange</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="order-1 md:order-2">
-                            <div className="relative">
-                                <div className="absolute -inset-4 border border-luxury-gold/20 translate-x-4 translate-y-4 -z-10"></div>
-                                <div className="aspect-[3/4] bg-heritage-charcoal p-2 border border-heritage-bronze/10 shadow-2xl overflow-hidden">
-                                    <img 
-                                        src={AboutImage} 
-                                        alt="Founder" 
-                                        className="w-full h-full object-cover contrast-[1.1] grayscale hover:grayscale-0 transition-all duration-1000" 
-                                    />
-                                </div>
-                                <div className="absolute -bottom-8 -left-8 bg-white p-8 border border-heritage-bronze/10 shadow-heritage hidden md:block">
-                                    <Sparkles className="text-luxury-gold w-8 h-8 mb-4" />
-                                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-heritage-charcoal/50">EST. 2024</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="space-y-6 text-lg md:text-xl font-light leading-relaxed text-gray-800 font-serif">
+                        <p className="italic text-black font-normal text-2xl border-l-4 border-luxury-gold pl-6">
+                            "The Collectors Exchange is not a 'startup dream,' it is a lifelong commitment to the soul of our nation.
+                        </p>
+                        <p>
+                            My intention is simple: to ensure that Indian heritage does not become a memory, but remains a living, breathing part of our homes.
+                        </p>
+                        <p>
+                            We do not believe in the fleeting nature of 'startup bubbles.' Instead, we build on the timeless principles taught by our ancestors: integrity, longevity, and a deep respect for the trade. To us, every article we find is sacred. Our responsibility does not end at the point of sale; we remain the guardians of every piece we sell. This is why we check in with our collectors annually to ensure the health and preservation of these historic treasures.
+                        </p>
+                        <p className="font-normal text-black mt-8 text-xl border-l-4 border-luxury-gold pl-6">
+                            'India is my country, and I know my responsibility to keep its history sacred and alive forever.' That is my vision, and that is my promise to you."
+                        </p>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Closing Section */}
-            <section className="py-24 bg-heritage-charcoal text-white text-center">
-                <div className="container mx-auto px-6 max-w-2xl">
-                    <p className="text-lg font-serif italic text-white/60 mb-8">
-                        "Connecting the past to the future, through the hands of those who care."
-                    </p>
-                    <div className="w-12 h-px bg-luxury-gold/30 mx-auto"></div>
-                </div>
-            </section>
+                {/* The Story: The Heartbeat of Heritage */}
+                <section className="mb-20 pt-16 border-t border-gray-100">
+                    <h2 className="text-3xl md:text-4xl font-serif mb-12">The Story: The Heartbeat of Heritage</h2>
+
+                    <div className="space-y-6 text-lg md:text-xl font-light leading-relaxed text-gray-800 font-serif">
+                        <p>
+                            I grew up listening to my father speak of a world that no longer seems to exist. He spoke of mechanical watches born from historic watchmakers and the weight of true craftsmanship. Today, I see fashion brands masquerading as "luxury" icons, but labels are not legacies.
+                        </p>
+                        <p className="italic text-black font-normal">
+                            You cannot ask a cobbler to stitch a wound and call him a doctor; similarly, you cannot put a luxury price tag on a hollow product and call it heritage.
+                        </p>
+                        <p>
+                            This "misbranding" is a betrayal of our history, and it isn't just happening with watches; it's everywhere. That realization sparked a burning passion within me to build something history would remember. The Collectors Exchange was born to be the antidote to the "startup bubble."
+                        </p>
+                        <p>
+                            To the Gen Z and Millennials: We are the bridge between the ancient and the digital. We bring the heritage of a hundred years to your screen and the rarest treasures to your doorstep. What used to take years of searching is now at your fingertips, curated, authenticated, and preserved.
+                        </p>
+                        <p>
+                            We are not a tech startup or an "innovation" company. We are your pride. We are your trust. We are the family you call upon when authenticity is the only currency that matters. Our process isn't about scrolling through vendor lists; it's about traveling across India, scouring the streets to find the needle in a haystack so you don't have to.
+                        </p>
+                        <p className="border-l-4 border-luxury-gold pl-6 italic text-black text-lg">
+                            When you hold a timepiece or a collectible from the Exchange, you aren't just holding an object. You are holding a family's lineage, a craftsman's soul, and a piece of sacred history.
+                        </p>
+                        <p>
+                            Our responsibility does not end at your doorstep. As stewards of heritage, we check in on our collectors and the "health" of their articles annually. We believe that if we take care of our history, our history will take care of our future.
+                        </p>
+                        <p className="text-xl font-normal text-black mt-8 pt-8 border-t border-gray-100">
+                            History isn't meant to be lived in the past; it is meant to be lived in the present.
+                        </p>
+                        <p className="text-2xl font-serif text-luxury-gold">
+                            Welcome to the Exchange.
+                        </p>
+                    </div>
+                </section>
+            </div>
         </div>
     );
 };

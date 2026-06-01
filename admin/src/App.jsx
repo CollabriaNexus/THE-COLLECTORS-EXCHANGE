@@ -1,6 +1,7 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { getUser } from './utils/storage';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import KYCRequests from './pages/KYCRequests';
@@ -11,6 +12,12 @@ import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
+import Vendors from './pages/Vendors';
+import GalleryManager from './pages/GalleryManager';
+import Payouts from './pages/Payouts';
+import TCEStore from './pages/TCEStore';
+import Testimonials from './pages/Testimonials';
+import PhoneVerifications from './pages/PhoneVerifications';
 import AdminLayout from './components/AdminLayout';
 
 // Protected Route wrapper
@@ -24,8 +31,16 @@ const ProtectedRoute = ({ children }) => {
     return <AdminLayout>{children}</AdminLayout>;
 };
 
+function ScrollToTop() {
+    const { pathname } = useLocation();
+    useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+    return null;
+}
+
 function App() {
     return (
+        <ErrorBoundary>
+        <ScrollToTop />
         <Routes>
             <Route path="/login" element={<Login />} />
 
@@ -84,9 +99,46 @@ function App() {
                 </ProtectedRoute>
             } />
 
+            <Route path="/vendors" element={
+                <ProtectedRoute>
+                    <Vendors />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/gallery" element={
+                <ProtectedRoute>
+                    <GalleryManager />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/payouts" element={
+                <ProtectedRoute>
+                    <Payouts />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/tce-store" element={
+                <ProtectedRoute>
+                    <TCEStore />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/testimonials" element={
+                <ProtectedRoute>
+                    <Testimonials />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/phone-verifications" element={
+                <ProtectedRoute>
+                    <PhoneVerifications />
+                </ProtectedRoute>
+            } />
+
             {/* Redirect to dashboard by default */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ErrorBoundary>
     );
 }
 

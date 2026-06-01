@@ -1,25 +1,33 @@
+import { Helmet } from 'react-helmet-async';
 import { Trash2, ShoppingBag, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart, useRemoveFromCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
+import apiClient from '../hooks/api/apiClient';
+import { useToast } from '../components/Toast';
 
 const Cart = () => {
     const user = getUser();
+    const navigate = useNavigate();
+    const showToast = useToast();
     const { data: cartItems = [], isLoading } = useCart(user?.id);
     const removeMutation = useRemoveFromCart();
 
     const handleRemove = async (productId) => {
         if (!user) return;
+        if (!window.confirm('Remove this item from your cart?')) return;
         try {
             await removeMutation.mutateAsync({ userId: user.id, productId });
+            apiClient.post('/analytics/cart', { productId, action: 'REMOVE' }).catch(() => {});
         } catch {
-            alert('Failed to remove item from cart.');
+            showToast('Failed to remove item from cart.', 'error');
         }
     };
 
     if (isLoading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center">
+                <Helmet><title>Cart — The Collectors Exchange</title></Helmet>
                 <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
                 <p className="text-gray-500 font-serif text-xl italic">Loading Your Collection...</p>
             </div>
@@ -27,11 +35,11 @@ const Cart = () => {
     }
 
     const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price || 0), 0);
-    const platformFee = subtotal * 0.05; // 5% fee
-    const total = subtotal + platformFee;
+    const total = subtotal;
 
     return (
         <div className="container mx-auto py-12 px-6">
+            <Helmet><title>Cart — The Collectors Exchange</title></Helmet>
             <h1 className="text-4xl font-serif mb-12 text-center md:text-left">Shopping Cart</h1>
 
             {cartItems.length > 0 ? (
@@ -52,7 +60,7 @@ const Cart = () => {
                                         <p className="text-sm text-gray-500 mt-1">{item.product.condition}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-sans font-semibold mb-2">${item.product.price?.toLocaleString()}</p>
+                                        <p className="font-sans font-semibold mb-2">₹{item.product.price?.toLocaleString()}</p>
                                         <button
                                             onClick={() => handleRemove(item.product.id)}
                                             className="text-red-500 hover:text-red-700 transition-colors"
@@ -72,11 +80,7 @@ const Cart = () => {
                             <div className="space-y-4 text-sm text-gray-600 border-b border-gray-100 pb-6">
                                 <div className="flex justify-between">
                                     <span>Subtotal ({cartItems.length} items)</span>
-                                    <span>${subtotal.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>Platform Verification Fee (5%)</span>
-                                    <span>${platformFee.toLocaleString()}</span>
+                                    <span>₹{subtotal.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Shipping</span>
@@ -85,13 +89,16 @@ const Cart = () => {
                             </div>
                             <div className="flex justify-between pt-6 font-serif font-bold text-lg mb-8">
                                 <span>Total</span>
-                                <span>${total.toLocaleString()}</span>
+                                <span>₹{total.toLocaleString()}</span>
                             </div>
-                            <button className="w-full bg-black text-white py-4 font-sans text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors">
+                            <button
+                                onClick={() => navigate('/checkout')}
+                                className="w-full bg-black text-white py-4 font-sans text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+                            >
                                 Proceed to Checkout
                             </button>
                             <div className="mt-4 text-center">
-                                <p className="text-xs text-gray-400">Checkout is a demo. No payment will be processed.</p>
+                                <p className="text-xs text-gray-400">Secure checkout powered by Razorpay.</p>
                             </div>
                         </div>
                     </div>
@@ -102,7 +109,7 @@ const Cart = () => {
                     <h3 className="text-xl font-serif text-gray-600 mb-2">Your cart is empty</h3>
                     <p className="text-gray-400 mb-6">Add items to your cart to proceed.</p>
                     <Link
-                        to="/THE-COLLECTORS-EXCHANGE/category"
+                        to="/category"
                         className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
                     >
                         Explore The Exchange

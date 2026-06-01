@@ -49,3 +49,83 @@ export const useUpdateUserRole = () => {
         },
     });
 };
+
+/**
+ * Hook to fetch admin dashboard stats overview
+ */
+/**
+ * Hook to fetch admin analytics data for dashboard charts
+ */
+export const useAdminAnalytics = () => {
+    return useQuery({
+        queryKey: ['admin', 'analytics'],
+        queryFn: async () => {
+            const { data } = await apiClient.get('/admin/stats/analytics');
+            return data;
+        },
+        refetchInterval: 60000,
+    });
+};
+
+export const useAdminStats = () => {
+    return useQuery({
+        queryKey: ['admin', 'stats'],
+        queryFn: async () => {
+            const { data } = await apiClient.get('/admin/stats/overview');
+            return data;
+        },
+    });
+};
+
+/**
+ * Hook to whitelist a vendor
+ */
+export const useWhitelistVendor = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ userId, plan }) => {
+            const { data } = await apiClient.post(`/admin/vendor/${userId}/whitelist`, { plan });
+            return data;
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['user', variables.userId] });
+        },
+    });
+};
+
+/**
+ * Hook to ban a user
+ */
+export const useBanUser = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id) => {
+            const { data } = await apiClient.patch(`/admin/users/${id}/ban`);
+            return data;
+        },
+        onSuccess: (data, id) => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['user', id] });
+        },
+    });
+};
+
+/**
+ * Hook to unban a user
+ */
+export const useUnbanUser = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id) => {
+            const { data } = await apiClient.patch(`/admin/users/${id}/unban`);
+            return data;
+        },
+        onSuccess: (data, id) => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['user', id] });
+        },
+    });
+};
+
+

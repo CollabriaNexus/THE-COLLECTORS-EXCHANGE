@@ -1,4 +1,5 @@
-import { KYCRequestIdParam, KYCApprovalSchema, KYCRejectionSchema } from '../schemas/admin.js';
+import { KYCRequestIdParam, KYCApprovalSchema, KYCRejectionSchema, CreatePayoutSchema, UpdatePayoutStatusSchema } from '../schemas/admin.js';
+import { CATEGORIES, AdminProductUpdateSchema } from '../schemas/product.js';
 
 /**
  * Admin Routes
@@ -7,36 +8,59 @@ import { KYCRequestIdParam, KYCApprovalSchema, KYCRejectionSchema } from '../sch
 export default async function adminRoutes(fastify) {
     const { prisma } = fastify;
 
-    // Admin authentication decorator
-    fastify.decorate('authenticateAdmin', async function (request, reply) {
-        try {
-            // First verify JWT token
-            await fastify.authenticate(request, reply);
+    // ============== DASHBOARD STATS ==============
 
-            // Then verify admin role
-            if (!request.user) {
-                throw new Error('User not authenticated');
-            }
+    // Get dashboard stats
+    fastify.get('/stats/overview', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const [totalUsers, pendingKyc, totalProducts, totalOrders] = await Promise.all([
+            prisma.user.count(),
+            prisma.user.count({ where: { kycStatus: 'pending' } }),
+            prisma.product.count(),
+            prisma.order.count(),
+        ]);
 
-            // Get user from database to verify role
-            const supabaseId = request.user.sub;
-            const user = await prisma.user.findUnique({
-                where: { supabaseId },
-                select: { role: true },
-            });
+        return {
+            totalUsers,
+            pendingKyc,
+            totalProducts,
+            totalOrders,
+        };
+    });
 
-            if (!user || user.role !== 'admin') {
-                return reply.code(403).send({
-                    error: 'Forbidden',
-                    message: 'Admin access required'
-                });
-            }
-        } catch (err) {
-            return reply.code(401).send({
-                error: 'Unauthorized',
-                message: err.message
-            });
-        }
+    // Get analytics data for dashboard charts
+    fastify.get('/stats/analytics', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const [revenueData, userGrowth, ordersByStatus, productsByCategory] = await Promise.all([
+            // Daily revenue for last 30 days
+            prisma.$queryRaw`
+                SELECT DATE(o."createdAt") as date, SUM(o."totalAmount") as revenue
+                FROM "Order" o
+                WHERE o."paymentStatus" = 'Paid' AND o."createdAt" >= NOW() - INTERVAL '30 days'
+                GROUP BY DATE(o."createdAt")
+                ORDER BY date ASC
+            `,
+            // User signups per day for last 30 days
+            prisma.$queryRaw`
+                SELECT DATE(u."createdAt") as date, COUNT(*) as count
+                FROM "User" u
+                WHERE u."createdAt" >= NOW() - INTERVAL '30 days'
+                GROUP BY DATE(u."createdAt")
+                ORDER BY date ASC
+            `,
+            // Orders by status
+            prisma.$queryRaw`
+                SELECT o."status", COUNT(*) as count
+                FROM "Order" o
+                GROUP BY o."status"
+            `,
+            // Products by category
+            prisma.$queryRaw`
+                SELECT p."category", COUNT(*) as count
+                FROM "Product" p
+                GROUP BY p."category"
+            `,
+        ]);
+
+        return { revenueData, userGrowth, ordersByStatus, productsByCategory };
     });
 
     // ============== KYC MANAGEMENT ==============
@@ -113,17 +137,65 @@ export default async function adminRoutes(fastify) {
         const { id } = KYCRequestIdParam.parse(request.params);
         const { notes } = KYCApprovalSchema.parse(request.body);
 
-        const updatedUser = await prisma.user.update({
-            where: { id },
+        const existingUser = await prisma.user.findUnique({
+            where: { id }
+        });
+        if (!existingUser) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const updatedUser = await prisma.$transaction(async (tx) => {
+            const currentKycData = typeof existingUser.kycData === 'object' && existingUser.kycData !== null 
+                ? existingUser.kycData 
+                : {};
+
+            const user = await tx.user.update({
+                where: { id },
+                data: {
+                    kycStatus: 'verified',
+                    kycData: {
+                        ...currentKycData,
+                        adminNotes: notes || '',
+                        approvedAt: new Date().toISOString(),
+                    },
+                },
+            });
+
+            // Auto-upsert Vendor Profile
+            await tx.vendor.upsert({
+                where: { userId: id },
+                update: { status: 'APPROVED' },
+                create: {
+                    userId: id,
+                    type: user.type === 'company' ? 'BULK' : 'SINGLE',
+                    status: 'APPROVED',
+                    maxListings: user.type === 'company' ? 999999 : 5,
+                    companyName: user.type === 'company' ? (currentKycData.companyName || null) : null,
+                    gst: user.type === 'company' ? (currentKycData.gst || null) : null,
+                    founderName: user.type === 'company' ? (currentKycData.founderName || null) : null,
+                    aadhaar: user.type === 'individual' ? (currentKycData.aadhaar || null) : null,
+                    pan: user.type === 'individual' ? (currentKycData.pan || null) : null,
+                    aadhaarDoc: currentKycData.aadhaarDoc || null,
+                    panDoc: currentKycData.panDoc || null,
+                    gstDoc: currentKycData.gstDoc || null,
+                    incorporationDoc: currentKycData.incorporationDoc || null,
+                    agreementAccepted: currentKycData.agreementAccepted === true,
+                    agreementSignedAt: currentKycData.agreementSignedAt ? new Date(currentKycData.agreementSignedAt) : null,
+                    agreementSignedByName: currentKycData.agreementSignedByName || null,
+                    signedAgreementDoc: currentKycData.signedAgreementDoc || null,
+                }
+            });
+
+            return user;
+        });
+
+        // Send KYC approved notification
+        await prisma.notification.create({
             data: {
-                kycStatus: 'verified',
-                // Optionally store notes in kycData
-                kycData: notes ? {
-                    ...(typeof request.user.kycData === 'object' ? request.user.kycData : {}),
-                    adminNotes: notes,
-                    approvedAt: new Date().toISOString(),
-                } : undefined,
-            },
+                userId: id,
+                title: 'KYC Verified ✓',
+                message: 'Your identity has been verified. You can now list items on The Collectors Exchange.',
+            }
         });
 
         return {
@@ -148,6 +220,15 @@ export default async function adminRoutes(fastify) {
             },
         });
 
+        // Send KYC rejected notification
+        await prisma.notification.create({
+            data: {
+                userId: id,
+                title: 'KYC Verification Update',
+                message: `Your verification was not approved. Reason: ${reason}. Please resubmit with correct documents.`,
+            }
+        });
+
         return {
             message: 'KYC request rejected',
             user: updatedUser
@@ -156,7 +237,56 @@ export default async function adminRoutes(fastify) {
 
     // ============== USER MANAGEMENT ==============
 
-    // Get all users with filters
+    // Ban user
+    fastify.patch('/users/:id/ban', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (!user) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: { banned: true },
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: id,
+                title: 'Account Banned',
+                message: 'Your account has been banned. Please contact support for more information.',
+            }
+        });
+
+        return { message: 'User banned successfully', user: updatedUser };
+    });
+
+    // Unban user
+    fastify.patch('/users/:id/unban', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (!user) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: { banned: false },
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: id,
+                title: 'Account Unbanned',
+                message: 'Your account has been reinstated. You can now use The Collectors Exchange normally.',
+            }
+        });
+
+        return { message: 'User unbanned successfully', user: updatedUser };
+    });
+
     fastify.get('/users', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
         const { role, search } = request.query;
 
@@ -183,8 +313,24 @@ export default async function adminRoutes(fastify) {
                 type: true,
                 role: true,
                 kycStatus: true,
+                banned: true,
                 createdAt: true,
                 updatedAt: true,
+                vendor: {
+                    select: {
+                        id: true,
+                        type: true,
+                        status: true,
+                        maxListings: true,
+                        subscription: {
+                            select: {
+                                plan: true,
+                                status: true,
+                                currentPeriodEnd: true,
+                            }
+                        }
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -202,6 +348,7 @@ export default async function adminRoutes(fastify) {
                 products: true,
                 cart: { include: { product: true } },
                 wishlist: { include: { product: true } },
+                vendor: { include: { subscription: true } },
             },
         });
 
@@ -212,14 +359,95 @@ export default async function adminRoutes(fastify) {
         return user;
     });
 
+    // Whitelist Vendor (manual subscription bypass / upgrade)
+    fastify.post('/vendor/:userId/whitelist', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { userId } = request.params;
+        const { plan } = request.body || {};
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user) {
+            return reply.status(404).send({ error: 'User not found' });
+        }
+
+        const updatedVendor = await prisma.$transaction(async (tx) => {
+            // Ensure vendor record exists
+            const v = await tx.vendor.upsert({
+                where: { userId },
+                update: {
+                    type: 'BULK',
+                    maxListings: 999999,
+                    status: 'APPROVED',
+                },
+                create: {
+                    userId,
+                    type: 'BULK',
+                    maxListings: 999999,
+                    status: 'APPROVED',
+                }
+            });
+
+            // Upsert the subscription
+            const currentPeriodEnd = new Date();
+            currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 10); // 10 years bypass
+
+            await tx.vendorSubscription.upsert({
+                where: { vendorId: v.id },
+                update: {
+                    plan: plan || 'CUSTOM_APPROVED',
+                    status: 'active',
+                    currentPeriodEnd,
+                },
+                create: {
+                    vendorId: v.id,
+                    plan: plan || 'CUSTOM_APPROVED',
+                    status: 'active',
+                    currentPeriodEnd,
+                }
+            });
+
+            // Log action
+            await tx.auditLog.create({
+                data: {
+                    adminId: request.dbUser?.id || 'SYSTEM',
+                    action: 'WHITELIST_VENDOR',
+                    targetType: 'Vendor',
+                    targetId: v.id,
+                    details: `Whitelisted user ${userId} to Bulk Vendor via plan ${plan || 'CUSTOM_APPROVED'}`
+                }
+            });
+
+            return v;
+        });
+
+        return { message: 'Vendor whitelisted successfully', vendor: updatedVendor };
+    });
+
+
     // Update user role
     fastify.patch('/users/:id/role', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
         const { id } = request.params;
         const { role } = request.body;
 
+        // Prevent self-demotion
+        if (id === request.dbUser.id) {
+            return reply.status(422).send({ error: 'Cannot change your own role' });
+        }
+
         if (!['user', 'admin', 'curator'].includes(role)) {
             return reply.status(400).send({ error: 'Invalid role' });
         }
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: request.dbUser.id,
+                action: 'CHANGE_USER_ROLE',
+                targetType: 'User',
+                targetId: id,
+                details: `Changed role to ${role}`,
+            }
+        });
 
         const updatedUser = await prisma.user.update({
             where: { id },
@@ -261,7 +489,6 @@ export default async function adminRoutes(fastify) {
                     select: {
                         id: true,
                         name: true,
-                        email: true,
                     },
                 },
             },
@@ -282,8 +509,6 @@ export default async function adminRoutes(fastify) {
                     select: {
                         id: true,
                         name: true,
-                        email: true,
-                        phone: true,
                     },
                 },
             },
@@ -303,7 +528,7 @@ export default async function adminRoutes(fastify) {
         const updatedProduct = await prisma.product.update({
             where: { id },
             data: {
-                status: 'In Review',
+                status: 'In_Review',
                 reviewedAt: new Date(),
             },
         });
@@ -311,8 +536,8 @@ export default async function adminRoutes(fastify) {
         return { message: 'Product is now under review', product: updatedProduct };
     });
 
-    // Approve product (Publish)
-    fastify.patch('/products/:id/approve', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+    // Approve product (Publish) — super admin only
+    fastify.patch('/products/:id/approve', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
         const { id } = request.params;
 
         const updatedProduct = await prisma.product.update({
@@ -325,6 +550,15 @@ export default async function adminRoutes(fastify) {
                 rejectionReason: null,
                 reviewedAt: new Date(),
             },
+        });
+
+        // Notify seller
+        await prisma.notification.create({
+            data: {
+                userId: updatedProduct.sellerId,
+                title: 'Listing Approved ✓',
+                message: `Your item "${updatedProduct.title}" has been verified and is now live on The Exchange.`,
+            }
         });
 
         return { message: 'Product approved and published successfully', product: updatedProduct };
@@ -351,15 +585,24 @@ export default async function adminRoutes(fastify) {
             },
         });
 
+        // Notify seller
+        await prisma.notification.create({
+            data: {
+                userId: updatedProduct.sellerId,
+                title: 'Listing Requires Attention',
+                message: `Your item "${updatedProduct.title}" was not approved. Reason: ${reason}. Please update and resubmit.`,
+            }
+        });
+
         return { message: 'Product rejected', product: updatedProduct };
     });
 
-    // Update authenticity status (legacy support or more granular control)
-    fastify.patch('/products/:id/authenticity', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+    // Update authenticity status — super admin only
+    fastify.patch('/products/:id/authenticity', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
         const { id } = request.params;
         const { status: authStatus } = request.body;
 
-        const validStatuses = ['Pending', 'Verified', 'Rejected', 'Under Review'];
+        const validStatuses = ['Pending', 'Verified', 'Rejected', 'Under_Review'];
         if (!validStatuses.includes(authStatus)) {
             return reply.status(400).send({ error: 'Invalid authenticity status' });
         }
@@ -385,6 +628,59 @@ export default async function adminRoutes(fastify) {
         });
 
         return { message: 'Authenticity status updated', product: updatedProduct };
+    });
+
+    // Delete product
+    fastify.delete('/products/:id', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+
+        const existing = await prisma.product.findUnique({ where: { id } });
+        if (!existing) {
+            return reply.status(404).send({ error: 'Product not found' });
+        }
+
+        // Delete related records first to avoid foreign key constraint errors
+        await prisma.cartItem.deleteMany({ where: { productId: id } });
+        await prisma.wishlistItem.deleteMany({ where: { productId: id } });
+        await prisma.orderItem.deleteMany({ where: { productId: id } });
+        await prisma.productView.deleteMany({ where: { productId: id } });
+        await prisma.cartEvent.deleteMany({ where: { productId: id } });
+        await prisma.checkoutEvent.deleteMany({ where: { productId: id } });
+        if (existing.auction) {
+            await prisma.auctionBid.deleteMany({ where: { auctionId: existing.auction.id } });
+            await prisma.auction.delete({ where: { id: existing.auction.id } });
+        }
+
+        await prisma.product.delete({ where: { id } });
+
+        return { message: 'Product deleted successfully' };
+    });
+
+    // Update product (brand, listingCategory, etc.)
+    fastify.patch('/products/:id', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+        const data = AdminProductUpdateSchema.parse(request.body);
+
+        const existing = await prisma.product.findUnique({ where: { id } });
+        if (!existing) {
+            return reply.status(404).send({ error: 'Product not found' });
+        }
+
+        const updated = await prisma.product.update({ where: { id }, data });
+
+        return { message: 'Product updated successfully', product: updated };
+    });
+
+    // Get all unique brands
+    fastify.get('/brands', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const products = await prisma.product.findMany({
+            where: { brand: { not: null } },
+            select: { brand: true },
+            distinct: ['brand'],
+        });
+
+        const brands = products.map(p => p.brand).filter(Boolean);
+        return brands;
     });
 
     // ============== ORDER MANAGEMENT ==============
@@ -431,7 +727,7 @@ export default async function adminRoutes(fastify) {
         const order = await prisma.order.findUnique({
             where: { id },
             include: {
-                user: true,
+                user: { select: { id: true, name: true, email: true, phone: true, type: true, role: true } },
                 items: {
                     include: {
                         product: true,
@@ -462,6 +758,23 @@ export default async function adminRoutes(fastify) {
             data: { status },
         });
 
+        // Notify the buyer of status change
+        const statusMessages = {
+            Processing: 'Your order is being processed and will be shipped soon.',
+            Shipped: 'Your order has been shipped! Track it in your account.',
+            Delivered: 'Your order has been delivered. Thank you for your acquisition.',
+            Cancelled: 'Your order has been cancelled. Contact support if you have questions.',
+        };
+        if (statusMessages[status]) {
+            await prisma.notification.create({
+                data: {
+                    userId: updatedOrder.userId,
+                    title: `Order ${status}`,
+                    message: statusMessages[status],
+                }
+            });
+        }
+
         return { message: `Order marked as ${status}`, order: updatedOrder };
     });
 
@@ -482,6 +795,169 @@ export default async function adminRoutes(fastify) {
             },
         });
 
+        // Notify buyer with tracking ID
+        await prisma.notification.create({
+            data: {
+                userId: updatedOrder.userId,
+                title: 'Your Order Has Shipped 📦',
+                message: `Your order is on its way! Tracking ID: ${trackingID}. Track at delhivery.com.`,
+            }
+        });
+
         return { message: 'Order shipped successfully', order: updatedOrder };
+    });
+
+    // ============== PAYOUT MANAGEMENT ==============
+
+    // Create a payout for a vendor
+    fastify.post('/payouts', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { vendorId, amount, periodStart, periodEnd, note } = CreatePayoutSchema.parse(request.body);
+        const adminUser = request.dbUser;
+
+        const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
+        if (!vendor) {
+            return reply.status(404).send({ error: 'Vendor not found' });
+        }
+
+        const payout = await prisma.payout.create({
+            data: {
+                vendorId,
+                amount: parseFloat(amount),
+                periodStart: new Date(periodStart),
+                periodEnd: new Date(periodEnd),
+                note: note || null,
+            }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: adminUser?.id || 'SYSTEM',
+                action: 'CREATE_PAYOUT',
+                targetType: 'Payout',
+                targetId: payout.id,
+                details: `Created payout of ${amount} for vendor ${vendorId}`,
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: vendor.userId,
+                title: 'New Payout Created',
+                message: `A payout of $${parseFloat(amount).toLocaleString()} has been created for ${new Date(periodStart).toLocaleDateString()} — ${new Date(periodEnd).toLocaleDateString()}.`,
+            }
+        });
+
+        return { message: 'Payout created successfully', payout };
+    });
+
+    // Update payout status
+    fastify.patch('/payouts/:id/status', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+        const { status } = UpdatePayoutStatusSchema.parse(request.body);
+        const adminUser = request.dbUser;
+
+        const data = { status };
+        if (status === 'PAID') {
+            data.paidAt = new Date();
+        }
+
+        const payout = await prisma.payout.update({
+            where: { id },
+            data,
+            include: { vendor: true }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: adminUser?.id || 'SYSTEM',
+                action: 'UPDATE_PAYOUT_STATUS',
+                targetType: 'Payout',
+                targetId: payout.id,
+                details: `Updated payout ${id} status to ${status}`,
+            }
+        });
+
+        const statusMessages = {
+            PROCESSING: 'Your payout is now being processed.',
+            PAID: `Your payout of $${payout.amount.toLocaleString()} has been paid.`,
+            FAILED: 'Your payout has failed. Please contact support.',
+        };
+        if (statusMessages[status]) {
+            await prisma.notification.create({
+                data: {
+                    userId: payout.vendor.userId,
+                    title: `Payout ${status}`,
+                    message: statusMessages[status],
+                }
+            });
+        }
+
+        return { message: 'Payout status updated', payout };
+    });
+
+    // List all payouts
+    fastify.get('/payouts', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const { status, vendorId, page = 1, limit = 20 } = request.query;
+
+        const where = {};
+        if (status) where.status = status;
+        if (vendorId) where.vendorId = vendorId;
+
+        const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+        const [payouts, total] = await Promise.all([
+            prisma.payout.findMany({
+                where,
+                include: { vendor: { include: { user: { select: { name: true, email: true } } } } },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: parseInt(limit, 10),
+            }),
+            prisma.payout.count({ where }),
+        ]);
+
+        return {
+            payouts,
+            pagination: { page: parseInt(page, 10), limit: parseInt(limit, 10), total, pages: Math.ceil(total / parseInt(limit, 10)) }
+        };
+    });
+
+    // Get TCE Store products (listed by super admin)
+    fastify.get('/products/tce-store', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const products = await prisma.product.findMany({
+            where: { seller: { role: 'admin' } },
+            include: { seller: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'desc' },
+        });
+        return { products };
+    });
+
+    // Create product as TCE (super admin) — auto-verified, auto-published
+    fastify.post('/products', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
+        const { title, category, description, condition, price, image, images, keywords, brand } = request.body;
+        if (!title || !category || !description || !condition || !price) {
+            return reply.status(400).send({ error: 'Missing required fields' });
+        }
+        if (!CATEGORIES.includes(category)) {
+            return reply.status(400).send({ error: `Invalid category. Must be one of: ${CATEGORIES.join(', ')}` });
+        }
+        const product = await prisma.product.create({
+            data: {
+                title,
+                category,
+                description,
+                condition,
+                price: parseFloat(price),
+                image: image || '',
+                images: images || [],
+                keywords: keywords || [],
+                brand: brand || null,
+                sellerId: request.dbUser.id,
+                status: 'Approved',
+                isPublished: true,
+                isVerified: true,
+                authenticityStatus: 'Verified',
+            },
+        });
+        return product;
     });
 }

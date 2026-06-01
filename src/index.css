@@ -1,14 +1,118 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --color-primary-bg: #FFFFFF;
+  --color-secondary-bg: #F9F9F9;
+  --color-text-main: #000000;
+  --color-text-inverse: #FFFFFF;
+  --color-obsidian: #0A0A0A;
+  --color-brass: #B8860B;
+  --color-luxury-gold: #D4AF37;
 
-@layer base {
+  --color-heritage-charcoal: #1C1C1C;
+  --color-heritage-dark: #2A2A2A;
+  --color-heritage-brown: #3D3028;
+  --color-heritage-warm: #4A3F35;
+  --color-heritage-beige: #F5F0E8;
+  --color-heritage-cream: #FAF8F5;
+  --color-heritage-bronze: #8B7355;
+  --color-heritage-gold-muted: #C9A962;
+
+  --font-family-serif: "Playfair Display", serif;
+  --font-family-sans: "Inter", sans-serif;
+
+  --shadow-heritage: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-heritage-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+body {
+  background-color: var(--color-primary-bg);
+  color: var(--color-text-main);
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-serif);
+}
+
+/* Mobile Responsive Overrides */
+@media (max-width: 640px) {
   body {
-    @apply bg-primary-bg text-text-main font-sans antialiased;
+    font-size: 14px;
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+
+  h1 { font-size: 1.75rem !important; }
+  h2 { font-size: 1.375rem !important; }
+  h3 { font-size: 1.125rem !important; }
+  h4 { font-size: 1rem !important; }
+
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  [class*="p-10"],
+  [class*="p-12"],
+  [class*="p-16"] {
+    padding: 1.25rem !important;
+  }
+
+  [class*="px-10"],
+  [class*="px-12"],
+  [class*="px-16"] {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+
+  [class*="py-10"],
+  [class*="py-12"],
+  [class*="py-16"],
+  [class*="py-20"] {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  [class*="gap-12"] {
+    gap: 1.5rem !important;
+  }
+
+  input, select, textarea, button, a {
+    font-size: 14px !important;
+  }
+
+  [class*="p-4"]:where(input, select, textarea) {
+    padding: 0.625rem !important;
+  }
+
+  [class*="py-4"]:where(button) {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  [class*="grid-cols-"] {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  [class*="text-4xl"] { font-size: 2rem !important; }
+  [class*="text-5xl"] { font-size: 2.25rem !important; }
+  [class*="text-6xl"] { font-size: 2.5rem !important; }
+
+  [class*="p-8"] {
+    padding: 1.25rem !important;
+  }
+
+  [class*="py-16"] {
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
   }
 }
