@@ -198,6 +198,13 @@ const ArchiveProductCard = ({ product }) => {
                     {product.condition || 'Excellent'}
                 </div>
 
+                {/* Sold Badge */}
+                {product.status === 'Sold' && (
+                    <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
+                        <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-[0.15em] shadow-lg">Sold</span>
+                    </div>
+                )}
+
                 {/* Verified Badge */}
                 {product.isVerified && (
                     <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[7px] sm:text-[10px] px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-[0.06em] sm:tracking-[0.1em] uppercase flex items-center gap-0.5 sm:gap-1">
@@ -216,18 +223,25 @@ const ArchiveProductCard = ({ product }) => {
                 </Link>
                 <p className="text-heritage-gold-muted font-sans text-[10px] sm:text-sm font-medium mb-1 sm:mb-4 mt-auto">₹{product.price?.toLocaleString()}</p>
 
-                {/* Add to Cart Button */}
-                <button
-                    onClick={handleAddToCart}
-                    disabled={inCart}
-                    className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${inCart
-                        ? 'bg-heritage-beige text-heritage-charcoal/50 cursor-default'
-                        : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
-                        }`}
-                >
-                    <ShoppingBag size={10} className="sm:w-[14px] sm:h-[14px]" />
-                    {inCart ? 'In Cart' : 'Add to Cart'}
-                </button>
+                {/* Add to Cart / Sold Button */}
+                {product.status === 'Sold' ? (
+                    <div className="w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-2 bg-gray-100 text-gray-400 cursor-default">
+                        <XCircle size={10} className="sm:w-[14px] sm:h-[14px]" />
+                        Sold
+                    </div>
+                ) : (
+                    <button
+                        onClick={handleAddToCart}
+                        disabled={inCart}
+                        className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${inCart
+                            ? 'bg-heritage-beige text-heritage-charcoal/50 cursor-default'
+                            : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
+                            }`}
+                    >
+                        <ShoppingBag size={10} className="sm:w-[14px] sm:h-[14px]" />
+                        {inCart ? 'In Cart' : 'Add to Cart'}
+                    </button>
+                )}
             </div>
         </div>
     );

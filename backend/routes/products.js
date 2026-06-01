@@ -14,11 +14,10 @@ export default async function productRoutes(fastify) {
 
         const where = {};
 
-        // Public catalog only sees Approved / Published products
+        // Public catalog: show Approved and Sold products
         // UNLESS querying own seller listings
         if (sellerId) {
             where.sellerId = sellerId;
-            // If requesting own listings, we verify ownership to allow seeing pending/rejected ones.
             const token = request.headers.authorization?.split(' ')[1];
             let isOwner = false;
             if (token) {
@@ -34,10 +33,10 @@ export default async function productRoutes(fastify) {
             }
 
             if (!isOwner) {
-                where.isPublished = true;
+                where.status = { in: ['Approved', 'Sold'] };
             }
         } else {
-            where.isPublished = true;
+            where.status = { in: ['Approved', 'Sold'] };
         }
 
         if (category && category !== 'all') {
@@ -76,7 +75,7 @@ export default async function productRoutes(fastify) {
     fastify.get('/:id', async (request, reply) => {
         const { id } = ProductIdParam.parse(request.params);
         const product = await prisma.product.findFirst({
-            where: { id, isPublished: true },
+            where: { id, status: { in: ['Approved', 'Sold'] } },
             include: { seller: { select: { name: true, type: true, role: true, vendor: { select: { id: true, rating: true, ratingCount: true } } } } }
         });
 
@@ -300,7 +299,7 @@ export default async function productRoutes(fastify) {
         if (!existing) return reply.status(404).send({ error: 'Product not found' });
         if (existing.sellerId !== dbUser.id) return reply.status(403).send({ error: 'Not your product' });
         if (existing.status === 'Sold') return reply.status(422).send({ error: 'Product is already sold' });
-        const updated = await prisma.product.update({ where: { id }, data: { status: 'Sold', isPublished: false } });
+        const updated = await prisma.product.update({ where: { id }, data: { status: 'Sold' } });
         return updated;
     });
 }
