@@ -64,7 +64,7 @@ export default async function checkoutRoutes(fastify) {
                     throw new OrderError(404, `Product not found: ${item.productId}`);
                 }
 
-                if (!product.isPublished || product.status === 'Sold') {
+                if (product.status === 'Sold') {
                     throw new OrderError(422, `Product not available: ${product.title}`);
                 }
 
@@ -226,13 +226,12 @@ export default async function checkoutRoutes(fastify) {
             include: { items: true }
         });
 
-        // Mark purchased products as Sold and remove from public view
+        // Mark purchased products as Sold
         for (const item of updatedOrder.items || []) {
             await prisma.product.update({
                 where: { id: item.productId },
                 data: {
                     status: 'Sold',
-                    isPublished: false,
                 }
             });
             // Remove from all users' carts

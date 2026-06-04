@@ -540,6 +540,11 @@ export default async function adminRoutes(fastify) {
     fastify.patch('/products/:id/approve', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
         const { id } = request.params;
 
+        const existingProduct = await prisma.product.findUnique({ where: { id } });
+        if (existingProduct.status === 'Sold') {
+            return reply.status(422).send({ error: 'Cannot approve a sold product' });
+        }
+
         const updatedProduct = await prisma.product.update({
             where: { id },
             data: {
@@ -573,6 +578,11 @@ export default async function adminRoutes(fastify) {
             return reply.status(400).send({ error: 'Rejection reason is required' });
         }
 
+        const existingProduct = await prisma.product.findUnique({ where: { id } });
+        if (existingProduct.status === 'Sold') {
+            return reply.status(422).send({ error: 'Cannot reject a sold product' });
+        }
+
         const updatedProduct = await prisma.product.update({
             where: { id },
             data: {
@@ -601,6 +611,11 @@ export default async function adminRoutes(fastify) {
     fastify.patch('/products/:id/authenticity', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
         const { id } = request.params;
         const { status: authStatus } = request.body;
+
+        const existingProduct = await prisma.product.findUnique({ where: { id } });
+        if (existingProduct.status === 'Sold') {
+            return reply.status(422).send({ error: 'Cannot modify authenticity of a sold product' });
+        }
 
         const validStatuses = ['Pending', 'Verified', 'Rejected', 'Under_Review'];
         if (!validStatuses.includes(authStatus)) {

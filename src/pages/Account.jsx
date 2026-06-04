@@ -661,7 +661,9 @@ const Account = () => {
                             <form onSubmit={async (e) => {
                                 e.preventDefault();
                                 try {
-                                    await updateProfileMutation.mutateAsync(editProfileForm);
+                                    const updatedUser = await updateProfileMutation.mutateAsync(editProfileForm);
+                                    setLocalUser(updatedUser);
+                                    setLocalUserState(updatedUser);
                                     showToast('Profile updated successfully!', 'success');
                                     setEditingProfile(false);
                                 } catch {
