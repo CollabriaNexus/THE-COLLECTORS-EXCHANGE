@@ -61,7 +61,6 @@ export default async function productRoutes(fastify) {
             prisma.product.findMany({
                 where,
                 orderBy: { createdAt: 'desc' },
-                include: { seller: { select: { name: true, type: true, role: true } } },
                 skip: (pageNum - 1) * limitNum,
                 take: limitNum,
             }),
