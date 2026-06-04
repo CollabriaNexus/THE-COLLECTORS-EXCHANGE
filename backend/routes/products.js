@@ -8,6 +8,17 @@ import { z } from 'zod';
 export default async function productRoutes(fastify) {
     const { prisma } = fastify;
 
+    // Debug: test Prisma connection
+    fastify.get('/debug/prisma', async (request, reply) => {
+        try {
+            const result = await prisma.$queryRaw`SELECT 1 as ok`;
+            const count = await prisma.product.count();
+            return { connected: true, productCount: count, queryResult: result };
+        } catch (err) {
+            return reply.status(500).send({ connected: false, error: err.name, message: err.message, stack: err.stack });
+        }
+    });
+
     // Get all products (Public catalog)
     fastify.get('/', async (request, reply) => {
         const { category, search, sellerId, page, limit, listingCategory } = request.query;
@@ -57,17 +68,22 @@ export default async function productRoutes(fastify) {
         const pageNum = parseInt(page, 10) || 1;
         const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
 
-        const [products, total] = await Promise.all([
-            prisma.product.findMany({
-                where,
-                orderBy: { createdAt: 'desc' },
-                skip: (pageNum - 1) * limitNum,
-                take: limitNum,
-            }),
-            prisma.product.count({ where }),
-        ]);
-
-        return { products, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) };
+        try {
+            const [products, total] = await Promise.all([
+                prisma.product.findMany({
+                    where,
+                    orderBy: { createdAt: 'desc' },
+                    include: { seller: { select: { name: true, type: true, role: true } } },
+                    skip: (pageNum - 1) * limitNum,
+                    take: limitNum,
+                }),
+                prisma.product.count({ where }),
+            ]);
+            return { products, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) };
+        } catch (dbError) {
+            request.log.error({ prismaError: dbError.message, stack: dbError.stack }, 'Product query failed');
+            return reply.status(500).send({ error: dbError.name, message: dbError.message });
+        }
     });
 
     // Get product by ID
