@@ -202,15 +202,19 @@ export default async function userRoutes(fastify) {
         const { kycData } = UserKycSchema.parse(request.body);
         const dbUser = request.dbUser;
 
-        const updatedUser = await prisma.user.update({
-            where: { id: dbUser.id },
-            data: {
-                kycData,
-                kycStatus: 'pending', // Pending manual review
-            },
-        });
-
-        return updatedUser;
+        try {
+            const updatedUser = await prisma.user.update({
+                where: { id: dbUser.id },
+                data: {
+                    kycData,
+                    kycStatus: 'pending',
+                },
+            });
+            return updatedUser;
+        } catch (err) {
+            request.log.error({ prismaError: err.message, stack: err.stack }, 'KYC update failed');
+            return reply.status(500).send({ error: err.name, message: err.message });
+        }
     });
 
     // Accept Seller Agreement (digital signature)

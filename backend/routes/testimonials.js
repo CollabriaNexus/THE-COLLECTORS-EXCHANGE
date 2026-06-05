@@ -4,11 +4,16 @@ export default async function testimonialsRoutes(fastify) {
     const { prisma } = fastify;
     // Public: get approved testimonials
     fastify.get('/', async (request, reply) => {
-        const testimonials = await prisma.testimonial.findMany({
-            where: { status: 'APPROVED' },
-            orderBy: { createdAt: 'desc' },
-        });
-        return testimonials;
+        try {
+            const testimonials = await prisma.testimonial.findMany({
+                where: { status: 'APPROVED' },
+                orderBy: { createdAt: 'desc' },
+            });
+            return testimonials;
+        } catch (err) {
+            request.log.error({ prismaError: err.message, stack: err.stack }, 'Testimonials query failed');
+            return reply.status(500).send({ error: err.name, message: err.message });
+        }
     });
 
     // Authenticated user: submit a testimonial (must have purchased something)
