@@ -1,13 +1,12 @@
 import React, { useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, UserCheck, Star, ArrowRight, Wallet, Archive, ChevronLeft, ChevronRight, ShoppingBag, Award, Gem, Heart, Pause, Play, Quote, QuoteIcon } from 'lucide-react';
+import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import heroVideo from '../assets/hero_section.mp4';
 import heroPoster from '../assets/hero-background.png';
 import verificationAuthenticity from '../assets/verification_authenticity.png';
 import { useProducts } from '../hooks/api/useProducts';
-import { getUser, addToCart, isInCart } from '../utils/storage';
 import { useTestimonials } from '../hooks/api/useTestimonials';
 
 const FeaturedProductsCarousel = () => {
@@ -56,22 +55,13 @@ const FeaturedProductsCarousel = () => {
     return (
         <section className="py-16 sm:py-20 px-6 bg-heritage-cream overflow-hidden">
             <div className="container mx-auto max-w-6xl">
-                <div className="flex items-center justify-between mb-10">
-                    <div>
-                        <div className="flex items-center gap-4 mb-3">
-                            <div className="h-px w-8 bg-luxury-gold/40"></div>
-                            <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Curated Selection</span>
-                            <div className="h-px w-8 bg-luxury-gold/40"></div>
-                        </div>
-                        <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal">Featured <span className="text-luxury-gold italic font-light">Products</span></h2>
+                <div className="text-center mb-10">
+                    <div className="flex items-center justify-center gap-4 mb-3">
+                        <div className="h-px w-8 bg-luxury-gold/40"></div>
+                        <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Curated Selection</span>
+                        <div className="h-px w-8 bg-luxury-gold/40"></div>
                     </div>
-                    <button
-                        onClick={() => setPaused(p => !p)}
-                        className="p-3 border border-heritage-bronze/20 hover:border-heritage-bronze hover:bg-white transition-all duration-300 rounded-full"
-                        title={paused ? 'Resume' : 'Pause'}
-                    >
-                        {paused ? <Play size={20} className="text-heritage-charcoal" /> : <Pause size={20} className="text-heritage-charcoal" />}
-                    </button>
+                    <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal">Featured <span className="text-luxury-gold italic font-light">Products</span></h2>
                 </div>
 
                 <div className="relative">
