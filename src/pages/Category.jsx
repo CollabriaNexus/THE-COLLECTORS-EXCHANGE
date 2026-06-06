@@ -56,116 +56,6 @@ const CATEGORIES = [
     },
 ];
 
-// Featured Product Card Component (Larger, Museum-style)
-const FeaturedProductCard = ({ product }) => {
-    const user = getUser();
-    const navigate = useNavigate();
-    const showToast = useToast();
-    const { data: wishlistItems = [] } = useWishlist(user?.id);
-    const addToWishlistMutation = useAddToWishlist();
-    const removeFromWishlistMutation = useRemoveFromWishlist();
-    const { data: cartItems = [] } = useCart(user?.id);
-    const addToCartMutation = useAddToCart();
-
-    const inCart = cartItems.some(item => item.productId === product.id);
-    const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
-
-    const handleWishlistToggle = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (!user) {
-            showToast("Please sign in to add to wishlist", 'error');
-            return;
-        }
-
-        if (inWishlist) {
-            removeFromWishlistMutation.mutate({ userId: user.id, productId: product.id });
-        } else {
-            addToWishlistMutation.mutate({ userId: user.id, productId: product.id });
-        }
-    };
-
-    const handleAddToCart = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!user) {
-            showToast('Please sign in to add items to cart', 'error');
-            return;
-        }
-        if (inCart) return;
-        try {
-            await addToCartMutation.mutateAsync({ userId: user.id, productId: product.id });
-            apiClient.post('/analytics/cart', { productId: product.id, action: 'ADD' }).catch(() => {});
-        } catch (err) {
-            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
-        }
-    };
-
-    const title = product.title || product.name;
-
-    return (
-        <div className="bg-heritage-cream border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 flex flex-col h-full">
-            <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] md:aspect-[4/5] bg-heritage-beige overflow-hidden shrink-0">
-                {product.image ? (
-                    <img
-                        src={product.image}
-                        alt={title}
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
-                    />
-                ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/40 bg-heritage-beige">
-                        <Gem size={32} strokeWidth={1} className="md:w-12 md:h-12" />
-                    </div>
-                )}
-
-                {/* Wishlist Button - Prevent propagation */}
-                <button
-                    onClick={handleWishlistToggle}
-                    className={`absolute top-2 right-2 md:top-4 md:right-4 p-1.5 md:p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm transition-all duration-300 z-10 ${inWishlist ? 'text-heritage-bronze' : 'text-heritage-charcoal/40 hover:text-heritage-bronze'}`}
-                >
-                    <Heart size={14} fill={inWishlist ? 'currentColor' : 'none'} className="md:w-[18px] md:h-[18px]" />
-                </button>
-
-            </Link>
-
-            <div className="p-3 md:p-6 bg-white flex flex-col flex-grow">
-                <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-3">
-                    <span className="text-[10px] md:text-xs text-heritage-bronze uppercase tracking-[0.1em] md:tracking-[0.15em] font-medium">{product.category}</span>
-                    {product.isVerified && (
-                        <span className="flex items-center gap-1 text-[9px] md:text-xs text-heritage-charcoal/60">
-                            <ShieldCheck size={9} className="md:w-3 md:h-3" /> Verified
-                        </span>
-                    )}
-                </div>
-                <Link to={`/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
-                    <h3 className="font-serif text-sm md:text-xl font-medium text-heritage-charcoal mb-0 leading-tight line-clamp-2">{title}</h3>
-                </Link>
-                <span className="text-heritage-gold-muted font-serif text-sm md:text-lg mt-auto pt-2 md:pt-4 mb-3 md:mb-4">₹{product.price?.toLocaleString()}</span>
-                
-                {/* Add to Cart / Sold Button */}
-                {product.status === 'Sold' ? (
-                    <div className="w-full py-2.5 md:py-3.5 text-[10px] md:text-sm uppercase tracking-[0.1em] md:tracking-[0.15em] flex items-center justify-center gap-2 bg-gray-100 text-gray-400 cursor-default">
-                        <XCircle size={14} className="md:w-4 md:h-4" />
-                        Sold
-                    </div>
-                ) : (
-                    <button
-                        onClick={inCart ? () => navigate('/cart') : handleAddToCart}
-                        disabled={addToCartMutation.isPending}
-                        className={`w-full py-2.5 md:py-3.5 text-[10px] md:text-sm uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-2 ${inCart
-                            ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
-                            : 'bg-black text-white hover:bg-luxury-gold'
-                            }`}
-                    >
-                        <ShoppingBag size={14} className="md:w-4 md:h-4" />
-                        {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart →' : 'Add to Cart'}
-                    </button>
-                )}
-            </div>
-        </div>
-    );
-};
 
 // Standard Product Card Component (Archive-style)
 const ArchiveProductCard = ({ product }) => {
@@ -330,10 +220,7 @@ const Category = () => {
         if (page < totalPages) setPage((p) => p + 1);
     };
 
-    // Get top 3 most expensive as "Most Rare" featured products
-    const featuredProducts = [...allProducts]
-        .sort((a, b) => (b.price || 0) - (a.price || 0))
-        .slice(0, 3);
+
 
     const productsRef = useRef(null);
 
@@ -448,36 +335,6 @@ const Category = () => {
                 </div>
             </section>
 
-            {/* "Most Rare" Featured Section */}
-            {
-                featuredProducts.length > 0 && (
-                    <section className="py-10 md:py-20 px-4 md:px-6 bg-heritage-cream">
-                        <div className="container mx-auto max-w-6xl">
-                            <div className="text-center mb-6 md:mb-12">
-                                <div className="flex items-center justify-center gap-2 md:gap-4 mb-2 md:mb-4">
-                                    <div className="h-px w-6 md:w-12 bg-heritage-bronze/30"></div>
-                                    <Award size={16} strokeWidth={1} className="md:w-5 md:h-5 text-heritage-gold-muted" />
-                                    <div className="h-px w-6 md:w-12 bg-heritage-bronze/30"></div>
-                                </div>
-                                <h2 className="text-xl md:text-4xl font-serif text-heritage-charcoal font-normal tracking-wide mb-1 md:mb-2">
-                                    Most Rare
-                                </h2>
-                                <p className="text-heritage-bronze/70 font-sans font-light text-[11px] md:text-sm">
-                                    An exclusive, museum-style presentation
-                                </p>
-                            </div>
-
-                            <div className="flex sm:grid sm:grid-cols-3 gap-3 md:gap-8 overflow-x-auto sm:overflow-visible scrollbar-hide snap-x snap-mandatory -mx-4 md:mx-0 px-4 md:px-0 pb-2 sm:pb-0">
-                                {featuredProducts.map((product) => (
-                                    <div key={product.id} className="snap-start shrink-0 w-[75vw] sm:w-auto max-w-[320px] sm:max-w-none">
-                                        <FeaturedProductCard product={product} />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </section>
-                )
-            }
 
             {/* All Products Grid */}
             <section ref={productsRef} className="py-10 md:py-20 px-4 sm:px-6 bg-white">
