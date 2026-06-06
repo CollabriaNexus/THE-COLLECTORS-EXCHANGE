@@ -59,11 +59,15 @@ const CATEGORIES = [
 // Featured Product Card Component (Larger, Museum-style)
 const FeaturedProductCard = ({ product }) => {
     const user = getUser();
+    const navigate = useNavigate();
     const showToast = useToast();
     const { data: wishlistItems = [] } = useWishlist(user?.id);
     const addToWishlistMutation = useAddToWishlist();
     const removeFromWishlistMutation = useRemoveFromWishlist();
+    const { data: cartItems = [] } = useCart(user?.id);
+    const addToCartMutation = useAddToCart();
 
+    const inCart = cartItems.some(item => item.productId === product.id);
     const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
 
     const handleWishlistToggle = async (e) => {
@@ -79,6 +83,22 @@ const FeaturedProductCard = ({ product }) => {
             removeFromWishlistMutation.mutate({ userId: user.id, productId: product.id });
         } else {
             addToWishlistMutation.mutate({ userId: user.id, productId: product.id });
+        }
+    };
+
+    const handleAddToCart = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!user) {
+            showToast('Please sign in to add items to cart', 'error');
+            return;
+        }
+        if (inCart) return;
+        try {
+            await addToCartMutation.mutateAsync({ userId: user.id, productId: product.id });
+            apiClient.post('/analytics/cart', { productId: product.id, action: 'ADD' }).catch(() => {});
+        } catch (err) {
+            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
         }
     };
 
@@ -126,7 +146,27 @@ const FeaturedProductCard = ({ product }) => {
                 <Link to={`/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
                     <h3 className="font-serif text-sm md:text-xl font-medium text-heritage-charcoal mb-0 leading-tight line-clamp-2">{title}</h3>
                 </Link>
-                <span className="text-heritage-gold-muted font-serif text-sm md:text-lg mt-auto pt-2 md:pt-4">₹{product.price?.toLocaleString()}</span>
+                <span className="text-heritage-gold-muted font-serif text-sm md:text-lg mt-auto pt-2 md:pt-4 mb-3 md:mb-4">₹{product.price?.toLocaleString()}</span>
+                
+                {/* Add to Cart / Sold Button */}
+                {product.status === 'Sold' ? (
+                    <div className="w-full py-2.5 md:py-3.5 text-[10px] md:text-sm uppercase tracking-[0.1em] md:tracking-[0.15em] flex items-center justify-center gap-2 bg-gray-100 text-gray-400 cursor-default">
+                        <XCircle size={14} className="md:w-4 md:h-4" />
+                        Sold
+                    </div>
+                ) : (
+                    <button
+                        onClick={inCart ? () => navigate('/cart') : handleAddToCart}
+                        disabled={addToCartMutation.isPending}
+                        className={`w-full py-2.5 md:py-3.5 text-[10px] md:text-sm uppercase tracking-[0.1em] md:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-2 ${inCart
+                            ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
+                            : 'bg-black text-white hover:bg-luxury-gold'
+                            }`}
+                    >
+                        <ShoppingBag size={14} className="md:w-4 md:h-4" />
+                        {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart →' : 'Add to Cart'}
+                    </button>
+                )}
             </div>
         </div>
     );
