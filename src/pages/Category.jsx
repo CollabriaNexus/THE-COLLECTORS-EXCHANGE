@@ -410,7 +410,7 @@ const Category = () => {
                         })}
                     </div>
                 </div>
-            </section> >
+            </section>
 
             {/* "Most Rare" Featured Section */}
             {

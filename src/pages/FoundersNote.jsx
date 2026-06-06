@@ -68,7 +68,6 @@ const FoundersNote = () => {
                         </p>
                     </div>
                 </section>
-            </div>
         </div>
     );
 };
