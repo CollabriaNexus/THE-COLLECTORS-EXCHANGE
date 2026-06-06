@@ -3,8 +3,10 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2, Sparkles, Box } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
-import { addToCart, isInCart, getUser } from '../utils/storage';
+import { getUser } from '../utils/storage';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
+import { useCart, useAddToCart } from '../hooks/api/useCart';
+import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import Bullet from '../components/Bullet';
 import exchangeHeroBg from '../assets/The_Exchange_Modern.png';
@@ -137,9 +139,10 @@ const ArchiveProductCard = ({ product }) => {
     const { data: wishlistItems = [] } = useWishlist(user?.id);
     const addToWishlistMutation = useAddToWishlist();
     const removeFromWishlistMutation = useRemoveFromWishlist();
-    const [inCart, setInCart] = useState(() => isInCart(product.id));
+    const { data: cartItems = [] } = useCart(user?.id);
+    const addToCartMutation = useAddToCart();
 
-    // Derived state for wishlist
+    const inCart = cartItems.some(item => item.productId === product.id);
     const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
 
     const handleWishlistToggle = async (e) => {
@@ -158,12 +161,19 @@ const ArchiveProductCard = ({ product }) => {
         }
     };
 
-    const handleAddToCart = (e) => {
+    const handleAddToCart = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!inCart) {
-            addToCart(product.id);
-            setInCart(true);
+        if (!user) {
+            showToast('Please sign in to add items to cart', 'error');
+            return;
+        }
+        if (inCart) return;
+        try {
+            await addToCartMutation.mutateAsync({ userId: user.id, productId: product.id });
+            apiClient.post('/analytics/cart', { productId: product.id, action: 'ADD' }).catch(() => {});
+        } catch (err) {
+            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
         }
     };
 
@@ -232,14 +242,14 @@ const ArchiveProductCard = ({ product }) => {
                 ) : (
                     <button
                         onClick={handleAddToCart}
-                        disabled={inCart}
+                        disabled={inCart || addToCartMutation.isPending}
                         className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${inCart
                             ? 'bg-heritage-beige text-heritage-charcoal/50 cursor-default'
                             : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
                             }`}
                     >
                         <ShoppingBag size={10} className="sm:w-[14px] sm:h-[14px]" />
-                        {inCart ? 'In Cart' : 'Add to Cart'}
+                        {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart' : 'Add to Cart'}
                     </button>
                 )}
             </div>
