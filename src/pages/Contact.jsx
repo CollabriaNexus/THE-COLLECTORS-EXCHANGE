@@ -47,20 +47,20 @@ const Contact = () => {
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-8 mb-12">
-                    <div className="bg-white p-6 text-center shadow-sm border border-gray-100">
+                    <div className="bg-white p-6 text-center shadow-sm border border-gray-100 flex flex-col justify-center">
                         <Mail size={28} className="mx-auto text-luxury-gold mb-3" />
                         <h3 className="font-serif font-medium mb-2">Email</h3>
-                        <a href="mailto:support@collectorsexchange.in" className="text-sm text-gray-600 hover:text-luxury-gold">support@collectorsexchange.in</a>
+                        <a href="mailto:support@collectorsexchange.in" className="text-sm text-gray-600 hover:text-luxury-gold break-all">support@collectorsexchange.in</a>
                     </div>
-                    <div className="bg-white p-6 text-center shadow-sm border border-gray-100">
+                    <div className="bg-white p-6 text-center shadow-sm border border-gray-100 flex flex-col justify-center">
                         <MessageSquare size={28} className="mx-auto text-luxury-gold mb-3" />
                         <h3 className="font-serif font-medium mb-2">Response Time</h3>
                         <p className="text-sm text-gray-600">Typically within 24–48 hours</p>
                     </div>
-                    <div className="bg-white p-6 text-center shadow-sm border border-gray-100">
+                    <div className="bg-white p-6 text-center shadow-sm border border-gray-100 flex flex-col justify-center">
                         <Mail size={28} className="mx-auto text-luxury-gold mb-3" />
                         <h3 className="font-serif font-medium mb-2">Partnerships</h3>
-                        <a href="mailto:partnerships@thecollectors.exchange" className="text-sm text-gray-600 hover:text-luxury-gold">partnerships@thecollectors.exchange</a>
+                        <a href="mailto:partnerships@thecollectors.exchange" className="text-sm text-gray-600 hover:text-luxury-gold break-all">partnerships@thecollectors.exchange</a>
                     </div>
                 </div>
 
