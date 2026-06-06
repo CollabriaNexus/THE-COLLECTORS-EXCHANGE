@@ -1,31 +1,51 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, ShieldCheck } from 'lucide-react';
-import { addToWishlist, removeFromWishlist, isInWishlist, addToCart, isInCart } from '../utils/storage';
+import { getUser } from '../utils/storage';
+import { useCart, useAddToCart } from '../hooks/api/useCart';
+import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
+import { useToast } from './Toast';
 
 const ProductCard = ({ product, onUpdate }) => {
-    const [inWishlist, setInWishlist] = useState(() => isInWishlist(product.id));
-    const [inCart, setInCart] = useState(() => isInCart(product.id));
+    const user = getUser();
+    const showToast = useToast();
+    const { data: cartItems = [] } = useCart(user?.id);
+    const addToCartMutation = useAddToCart();
+    const { data: wishlistItems = [] } = useWishlist(user?.id);
+    const addToWishlistMutation = useAddToWishlist();
+    const removeFromWishlistMutation = useRemoveFromWishlist();
 
-    const handleWishlistToggle = (e) => {
+    const inCart = cartItems.some(item => item.productId === product.id);
+    const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
+
+    const handleWishlistToggle = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (inWishlist) {
-            removeFromWishlist(product.id);
-            setInWishlist(false);
-        } else {
-            addToWishlist(product.id);
-            setInWishlist(true);
+
+        if (!user) {
+            showToast('Please sign in to add to wishlist', 'error');
+            return;
         }
-        if (onUpdate) onUpdate();
+
+        if (inWishlist) {
+            removeFromWishlistMutation.mutate({ userId: user.id, productId: product.id });
+        } else {
+            addToWishlistMutation.mutate({ userId: user.id, productId: product.id });
+        }
     };
 
-    const handleAddToCart = (e) => {
+    const handleAddToCart = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!inCart) {
-            addToCart(product.id);
-            setInCart(true);
+        if (!user) {
+            showToast('Please sign in to add items to cart', 'error');
+            return;
+        }
+        if (inCart) return;
+        try {
+            await addToCartMutation.mutateAsync({ userId: user.id, productId: product.id });
+        } catch (err) {
+            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
         }
     };
 
@@ -46,7 +66,6 @@ const ProductCard = ({ product, onUpdate }) => {
                     </div>
                 )}
 
-                {/* Wishlist Button - Keep outside Link to prevent navigation when clicked */}
                 <button
                     onClick={handleWishlistToggle}
                     className={`absolute top-4 right-4 p-2 bg-white rounded-full shadow-sm transition-colors z-10 ${inWishlist ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
@@ -54,7 +73,6 @@ const ProductCard = ({ product, onUpdate }) => {
                     <Heart size={16} fill={inWishlist ? 'currentColor' : 'none'} />
                 </button>
 
-                {/* Verified Badge */}
                 {product.isVerified && (
                     <div className="absolute bottom-4 left-4 bg-black text-white text-xs px-3 py-1 font-sans tracking-widest uppercase flex items-center gap-1">
                         <ShieldCheck size={12} /> Verified
@@ -71,17 +89,16 @@ const ProductCard = ({ product, onUpdate }) => {
                     <p className="text-luxury-gold font-sans font-semibold mb-4">₹{product.price?.toLocaleString()}</p>
                 </div>
 
-                {/* Add to Cart Button */}
                 <button
                     onClick={handleAddToCart}
-                    disabled={inCart}
+                    disabled={inCart || addToCartMutation.isPending}
                     className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mt-auto ${inCart
                         ? 'bg-gray-200 text-gray-500 cursor-default'
                         : 'bg-black text-white hover:bg-luxury-gold'
                         }`}
                 >
                     <ShoppingBag size={16} />
-                    {inCart ? 'In Cart' : 'Add to Cart'}
+                    {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart' : 'Add to Cart'}
                 </button>
             </div>
         </div>
