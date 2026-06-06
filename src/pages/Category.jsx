@@ -127,11 +127,6 @@ const FeaturedProductCard = ({ product }) => {
                     <Heart size={14} fill={inWishlist ? 'currentColor' : 'none'} className="md:w-[18px] md:h-[18px]" />
                 </button>
 
-                {/* Rarity Badge */}
-                <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] md:text-xs px-2 py-1 md:px-4 md:py-2 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase flex items-center gap-1 md:gap-2">
-                    <Award size={10} strokeWidth={1.5} className="md:w-[14px] md:h-[14px]" />
-                    <span>Most Rare</span>
-                </div>
             </Link>
 
             <div className="p-3 md:p-6 bg-white flex flex-col flex-grow">
