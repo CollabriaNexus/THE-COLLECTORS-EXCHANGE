@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { getUser } from '../utils/storage';
 import { useCart, useAddToCart } from '../hooks/api/useCart';
@@ -8,6 +8,7 @@ import { useToast } from './Toast';
 
 const ProductCard = ({ product, onUpdate }) => {
     const user = getUser();
+    const navigate = useNavigate();
     const showToast = useToast();
     const { data: cartItems = [] } = useCart(user?.id);
     const addToCartMutation = useAddToCart();
@@ -90,15 +91,15 @@ const ProductCard = ({ product, onUpdate }) => {
                 </div>
 
                 <button
-                    onClick={handleAddToCart}
-                    disabled={inCart || addToCartMutation.isPending}
+                    onClick={inCart ? () => navigate('/cart') : handleAddToCart}
+                    disabled={addToCartMutation.isPending}
                     className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mt-auto ${inCart
-                        ? 'bg-gray-200 text-gray-500 cursor-default'
+                        ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                         : 'bg-black text-white hover:bg-luxury-gold'
                         }`}
                 >
                     <ShoppingBag size={16} />
-                    {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart' : 'Add to Cart'}
+                    {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart →' : 'Add to Cart'}
                 </button>
             </div>
         </div>

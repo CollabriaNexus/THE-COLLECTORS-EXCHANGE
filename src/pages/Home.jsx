@@ -1,13 +1,81 @@
 import React, { useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
-import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon, ShoppingBag } from 'lucide-react';
 import Bullet from '../components/Bullet';
-import heroVideo from '../assets/hero_section.mp4';
 import heroPoster from '../assets/hero-background.png';
 import verificationAuthenticity from '../assets/verification_authenticity.png';
 import { useProducts } from '../hooks/api/useProducts';
 import { useTestimonials } from '../hooks/api/useTestimonials';
+import { useCart, useAddToCart } from '../hooks/api/useCart';
+import { getUser } from '../utils/storage';
+import { useToast } from '../components/Toast';
+
+const FeaturedProductCard = ({ product }) => {
+    const user = getUser();
+    const navigate = useNavigate();
+    const showToast = useToast();
+    const { data: cartItems = [] } = useCart(user?.id);
+    const addToCartMutation = useAddToCart();
+    const inCart = cartItems.some(item => item.productId === product.id);
+    const title = product.title || product.name;
+
+    const handleAddToCart = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!user) {
+            showToast('Please sign in to add items to cart', 'error');
+            return;
+        }
+        if (inCart) return;
+        try {
+            await addToCartMutation.mutateAsync({ userId: user.id, productId: product.id });
+        } catch (err) {
+            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
+        }
+    };
+
+    return (
+        <div className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 snap-start flex flex-col">
+            <Link to={`/product/${product.id}`} className="block">
+                <div className="relative aspect-[4/5] bg-heritage-beige overflow-hidden">
+                    {product.image ? (
+                        <img loading="lazy" src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/40 bg-heritage-beige">
+                            <Gem size={48} strokeWidth={1} />
+                        </div>
+                    )}
+                    <div className="absolute bottom-4 left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-xs px-4 py-2 font-sans tracking-[0.15em] uppercase flex items-center gap-2">
+                        <Award size={14} strokeWidth={1.5} />
+                        <span>Featured</span>
+                    </div>
+                </div>
+            </Link>
+            <div className="p-5 flex flex-col flex-grow">
+                <div className="flex-grow">
+                    <span className="text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">{product.category}</span>
+                    <Link to={`/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
+                        <h3 className="font-serif text-lg font-medium text-heritage-charcoal mb-1 leading-tight mt-1">{title}</h3>
+                    </Link>
+                    <p className="text-heritage-gold-muted font-serif text-lg font-medium mt-2">₹{product.price?.toLocaleString()}</p>
+                </div>
+                <button
+                    onClick={inCart ? () => navigate('/cart') : handleAddToCart}
+                    disabled={addToCartMutation.isPending}
+                    className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mt-4 ${
+                        inCart
+                            ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
+                            : 'bg-black text-white hover:bg-luxury-gold'
+                    }`}
+                >
+                    <ShoppingBag size={16} />
+                    {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart →' : 'Add to Cart'}
+                </button>
+            </div>
+        </div>
+    );
+};
 
 const FeaturedProductsCarousel = () => {
     const trackRef = useRef(null);
@@ -22,35 +90,9 @@ const FeaturedProductsCarousel = () => {
 
     if (isLoading || products.length === 0) return null;
 
-    const cards = products.map((product) => {
-        const title = product.title || product.name;
-        return (
-            <Link
-                key={product.id}
-                to={`/product/${product.id}`}
-                className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 snap-start"
-            >
-                <div className="relative aspect-[4/5] bg-heritage-beige overflow-hidden">
-                    {product.image ? (
-                        <img loading="lazy" src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
-                    ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/40 bg-heritage-beige">
-                            <Gem size={48} strokeWidth={1} />
-                        </div>
-                    )}
-                    <div className="absolute bottom-4 left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-xs px-4 py-2 font-sans tracking-[0.15em] uppercase flex items-center gap-2">
-                        <Award size={14} strokeWidth={1.5} />
-                        <span>Featured</span>
-                    </div>
-                </div>
-                <div className="p-5">
-                    <span className="text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">{product.category}</span>
-                    <h3 className="font-serif text-lg font-medium text-heritage-charcoal mb-1 leading-tight mt-1">{title}</h3>
-                    <p className="text-heritage-gold-muted font-serif text-lg font-medium mt-2">₹{product.price?.toLocaleString()}</p>
-                </div>
-            </Link>
-        );
-    });
+    const cards = products.map((product) => (
+        <FeaturedProductCard key={product.id} product={product} />
+    ));
 
     return (
         <section className="py-16 sm:py-20 px-6 bg-heritage-cream overflow-hidden">
@@ -97,26 +139,15 @@ const FeaturedProductsCarousel = () => {
 };
 
 const Home = () => {
-    const homeVideoRef = useRef(null);
-
-    const handleVideoEnded = () => {
-        window.dispatchEvent(new CustomEvent('homeVideoEnded'));
-    };
-
     return (
         <div className="flex flex-col">
             <Helmet><title>The Collectors Exchange — Luxury Pre-Owned & Rare Collectibles</title></Helmet>
             {/* Hero Section */}
             <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden">
-                <video
-                    ref={homeVideoRef}
-                    src={heroVideo}
-                    poster={heroPoster}
+                <img
+                    src={heroPoster}
+                    alt="The Collectors Exchange — Luxury Collectibles"
                     className="absolute inset-0 w-full h-full object-cover object-top"
-                    autoPlay
-                    muted
-                    playsInline
-                    onEnded={handleVideoEnded}
                 />
                 <div className="absolute inset-0 bg-black/40"></div>
 

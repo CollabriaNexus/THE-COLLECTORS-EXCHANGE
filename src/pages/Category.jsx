@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
-import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2, Sparkles, Box } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2, Sparkles, Box, XCircle } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
 import { getUser } from '../utils/storage';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
@@ -135,6 +135,7 @@ const FeaturedProductCard = ({ product }) => {
 // Standard Product Card Component (Archive-style)
 const ArchiveProductCard = ({ product }) => {
     const user = getUser();
+    const navigate = useNavigate();
     const showToast = useToast();
     const { data: wishlistItems = [] } = useWishlist(user?.id);
     const addToWishlistMutation = useAddToWishlist();
@@ -241,15 +242,15 @@ const ArchiveProductCard = ({ product }) => {
                     </div>
                 ) : (
                     <button
-                        onClick={handleAddToCart}
-                        disabled={inCart || addToCartMutation.isPending}
+                        onClick={inCart ? () => navigate('/cart') : handleAddToCart}
+                        disabled={addToCartMutation.isPending}
                         className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${inCart
-                            ? 'bg-heritage-beige text-heritage-charcoal/50 cursor-default'
+                            ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                             : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
                             }`}
                     >
                         <ShoppingBag size={10} className="sm:w-[14px] sm:h-[14px]" />
-                        {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart' : 'Add to Cart'}
+                        {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart →' : 'Add to Cart'}
                     </button>
                 )}
             </div>
