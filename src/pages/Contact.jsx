@@ -50,7 +50,7 @@ const Contact = () => {
                     <div className="bg-white p-6 text-center shadow-sm border border-gray-100 flex flex-col justify-center min-w-0">
                         <Mail size={28} className="mx-auto text-luxury-gold mb-3" />
                         <h3 className="font-serif font-medium mb-2">Email</h3>
-                        <a href="mailto:support@collectorsexchange.in" className="text-sm text-gray-600 hover:text-luxury-gold break-words">support@collectorsexchange.in</a>
+                        <a href="mailto:support@collectorsexchange.in" className="text-sm text-gray-600 hover:text-luxury-gold break-all">support@collectorsexchange.in</a>
                     </div>
                     <div className="bg-white p-6 text-center shadow-sm border border-gray-100 flex flex-col justify-center min-w-0">
                         <MessageSquare size={28} className="mx-auto text-luxury-gold mb-3" />
@@ -60,7 +60,7 @@ const Contact = () => {
                     <div className="bg-white p-6 text-center shadow-sm border border-gray-100 flex flex-col justify-center min-w-0">
                         <Mail size={28} className="mx-auto text-luxury-gold mb-3" />
                         <h3 className="font-serif font-medium mb-2">Partnerships</h3>
-                        <a href="mailto:partnerships@thecollectors.exchange" className="text-sm text-gray-600 hover:text-luxury-gold break-words">partnerships@thecollectors.exchange</a>
+                        <a href="mailto:partnerships@thecollectors.exchange" className="text-sm text-gray-600 hover:text-luxury-gold break-all">partnerships@thecollectors.exchange</a>
                     </div>
                 </div>
 
