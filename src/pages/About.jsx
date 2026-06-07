@@ -36,20 +36,16 @@ const About = () => {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
-                            <button className="px-6 sm:px-10 py-3 sm:py-4 bg-white text-heritage-charcoal text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold shadow-heritage hover:bg-luxury-gold hover:text-white transition-all duration-300 rounded-sm w-full sm:w-auto">
+                            <Link to="/category" className="px-6 sm:px-10 py-3 sm:py-4 bg-white text-heritage-charcoal text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold shadow-heritage hover:bg-luxury-gold hover:text-white transition-all duration-300 rounded-sm w-full sm:w-auto text-center">
                                 Explore The Exchange
-                            </button>
-                            <button className="px-6 sm:px-10 py-3 sm:py-4 bg-transparent border border-white/30 text-white text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold hover:bg-white hover:text-heritage-charcoal transition-all duration-300 rounded-sm w-full sm:w-auto">
+                            </Link>
+                            <Link to="/auction" className="px-6 sm:px-10 py-3 sm:py-4 bg-transparent border border-white/30 text-white text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold hover:bg-white hover:text-heritage-charcoal transition-all duration-300 rounded-sm w-full sm:w-auto text-center">
                                 View Auctions
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
 
-                <div className="hidden sm:flex absolute bottom-12 left-1/2 -translate-x-1/2 flex-col items-center gap-4 opacity-50">
-                    <span className="text-[10px] uppercase tracking-[0.8em] text-luxury-gold font-bold">Scroll</span>
-                    <div className="w-px h-20 bg-gradient-to-b from-luxury-gold to-transparent animate-pulse"></div>
-                </div>
             </section>
 
             {/* Why We Do It & Mission */}

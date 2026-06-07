@@ -297,11 +297,6 @@ const Category = () => {
                         </div>
                     </div>
 
-                    {/* Scroll Indicator - hidden on mobile */}
-                    <div className="hidden sm:flex absolute bottom-10 left-1/2 -translate-x-1/2 flex-col items-center gap-3 opacity-50">
-                        <span className="text-[9px] uppercase tracking-[0.8em] text-[#D4AF37] font-bold mb-1">Scroll</span>
-                        <div className="w-px h-20 bg-gradient-to-b from-[#D4AF37] to-transparent"></div>
-                    </div>
                 </div>
             </section>
 
