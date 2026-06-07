@@ -2,6 +2,7 @@ import React from 'react';
 import { Landmark, ShieldCheck, History, Sparkles } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import collectorsStudy from '../assets/collectors_study.png';
+import artisanAtWork from '../assets/artisan2.png';
 
 const InstitutionalIcon = () => (
     <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
@@ -111,7 +112,7 @@ const Vision = () => {
                                     </ul>
                                 </div>
                                 <p className="font-serif italic text-lg md:text-xl text-[#1A1816] pt-2 flex items-center gap-3">
-                                    <div className="w-8 h-px bg-[#C9A962]/40"></div>
+                                    <span className="w-8 h-px bg-[#C9A962]/40 inline-block"></span>
                                     Here, collectors are custodians of history.
                                 </p>
                             </div>
@@ -186,7 +187,7 @@ const Vision = () => {
                                 </div>
                                 <p className="font-serif italic text-lg md:text-xl text-[#1A1816] pt-2 flex items-center justify-end gap-3 text-right">
                                     By safeguarding authenticity, we ensure that value flows forward.
-                                    <div className="w-8 h-px bg-[#C9A962]/40"></div>
+                                    <span className="w-8 h-px bg-[#C9A962]/40 inline-block"></span>
                                 </p>
                             </div>
                         </div>
