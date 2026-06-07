@@ -48,3 +48,18 @@ export const uploadProductImage = async (file) => {
         throw error;
     }
 };
+
+export const uploadGalleryImage = async (file) => {
+    try {
+        if (!file) throw new Error('No file selected');
+        const fileExt = file.name.split('.').pop();
+        const fileName = `gallery/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const { error } = await supabase.storage.from('product-images').upload(fileName, file);
+        if (error) throw error;
+        const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
+        return publicUrl;
+    } catch (error) {
+        console.error('Error uploading gallery image:', error);
+        throw error;
+    }
+};

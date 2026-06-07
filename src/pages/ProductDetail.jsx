@@ -39,7 +39,11 @@ const ProductDetail = () => {
             clearTimeout(cartFeedbackTimer.current);
             cartFeedbackTimer.current = setTimeout(() => setCartFeedback(false), 2000);
         } catch (err) {
-            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
+            if (err?.response?.status === 401) {
+                showToast('Please sign in to add items to cart', 'error');
+            } else {
+                showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
+            }
         }
     };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, XCircle, Package, Eye, EyeOff, Clock, MessageSquare, Trash2, Plus, Edit3 } from 'lucide-react';
-import { useProductDetail, useApproveProduct, useRejectProduct, useReviewProduct, useUpdateAuthenticityStatus, useDeleteProduct, useUpdateProduct, useBrands } from '../hooks/api/useProducts';
+import { ArrowLeft, CheckCircle, XCircle, Package, Eye, EyeOff, Clock, MessageSquare, Trash2, Plus, Edit3, BadgeIndianRupee } from 'lucide-react';
+import { useProductDetail, useApproveProduct, useRejectProduct, useReviewProduct, useUpdateAuthenticityStatus, useDeleteProduct, useUpdateProduct, useBrands, useMarkProductAsSold } from '../hooks/api/useProducts';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
@@ -31,6 +31,19 @@ function ProductDetail() {
     const updateStatusMutation = useUpdateAuthenticityStatus();
     const deleteMutation = useDeleteProduct();
     const updateProductMutation = useUpdateProduct();
+    const markAsSoldMutation = useMarkProductAsSold();
+
+    const handleMarkAsSold = async () => {
+        if (!window.confirm(`Mark "${product.title}" as sold? This will unpublish the listing.`)) return;
+        setError('');
+        try {
+            await markAsSoldMutation.mutateAsync(id);
+            setSuccess('Product marked as sold');
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Failed to mark as sold');
+        }
+    };
 
     const handleReview = async () => {
         setError('');
@@ -414,6 +427,17 @@ function ProductDetail() {
                                     className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-700 py-3 rounded-md font-medium hover:bg-amber-100 transition-colors"
                                 >
                                     Edit Brand & Category
+                                </button>
+                                <button
+                                    onClick={handleMarkAsSold}
+                                    disabled={markAsSoldMutation.isPending || product.status === 'Sold'}
+                                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-md font-medium transition-colors ${product.status === 'Sold'
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                    }`}
+                                >
+                                    <BadgeIndianRupee size={18} />
+                                    {markAsSoldMutation.isPending ? 'Updating...' : product.status === 'Sold' ? 'Already Sold' : 'Mark as Sold'}
                                 </button>
                                 <button
                                     onClick={() => setShowDeleteModal(true)}

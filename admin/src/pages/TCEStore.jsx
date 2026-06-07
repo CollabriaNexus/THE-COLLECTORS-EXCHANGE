@@ -180,7 +180,7 @@ const TCEStore = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                                        Listing Price (USD) <span className="text-luxury-gold">*</span>
+                                        Listing Price (₹) <span className="text-luxury-gold">*</span>
                                     </label>
                                     <input type="number" required min="1" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold" />
                                 </div>

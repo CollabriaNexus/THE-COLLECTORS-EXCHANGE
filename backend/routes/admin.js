@@ -34,7 +34,7 @@ export default async function adminRoutes(fastify) {
             prisma.$queryRaw`
                 SELECT DATE(o."createdAt") as date, SUM(o."totalAmount") as revenue
                 FROM "Order" o
-                WHERE o."paymentStatus" = 'Paid' AND o."createdAt" >= NOW() - INTERVAL '30 days'
+                WHERE o."paymentStatus" = 'Paid'::"PaymentStatus" AND o."createdAt" >= NOW() - INTERVAL '30 days'
                 GROUP BY DATE(o."createdAt")
                 ORDER BY date ASC
             `,
@@ -322,13 +322,6 @@ export default async function adminRoutes(fastify) {
                         type: true,
                         status: true,
                         maxListings: true,
-                        subscription: {
-                            select: {
-                                plan: true,
-                                status: true,
-                                currentPeriodEnd: true,
-                            }
-                        }
                     }
                 }
             },
@@ -348,7 +341,7 @@ export default async function adminRoutes(fastify) {
                 products: true,
                 cart: { include: { product: true } },
                 wishlist: { include: { product: true } },
-                vendor: { include: { subscription: true } },
+                vendor: true,
             },
         });
 
@@ -359,10 +352,14 @@ export default async function adminRoutes(fastify) {
         return user;
     });
 
-    // Whitelist Vendor (manual subscription bypass / upgrade)
-    fastify.post('/vendor/:userId/whitelist', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+    // Toggle vendor type (BULK / SINGLE)
+    fastify.patch('/vendor/:userId/type', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
         const { userId } = request.params;
-        const { plan } = request.body || {};
+        const { type } = request.body || {};
+
+        if (!type || !['SINGLE', 'BULK'].includes(type)) {
+            return reply.status(400).send({ error: 'Vendor type must be SINGLE or BULK' });
+        }
 
         const user = await prisma.user.findUnique({
             where: { id: userId }
@@ -371,57 +368,33 @@ export default async function adminRoutes(fastify) {
             return reply.status(404).send({ error: 'User not found' });
         }
 
-        const updatedVendor = await prisma.$transaction(async (tx) => {
-            // Ensure vendor record exists
-            const v = await tx.vendor.upsert({
-                where: { userId },
-                update: {
-                    type: 'BULK',
-                    maxListings: 999999,
-                    status: 'APPROVED',
-                },
-                create: {
-                    userId,
-                    type: 'BULK',
-                    maxListings: 999999,
-                    status: 'APPROVED',
-                }
-            });
-
-            // Upsert the subscription
-            const currentPeriodEnd = new Date();
-            currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 10); // 10 years bypass
-
-            await tx.vendorSubscription.upsert({
-                where: { vendorId: v.id },
-                update: {
-                    plan: plan || 'CUSTOM_APPROVED',
-                    status: 'active',
-                    currentPeriodEnd,
-                },
-                create: {
-                    vendorId: v.id,
-                    plan: plan || 'CUSTOM_APPROVED',
-                    status: 'active',
-                    currentPeriodEnd,
-                }
-            });
-
-            // Log action
-            await tx.auditLog.create({
-                data: {
-                    adminId: request.dbUser?.id || 'SYSTEM',
-                    action: 'WHITELIST_VENDOR',
-                    targetType: 'Vendor',
-                    targetId: v.id,
-                    details: `Whitelisted user ${userId} to Bulk Vendor via plan ${plan || 'CUSTOM_APPROVED'}`
-                }
-            });
-
-            return v;
+        const updatedVendor = await prisma.vendor.upsert({
+            where: { userId },
+            update: {
+                type,
+                maxListings: type === 'BULK' ? 999999 : 5,
+                status: 'APPROVED',
+            },
+            create: {
+                userId,
+                type,
+                maxListings: type === 'BULK' ? 999999 : 5,
+                status: 'APPROVED',
+            }
         });
 
-        return { message: 'Vendor whitelisted successfully', vendor: updatedVendor };
+        // Log action
+        await prisma.auditLog.create({
+            data: {
+                adminId: request.dbUser?.id || 'SYSTEM',
+                action: 'TOGGLE_VENDOR_TYPE',
+                targetType: 'Vendor',
+                targetId: updatedVendor.id,
+                details: `Set vendor type to ${type} for user ${userId}`
+            }
+        });
+
+        return { message: `Vendor type set to ${type}`, vendor: updatedVendor };
     });
 
 
@@ -605,6 +578,30 @@ export default async function adminRoutes(fastify) {
         });
 
         return { message: 'Product rejected', product: updatedProduct };
+    });
+
+    // Mark product as sold — admin only
+    fastify.patch('/products/:id/sold', { preValidation: [fastify.authenticateSuperAdmin] }, async (request, reply) => {
+        const { id } = request.params;
+
+        const existingProduct = await prisma.product.findUnique({ where: { id } });
+        if (!existingProduct) return reply.status(404).send({ error: 'Product not found' });
+        if (existingProduct.status === 'Sold') return reply.status(422).send({ error: 'Product is already sold' });
+
+        const updatedProduct = await prisma.product.update({
+            where: { id },
+            data: { status: 'Sold', isPublished: false },
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: updatedProduct.sellerId,
+                title: 'Item Sold',
+                message: `Your item "${updatedProduct.title}" has been marked as sold.`,
+            }
+        });
+
+        return { message: 'Product marked as sold', product: updatedProduct };
     });
 
     // Update authenticity status — super admin only
@@ -824,6 +821,97 @@ export default async function adminRoutes(fastify) {
 
     // ============== PAYOUT MANAGEMENT ==============
 
+    // Auto-create payouts for delivered items (7+ days after delivery)
+    fastify.post('/payouts/auto-create', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
+        const adminUser = request.dbUser;
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        // Find delivered orders older than 7 days
+        const deliveredOrders = await prisma.order.findMany({
+            where: {
+                status: 'Delivered',
+                updatedAt: { lte: sevenDaysAgo },
+                paymentStatus: 'Paid',
+            },
+            include: {
+                items: {
+                    include: { product: { select: { sellerId: true } } }
+                }
+            }
+        });
+
+        // Group items by vendor
+        const vendorItems = {};
+        for (const order of deliveredOrders) {
+            for (const item of order.items) {
+                const sellerId = item.product.sellerId;
+                if (!vendorItems[sellerId]) vendorItems[sellerId] = [];
+                vendorItems[sellerId].push(item);
+            }
+        }
+
+        const created = [];
+        const skipped = [];
+
+        for (const [sellerId, items] of Object.entries(vendorItems)) {
+            const vendor = await prisma.vendor.findUnique({ where: { userId: sellerId } });
+            if (!vendor) { skipped.push({ sellerId, reason: 'No vendor profile' }); continue; }
+
+            const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            if (totalAmount <= 0) { skipped.push({ sellerId, reason: 'Zero amount' }); continue; }
+
+            // Check for existing pending/paid payout in recent 30 days to avoid duplicates
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const existingPayout = await prisma.payout.findFirst({
+                where: {
+                    vendorId: vendor.id,
+                    createdAt: { gte: thirtyDaysAgo },
+                    status: { in: ['PENDING', 'PROCESSING', 'PAID'] }
+                }
+            });
+            if (existingPayout) { skipped.push({ sellerId, reason: 'Recent payout exists' }); continue; }
+
+            const payout = await prisma.payout.create({
+                data: {
+                    vendorId: vendor.id,
+                    amount: totalAmount,
+                    status: 'PENDING',
+                    periodStart: thirtyDaysAgo,
+                    periodEnd: new Date(),
+                    note: 'Auto-created from delivered items (7+ days post-delivery)',
+                }
+            });
+
+            await prisma.notification.create({
+                data: {
+                    userId: sellerId,
+                    title: 'Payout Ready',
+                    message: `A payout of ₹${totalAmount.toLocaleString('en-IN')} has been created for your delivered items and is pending admin release.`,
+                }
+            });
+
+            await prisma.auditLog.create({
+                data: {
+                    adminId: adminUser?.id || 'SYSTEM',
+                    action: 'AUTO_CREATE_PAYOUT',
+                    targetType: 'Payout',
+                    targetId: payout.id,
+                    details: `Auto-created payout of ${totalAmount} for vendor ${vendor.id} (${items.length} items)`,
+                }
+            });
+
+            created.push({ vendorId: vendor.id, amount: totalAmount, payoutId: payout.id });
+        }
+
+        return {
+            message: `Auto-created ${created.length} payout(s), skipped ${skipped.length}`,
+            created,
+            skipped,
+        };
+    });
+
     // Create a payout for a vendor
     fastify.post('/payouts', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
         const { vendorId, amount, periodStart, periodEnd, note } = CreatePayoutSchema.parse(request.body);
@@ -858,7 +946,7 @@ export default async function adminRoutes(fastify) {
             data: {
                 userId: vendor.userId,
                 title: 'New Payout Created',
-                message: `A payout of $${parseFloat(amount).toLocaleString()} has been created for ${new Date(periodStart).toLocaleDateString()} — ${new Date(periodEnd).toLocaleDateString()}.`,
+                message: `A payout of ₹${parseFloat(amount).toLocaleString('en-IN')} has been created for ${new Date(periodStart).toLocaleDateString()} — ${new Date(periodEnd).toLocaleDateString()}.`,
             }
         });
 
@@ -894,7 +982,7 @@ export default async function adminRoutes(fastify) {
 
         const statusMessages = {
             PROCESSING: 'Your payout is now being processed.',
-            PAID: `Your payout of $${payout.amount.toLocaleString()} has been paid.`,
+            PAID: `Your payout of ₹${payout.amount.toLocaleString('en-IN')} has been paid.`,
             FAILED: 'Your payout has failed. Please contact support.',
         };
         if (statusMessages[status]) {

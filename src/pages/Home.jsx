@@ -1,9 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon, ShoppingBag } from 'lucide-react';
+import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon, ShoppingBag, Sparkles, Check, XCircle } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import heroPoster from '../assets/hero-background.png';
+import heroVideo from '../assets/hero_section.mp4';
 import verificationAuthenticity from '../assets/verification_authenticity.png';
 import { useProducts } from '../hooks/api/useProducts';
 import { useTestimonials } from '../hooks/api/useTestimonials';
@@ -17,8 +18,14 @@ const FeaturedProductCard = ({ product }) => {
     const showToast = useToast();
     const { data: cartItems = [] } = useCart(user?.id);
     const addToCartMutation = useAddToCart();
+    const [cartFeedback, setCartFeedback] = useState(false);
+    const cartFeedbackTimer = useRef(null);
     const inCart = cartItems.some(item => item.productId === product.id);
     const title = product.title || product.name;
+
+    useEffect(() => {
+        return () => clearTimeout(cartFeedbackTimer.current);
+    }, []);
 
     const handleAddToCart = async (e) => {
         e.preventDefault();
@@ -30,8 +37,15 @@ const FeaturedProductCard = ({ product }) => {
         if (inCart) return;
         try {
             await addToCartMutation.mutateAsync({ userId: user.id, productId: product.id });
+            setCartFeedback(true);
+            clearTimeout(cartFeedbackTimer.current);
+            cartFeedbackTimer.current = setTimeout(() => setCartFeedback(false), 2000);
         } catch (err) {
-            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
+            if (err?.response?.status === 401) {
+                showToast('Please sign in to add items to cart', 'error');
+            } else {
+                showToast(err?.response?.data?.message || err?.response?.data?.error || 'Failed to add to cart', 'error');
+            }
         }
     };
 
@@ -44,6 +58,11 @@ const FeaturedProductCard = ({ product }) => {
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/40 bg-heritage-beige">
                             <Gem size={48} strokeWidth={1} />
+                        </div>
+                    )}
+                    {product.status === 'Sold' && (
+                        <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center z-10">
+                            <span className="bg-white/90 text-heritage-charcoal text-sm font-bold px-4 py-1.5 uppercase tracking-[0.15em] shadow-lg">Sold Out</span>
                         </div>
                     )}
                     <div className="absolute bottom-4 left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-xs px-4 py-2 font-sans tracking-[0.15em] uppercase flex items-center gap-2">
@@ -60,18 +79,25 @@ const FeaturedProductCard = ({ product }) => {
                     </Link>
                     <p className="text-heritage-gold-muted font-serif text-lg font-medium mt-2">₹{product.price?.toLocaleString()}</p>
                 </div>
-                <button
-                    onClick={inCart ? () => navigate('/cart') : handleAddToCart}
-                    disabled={addToCartMutation.isPending}
-                    className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mt-4 ${
-                        inCart
-                            ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
-                            : 'bg-black text-white hover:bg-luxury-gold'
-                    }`}
-                >
-                    <ShoppingBag size={16} />
-                    {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart →' : 'Add to Cart'}
-                </button>
+                {product.status === 'Sold' ? (
+                    <div className="w-full py-3 text-sm uppercase tracking-widest flex items-center justify-center gap-2 mt-4 bg-gray-100 text-gray-400 cursor-default">
+                        <XCircle size={16} />
+                        Sold Out
+                    </div>
+                ) : (
+                    <button
+                        onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
+                        disabled={addToCartMutation.isPending || cartFeedback}
+                        className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mt-4 ${
+                            cartFeedback || inCart
+                                ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
+                                : 'bg-black text-white hover:bg-luxury-gold'
+                        }`}
+                    >
+                        {cartFeedback ? <Check size={16} /> : product.status === 'Sold' ? <XCircle size={16} /> : <ShoppingBag size={16} />}
+                        {addToCartMutation.isPending ? 'Adding...' : cartFeedback ? 'Added' : inCart ? 'In Cart →' : 'Add to Cart'}
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -144,11 +170,14 @@ const Home = () => {
             <Helmet><title>The Collectors Exchange — Luxury Pre-Owned & Rare Collectibles</title></Helmet>
             {/* Hero Section */}
             <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden">
-                <img
-                    src={heroPoster}
-                    alt="The Collectors Exchange — Luxury Collectibles"
-                    className="absolute inset-0 w-full h-full object-cover object-top"
-                />
+                <video
+                    autoPlay muted loop playsInline
+                    poster={heroPoster}
+                    onEnded={() => window.dispatchEvent(new Event('homeVideoEnded'))}
+                    className="absolute inset-0 w-full h-full object-cover"
+                >
+                    <source src={heroVideo} type="video/mp4" />
+                </video>
                 <div className="absolute inset-0 bg-black/40"></div>
 
                 <div className="container mx-auto max-w-4xl relative z-10">
@@ -282,7 +311,7 @@ const Home = () => {
                         </div>
                         <div className="lg:w-1/2 relative">
                             <div className="relative z-10 p-2 bg-white border border-heritage-bronze/10 shadow-2xl overflow-hidden group">
-                                <img src={verificationImage} alt="Heritage Verification" className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" />
+                                <img src={verificationAuthenticity} alt="Heritage Verification" className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-heritage-charcoal/5 to-transparent"></div>
                             </div>
                             <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-luxury-gold/10 rounded-full blur-3xl -z-0"></div>

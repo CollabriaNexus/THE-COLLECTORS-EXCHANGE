@@ -9,8 +9,7 @@ import {
     AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { useVendorProfile, useVendorAnalyticsOverview, useVendorAnalyticsInterest, useVendorSalesGraph, useVendorTopProducts, useVendorPayouts } from '../hooks/api/useVendor';
-import apiClient from '../hooks/api/apiClient';
-import { useToast } from '../components/Toast';
+
 
 const PERIODS = [
     { value: '7d', label: '7 Days' },
@@ -160,9 +159,6 @@ export default function VendorDashboard() {
     const [period, setPeriod] = useState('30d');
     const [payoutFilter, setPayoutFilter] = useState('');
     const [payoutPage, setPayoutPage] = useState(1);
-    const [requestAmount, setRequestAmount] = useState('');
-    const [requesting, setRequesting] = useState(false);
-    const showToast = useToast();
 
     const { data: profile, isLoading: profileLoading } = useVendorProfile();
     const { data: overview, isLoading: overviewLoading, error: overviewError, refetch: refetchOverview } = useVendorAnalyticsOverview(period);
@@ -177,24 +173,6 @@ export default function VendorDashboard() {
     const { data: prevOverview } = useVendorAnalyticsOverview(prevPeriod !== period ? prevPeriod : null);
 
     const isLoading = overviewLoading || interestLoading || salesGraphLoading || topProductsLoading;
-
-    const handleRequestPayout = async () => {
-        if (!requestAmount || parseFloat(requestAmount) <= 0) {
-            showToast('Please enter a valid amount', 'error');
-            return;
-        }
-        if (!window.confirm(`Request a payout of ₹${parseFloat(requestAmount).toLocaleString()}?`)) return;
-        setRequesting(true);
-        try {
-            await apiClient.post('/vendor/payouts/request', { amount: parseFloat(requestAmount) });
-            showToast('Payout request submitted successfully!', 'success');
-            setRequestAmount('');
-        } catch {
-            showToast('Failed to submit payout request', 'error');
-        } finally {
-            setRequesting(false);
-        }
-    };
 
     const calcChange = (current, previous) => {
         if (!previous || !previous.totalRevenue || previous.totalRevenue === 0) return undefined;
@@ -358,18 +336,6 @@ export default function VendorDashboard() {
                             ))}
                         </div>
 
-                        {/* Request Payout */}
-                        <div className="bg-amber-50 border border-amber-200 rounded p-4 mb-6">
-                            <p className="text-xs font-bold uppercase tracking-widest text-amber-800 mb-2">Request a Payout</p>
-                            <div className="flex gap-2">
-                                <input type="number" min="1" placeholder="Amount (₹)" value={requestAmount} onChange={(e) => setRequestAmount(e.target.value)} className="flex-grow p-2.5 border border-amber-200 text-sm rounded" />
-                                <button onClick={handleRequestPayout} disabled={requesting} className="bg-amber-600 text-white px-4 py-2 text-xs uppercase tracking-widest rounded hover:bg-amber-700 transition-colors flex items-center gap-1">
-                                    {requesting && <Loader2 size={12} className="animate-spin" />}
-                                    Request
-                                </button>
-                            </div>
-                        </div>
-
                         {payoutsLoading ? (
                             <div className="space-y-3">
                                 {[1, 2, 3].map(i => (
@@ -429,33 +395,6 @@ export default function VendorDashboard() {
                     </div>
                 </div>
 
-                {/* Listings Overview */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-serif font-bold text-heritage-charcoal mb-1">Listings Overview</h3>
-                            <p className="text-xs text-gray-500">Your inventory at a glance</p>
-                        </div>
-                        <Store size={20} className="text-gray-400" />
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6">
-                        {[
-                            { label: 'Total Listings', value: overview?.totalListings || 0, color: 'text-heritage-charcoal' },
-                            { label: 'Active', value: overview?.activeListings || 0, color: 'text-green-600' },
-                            { label: 'Orders', value: overview?.orderCount || 0, color: 'text-amber-600' },
-                            { label: 'Paid Revenue', value: `₹${overview?.paidRevenue?.toLocaleString() || '0'}`, color: 'text-purple-600' },
-                        ].map(item => (
-                            <div key={item.label} className="text-center">
-                                {isLoading ? (
-                                    <Skeleton className="h-8 w-20 mx-auto" />
-                                ) : (
-                                    <p className={`text-3xl font-bold ${item.color}`}>{item.value}</p>
-                                )}
-                                <p className="text-xs text-gray-500 uppercase tracking-wider mt-1">{item.label}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
             </div>
         </div>
     );

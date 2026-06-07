@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DollarSign, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { DollarSign, Loader2, RefreshCw } from 'lucide-react';
 import apiClient from '../hooks/api/apiClient';
 
 const STATUS_COLORS = {
@@ -47,6 +47,17 @@ function Payouts() {
         },
     });
 
+    const autoCreateMutation = useMutation({
+        mutationFn: async () => {
+            const { data } = await apiClient.post('/admin/payouts/auto-create');
+            return data;
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'payouts'] });
+            alert(`Auto-created ${data.created.length} payout(s), skipped ${data.skipped.length}`);
+        },
+    });
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -54,13 +65,23 @@ function Payouts() {
                     <h2 className="text-3xl font-serif font-bold text-heritage-charcoal">Payouts</h2>
                     <p className="text-gray-600 mt-2">Manage vendor payouts</p>
                 </div>
-                <button
-                    onClick={() => setShowCreate(!showCreate)}
-                    className="bg-heritage-charcoal text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center gap-2"
-                >
-                    <DollarSign size={16} />
-                    {showCreate ? 'Cancel' : 'New Payout'}
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => autoCreateMutation.mutate()}
+                        disabled={autoCreateMutation.isPending}
+                        className="bg-green-700 text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-green-800 transition-colors flex items-center gap-2"
+                    >
+                        {autoCreateMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                        Auto-Create
+                    </button>
+                    <button
+                        onClick={() => setShowCreate(!showCreate)}
+                        className="bg-heritage-charcoal text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center gap-2"
+                    >
+                        <DollarSign size={16} />
+                        {showCreate ? 'Cancel' : 'New Payout'}
+                    </button>
+                </div>
             </div>
 
             {showCreate && (
@@ -72,7 +93,7 @@ function Payouts() {
                             <input type="text" required value={createForm.vendorId} onChange={(e) => setCreateForm({ ...createForm, vendorId: e.target.value })} className="w-full p-3 border border-gray-200" placeholder="Vendor ID from DB" />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Amount ($)</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Amount (₹)</label>
                             <input type="number" required min="1" step="0.01" value={createForm.amount} onChange={(e) => setCreateForm({ ...createForm, amount: e.target.value })} className="w-full p-3 border border-gray-200" />
                         </div>
                         <div>
@@ -136,7 +157,7 @@ function Payouts() {
                                         <p className="text-sm font-medium text-heritage-charcoal">{payout.vendor?.user?.name || 'Unknown'}</p>
                                         <p className="text-xs text-gray-500">{payout.vendor?.user?.email}</p>
                                     </td>
-                                    <td className="p-4 text-sm font-bold">${payout.amount?.toLocaleString()}</td>
+                                    <td className="p-4 text-sm font-bold">₹{payout.amount?.toLocaleString()}</td>
                                     <td className="p-4 text-sm text-gray-600">
                                         {new Date(payout.periodStart).toLocaleDateString()} — {new Date(payout.periodEnd).toLocaleDateString()}
                                     </td>

@@ -100,20 +100,6 @@ export const useVendorPayouts = (params = {}) => {
     });
 };
 
-export const useVendorSubscribe = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async ({ paymentId, plan }) => {
-            const { data } = await apiClient.post('/vendor/subscribe', { paymentId, plan });
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['vendor', 'profile'] });
-            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-        },
-    });
-};
-
 /**
  * Hook to fetch vendor's sold order items
  */

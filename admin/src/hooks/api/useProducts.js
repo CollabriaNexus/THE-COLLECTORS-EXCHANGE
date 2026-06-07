@@ -138,6 +138,24 @@ export const useBrands = () => {
 };
 
 /**
+ * Hook to mark product as sold
+ */
+export const useMarkProductAsSold = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (id) => {
+            const { data } = await apiClient.patch(`/admin/products/${id}/sold`);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+            queryClient.invalidateQueries({ queryKey: ['adminProduct'] });
+        },
+    });
+};
+
+/**
  * Hook to update authenticity status
  */
 export const useUpdateAuthenticityStatus = () => {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Landmark, ShieldCheck, History, Sparkles } from 'lucide-react';
+import Bullet from '../components/Bullet';
 
 const InstitutionalIcon = () => (
     <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">

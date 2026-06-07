@@ -1,5 +1,3 @@
-import crypto from 'crypto';
-
 /**
  * Vendor Routes
  * @param {import('fastify').FastifyInstance} fastify
@@ -16,7 +14,7 @@ export default async function vendorRoutes(fastify) {
 
         const vendor = await prisma.vendor.findUnique({
             where: { userId: dbUser.id },
-            include: { subscription: true }
+            include: { }
         });
 
         if (!vendor) {
@@ -307,144 +305,27 @@ export default async function vendorRoutes(fastify) {
         };
     });
 
-    // Vendor requests a payout
-    fastify.post('/payouts/request', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+    // Update vendor pickup address
+    fastify.patch('/pickup-address', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const dbUser = request.dbUser;
-        const { amount } = request.body;
-
-        if (!amount || amount <= 0) {
-            return reply.status(400).send({ error: 'Valid amount is required' });
-        }
+        const { pickupAddress, pickupCity, pickupState, pickupZip, pickupContactName, pickupPhone } = request.body || {};
 
         const vendor = await prisma.vendor.findUnique({ where: { userId: dbUser.id } });
         if (!vendor) return reply.status(404).send({ error: 'Vendor profile not found' });
 
-        // Calculate available balance from paid orders
-        const productIds = (await prisma.product.findMany({
-            where: { sellerId: dbUser.id },
-            select: { id: true }
-        })).map(p => p.id);
-
-        const paidOrderItems = await prisma.orderItem.findMany({
-            where: {
-                productId: { in: productIds },
-                order: { paymentStatus: 'Paid', status: { not: 'Cancelled' } }
-            }
-        });
-        const earnedRevenue = paidOrderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-
-        const pastPayouts = await prisma.payout.aggregate({
-            where: { vendorId: vendor.id, status: { not: 'REJECTED' } },
-            _sum: { amount: true }
-        });
-        const paidOut = pastPayouts._sum.amount || 0;
-        const availableBalance = earnedRevenue - paidOut;
-
-        if (parseFloat(amount) > availableBalance) {
-            return reply.status(422).send({
-                error: `Insufficient balance. Available balance is $${availableBalance.toLocaleString()}`
-            });
-        }
-
-        // Check for existing pending payout request
-        const existingPending = await prisma.payout.findFirst({
-            where: { vendorId: vendor.id, status: 'PENDING' }
-        });
-        if (existingPending) {
-            return reply.status(422).send({ error: 'You already have a pending payout request' });
-        }
-
-        const payout = await prisma.payout.create({
+        const updatedVendor = await prisma.vendor.update({
+            where: { userId: dbUser.id },
             data: {
-                vendorId: vendor.id,
-                amount: parseFloat(amount),
-                status: 'PENDING',
-                periodStart: new Date(),
-                periodEnd: new Date(),
-                note: 'Requested by vendor',
+                ...(pickupAddress !== undefined && { pickupAddress }),
+                ...(pickupCity !== undefined && { pickupCity }),
+                ...(pickupState !== undefined && { pickupState }),
+                ...(pickupZip !== undefined && { pickupZip }),
+                ...(pickupContactName !== undefined && { pickupContactName }),
+                ...(pickupPhone !== undefined && { pickupPhone }),
             }
         });
 
-        await prisma.notification.create({
-            data: {
-                userId: dbUser.id,
-                title: 'Payout Requested',
-                message: `Your payout request of $${parseFloat(amount).toLocaleString()} has been submitted. An admin will review it shortly.`,
-            }
-        });
-
-        return { message: 'Payout request submitted', payout };
-    });
-
-    // Purchase/Verify bulk vendor subscription
-    fastify.post('/subscribe', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const dbUser = request.dbUser;
-        const { paymentId, razorpayOrderId, razorpayPaymentId, razorpaySignature, plan } = request.body;
-
-        if (!dbUser) {
-            return reply.status(401).send({ error: 'User profile not synchronized' });
-        }
-
-        const vendor = await prisma.vendor.findUnique({
-            where: { userId: dbUser.id }
-        });
-
-        if (!vendor) {
-            return reply.status(404).send({ error: 'Vendor profile not found' });
-        }
-
-        // Verify payment
-        const keySecret = process.env.RAZORPAY_KEY_SECRET;
-        if (keySecret) {
-            if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-                return reply.status(400).send({ error: 'Payment verification details are required' });
-            }
-            const hmac = crypto.createHmac('sha256', keySecret);
-            hmac.update(razorpayOrderId + "|" + razorpayPaymentId);
-            if (hmac.digest('hex') !== razorpaySignature) {
-                return reply.status(400).send({ error: 'Invalid payment signature' });
-            }
-        } else if (!paymentId || !paymentId.startsWith('pay_')) {
-            return reply.status(400).send({ error: 'Valid payment ID is required' });
-        }
-
-        const currentPeriodEnd = new Date();
-        if (plan === 'BULK_YEARLY') {
-            currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
-        } else {
-            currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
-        }
-
-        const updatedVendor = await prisma.$transaction(async (tx) => {
-            const v = await tx.vendor.update({
-                where: { userId: dbUser.id },
-                data: {
-                    type: 'BULK',
-                    maxListings: 999999,
-                }
-            });
-
-            await tx.vendorSubscription.upsert({
-                where: { vendorId: v.id },
-                update: {
-                    plan: plan || 'BULK_MONTHLY',
-                    status: 'active',
-                    paymentId: razorpayPaymentId || paymentId,
-                    currentPeriodEnd,
-                },
-                create: {
-                    vendorId: v.id,
-                    plan: plan || 'BULK_MONTHLY',
-                    status: 'active',
-                    paymentId: razorpayPaymentId || paymentId,
-                    currentPeriodEnd,
-                }
-            });
-
-            return v;
-        });
-
-        return { message: 'Subscription activated successfully', vendor: updatedVendor };
+        return { message: 'Pickup address updated', vendor: updatedVendor };
     });
 
     // Rate a vendor (buyers after purchase, one rating per user)

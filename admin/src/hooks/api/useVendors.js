@@ -20,13 +20,13 @@ export const useVendors = (filters = {}) => {
 };
 
 /**
- * Hook to whitelist a vendor (reused from useUsers)
+ * Hook to toggle vendor type (BULK / SINGLE)
  */
-export const useWhitelistVendor = () => {
+export const useToggleVendorType = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ userId, plan }) => {
-            const { data } = await apiClient.post(`/admin/vendor/${userId}/whitelist`, { plan });
+        mutationFn: async ({ userId, type }) => {
+            const { data } = await apiClient.patch(`/admin/vendor/${userId}/type`, { type });
             return data;
         },
         onSuccess: () => {

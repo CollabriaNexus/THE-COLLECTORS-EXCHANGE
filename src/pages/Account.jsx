@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import { User, FileText, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, Crown, Check, CreditCard, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
+import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, Crown, Check, CreditCard, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Papa from 'papaparse';
@@ -98,6 +98,26 @@ const Account = () => {
     const [editingProductId, setEditingProductId] = useState(null);
     const [editProductForm, setEditProductForm] = useState({ title: '', description: '', price: '', condition: '', category: '', keywords: '', image: '', images: [] });
 
+    // Pickup address state
+    const [editingPickup, setEditingPickup] = useState(false);
+    const [pickupSaving, setPickupSaving] = useState(false);
+    const [pickupForm, setPickupForm] = useState({ pickupAddress: '', pickupCity: '', pickupState: '', pickupZip: '', pickupContactName: '', pickupPhone: '' });
+
+    const handlePickupSubmit = async (e) => {
+        e.preventDefault();
+        setPickupSaving(true);
+        try {
+            await apiClient.patch('/vendor/pickup-address', pickupForm);
+            showToast('Pickup address saved successfully!', 'success');
+            setEditingPickup(false);
+            queryClient.invalidateQueries({ queryKey: ['vendorProfile'] });
+        } catch {
+            showToast('Failed to save pickup address.', 'error');
+        } finally {
+            setPickupSaving(false);
+        }
+    };
+
     const handleAuthChange = useCallback(async (session) => {
         if (session) {
             try {
@@ -144,6 +164,20 @@ const Account = () => {
 
         return () => subscription.unsubscribe();
     }, [handleAuthChange]);
+
+    // Populate pickup form when vendor profile loads
+    useEffect(() => {
+        if (vendorProfile) {
+            setPickupForm({
+                pickupAddress: vendorProfile.pickupAddress || '',
+                pickupCity: vendorProfile.pickupCity || '',
+                pickupState: vendorProfile.pickupState || '',
+                pickupZip: vendorProfile.pickupZip || '',
+                pickupContactName: vendorProfile.pickupContactName || '',
+                pickupPhone: vendorProfile.pickupPhone || '',
+            });
+        }
+    }, [vendorProfile]);
 
     const handleGoogleLogin = async () => {
         const { data, error } = await supabase.auth.signInWithOAuth({
@@ -733,16 +767,130 @@ const Account = () => {
             case 'seller':
                 return (
                     <div className="bg-white p-10 shadow-sm border border-gray-100">
-                        <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">Identity Verification</h3>
+                        <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">
+                            {user.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}
+                        </h3>
 
                         {user.kycStatus === 'verified' ? (
-                            <div className="bg-green-50 text-green-800 p-6 border border-green-100 flex items-start gap-4">
-                                <ShieldCheck size={32} className="text-green-600 mt-1" />
-                                <div>
-                                    <h4 className="font-serif text-lg font-medium mb-1">Verified Status: Active</h4>
-                                    <p className="text-sm opacity-80">Your identity has been verified. You have full access to list items on The Exchange.</p>
+                            <>
+                                <div className="bg-green-50 text-green-800 p-6 border border-green-100 flex items-start gap-4 mb-8">
+                                    <ShieldCheck size={32} className="text-green-600 mt-1" />
+                                    <div>
+                                        <h4 className="font-serif text-lg font-medium mb-1">Verified Status: Active</h4>
+                                        <p className="text-sm opacity-80">Your identity has been verified. You have full access to list items on The Exchange.</p>
+                                    </div>
                                 </div>
-                            </div>
+
+                                {/* Pickup Address */}
+                                <div className="border-t border-gray-100 pt-8">
+                                    <h4 className="font-serif text-xl mb-2 text-heritage-charcoal">Pickup Address</h4>
+                                    <p className="text-sm text-gray-500 mb-6">This address will be used by our delivery partner to collect items for shipping to buyers.</p>
+
+                                    {vendorProfile && (vendorProfile.pickupAddress || vendorProfile.pickupCity) ? (
+                                        <div className="bg-gray-50 p-6 border border-gray-100 mb-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                                <div className="md:col-span-2">
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Address</span>
+                                                    <p className="text-gray-800 mt-1">{vendorProfile.pickupAddress}</p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-gray-500">City</span>
+                                                    <p className="text-gray-800 mt-1">{vendorProfile.pickupCity}</p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-gray-500">State</span>
+                                                    <p className="text-gray-800 mt-1">{vendorProfile.pickupState}</p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-gray-500">ZIP Code</span>
+                                                    <p className="text-gray-800 mt-1">{vendorProfile.pickupZip}</p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Contact Person</span>
+                                                    <p className="text-gray-800 mt-1">{vendorProfile.pickupContactName || '—'}</p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Contact Phone</span>
+                                                    <p className="text-gray-800 mt-1">{vendorProfile.pickupPhone || '—'}</p>
+                                                </div>
+                                            </div>
+                                            {vendorProfile.pickupVerified ? (
+                                                <span className="inline-flex items-center gap-1 mt-4 text-xs text-green-700 bg-green-50 px-3 py-1 rounded-full font-medium">
+                                                    <ShieldCheck size={12} /> Verified by Delivery Partner
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 mt-4 text-xs text-amber-700 bg-amber-50 px-3 py-1 rounded-full font-medium">
+                                                    Pending Verification
+                                                </span>
+                                            )}
+                                            <button
+                                                onClick={() => setEditingPickup(true)}
+                                                className="mt-4 text-sm text-luxury-gold hover:underline font-medium"
+                                            >
+                                                Edit Address
+                                            </button>
+                                        </div>
+                                    ) : null}
+
+                                    {(editingPickup || !vendorProfile?.pickupAddress) && (
+                                        <form onSubmit={handlePickupSubmit} className="bg-gray-50 p-6 border border-gray-100 space-y-4">
+                                            <div className="md:col-span-2">
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Pickup Address</label>
+                                                <textarea
+                                                    required
+                                                    rows={2}
+                                                    value={pickupForm.pickupAddress}
+                                                    onChange={e => setPickupForm({ ...pickupForm, pickupAddress: e.target.value })}
+                                                    className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold"
+                                                    placeholder="Street address, landmark, etc."
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">City</label>
+                                                    <input required value={pickupForm.pickupCity} onChange={e => setPickupForm({ ...pickupForm, pickupCity: e.target.value })}
+                                                        className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">State</label>
+                                                    <input required value={pickupForm.pickupState} onChange={e => setPickupForm({ ...pickupForm, pickupState: e.target.value })}
+                                                        className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">ZIP Code</label>
+                                                    <input required value={pickupForm.pickupZip} onChange={e => setPickupForm({ ...pickupForm, pickupZip: e.target.value })}
+                                                        className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Contact Person Name</label>
+                                                    <input value={pickupForm.pickupContactName} onChange={e => setPickupForm({ ...pickupForm, pickupContactName: e.target.value })}
+                                                        className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" placeholder="Optional" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Contact Phone</label>
+                                                    <input value={pickupForm.pickupPhone} onChange={e => setPickupForm({ ...pickupForm, pickupPhone: e.target.value })}
+                                                        className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" placeholder="Optional" />
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-end gap-3 pt-2">
+                                                {editingPickup && (
+                                                    <button type="button" onClick={() => setEditingPickup(false)}
+                                                        className="px-6 py-2.5 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50">
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                                <button type="submit" disabled={pickupSaving}
+                                                    className="px-6 py-2.5 text-sm bg-heritage-charcoal text-white hover:bg-heritage-brown flex items-center gap-2">
+                                                    {pickupSaving && <Loader2 size={14} className="animate-spin" />}
+                                                    Save Address
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
+                                </div>
+                            </>
                         ) : user.kycStatus === 'pending' ? (
                             <div className="bg-yellow-50 text-yellow-800 p-6 border border-yellow-100 flex items-start gap-4">
                                 <ShieldCheck size={32} className="text-yellow-600 mt-1" />
@@ -1386,7 +1534,7 @@ const Account = () => {
                                                         <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded">
                                                             <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1">Reason for Rejection</p>
                                                             <p className="text-xs text-red-600 leading-relaxed">{product.rejectionReason}</p>
-                                                            <p className="text-[10px] text-red-500 mt-2">Edit your listing to fix the issues and it will be sent for review again. For queries, contact <a href="mailto:support@collectorsexchange.in" className="underline font-medium">support@collectorsexchange.in</a>.</p>
+                                                            <p className="text-[10px] text-red-500 mt-2">Edit your listing to fix the issues and it will be sent for review again. For queries, contact <a href="mailto:support@thecollectorsexchange.in" className="underline font-medium">support@thecollectorsexchange.in</a>.</p>
                                                         </div>
                                                     )}
                                                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
@@ -1587,7 +1735,7 @@ const Account = () => {
                                     onClick={() => setActiveTab('seller')}
                                     className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'seller' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
                                 >
-                                    <FileText size={18} /> Verification
+                                    <Store size={18} /> {user?.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('listings')}

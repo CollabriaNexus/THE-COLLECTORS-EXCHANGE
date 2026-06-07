@@ -47,7 +47,24 @@ function Login() {
                         navigate('/', { replace: true });
                     } catch (userError) {
                         if (userError.response?.status === 404) {
-                            setError('Account not found in database. Please register on the main app first, then contact an administrator to grant admin access.');
+                            try {
+                                const { data: newUser } = await apiClient.post('/users/register', {
+                                    email,
+                                    name: email.split('@')[0],
+                                });
+
+                                if (newUser.role !== 'admin') {
+                                    setError('Access denied. Admin privileges required.');
+                                    await supabase.auth.signOut();
+                                    return;
+                                }
+
+                                setUser(newUser);
+                                navigate('/', { replace: true });
+                                return;
+                            } catch (regError) {
+                                setError('Account not found. Please register on the main app first.');
+                            }
                         } else {
                             setError('Failed to verify account. Please try again.');
                         }
@@ -97,7 +114,22 @@ function Login() {
             setAuthToken(token);
 
             // 3. Fetch user data from backend to verify admin role
-            const { data: userData } = await apiClient.get(`/users/me`);
+            let userData;
+            try {
+                const { data } = await apiClient.get(`/users/me`);
+                userData = data;
+            } catch (meErr) {
+                if (meErr.response?.status === 404) {
+                    // Auto-sync user
+                    const { data } = await apiClient.post('/users/register', {
+                        email,
+                        name: email.split('@')[0],
+                    });
+                    userData = data;
+                } else {
+                    throw meErr;
+                }
+            }
 
             // 4. Verify user is admin
             if (userData.role !== 'admin') {

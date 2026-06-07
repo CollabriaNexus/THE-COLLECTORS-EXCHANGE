@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import AboutImage from '../assets/About_US.jpg';
-import { History, ShieldCheck, Landmark, Compass, Users, Sparkles } from 'lucide-react';
+import { History, ShieldCheck, Landmark, Compass, Users, Sparkles, Heart } from 'lucide-react';
+import Bullet from '../components/Bullet';
 import { Link } from 'react-router-dom';
 
 const About = () => {

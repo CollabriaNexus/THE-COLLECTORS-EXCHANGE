@@ -10,9 +10,13 @@ const apiClient = axios.create({
     },
 });
 
-// Add a request interceptor to include the auth token
+// Attach auth token to every request, refreshing expired sessions
 apiClient.interceptors.request.use(async (config) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    let { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+        session = refreshedSession;
+    }
     if (session?.access_token) {
         config.headers.Authorization = `Bearer ${session.access_token}`;
     }
@@ -20,5 +24,16 @@ apiClient.interceptors.request.use(async (config) => {
 }, (error) => {
     return Promise.reject(error);
 });
+
+// On 401, clear stale user state so the app knows the session is gone
+apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('tce_user');
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default apiClient;

@@ -127,7 +127,7 @@ export default async function productRoutes(fastify) {
                 data: {
                     userId: dbUser.id,
                     type: dbUser.type === 'company' ? 'BULK' : 'SINGLE',
-                    status: 'PENDING',
+                    status: 'APPROVED',
                     maxListings: dbUser.type === 'company' ? 999999 : 5,
                 }
             });

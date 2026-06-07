@@ -1,84 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ShieldCheck, Star } from 'lucide-react';
-import { useVendors, useWhitelistVendor } from '../hooks/api/useVendors';
-import { useUserDetail } from '../hooks/api/useUsers';
+import { Search, ShieldCheck, Star, Users as UsersIcon } from 'lucide-react';
+import { useVendors, useToggleVendorType } from '../hooks/api/useVendors';
 import Table from '../components/ui/Table';
 import StatusBadge from '../components/ui/StatusBadge';
-import Modal from '../components/ui/Modal';
-
-// Inline whitelist action — opens a confirmation modal
-function WhitelistModal({ userId, userName, onClose, onSuccess }) {
-    const whitelistMutation = useWhitelistVendor();
-    const [plan, setPlan] = useState('CUSTOM_APPROVED');
-    const [error, setError] = useState('');
-
-    const handleConfirm = async () => {
-        setError('');
-        try {
-            await whitelistMutation.mutateAsync({ userId, plan });
-            onSuccess();
-        } catch (err) {
-            setError(err?.response?.data?.error || err.message || 'Failed to whitelist vendor');
-        }
-    };
-
-    return (
-        <Modal isOpen onClose={onClose} title="Whitelist Vendor">
-            <div className="space-y-4">
-                <p className="text-gray-700">
-                    Grant <strong>{userName}</strong> unlimited bulk vendor access?
-                </p>
-
-                <div>
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Plan</label>
-                    <select
-                        value={plan}
-                        onChange={e => setPlan(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
-                    >
-                        <option value="CUSTOM_APPROVED">Custom Approved (10 years)</option>
-                        <option value="BULK_YEARLY">Bulk Yearly</option>
-                        <option value="BULK_MONTHLY">Bulk Monthly</option>
-                    </select>
-                </div>
-
-                {error && (
-                    <p className="text-red-600 text-sm">{error}</p>
-                )}
-
-                <div className="flex gap-3 justify-end pt-2">
-                    <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-800">
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleConfirm}
-                        disabled={whitelistMutation.isPending}
-                        className="px-6 py-2 bg-luxury-gold text-white rounded-md hover:bg-luxury-gold/90 disabled:opacity-50"
-                    >
-                        {whitelistMutation.isPending ? 'Whitelisting...' : 'Confirm Whitelist'}
-                    </button>
-                </div>
-            </div>
-        </Modal>
-    );
-}
 
 function Vendors() {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
-    const [whitelistTarget, setWhitelistTarget] = useState(null); // { id, name }
     const [successMsg, setSuccessMsg] = useState('');
 
     const { data: vendors = [], isLoading, refetch } = useVendors({
         search: searchQuery || undefined,
     });
 
-    const handleWhitelistSuccess = () => {
-        setWhitelistTarget(null);
-        setSuccessMsg('Vendor whitelisted successfully!');
-        refetch();
-        setTimeout(() => setSuccessMsg(''), 3000);
+    const toggleVendorType = useToggleVendorType();
+
+    const handleToggleType = async (userId, currentType) => {
+        const newType = currentType === 'BULK' ? 'SINGLE' : 'BULK';
+        try {
+            await toggleVendorType.mutateAsync({ userId, type: newType });
+            setSuccessMsg(`Vendor type changed to ${newType}`);
+            refetch();
+            setTimeout(() => setSuccessMsg(''), 3000);
+        } catch (err) {
+            console.error('Failed to toggle vendor type', err);
+        }
     };
 
     const columns = [
@@ -92,9 +39,16 @@ function Vendors() {
             label: 'Email',
         },
         {
-            key: 'type',
-            label: 'Account Type',
-            render: (type) => <span className="capitalize">{type || 'Individual'}</span>,
+            key: 'vendor.type',
+            label: 'Vendor Type',
+            render: (_, row) => {
+                const type = row.vendor?.type || 'SINGLE';
+                return (
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${type === 'BULK' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {type === 'BULK' ? 'Bulk Lister' : 'Normal'}
+                    </span>
+                );
+            },
         },
         {
             key: 'kycStatus',
@@ -119,11 +73,16 @@ function Vendors() {
                     </button>
                     {row.kycStatus === 'verified' && (
                         <button
-                            onClick={() => setWhitelistTarget({ id, name: row.name || row.email })}
-                            className="px-3 py-1 text-xs bg-luxury-gold text-white rounded hover:bg-luxury-gold/90 transition-colors flex items-center gap-1"
+                            onClick={() => handleToggleType(id, row.vendor?.type || 'SINGLE')}
+                            disabled={toggleVendorType.isPending}
+                            className={`px-3 py-1 text-xs rounded transition-colors flex items-center gap-1 ${
+                                row.vendor?.type === 'BULK'
+                                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    : 'bg-luxury-gold text-white hover:bg-luxury-gold/90'
+                            }`}
                         >
                             <Star size={12} />
-                            Whitelist
+                            {row.vendor?.type === 'BULK' ? 'Set Normal' : 'Set Bulk'}
                         </button>
                     )}
                 </div>
@@ -138,7 +97,7 @@ function Vendors() {
                     Vendor Management
                 </h2>
                 <p className="text-gray-600 mt-2">
-                    Manage KYC-verified sellers and bulk vendor subscriptions
+                    Manage KYC-verified sellers — mark as Bulk Lister or Normal Vendor
                 </p>
             </div>
 
@@ -190,16 +149,6 @@ function Vendors() {
                 loading={isLoading}
                 emptyMessage="No vendors found"
             />
-
-            {/* Whitelist Modal */}
-            {whitelistTarget && (
-                <WhitelistModal
-                    userId={whitelistTarget.id}
-                    userName={whitelistTarget.name}
-                    onClose={() => setWhitelistTarget(null)}
-                    onSuccess={handleWhitelistSuccess}
-                />
-            )}
         </div>
     );
 }

@@ -62,7 +62,7 @@ export default async function userRoutes(fastify) {
                     include: { items: { include: { product: true } } },
                     orderBy: { createdAt: 'desc' },
                 },
-                vendor: { include: { subscription: true } },
+                vendor: true,
             },
         });
 

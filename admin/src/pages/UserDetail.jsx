@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Package, ShoppingCart, Heart, Ban, CheckCircle } from 'lucide-react';
-import { useUserDetail, useUpdateUserRole, useWhitelistVendor, useBanUser, useUnbanUser } from '../hooks/api/useUsers';
+import { ArrowLeft, User, Package, ShoppingCart, Heart, Ban, CheckCircle, Star } from 'lucide-react';
+import { useUserDetail, useUpdateUserRole, useToggleVendorType, useBanUser, useUnbanUser } from '../hooks/api/useUsers';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
@@ -16,7 +16,7 @@ function UserDetail() {
 
     const { data: user, isLoading } = useUserDetail(id);
     const updateRoleMutation = useUpdateUserRole();
-    const whitelistVendorMutation = useWhitelistVendor();
+    const toggleVendorType = useToggleVendorType();
     const banMutation = useBanUser();
     const unbanMutation = useUnbanUser();
 
@@ -34,14 +34,16 @@ function UserDetail() {
         }
     };
 
-    const handleWhitelistVendor = async () => {
+    const handleToggleVendorType = async () => {
         setError('');
+        const currentType = user.vendor?.type || 'SINGLE';
+        const newType = currentType === 'BULK' ? 'SINGLE' : 'BULK';
         try {
-            await whitelistVendorMutation.mutateAsync({ userId: id, plan: 'CUSTOM_APPROVED' });
-            setSuccess('User whitelisted as Bulk Vendor successfully!');
+            await toggleVendorType.mutateAsync({ userId: id, type: newType });
+            setSuccess(`Vendor type changed to ${newType === 'BULK' ? 'Bulk Lister' : 'Normal'}`);
             setTimeout(() => setSuccess(''), 3000);
         } catch (err) {
-            setError(err.message || 'Failed to whitelist vendor');
+            setError(err.message || 'Failed to update vendor type');
         }
     };
 
@@ -205,27 +207,28 @@ function UserDetail() {
                         )}
                     </div>
 
-                    {/* Whitelist Vendor Button */}
+                    {/* Vendor Type Toggle */}
                         {user.kycStatus === 'verified' && (
                             <div className="pt-4 border-t border-gray-100">
-                                <h4 className="text-sm font-semibold text-heritage-charcoal mb-2 font-serif">Vendor Subscription</h4>
+                                <h4 className="text-sm font-semibold text-heritage-charcoal mb-2 font-serif">Vendor Type</h4>
                                 <div className="bg-gray-50 p-3 rounded border border-gray-100 mb-3 text-xs text-gray-600 space-y-1">
-                                    <p><strong>Vendor Status:</strong> <span className="capitalize">{user.vendor?.status || 'None'}</span></p>
-                                    <p><strong>Vendor Type:</strong> <span className="capitalize">{user.vendor?.type || 'Not initialized'}</span></p>
+                                    <p><strong>Status:</strong> <span className="capitalize">{user.vendor?.status || 'None'}</span></p>
+                                    <p><strong>Type:</strong> <span className={`px-2 py-0.5 rounded font-medium ${user.vendor?.type === 'BULK' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                                        {user.vendor?.type === 'BULK' ? 'Bulk Lister' : 'Normal'}
+                                    </span></p>
                                     <p><strong>Max Listings:</strong> {user.vendor?.maxListings ?? 5}</p>
-                                    {user.vendor?.subscription && (
-                                        <p><strong>Plan:</strong> {user.vendor.subscription.plan} ({user.vendor.subscription.status})</p>
-                                    )}
                                 </div>
-                                {user.vendor?.type !== 'BULK' && (
-                                    <button
-                                        onClick={handleWhitelistVendor}
-                                        disabled={whitelistVendorMutation.isPending}
-                                        className="w-full border border-heritage-charcoal text-heritage-charcoal py-2 rounded-md font-medium hover:bg-heritage-charcoal hover:text-white transition-all text-sm uppercase tracking-wider"
-                                    >
-                                        {whitelistVendorMutation.isPending ? 'Whitelisting...' : 'Whitelist as Bulk Vendor'}
-                                    </button>
-                                )}
+                                <button
+                                    onClick={handleToggleVendorType}
+                                    disabled={toggleVendorType.isPending}
+                                    className={`w-full py-2 rounded-md font-medium transition-all text-sm uppercase tracking-wider ${
+                                        user.vendor?.type === 'BULK'
+                                            ? 'border border-gray-300 text-gray-600 hover:bg-gray-100'
+                                            : 'bg-luxury-gold text-white hover:bg-luxury-gold/90'
+                                    }`}
+                                >
+                                    {toggleVendorType.isPending ? 'Updating...' : user.vendor?.type === 'BULK' ? 'Set to Normal' : 'Set to Bulk Lister'}
+                                </button>
                             </div>
                         )}
                     </div>

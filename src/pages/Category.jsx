@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
-import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2, Sparkles, Box, XCircle } from 'lucide-react';
+import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2, Sparkles, Box, XCircle, Check } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
 import { getUser } from '../utils/storage';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
@@ -67,9 +67,15 @@ const ArchiveProductCard = ({ product }) => {
     const removeFromWishlistMutation = useRemoveFromWishlist();
     const { data: cartItems = [] } = useCart(user?.id);
     const addToCartMutation = useAddToCart();
+    const [cartFeedback, setCartFeedback] = useState(false);
+    const cartFeedbackTimer = useRef(null);
 
     const inCart = cartItems.some(item => item.productId === product.id);
     const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
+
+    useEffect(() => {
+        return () => clearTimeout(cartFeedbackTimer.current);
+    }, []);
 
     const handleWishlistToggle = async (e) => {
         e.preventDefault();
@@ -98,8 +104,15 @@ const ArchiveProductCard = ({ product }) => {
         try {
             await addToCartMutation.mutateAsync({ userId: user.id, productId: product.id });
             apiClient.post('/analytics/cart', { productId: product.id, action: 'ADD' }).catch(() => {});
+            setCartFeedback(true);
+            clearTimeout(cartFeedbackTimer.current);
+            cartFeedbackTimer.current = setTimeout(() => setCartFeedback(false), 2000);
         } catch (err) {
-            showToast(err?.response?.data?.message || 'Failed to add to cart', 'error');
+            if (err?.response?.status === 401) {
+                showToast('Please sign in to add items to cart', 'error');
+            } else {
+                showToast(err?.response?.data?.message || err?.response?.data?.error || 'Failed to add to cart', 'error');
+            }
         }
     };
 
@@ -137,7 +150,7 @@ const ArchiveProductCard = ({ product }) => {
                 {/* Sold Badge */}
                 {product.status === 'Sold' && (
                     <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
-                        <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-[0.15em] shadow-lg">Sold</span>
+                        <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-[0.15em] shadow-lg">Sold Out</span>
                     </div>
                 )}
 
@@ -163,19 +176,19 @@ const ArchiveProductCard = ({ product }) => {
                 {product.status === 'Sold' ? (
                     <div className="w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-2 bg-gray-100 text-gray-400 cursor-default">
                         <XCircle size={10} className="sm:w-[14px] sm:h-[14px]" />
-                        Sold
+                        Sold Out
                     </div>
                 ) : (
                     <button
-                        onClick={inCart ? () => navigate('/cart') : handleAddToCart}
-                        disabled={addToCartMutation.isPending}
-                        className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${inCart
+                        onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
+                        disabled={addToCartMutation.isPending || cartFeedback}
+                        className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${cartFeedback || inCart
                             ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                             : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
                             }`}
                     >
-                        <ShoppingBag size={10} className="sm:w-[14px] sm:h-[14px]" />
-                        {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart →' : 'Add to Cart'}
+                        {cartFeedback ? <Check size={10} className="sm:w-[14px] sm:h-[14px]" /> : <ShoppingBag size={10} className="sm:w-[14px] sm:h-[14px]" />}
+                        {addToCartMutation.isPending ? 'Adding...' : cartFeedback ? 'Added' : inCart ? 'In Cart →' : 'Add to Cart'}
                     </button>
                 )}
             </div>

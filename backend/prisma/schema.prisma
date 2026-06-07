@@ -90,20 +90,6 @@ enum VendorStatus {
   SUSPENDED
 }
 
-enum SubscriptionPlan {
-  BULK_MONTHLY
-  BULK_YEARLY
-  FREE
-  CUSTOM_APPROVED
-}
-
-enum SubscriptionStatus {
-  active
-  cancelled
-  expired
-  trialing
-}
-
 enum AuctionStatus {
   UPCOMING
   ACTIVE
@@ -304,26 +290,23 @@ model Vendor {
   agreementSignedByName String?
   signedAgreementDoc  String?
 
+  pickupAddress     String?
+  pickupCity        String?
+  pickupState       String?
+  pickupZip         String?
+  pickupContactName String?
+  pickupPhone       String?
+  pickupVerified    Boolean  @default(false)
+  pickupVerifiedAt  DateTime?
+  pickupVerifiedBy  String?
+
   rating       Float    @default(0)
   ratingCount  Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  subscription VendorSubscription?
   payouts       Payout[]
   ratings       Rating[]
-}
-
-model VendorSubscription {
-  id               String             @id @default(cuid())
-  vendorId         String             @unique
-  vendor           Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  plan             SubscriptionPlan
-  status           SubscriptionStatus
-  paymentId        String?
-  currentPeriodEnd DateTime
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
 }
 
 model AuditLog {
