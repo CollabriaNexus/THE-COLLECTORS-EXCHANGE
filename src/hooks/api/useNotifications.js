@@ -77,10 +77,14 @@ export const usePushSubscription = () => {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
                 return { message: 'Push not supported' };
             }
+            const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+            if (!vapidPublicKey) {
+                return { message: 'Push not configured: missing VAPID public key' };
+            }
             const registration = await navigator.serviceWorker.register('/sw.js');
             const sub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: null,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
             });
             const { data } = await apiClient.post('/users/push-subscribe', sub.toJSON());
             return data;

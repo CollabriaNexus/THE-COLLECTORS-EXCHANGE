@@ -8,7 +8,9 @@ export default async function contactRoutes(fastify) {
             return reply.status(400).send({ error: 'All fields are required' });
         }
 
-        console.log(`[CONTACT] Message from ${name} (${email}): ${subject} - ${message.substring(0, 100)}...`);
+        await prisma.contactMessage.create({
+            data: { name, email, subject, message }
+        });
 
         return { message: 'Thank you for reaching out. We will respond within 24-48 hours.' };
     });

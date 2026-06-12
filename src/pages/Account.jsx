@@ -110,7 +110,7 @@ const Account = () => {
             await apiClient.patch('/vendor/pickup-address', pickupForm);
             showToast('Pickup address saved successfully!', 'success');
             setEditingPickup(false);
-            queryClient.invalidateQueries({ queryKey: ['vendorProfile'] });
+            queryClient.invalidateQueries({ queryKey: ['vendor', 'profile'] });
         } catch {
             showToast('Failed to save pickup address.', 'error');
         } finally {
@@ -183,7 +183,7 @@ const Account = () => {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin + '/account'
+                redirectTo: window.location.origin
             }
         });
         if (error) { showToast(error.message, 'error'); return; }
@@ -244,7 +244,7 @@ const Account = () => {
         };
 
         try {
-            await kycMutation.mutateAsync({ userId: user.id, kycData });
+            await kycMutation.mutateAsync({ kycData });
             showToast('Verification documents submitted successfully!', 'success');
         } catch {
             showToast('KYC submission failed.', 'error');

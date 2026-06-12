@@ -34,7 +34,7 @@ const Cart = () => {
         );
     }
 
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price || 0), 0);
+    const subtotal = cartItems.reduce((sum, item) => sum + (item.product?.price || 0), 0);
     const total = subtotal;
 
     return (
@@ -50,19 +50,19 @@ const Cart = () => {
                             {cartItems.map(item => (
                                 <div key={item.id} className="flex gap-6 p-6 border-b border-gray-100 last:border-0 items-center">
                                     <img
-                                        src={item.product.image || 'https://via.placeholder.com/100'}
-                                        alt={item.product.title}
+                                        src={item.product?.image || 'https://via.placeholder.com/100'}
+                                        alt={item.product?.title || 'Product'}
                                         className="w-24 h-24 object-cover"
                                     />
                                     <div className="flex-grow">
-                                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">{item.product.category}</p>
-                                        <h3 className="font-serif text-lg font-medium">{item.product.title}</h3>
-                                        <p className="text-sm text-gray-500 mt-1">{item.product.condition}</p>
+                                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">{item.product?.category || 'Unknown'}</p>
+                                        <h3 className="font-serif text-lg font-medium">{item.product?.title || 'Unavailable'}</h3>
+                                        <p className="text-sm text-gray-500 mt-1">{item.product?.condition || ''}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-sans font-semibold mb-2">₹{item.product.price?.toLocaleString()}</p>
+                                        <p className="font-sans font-semibold mb-2">₹{item.product?.price?.toLocaleString() || '0'}</p>
                                         <button
-                                            onClick={() => handleRemove(item.product.id)}
+                                            onClick={() => handleRemove(item.product?.id || item.productId)}
                                             className="text-red-500 hover:text-red-700 transition-colors"
                                         >
                                             <Trash2 size={18} />

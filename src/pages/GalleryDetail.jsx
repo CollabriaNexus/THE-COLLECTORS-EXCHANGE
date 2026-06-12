@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Landmark, Compass, History, Info, ChevronLeft, ChevronRight, Share2, Printer, Loader2 } from 'lucide-react';
-import { useGalleryItem } from '../hooks/api/useGallery';
+import { getGalleryItemById } from '../utils/galleryStorage';
 
 const GalleryDetail = () => {
     const { id } = useParams();
-    const { data: item, isLoading } = useGalleryItem(id);
+    const [item, setItem] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [activeImage, setActiveImage] = useState(0);
+
+    useEffect(() => {
+        setItem(getGalleryItemById(id));
+        setIsLoading(false);
+    }, [id]);
 
     useEffect(() => {
         window.scrollTo(0, 0);

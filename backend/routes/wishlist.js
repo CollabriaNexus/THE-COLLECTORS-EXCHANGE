@@ -34,6 +34,17 @@ export default async function wishlistRoutes(fastify) {
             return reply.status(403).send({ error: 'You do not have permission to access this resource' });
         }
 
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        if (!product) {
+            return reply.status(404).send({ error: 'Product not found' });
+        }
+        if (product.status === 'Sold') {
+            return reply.status(422).send({ error: 'Product is no longer available' });
+        }
+        if (product.status !== 'Approved') {
+            return reply.status(422).send({ error: 'Product is not available for purchase' });
+        }
+
         const wishlistItem = await prisma.wishlistItem.upsert({
             where: {
                 userId_productId: { userId, productId },

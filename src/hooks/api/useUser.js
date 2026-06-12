@@ -48,12 +48,11 @@ export const useRegisterUser = () => {
 export const useSubmitKyc = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ userId, kycData }) => {
-            const { data } = await apiClient.post('/users/kyc', { userId, kycData });
+        mutationFn: async ({ kycData }) => {
+            const { data } = await apiClient.post('/users/kyc', { kycData });
             return data;
         },
-        onSuccess: (_, { userId }) => {
-            queryClient.invalidateQueries({ queryKey: ['users', userId] });
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
         },
     });

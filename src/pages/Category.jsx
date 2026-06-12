@@ -71,7 +71,7 @@ const ArchiveProductCard = ({ product }) => {
     const cartFeedbackTimer = useRef(null);
 
     const inCart = cartItems.some(item => item.productId === product.id);
-    const inWishlist = wishlistItems.some(item => item.product.id === product.id || item.productId === product.id);
+    const inWishlist = wishlistItems.some(item => (item.product?.id === product.id) || item.productId === product.id);
 
     useEffect(() => {
         return () => clearTimeout(cartFeedbackTimer.current);

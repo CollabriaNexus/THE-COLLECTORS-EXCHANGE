@@ -265,7 +265,7 @@ export default async function productRoutes(fastify) {
             data: {
                 userId: dbUser.id,
                 type: 'BULK',
-                status: 'PENDING',
+                status: 'APPROVED',
                 maxListings: 999999,
             }
         });

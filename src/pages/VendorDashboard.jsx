@@ -167,19 +167,7 @@ export default function VendorDashboard() {
     const { data: topProducts, isLoading: topProductsLoading } = useVendorTopProducts(period);
     const { data: payoutsData, isLoading: payoutsLoading } = useVendorPayouts({ status: payoutFilter || undefined, page: payoutPage });
 
-    // Previous period comparison (fetch overview for previous period to calc change)
-    const prevPeriodMap = { '7d': '7d', '10d': '10d', '15d': '15d', '30d': '30d', quarterly: 'quarterly', '6m': '6m', '1y': '1y', all: '1y' };
-    const prevPeriod = prevPeriodMap[period] || '30d';
-    const { data: prevOverview } = useVendorAnalyticsOverview(prevPeriod !== period ? prevPeriod : null);
-
     const isLoading = overviewLoading || interestLoading || salesGraphLoading || topProductsLoading;
-
-    const calcChange = (current, previous) => {
-        if (!previous || !previous.totalRevenue || previous.totalRevenue === 0) return undefined;
-        return ((current?.totalRevenue - previous.totalRevenue) / previous.totalRevenue) * 100;
-    };
-
-    const changePct = calcChange(overview, prevOverview);
 
     return (
         <div className="min-h-screen bg-secondary-bg">
@@ -211,7 +199,7 @@ export default function VendorDashboard() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <StatCard title="Order Count" value={overview?.orderCount} icon={ShoppingBag} color="bg-blue-500" loading={isLoading} change={changePct} error={overviewError} onRetry={refetchOverview} />
+                    <StatCard title="Order Count" value={overview?.orderCount} icon={ShoppingBag} color="bg-blue-500" loading={isLoading} error={overviewError} onRetry={refetchOverview} />
                     <StatCard title="Items Sold" value={overview?.saleCount} icon={Package} color="bg-green-500" loading={isLoading} error={overviewError} onRetry={refetchOverview} />
                     <StatCard title="Total Revenue" value={overview?.totalRevenue?.toLocaleString()} icon={TrendingUp} color="bg-purple-500" prefix="₹" loading={isLoading} error={overviewError} onRetry={refetchOverview} />
                     <StatCard title="Pending Payout" value={overview?.pendingPayout?.toLocaleString()} icon={DollarSign} color="bg-amber-500" prefix="₹" loading={isLoading} error={overviewError} onRetry={refetchOverview} />

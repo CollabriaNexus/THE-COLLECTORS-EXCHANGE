@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Mail, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../utils/supabase';
 import { useToast } from '../Toast';
 
 const LoginForm = () => {
+    const navigate = useNavigate();
     const showToast = useToast();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -33,6 +35,8 @@ const LoginForm = () => {
         try {
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
+            showToast('Welcome back!', 'success');
+            navigate('/');
         } catch (error) {
             showToast(error.message || 'Login failed', 'error');
         } finally {
@@ -46,6 +50,8 @@ const LoginForm = () => {
         try {
             const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' });
             if (error) throw error;
+            showToast('Welcome back!', 'success');
+            navigate('/');
         } catch (error) {
             showToast(error.message || 'Invalid Code', 'error');
         } finally {
@@ -124,6 +130,27 @@ const LoginForm = () => {
                     >
                         {loading ? <Loader2 size={16} className="animate-spin" /> : 'Sign In'}
                     </button>
+                    <div className="text-center">
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                if (!email) { showToast('Please enter your email first', 'error'); return; }
+                                setLoading(true);
+                                try {
+                                    const { error } = await supabase.auth.resetPasswordForEmail(email);
+                                    if (error) throw error;
+                                    showToast('Password reset link sent to your email!', 'success');
+                                } catch (error) {
+                                    showToast(error.message || 'Failed to send reset email', 'error');
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                            className="text-xs text-gray-500 hover:text-luxury-gold hover:underline mt-2"
+                        >
+                            Forgot Password?
+                        </button>
+                    </div>
                 </form>
             )}
         </div>

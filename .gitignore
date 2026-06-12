@@ -24,8 +24,11 @@ dist-ssr
 *.sw?
 
 .agent/*
+.agents/
 
 .kiro/
+
+opencode.json
 
 # Environment files
 .env

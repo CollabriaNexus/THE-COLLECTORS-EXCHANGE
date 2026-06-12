@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Landmark, Compass, Award, History, Gem, Info, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
-import { useGallery } from '../hooks/api/useGallery';
+import { getGalleryItems } from '../utils/galleryStorage';
 import galleryHero from '../assets/gallery-hero.png';
 
 const THEMES = [
@@ -72,7 +72,13 @@ const GalleryCard = ({ item }) => {
 };
 
 const GalleryPage = () => {
-    const { data: galleryItems = [], isLoading } = useGallery();
+    const [galleryItems, setGalleryItems] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        setGalleryItems(getGalleryItems());
+        setIsLoading(false);
+    }, []);
 
     return (
         <div className="min-h-screen bg-[#1A1816] relative overflow-hidden">

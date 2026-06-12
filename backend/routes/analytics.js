@@ -1,7 +1,7 @@
 export default async function analyticsRoutes(fastify) {
     const { prisma } = fastify;
 
-    fastify.post('/view', async (request, reply) => {
+    fastify.post('/view', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const { productId, sessionId } = request.body;
         const dbUser = request.dbUser || null;
 
