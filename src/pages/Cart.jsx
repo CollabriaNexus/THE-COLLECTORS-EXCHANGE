@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async';
 import { Trash2, ShoppingBag, Loader2 } from 'lucide-react';
+import SEO from '../components/SEO';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart, useRemoveFromCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
@@ -27,7 +27,6 @@ const Cart = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center">
-                <Helmet><title>Cart — The Collectors Exchange</title></Helmet>
                 <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
                 <p className="text-gray-500 font-serif text-xl italic">Loading Your Collection...</p>
             </div>
@@ -39,7 +38,7 @@ const Cart = () => {
 
     return (
         <div className="container mx-auto py-12 px-6">
-            <Helmet><title>Cart — The Collectors Exchange</title></Helmet>
+            <SEO title="Cart" description="Review your curated collection of authenticated collectibles before checkout on The Collectors Exchange." canonical="/cart" noindex />
             <h1 className="text-4xl font-serif mb-12 text-center md:text-left">Shopping Cart</h1>
 
             {cartItems.length > 0 ? (

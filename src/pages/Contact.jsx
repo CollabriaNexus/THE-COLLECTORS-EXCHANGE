@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Mail, MessageSquare, Clock, Send, Loader2, CheckCircle } from 'lucide-react';
+import SEO from '../components/SEO';
 import apiClient from '../hooks/api/apiClient';
 
 const cards = [
@@ -51,7 +51,7 @@ const Contact = () => {
     if (sent) {
         return (
             <div className="min-h-screen bg-secondary-bg flex items-center justify-center px-4">
-                <Helmet><title>Contact Us — The Collectors Exchange</title></Helmet>
+                <SEO title="Contact Us" description="Get in touch with The Collectors Exchange team. Email us at support@thecollectorsexchange.in for inquiries about buying, selling, or partnerships." canonical="/contact" />
                 <div className="text-center max-w-md mx-auto p-6 sm:p-12">
                     <CheckCircle size={48} className="mx-auto text-green-500 mb-6 sm:w-16 sm:h-16" />
                     <h1 className="text-2xl sm:text-3xl font-serif mb-4">Message Sent</h1>
@@ -64,7 +64,7 @@ const Contact = () => {
 
     return (
         <section className="min-h-screen bg-secondary-bg flex items-center">
-            <Helmet><title>Contact Us — The Collectors Exchange</title></Helmet>
+            <SEO title="Contact Us" />
             <div className="w-full container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-24">
                 <div className="text-center mb-10 sm:mb-14 md:mb-16">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-3 sm:mb-4">Contact Us</h1>

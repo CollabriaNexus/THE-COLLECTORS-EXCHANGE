@@ -1,6 +1,6 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Heart, Trash2, ShoppingBag, ShieldCheck, Loader2 } from 'lucide-react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { useWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useAddToCart, useCart } from '../hooks/api/useCart';
@@ -41,7 +41,7 @@ const Wishlist = () => {
     if (!user) {
         return (
             <div className="container mx-auto py-20 px-6 text-center">
-                <Helmet><title>Wishlist — The Collectors Exchange</title></Helmet>
+                <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
                 <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
                 <p className="text-gray-500 mb-6">You need to be logged in to view your wishlist.</p>
                 <Link to="/account" className="bg-black text-white px-6 py-2 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
@@ -54,7 +54,7 @@ const Wishlist = () => {
     if (isLoading) {
         return (
             <div className="container mx-auto py-20 text-center">
-                <Helmet><title>Wishlist — The Collectors Exchange</title></Helmet>
+                <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
                 <Loader2 className="animate-spin mx-auto text-luxury-gold mb-4" size={40} />
                 <p className="font-serif italic text-gray-400">Loading your collection...</p>
             </div>
@@ -63,7 +63,7 @@ const Wishlist = () => {
 
     return (
         <div className="container mx-auto py-12 px-6">
-            <Helmet><title>Wishlist — The Collectors Exchange</title></Helmet>
+            <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
             <h1 className="text-4xl font-serif mb-8 text-center md:text-left">My Wishlist</h1>
 
             {wishlistItems.length > 0 ? (

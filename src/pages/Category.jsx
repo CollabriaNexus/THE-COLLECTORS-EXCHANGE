@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2, Sparkles, Box, XCircle, Check } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
 import { getUser } from '../utils/storage';
@@ -251,7 +251,11 @@ const Category = () => {
 
     return (
         <div className="min-h-screen bg-heritage-cream">
-            <Helmet><title>Archive — The Collectors Exchange</title></Helmet>
+            <SEO
+                title="Archive"
+                description="Browse The Collectors Exchange archive of authentic pre-owned collectibles. Shop curated timepieces, antiques, jewelry, and rare finds — all verified for authenticity."
+                canonical="/category"
+            />
             {/* Hero Section - The Collected Archive (Modern Dark Aesthetic) */}
             <section className="relative h-screen min-h-[500px] flex items-center justify-center overflow-hidden border-b border-heritage-beige bg-heritage-charcoal">
                 {/* Visual Archive Background Layer */}

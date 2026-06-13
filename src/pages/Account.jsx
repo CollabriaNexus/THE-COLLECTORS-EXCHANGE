@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
 import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, Crown, Check, CreditCard, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -31,6 +31,7 @@ const Account = () => {
     const [localUser, setLocalUserState] = useState(null);
     const [sessionChecked, setSessionChecked] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
+    const [showEmailVerify, setShowEmailVerify] = useState(false);
     const [showCompanyPopup, setShowCompanyPopup] = useState(false);
     const [regForm, setRegForm] = useState({ name: '', email: '', phone: '', password: '', type: 'individual' });
     const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '', aadhaarDoc: '', panDoc: '', gstDoc: '', incorporationDoc: '', signedByName: '', signedAgreementDoc: '' });
@@ -204,7 +205,8 @@ const Account = () => {
                     data: {
                         full_name: regForm.name,
                         phone: regForm.phone,
-                    }
+                    },
+                    emailRedirectTo: window.location.origin,
                 }
             });
             if (error) throw error;
@@ -213,7 +215,7 @@ const Account = () => {
                 phone: regForm.phone,
                 type: regForm.type,
             };
-            setIsRegistering(false);
+            setShowEmailVerify(true);
         } catch (err) {
             showToast(err.message || 'Registration failed. Please try again.', 'error');
         }
@@ -486,7 +488,7 @@ const Account = () => {
     if (!sessionChecked) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-secondary-bg">
-                <Helmet><title>My Account — The Collectors Exchange</title></Helmet>
+                <SEO title="My Account" description="Manage your profile, orders, and seller account on The Collectors Exchange." canonical="/account" noindex />
                 <Loader2 className="animate-spin text-luxury-gold mb-4" size={64} />
                 <p className="text-gray-500 font-serif text-xl italic">Authenticating Profile...</p>
             </div>
@@ -496,13 +498,37 @@ const Account = () => {
     if (!localUser) {
         return (
             <div className="container mx-auto py-20 px-6 max-w-xl">
-                <Helmet><title>My Account — The Collectors Exchange</title></Helmet>
+                <SEO title="My Account" description="Manage your profile, orders, and seller account on The Collectors Exchange." canonical="/account" noindex />
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-serif mb-4">{isRegistering ? 'Membership Application' : 'Welcome Back'}</h1>
                     <p className="text-gray-500 font-light">Access The Collectors' Exchange secure portal.</p>
                 </div>
 
-                {isRegistering ? (
+                {showEmailVerify ? (
+                    <div className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6 text-center">
+                        <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Mail size={32} className="text-amber-500" />
+                        </div>
+                        <h2 className="text-2xl font-serif text-heritage-charcoal mb-3">Verify Your Email</h2>
+                        <p className="text-gray-500 mb-6 leading-relaxed">
+                            We sent a verification link to <strong className="text-gray-700">{regForm.email}</strong>.
+                            Please check your inbox and click the link to activate your account.
+                        </p>
+                        <p className="text-xs text-gray-400 mb-8">
+                            Didn't receive the email? Check your spam folder or{' '}
+                            <button type="button" onClick={() => { setShowEmailVerify(false); setIsRegistering(false); }} className="text-luxury-gold hover:underline font-semibold">
+                                try signing in
+                            </button>
+                            .
+                        </p>
+                        <button
+                            onClick={() => { setShowEmailVerify(false); setIsRegistering(false); }}
+                            className="w-full bg-black text-white py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300"
+                        >
+                            Back to Sign In
+                        </button>
+                    </div>
+                ) : isRegistering ? (
                     <form onSubmit={handleRegister} className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
                         <button
                             type="button"
@@ -1593,7 +1619,7 @@ const Account = () => {
                                 <div key={order.id} className="border border-gray-100 p-6 hover:shadow-md transition-shadow">
                                     <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
                                         <div>
-                                            <p className="text-xs text-gray-500 uppercase tracking-wider">Order #{order.id.slice(-8).toUpperCase()}</p>
+                                            <p className="text-xs text-gray-500 uppercase tracking-wider">Order #{order.displayId || order.id.slice(-8).toUpperCase()}</p>
                                             <p className="text-xs text-gray-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                                         </div>
                                         <span className={`px-3 py-1 text-xs font-semibold rounded-full ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' : order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' : order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' : order.status === 'Cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -1711,7 +1737,7 @@ const Account = () => {
 
     return (
         <div className="min-h-screen bg-secondary-bg">
-            <Helmet><title>My Account — The Collectors Exchange</title></Helmet>
+            <SEO title="My Account" description="Manage your profile, orders, and seller account on The Collectors Exchange." canonical="/account" noindex />
             <div className="container mx-auto py-16 px-6">
                 <div className="flex flex-col lg:flex-row gap-12">
                     {/* Sidebar */}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Landmark, ShieldCheck, History, Sparkles } from 'lucide-react';
+import SEO from '../components/SEO';
 import Bullet from '../components/Bullet';
 import collectorsStudy from '../assets/collectors_study.png';
 import artisanAtWork from '../assets/artisan2.png';
@@ -24,7 +25,11 @@ const DiamondBullet = () => (
 const Vision = () => {
     return (
         <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
-
+            <SEO
+                title="Our Vision"
+                description="Discover the vision of The Collectors Exchange — building a global archive where heritage, authenticity, and trust define the future of collectible exchange."
+                canonical="/vision"
+            />
             {/* Vision Hero & Statement Section */}
             <section className="relative pt-32 pb-24 px-6 bg-heritage-cream">
                 <div className="container mx-auto max-w-4xl text-center">

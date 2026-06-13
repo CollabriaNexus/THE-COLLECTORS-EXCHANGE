@@ -1,8 +1,10 @@
 import React from 'react';
+import SEO from '../components/SEO';
 
 const Returns = () => {
     return (
         <div className="min-h-screen bg-white text-black py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
+            <SEO title="Returns, Refunds & Shipping Policy" description="Learn about The Collectors Exchange returns, refunds, and shipping policy. 48-hour return window, free domestic shipping, and authenticity guarantee." canonical="/returns" />
             <div className="mb-12 border-b border-gray-200 pb-8">
                 <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">RETURNS, REFUNDS & SHIPPING POLICY</h1>
                 <p className="text-gray-500 font-sans">Last Updated: May 2026</p>

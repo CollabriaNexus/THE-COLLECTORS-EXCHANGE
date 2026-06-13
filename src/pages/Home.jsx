@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
+import SEO, { OrganizationSchema, WebSiteSchema } from '../components/SEO';
 import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon, ShoppingBag, Sparkles, Check, XCircle } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import heroPoster from '../assets/hero-background.png';
@@ -167,7 +167,13 @@ const FeaturedProductsCarousel = () => {
 const Home = () => {
     return (
         <div className="flex flex-col">
-            <Helmet><title>The Collectors Exchange — Luxury Pre-Owned & Rare Collectibles</title></Helmet>
+            <SEO
+                description="India's premier curated marketplace for verified pre-owned collectibles, antiques, and limited-edition pieces. Every item authenticated. Trusted sellers. Secure transactions."
+                canonical="/"
+                ogType="website"
+            />
+            <OrganizationSchema />
+            <WebSiteSchema />
             {/* Hero Section */}
             <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden">
                 <video
@@ -367,7 +373,7 @@ const Home = () => {
                     </div>
 
                     <div className="mt-24">
-                        <Link to="/THE-COLLECTORS-EXCHANGE/account" className="inline-flex items-center gap-6 text-white border border-white/20 px-12 py-6 hover:bg-white hover:text-black transition-all duration-500 font-sans text-xs tracking-[0.4em] uppercase font-black group">
+                        <Link to="/account" className="inline-flex items-center gap-6 text-white border border-white/20 px-12 py-6 hover:bg-white hover:text-black transition-all duration-500 font-sans text-xs tracking-[0.4em] uppercase font-black group">
                             Start Selling <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-500" />
                         </Link>
                     </div>

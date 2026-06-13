@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async';
 import AboutImage from '../assets/About_US.jpg';
+import SEO from '../components/SEO';
 import { History, ShieldCheck, Landmark, Compass, Users, Sparkles, Heart } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import { Link } from 'react-router-dom';
@@ -7,7 +7,11 @@ import { Link } from 'react-router-dom';
 const About = () => {
     return (
         <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
-            <Helmet><title>About — The Collectors Exchange</title></Helmet>
+            <SEO
+                title="About"
+                description="Learn about The Collectors Exchange — India's premier platform for authentic pre-owned collectibles, antiques, and limited-edition pieces. Discover our mission to preserve heritage through verified sourcing."
+                canonical="/about"
+            />
             {/* Cinematic Hero */}
             <section className="relative min-h-[60vh] sm:min-h-[75vh] lg:min-h-[90vh] flex items-center justify-center overflow-hidden border-b border-heritage-bronze/10 bg-heritage-charcoal">
                 <div className="absolute inset-0 z-0">

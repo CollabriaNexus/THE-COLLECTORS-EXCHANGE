@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -171,7 +171,7 @@ export default function VendorDashboard() {
 
     return (
         <div className="min-h-screen bg-secondary-bg">
-            <Helmet><title>Vendor Dashboard — The Collectors Exchange</title></Helmet>
+            <SEO title="Vendor Dashboard" description="Manage your listings, sales, and analytics on The Collectors Exchange vendor dashboard." canonical="/vendor-dashboard" noindex />
 
             <div className="container mx-auto py-12 px-6">
                 {/* Header */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { Landmark, Compass, Award, History, Gem, Info, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { getGalleryItems } from '../utils/galleryStorage';
 import galleryHero from '../assets/gallery-hero.png';
@@ -82,7 +82,11 @@ const GalleryPage = () => {
 
     return (
         <div className="min-h-screen bg-[#1A1816] relative overflow-hidden">
-            <Helmet><title>Gallery — The Collectors Exchange</title></Helmet>
+            <SEO
+                title="Gallery"
+                description="Explore The Collectors Exchange gallery — a curated archive of heritage collections, rare artifacts, and timeless objects from around the world."
+                canonical="/gallery"
+            />
             {/* ... heritage background ... */}
             <div className="fixed inset-0 pointer-events-none opacity-20 mix-blend-overlay" style={{
                 backgroundImage: 'url("https://www.transparenttextures.com/patterns/pinstriped-suit.png")',

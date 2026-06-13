@@ -1,12 +1,16 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Gavel, Instagram, ArrowRight, Clock } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const Auction = () => {
     return (
         <div className="min-h-screen bg-heritage-cream">
-            <Helmet><title>Auctions — The Collectors Exchange</title></Helmet>
+            <SEO
+                title="Auctions"
+                description="Participate in live and upcoming auctions for rare collectibles, antiques, and limited-edition pieces at The Collectors Exchange. Bid with confidence on verified items."
+                canonical="/auction"
+            />
             {/* Hero */}
             <section className="relative h-[60vh] sm:h-[65vh] lg:h-[70vh] min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] flex items-center justify-center overflow-hidden bg-heritage-charcoal">
                 <div className="absolute inset-0 bg-black/50 z-10"></div>

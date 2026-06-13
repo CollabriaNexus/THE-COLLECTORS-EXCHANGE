@@ -1,6 +1,6 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
+import SEO, { ArticleSchema } from '../components/SEO';
 import { ArrowLeft, Landmark } from 'lucide-react';
 
 const ARTICLES = {
@@ -446,7 +446,17 @@ const GalleryArticle = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Helmet><title>{article.title} — The Collectors Exchange</title></Helmet>
+      <SEO
+                title={article.title}
+                description={article.content?.find(c => c.type === 'paragraph')?.text?.substring(0, 160) || 'Explore heritage and collectible insights at The Collectors Exchange gallery.'}
+                canonical={`/gallery/article/${slug}`}
+                ogType="article"
+            />
+            <ArticleSchema
+                headline={article.title}
+                image={article.content?.find(c => c.type === 'image')?.src}
+                datePublished="2025-01-01"
+            />
 
       {/* Hero */}
       <section className="relative py-20 px-6 bg-heritage-charcoal overflow-hidden">

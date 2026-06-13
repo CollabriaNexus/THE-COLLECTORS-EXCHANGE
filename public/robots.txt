@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /vendor-dashboard
+Disallow: /checkout
+Disallow: /cart
+Disallow: /wishlist
+
+Sitemap: https://thecollectorsexchange.in/sitemap.xml

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
+import SEO, { FAQSchema } from '../components/SEO';
 
 const FAQ_ITEMS = [
     {
@@ -59,9 +59,16 @@ const FAQ = () => {
         )
     })).filter(cat => cat.questions.length > 0);
 
+    const faqItems = FAQ_ITEMS.flatMap(cat => cat.questions);
+
     return (
         <div className="min-h-screen bg-secondary-bg">
-            <Helmet><title>FAQ — The Collectors Exchange</title></Helmet>
+            <SEO
+                title="FAQ"
+                description="Find answers to frequently asked questions about buying, selling, shipping, and account security on The Collectors Exchange — India's trusted marketplace for verified collectibles."
+                canonical="/faq"
+            />
+            <FAQSchema items={faqItems} />
             <div className="container mx-auto py-20 px-6 max-w-3xl">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-serif mb-4">Frequently Asked Questions</h1>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
+import SEO, { ProductSchema, BreadcrumbSchema } from '../components/SEO';
 import { ShieldCheck, Heart, ShoppingBag, ChevronRight, Share2, Info, Loader2, Check, ArrowRight, Gem, Award, ImageOff, XCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -105,9 +105,24 @@ const ProductDetail = () => {
     const images = product.images?.length > 0 ? product.images : (product.image ? [product.image] : []);
     const keywords = product.keywords || [];
 
+    const breadcrumbItems = [
+        { name: 'Home', url: '/' },
+        { name: 'The Exchange', url: '/category' },
+        { name: product.category },
+        { name: product.title },
+    ];
+
     return (
         <div className="min-h-screen bg-white">
-            <Helmet><title>{product.title} — The Collectors Exchange</title></Helmet>
+            <SEO
+                title={product.title}
+                description={product.description?.replace(/<[^>]*>/g, '').substring(0, 160) || `Authentic ${product.category} collectible at ₹${product.price?.toLocaleString()}. Verified by The Collectors Exchange.`}
+                canonical={`/product/${product.id}`}
+                image={product.images?.[0] || product.image}
+                ogType="product"
+            />
+            <ProductSchema product={product} />
+            <BreadcrumbSchema items={breadcrumbItems} />
             {/* Breadcrumbs */}
             <div className="border-b border-gray-100 bg-gray-50/50">
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Landmark, Compass, History, Info, ChevronLeft, ChevronRight, Share2, Printer, Loader2 } from 'lucide-react';
+import SEO from '../components/SEO';
 import { getGalleryItemById } from '../utils/galleryStorage';
 
 const GalleryDetail = () => {
@@ -30,6 +31,7 @@ const GalleryDetail = () => {
     if (!item) {
         return (
             <div className="min-h-screen bg-[#F9F7F5] flex items-center justify-center p-6">
+                <SEO title="Gallery Detail" />
                 <div className="text-center">
                     <h2 className="text-2xl font-serif text-gray-400 mb-4">Archive Record Not Found</h2>
                     <Link to="/gallery" className="text-amber-800 uppercase tracking-widest text-xs font-bold hover:underline">
@@ -44,6 +46,13 @@ const GalleryDetail = () => {
 
     return (
         <div className="min-h-screen bg-[#F9F7F5]">
+            <SEO
+                title={item.title}
+                description={item.description?.substring(0, 160) || `Explore ${item.title} in The Collectors Exchange gallery.`}
+                canonical={`/gallery/${item.id}`}
+                image={item.images?.[0]}
+                ogType="article"
+            />
             {/* Top Navigation Bar */}
             <div className="border-b border-gray-200 bg-white/50 sticky top-0 z-50 backdrop-blur-md">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">

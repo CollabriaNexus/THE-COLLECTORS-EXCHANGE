@@ -86,10 +86,22 @@ export default async function checkoutRoutes(fastify) {
                 });
             }
 
-            // Create order in DB with status "Pending"
+            // Generate sequential display ID (HOR00001, HOR00002, ...)
+            const lastOrder = await tx.order.findFirst({
+                orderBy: { displayId: 'desc' },
+                select: { displayId: true }
+            });
+            let nextSeq = 1;
+            if (lastOrder?.displayId) {
+                const num = parseInt(lastOrder.displayId.replace('HOR', ''), 10);
+                if (!isNaN(num)) nextSeq = num + 1;
+            }
+            const displayId = 'HOR' + String(nextSeq).padStart(5, '0');
+
             return await tx.order.create({
                 data: {
                     userId: dbUser.id,
+                    displayId,
                     status: 'Pending',
                     totalAmount,
                     shippingAddress,

@@ -1,10 +1,16 @@
 import React from 'react';
 import AboutImage from '../assets/About_US.jpg';
 import { Sparkles, Quote } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const FoundersNote = () => {
     return (
         <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
+            <SEO
+                title="Founder's Note"
+                description="Read a personal letter from the founder of The Collectors Exchange. Learn about our mission to preserve heritage through authenticated collectibles and trusted transactions."
+                canonical="/founders-note"
+            />
             {/* Header section for the note */}
             <section className="py-24 px-6 bg-white border-b border-heritage-bronze/10">
                 <div className="container mx-auto max-w-4xl text-center">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { ShieldCheck, Loader2, ChevronRight, CheckCircle } from 'lucide-react';
 import { useCart } from '../hooks/api/useCart';
 import { useCreateOrder, useVerifyPayment } from '../hooks/api/useCheckout';
@@ -142,7 +142,7 @@ const Checkout = () => {
     if (!currentUser) {
         return (
             <div className="container mx-auto py-20 px-6 text-center">
-                <Helmet><title>Checkout — The Collectors Exchange</title></Helmet>
+                <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
                 <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
                 <p className="text-gray-500 mb-6">You need to be logged in to checkout.</p>
                 <Link to="/account" className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
@@ -155,7 +155,7 @@ const Checkout = () => {
     if (cartLoading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center">
-                <Helmet><title>Checkout — The Collectors Exchange</title></Helmet>
+                <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
                 <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
                 <p className="text-gray-500 font-serif text-xl italic">Preparing Checkout...</p>
             </div>
@@ -165,7 +165,7 @@ const Checkout = () => {
     if (cartItems.length === 0 && !orderSuccess) {
         return (
             <div className="container mx-auto py-20 px-6 text-center">
-                <Helmet><title>Checkout — The Collectors Exchange</title></Helmet>
+                <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
                 <h1 className="text-2xl font-serif mb-4">Your cart is empty</h1>
                 <Link to="/category" className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
                     Explore The Exchange
@@ -178,7 +178,7 @@ const Checkout = () => {
     if (orderSuccess) {
         return (
             <div className="container mx-auto py-20 px-6 max-w-lg text-center">
-                <Helmet><title>Checkout — The Collectors Exchange</title></Helmet>
+                <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
                 <div className="bg-white border border-gray-100 shadow-heritage p-12">
                     <CheckCircle size={64} className="mx-auto text-green-500 mb-6" />
                     <h1 className="text-3xl font-serif mb-3 text-heritage-charcoal">Order Confirmed</h1>
@@ -188,7 +188,7 @@ const Checkout = () => {
                     <div className="bg-gray-50 border border-gray-100 p-4 mb-8 text-left space-y-2 text-sm">
                         <div className="flex justify-between">
                             <span className="text-gray-500 uppercase tracking-widest text-xs">Order ID</span>
-                            <span className="font-mono text-xs text-gray-700">{orderSuccess.id}</span>
+                            <span className="font-mono text-xs text-gray-700">{orderSuccess.displayId || orderSuccess.id}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-500 uppercase tracking-widest text-xs">Status</span>
@@ -212,7 +212,7 @@ const Checkout = () => {
 
     return (
         <div className="container mx-auto py-12 px-6">
-            <Helmet><title>Checkout — The Collectors Exchange</title></Helmet>
+            <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
             {/* Breadcrumb */}
             <div className="flex items-center text-xs text-gray-500 uppercase tracking-widest gap-2 mb-8">
                 <Link to="/cart" className="hover:text-luxury-gold">Cart</Link>

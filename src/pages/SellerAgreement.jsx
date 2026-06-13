@@ -1,10 +1,10 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
 
 const SellerAgreement = () => {
     return (
         <div className="min-h-screen bg-white text-black py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
-            <Helmet><title>Seller Agreement — The Collectors Exchange</title></Helmet>
+            <SEO title="Seller Agreement" description="Read the official Seller Agreement for listing items on The Collectors Exchange. Understand the terms, fees, and verification requirements for sellers." canonical="/seller-agreement" />
 
             {/* Header */}
             <div className="mb-12 border-b border-gray-200 pb-8">

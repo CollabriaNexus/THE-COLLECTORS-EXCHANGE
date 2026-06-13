@@ -228,6 +228,7 @@ model GalleryItem {
 
 model Order {
   id              String        @id @default(cuid())
+  displayId       String        @unique
   userId          String
   user            User          @relation(fields: [userId], references: [id])
   status          OrderStatus   @default(Pending)
@@ -250,6 +251,7 @@ model Order {
 
   @@index([userId])
   @@index([status])
+  @@index([displayId])
 }
 
 model OrderItem {

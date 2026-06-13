@@ -1,8 +1,10 @@
 import React from 'react';
+import SEO from '../components/SEO';
 
 const Terms = () => {
     return (
         <div className="min-h-screen bg-white text-black py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
+            <SEO title="Terms & Conditions" description="Read the Terms & Conditions of The Collectors Exchange. Understand the custodianship agreement, buyer terms, and legal policies for our platform." canonical="/terms" />
             {/* Header */}
             <div className="mb-12 border-b border-gray-200 pb-8">
                 <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">THE COLLECTORS EXCHANGE: CUSTODIANSHIP AGREEMENT</h1>
