@@ -259,7 +259,7 @@ const Home = () => {
                             <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-4 block">Institutional Framework</span>
                             <h2 className="text-4xl md:text-6xl font-serif leading-tight text-heritage-charcoal">A New Standard <br /> of <span className="italic text-luxury-gold">Archival Integrity</span></h2>
                         </div>
-                        <Link to="/THE-COLLECTORS-EXCHANGE/vision" className="group flex items-center gap-4 text-heritage-charcoal/50 hover:text-luxury-gold transition-colors text-xs font-bold tracking-widest uppercase">
+                        <Link to="/vision" className="group flex items-center gap-4 text-heritage-charcoal/50 hover:text-luxury-gold transition-colors text-xs font-bold tracking-widest uppercase">
                             Our Full Vision <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                         </Link>
                     </div>

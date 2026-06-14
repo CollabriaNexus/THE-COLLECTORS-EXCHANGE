@@ -320,7 +320,7 @@ const About = () => {
             {/* Final CTA */}
             <section className="py-24 bg-white border-t border-heritage-bronze/10">
                 <div className="container mx-auto px-6 text-center">
-                    <Link to="/THE-COLLECTORS-EXCHANGE/category" className="inline-block px-12 py-5 bg-heritage-charcoal text-white text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-luxury-gold transition-all duration-500 rounded-sm">
+                    <Link to="/category" className="inline-block px-12 py-5 bg-heritage-charcoal text-white text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-luxury-gold transition-all duration-500 rounded-sm">
                         EXPLORE THE REGISTRY
                     </Link>
                 </div>
