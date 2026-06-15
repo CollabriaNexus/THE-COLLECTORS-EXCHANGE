@@ -73,7 +73,7 @@ const Header = () => {
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden lg:flex space-x-4 xl:space-x-8">
+                    <nav aria-label="Main navigation" className="hidden lg:flex space-x-4 xl:space-x-8">
                         {navItems.map((item) => (
                             <Link
                                 key={item.name}
@@ -113,8 +113,9 @@ const Header = () => {
                         className="lg:hidden"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         aria-label="Toggle menu"
+                        aria-expanded={isMenuOpen}
                     >
-                        {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                        {isMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
                     </button>
                 </div>
 
@@ -138,7 +139,7 @@ const Header = () => {
             </header>
 
             {/* Mobile Bottom Navigation Bar */}
-            <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg flex items-center justify-around py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-transform duration-300 ${showNav ? 'translate-y-0' : 'translate-y-full'}`}>
+            <nav aria-label="Mobile navigation" className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg flex items-center justify-around py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-transform duration-300 ${showNav ? 'translate-y-0' : 'translate-y-full'}`}>
                 {bottomNav.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -148,7 +149,7 @@ const Header = () => {
                             className="flex flex-col items-center gap-0.5 px-4 py-1 text-gray-500 hover:text-luxury-gold transition-colors relative"
                         >
                             <div className="relative">
-                                <Icon size={20} />
+                                <Icon size={20} aria-hidden="true" />
                                 {item.count > 0 && (
                                     <span className="absolute -top-1.5 -right-2 bg-luxury-gold text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                                         {item.count > 9 ? '9+' : item.count}

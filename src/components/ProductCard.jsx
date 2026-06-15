@@ -59,6 +59,8 @@ const ProductCard = ({ product, onUpdate }) => {
                     <img
                         src={product.image}
                         alt={title}
+                        loading="lazy"
+                        width="400" height="400"
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                     />
                 ) : (

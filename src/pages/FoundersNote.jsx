@@ -22,7 +22,7 @@ const FoundersNote = () => {
 
                 {/* Founder's Message */}
                 <section className="mb-20 text-center md:text-left">
-                    <h1 className="text-4xl md:text-5xl font-serif mb-12">A Message from Our Founder</h1>
+                    <h2 className="text-4xl md:text-5xl font-serif mb-12">A Message from Our Founder</h2>
 
                     <div className="space-y-6 text-lg md:text-xl font-light leading-relaxed text-gray-800 font-serif">
                         <p className="italic text-black font-normal text-2xl border-l-4 border-luxury-gold pl-6">

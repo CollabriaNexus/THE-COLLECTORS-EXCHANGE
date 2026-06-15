@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { getUser } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
+
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import KYCRequests from './pages/KYCRequests';
@@ -36,6 +37,7 @@ function ScrollToTop() {
     useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
     return null;
 }
+
 
 function App() {
     return (

@@ -23,6 +23,8 @@ const HeroManifesto = () => (
       <img
         src={heroImgUrl}
         alt="Vintage watch movement macro"
+        loading="lazy"
+        width="800" height="800"
         className="max-w-full h-auto object-cover rounded-lg shadow-heritage"
       />
     </div>

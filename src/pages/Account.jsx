@@ -18,7 +18,6 @@ import { useToast } from '../components/Toast';
 import { useVendorProfile, useVendorStats } from '../hooks/api/useVendor';
 import { useTestimonials, useSubmitTestimonial } from '../hooks/api/useTestimonials';
 import PhoneVerification from '../components/account/PhoneVerification';
-import LoginForm from '../components/account/LoginForm';
 import NotificationsPanel from '../components/account/NotificationsPanel';
 import DocUploadField from '../components/account/DocUploadField';
 
@@ -30,10 +29,9 @@ const Account = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [localUser, setLocalUserState] = useState(null);
     const [sessionChecked, setSessionChecked] = useState(false);
-    const [isRegistering, setIsRegistering] = useState(false);
-    const [showEmailVerify, setShowEmailVerify] = useState(false);
+    const [showPasswordSetup, setShowPasswordSetup] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({ password: '', confirm: '' });
     const [showCompanyPopup, setShowCompanyPopup] = useState(false);
-    const [regForm, setRegForm] = useState({ name: '', email: '', phone: '', password: '', type: 'individual' });
     const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '', aadhaarDoc: '', panDoc: '', gstDoc: '', incorporationDoc: '', signedByName: '', signedAgreementDoc: '' });
     const [tncAccepted, setTncAccepted] = useState(false);
     const [productForm, setProductForm] = useState({
@@ -122,19 +120,17 @@ const Account = () => {
     const handleAuthChange = useCallback(async (session) => {
         if (session) {
             try {
-                const pendingReg = window.__tce_pendingReg || {};
                 const syncData = {
                     email: session.user.email,
-                    name: session.user.user_metadata?.full_name || pendingReg.name || session.user.email.split('@')[0],
+                    name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
                     supabaseId: session.user.id,
-                    phone: pendingReg.phone || session.user.phone || undefined,
-                    type: pendingReg.type || 'individual',
+                    phone: session.user.phone || undefined,
+                    type: 'individual',
                 };
-            const user = await registerUser(syncData);
-            window.__tce_pendingReg = null;
-            setLocalUser(user);
-            setLocalUserState(user);
-            queryClient.invalidateQueries({ queryKey: ['user'] });
+                const user = await registerUser(syncData);
+                setLocalUser(user);
+                setLocalUserState(user);
+                queryClient.invalidateQueries({ queryKey: ['user'] });
             } catch (error) {
                 console.error('Auth sync failed', error);
             }
@@ -195,29 +191,24 @@ const Account = () => {
 
     const userProducts = user?.products || [];
 
-    const handleRegister = async (e) => {
+    const handleSetPassword = async (e) => {
         e.preventDefault();
+        if (passwordForm.password !== passwordForm.confirm) {
+            showToast('Passwords do not match.', 'error');
+            return;
+        }
+        if (passwordForm.password.length < 6) {
+            showToast('Password must be at least 6 characters.', 'error');
+            return;
+        }
         try {
-            const { error } = await supabase.auth.signUp({
-                email: regForm.email,
-                password: regForm.password,
-                options: {
-                    data: {
-                        full_name: regForm.name,
-                        phone: regForm.phone,
-                    },
-                    emailRedirectTo: window.location.origin,
-                }
-            });
+            const { error } = await supabase.auth.updateUser({ password: passwordForm.password });
             if (error) throw error;
-            window.__tce_pendingReg = {
-                name: regForm.name,
-                phone: regForm.phone,
-                type: regForm.type,
-            };
-            setShowEmailVerify(true);
+            showToast('Password set successfully!', 'success');
+            setShowPasswordSetup(false);
+            setPasswordForm({ password: '', confirm: '' });
         } catch (err) {
-            showToast(err.message || 'Registration failed. Please try again.', 'error');
+            showToast(err.message || 'Failed to set password.', 'error');
         }
     };
 
@@ -500,172 +491,20 @@ const Account = () => {
             <div className="container mx-auto py-20 px-6 max-w-xl">
                 <SEO title="My Account" description="Manage your profile, orders, and seller account on The Collectors Exchange." canonical="/account" noindex />
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-serif mb-4">{isRegistering ? 'Membership Application' : 'Welcome Back'}</h1>
-                    <p className="text-gray-500 font-light">Access The Collectors' Exchange secure portal.</p>
+                    <h1 className="text-4xl font-serif mb-4">Welcome Back</h1>
+                    <p className="text-gray-500 font-light">Sign in to The Collectors' Exchange secure portal.</p>
                 </div>
 
-                {showEmailVerify ? (
-                    <div className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6 text-center">
-                        <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Mail size={32} className="text-amber-500" />
-                        </div>
-                        <h2 className="text-2xl font-serif text-heritage-charcoal mb-3">Verify Your Email</h2>
-                        <p className="text-gray-500 mb-6 leading-relaxed">
-                            We sent a verification link to <strong className="text-gray-700">{regForm.email}</strong>.
-                            Please check your inbox and click the link to activate your account.
-                        </p>
-                        <p className="text-xs text-gray-400 mb-8">
-                            Didn't receive the email? Check your spam folder or{' '}
-                            <button type="button" onClick={() => { setShowEmailVerify(false); setIsRegistering(false); }} className="text-luxury-gold hover:underline font-semibold">
-                                try signing in
-                            </button>
-                            .
-                        </p>
-                        <button
-                            onClick={() => { setShowEmailVerify(false); setIsRegistering(false); }}
-                            className="w-full bg-black text-white py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300"
-                        >
-                            Back to Sign In
-                        </button>
-                    </div>
-                ) : isRegistering ? (
-                    <form onSubmit={handleRegister} className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
-                        <button
-                            type="button"
-                            onClick={handleGoogleLogin}
-                            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-4 text-sm font-medium hover:bg-gray-50 transition-colors mb-4"
-                        >
-                            <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-                            Continue with Google
-                        </button>
-
-                        <div className="relative py-2">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-100"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                                <span className="bg-white px-2 text-gray-400">Or Register with Email</span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
-                            <input
-                                type="text"
-                                required
-                                value={regForm.name}
-                                onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
-                                className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
-                            <input
-                                type="email"
-                                required
-                                value={regForm.email}
-                                onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
-                                className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone Number</label>
-                            <input
-                                type="tel"
-                                required
-                                value={regForm.phone}
-                                onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
-                                className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Account Type</label>
-                            <div className="grid grid-cols-2 gap-4">
-                                <label className={`cursor-pointer p-4 border transition-all ${regForm.type === 'individual' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200'}`}>
-                                    <input
-                                        type="radio"
-                                        name="type"
-                                        value="individual"
-                                        checked={regForm.type === 'individual'}
-                                        onChange={(e) => setRegForm({ ...regForm, type: e.target.value })}
-                                        className="hidden"
-                                    />
-                                    <div className="font-serif font-medium">Individual</div>
-                                    <div className="text-xs text-gray-500 mt-1">For private collectors</div>
-                                </label>
-                                <label className={`cursor-pointer p-4 border transition-all ${regForm.type === 'company' ? 'border-luxury-gold bg-luxury-gold/5 opacity-50' : 'border-gray-200 opacity-50 hover:border-luxury-gold/50'}`}>
-                                    <input
-                                        type="radio"
-                                        name="type"
-                                        value="company"
-                                        checked={regForm.type === 'company'}
-                                        onChange={() => setShowCompanyPopup(true)}
-                                        className="hidden"
-                                    />
-                                    <div className="font-serif font-medium">Company <span className="text-xs font-sans font-normal text-amber-600">— contact us</span></div>
-                                    <div className="text-xs text-gray-500 mt-1">For businesses (email required)</div>
-                                </label>
-                            </div>
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={isRegisterPending}
-                            className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-2"
-                        >
-                            {isRegisterPending && <Loader2 size={16} className="animate-spin" />}
-                            Create Account
-                        </button>
-                        <p className="text-center text-gray-500 text-sm">
-                            Already a member?{' '}
-                            <button type="button" onClick={() => setIsRegistering(false)} className="text-luxury-gold hover:underline font-semibold">
-                                Sign In
-                            </button>
-                        </p>
-                    </form>
-                ) : (
-                    <div className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl font-serif text-heritage-charcoal mb-2">Member Sign In</h2>
-                            <p className="text-gray-500 font-light text-sm">Welcome back to The Exchange.</p>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={handleGoogleLogin}
-                            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-4 text-sm font-medium hover:bg-gray-50 transition-colors"
-                        >
-                            <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-                            Continue with Google
-                        </button>
-
-                        <div className="relative py-2">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-100"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                                <span className="bg-white px-2 text-gray-400">Or Sign In with Email</span>
-                            </div>
-                        </div>
-
-                        <LoginForm onLoginSuccess={() => { }} />
-
-                        <div className="relative py-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-100"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                                <span className="bg-white px-2 text-gray-400">New Collector?</span>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setIsRegistering(true)}
-                            className="w-full bg-black text-white py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 shadow-sm"
-                        >
-                            Create Application
-                        </button>
-                    </div>
-                )}
+                <div className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-4 text-sm font-medium hover:bg-gray-50 transition-colors"
+                    >
+                        <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
+                        Continue with Google
+                    </button>
+                </div>
 
                 {/* Company Registration Popup */}
                 {showCompanyPopup && (
@@ -1734,6 +1573,56 @@ const Account = () => {
             return null;
         }
     };
+
+    if (showPasswordSetup) {
+        return (
+            <div className="min-h-screen bg-secondary-bg">
+                <SEO title="Set Your Password — The Collectors Exchange" description="" canonical="/account" noindex />
+                <div className="container mx-auto py-20 px-6 max-w-xl">
+                    <div className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
+                        <div className="text-center mb-4">
+                            <h1 className="text-3xl font-serif mb-3">Set Your Password</h1>
+                            <p className="text-gray-500 font-light">
+                                Your email has been verified. Choose a password to secure your account.
+                            </p>
+                        </div>
+                        <form onSubmit={handleSetPassword} className="space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    minLength={6}
+                                    value={passwordForm.password}
+                                    onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
+                                    className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
+                                    placeholder="At least 6 characters"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Confirm Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    minLength={6}
+                                    value={passwordForm.confirm}
+                                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                                    className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
+                                    placeholder="Re-enter your password"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300"
+                            >
+                                Set Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-secondary-bg">

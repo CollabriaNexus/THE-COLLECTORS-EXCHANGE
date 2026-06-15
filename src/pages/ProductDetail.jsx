@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import SEO, { ProductSchema, BreadcrumbSchema } from '../components/SEO';
 import { ShieldCheck, Heart, ShoppingBag, ChevronRight, Share2, Info, Loader2, Check, ArrowRight, Gem, Award, ImageOff, XCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -150,7 +151,7 @@ const ProductDetail = () => {
                                         onClick={() => setActiveImageIndex(idx)}
                                         className={`aspect-square border-2 transition-all ${activeImageIndex === idx ? 'border-luxury-gold ring-1 ring-luxury-gold/50' : 'border-gray-100 hover:border-gray-300'}`}
                                     >
-                                        <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <img loading="lazy" width="80" height="80" src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
                                     </button>
                                 ))}
                             </div>
@@ -159,6 +160,7 @@ const ProductDetail = () => {
                         <div className="relative flex-1 aspect-[4/3] bg-gray-50 overflow-hidden shadow-sm border border-gray-100">
                             {images.length > 0 ? (
                                 <img
+                                    width="800" height="600"
                                     src={images[activeImageIndex]}
                                     alt={product.title}
                                     className="w-full h-full object-contain p-2 sm:p-6 md:p-8"
@@ -410,10 +412,15 @@ const SuggestedProducts = ({ category, currentId }) => {
                             >
                                 <div className="relative aspect-square bg-heritage-beige overflow-hidden">
                                     {product.image ? (
-                                        <img src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+                                        <img loading="lazy" width="400" height="400" src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
                                     ) : (
                                         <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/30 bg-heritage-cream">
                                             <Gem size={32} strokeWidth={1} />
+                                        </div>
+                                    )}
+                                    {product.status === 'Sold' && (
+                                        <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
+                                            <span className="bg-white/90 text-heritage-charcoal text-[10px] font-bold px-4 py-1.5 uppercase tracking-[0.15em] shadow-lg">Sold Out</span>
                                         </div>
                                     )}
                                     <div className="absolute bottom-3 left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 font-sans tracking-[0.12em] uppercase flex items-center gap-1.5">
@@ -423,7 +430,7 @@ const SuggestedProducts = ({ category, currentId }) => {
                                 </div>
                                 <div className="p-4">
                                     <h3 className="font-serif text-sm font-medium text-heritage-charcoal leading-snug line-clamp-1" title={title}>{title}</h3>
-                                    <p className="text-heritage-gold-muted font-sans text-sm font-medium mt-1.5">₹{product.price?.toLocaleString()}</p>
+                                    <p className={`font-sans text-sm font-medium mt-1.5 ${product.status === 'Sold' ? 'text-gray-400 line-through' : 'text-heritage-gold-muted'}`}>₹{product.price?.toLocaleString()}</p>
                                 </div>
                             </Link>
                         );

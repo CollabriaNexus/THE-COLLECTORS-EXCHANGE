@@ -229,26 +229,27 @@ const About = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="space-y-8">
-                            <div className="space-y-4">
-                                <span className="text-luxury-gold font-serif text-4xl block">02.</span>
-                                <h2 className="text-3xl md:text-4xl font-serif text-heritage-charcoal tracking-tight uppercase">A New Standard of Trust</h2>
-                            </div>
-                            <div className="space-y-6 text-heritage-charcoal/80 text-lg leading-relaxed font-medium border-l-2 border-luxury-gold/20 pl-8">
-                                <p>
-                                    The pre-owned market is often clouded by doubt. We’re here to change that.
-                                </p>
-                                <p>
-                                    Through a rigorous verification process and archival appraisal, we ensure that every piece in our registry is original and authentic. We’re creating a space where transparency is the default, not the exception.
-                                </p>
-                            </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        <div className="space-y-4">
+                            <span className="text-luxury-gold font-serif text-4xl block">01.</span>
+                            <h2 className="text-3xl md:text-4xl font-serif text-heritage-charcoal tracking-tight uppercase">A New Standard of Trust</h2>
+                        </div>
+                        <div className="space-y-6 text-heritage-charcoal/80 text-lg leading-relaxed font-medium border-l-2 border-luxury-gold/20 pl-8">
+                            <p>
+                                The pre-owned market is often clouded by doubt. We're here to change that.
+                            </p>
+                            <p>
+                                Through a rigorous verification process and archival appraisal, we ensure that every piece in our registry is original and authentic. We're creating a space where transparency is the default, not the exception.
+                            </p>
                         </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-20 items-center">
                         <div className="space-y-8 order-2 md:order-1">
                             <div className="space-y-4">
-                                <span className="text-luxury-gold font-serif text-4xl block">03.</span>
+                                <span className="text-luxury-gold font-serif text-4xl block">02.</span>
                                 <h2 className="text-3xl md:text-4xl font-serif text-heritage-charcoal tracking-tight uppercase">Direct From the Source</h2>
                             </div>
                             <div className="space-y-6 text-heritage-charcoal/80 text-lg leading-relaxed font-medium border-l-2 border-luxury-gold/20 pl-8">

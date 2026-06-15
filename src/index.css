@@ -116,3 +116,47 @@ h1, h2, h3, h4, h5, h6 {
     padding-bottom: 2.5rem !important;
   }
 }
+
+/* CLS prevention: default aspect-ratio on image containers */
+img,
+video {
+  aspect-ratio: attr(width) / attr(height);
+}
+
+img[loading="lazy"] {
+  background: #f5f5f5;
+}
+
+.aspect-4-5 {
+  aspect-ratio: 4/5;
+}
+
+.aspect-square-ph {
+  aspect-ratio: 1/1;
+}
+
+/* Touch target minimum size for mobile */
+@media (hover: none) and (pointer: coarse) {
+  button, 
+  a, 
+  [role="button"],
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  a:has(svg:only-child),
+  button:has(svg:only-child) {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}

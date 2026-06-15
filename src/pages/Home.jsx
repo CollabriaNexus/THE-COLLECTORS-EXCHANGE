@@ -54,7 +54,7 @@ const FeaturedProductCard = ({ product }) => {
             <Link to={`/product/${product.id}`} className="block">
                 <div className="relative aspect-[4/5] bg-heritage-beige overflow-hidden">
                     {product.image ? (
-                        <img loading="lazy" src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+                        <img loading="lazy" width="400" height="500" src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/40 bg-heritage-beige">
                             <Gem size={48} strokeWidth={1} />
@@ -179,6 +179,7 @@ const Home = () => {
                 <video
                     autoPlay muted loop playsInline
                     poster={heroPoster}
+                    fetchpriority="high"
                     onEnded={() => window.dispatchEvent(new Event('homeVideoEnded'))}
                     className="absolute inset-0 w-full h-full object-cover"
                 >
@@ -317,7 +318,7 @@ const Home = () => {
                         </div>
                         <div className="lg:w-1/2 relative">
                             <div className="relative z-10 p-2 bg-white border border-heritage-bronze/10 shadow-2xl overflow-hidden group">
-                                <img src={verificationAuthenticity} alt="Heritage Verification" className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" />
+                                <img loading="lazy" width="600" height="600" src={verificationAuthenticity} alt="Heritage Verification" className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-heritage-charcoal/5 to-transparent"></div>
                             </div>
                             <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-luxury-gold/10 rounded-full blur-3xl -z-0"></div>
@@ -409,7 +410,7 @@ const TestimonialsSection = () => {
                     {t.images?.length > 0 && (
                         <div className="flex justify-center gap-3 mb-4 overflow-x-auto">
                             {t.images.map((img, i) => (
-                                <img key={i} src={img} alt={`${t.authorName}'s collectible`} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded border border-gray-200 flex-shrink-0" />
+                                <img key={i} loading="lazy" width="96" height="96" src={img} alt={`${t.authorName}'s collectible`} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded border border-gray-200 flex-shrink-0" />
                             ))}
                         </div>
                     )}
