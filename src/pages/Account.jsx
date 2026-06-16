@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import SEO from '../components/SEO';
 import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, Crown, Check, CreditCard, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
@@ -32,6 +32,7 @@ const Account = () => {
     const [showPasswordSetup, setShowPasswordSetup] = useState(false);
     const [passwordForm, setPasswordForm] = useState({ password: '', confirm: '' });
     const [showCompanyPopup, setShowCompanyPopup] = useState(false);
+    const navigate = useNavigate();
     const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '', aadhaarDoc: '', panDoc: '', gstDoc: '', incorporationDoc: '', signedByName: '', signedAgreementDoc: '' });
     const [tncAccepted, setTncAccepted] = useState(false);
     const [productForm, setProductForm] = useState({
@@ -131,14 +132,16 @@ const Account = () => {
                 setLocalUser(user);
                 setLocalUserState(user);
                 queryClient.invalidateQueries({ queryKey: ['user'] });
+                showToast('Welcome back!', 'success');
             } catch (error) {
                 console.error('Auth sync failed', error);
+                showToast('Failed to sync account. Please try again.', 'error');
             }
         } else {
             setLocalUserState(null);
             clearUser();
         }
-    }, [registerUser, queryClient]);
+    }, [registerUser, queryClient, showToast]);
 
     useEffect(() => {
         // Initial session check
@@ -180,7 +183,7 @@ const Account = () => {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: window.location.origin + '/account'
             }
         });
         if (error) { showToast(error.message, 'error'); return; }
