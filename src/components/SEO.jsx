@@ -113,7 +113,7 @@ export const ProductSchema = ({ product }) => {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
-    description: product.description?.replace(/<[^>]*>/g, '').substring(0, 200),
+    description: product.description?.replace(/<[^>]*>/g, '')?.substring(0, 200),
     image: product.images?.length > 0 ? product.images : (product.image ? [product.image] : []),
     sku: product.id?.toString(),
     brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
@@ -126,6 +126,9 @@ export const ProductSchema = ({ product }) => {
       url: `${SITE_URL}/product/${product.id}`,
       priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     },
+    itemCondition: product.condition === 'New' ? 'https://schema.org/NewCondition'
+      : product.condition === 'Mint' ? 'https://schema.org/MintCondition'
+      : 'https://schema.org/UsedCondition',
     ...(product.isVerified && {
       award: 'Verified Authentic by The Collectors Exchange',
     }),

@@ -1,32 +1,33 @@
 import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import Layout from './components/Layout';
-import Home from './pages/Home';
-import Category from './pages/Category';
-import Auction from './pages/Auction';
-import Account from './pages/Account';
-import Wishlist from './pages/Wishlist';
-import Cart from './pages/Cart';
-import About from './pages/About';
-import AboutUs from "./pages/AboutUs";
-import Vision from './pages/Vision';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
-import FoundersNote from './pages/FoundersNote';
-import ProductDetail from './pages/ProductDetail';
-import GalleryPage from './pages/GalleryPage';
-import GalleryDetail from './pages/GalleryDetail';
-import GalleryArticle from './pages/GalleryArticle';
-import SellerAgreement from './pages/SellerAgreement';
-import Checkout from './pages/Checkout';
-import VendorDashboard from './pages/VendorDashboard';
-import Contact from './pages/Contact';
-import FAQ from './pages/FAQ';
-import Returns from './pages/Returns';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { pageview } from './utils/gtag';
+
+const Home = lazy(() => import('./pages/Home'));
+const Category = lazy(() => import('./pages/Category'));
+const Auction = lazy(() => import('./pages/Auction'));
+const Account = lazy(() => import('./pages/Account'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
+const Cart = lazy(() => import('./pages/Cart'));
+const About = lazy(() => import('./pages/About'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const Vision = lazy(() => import('./pages/Vision'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const FoundersNote = lazy(() => import('./pages/FoundersNote'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const GalleryPage = lazy(() => import('./pages/GalleryPage'));
+const GalleryDetail = lazy(() => import('./pages/GalleryDetail'));
+const GalleryArticle = lazy(() => import('./pages/GalleryArticle'));
+const SellerAgreement = lazy(() => import('./pages/SellerAgreement'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const VendorDashboard = lazy(() => import('./pages/VendorDashboard'));
+const Contact = lazy(() => import('./pages/Contact'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const Returns = lazy(() => import('./pages/Returns'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -48,6 +49,14 @@ function App() {
       <GATracker />
       <ErrorBoundary>
       <ToastProvider>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="w-10 h-10 border-2 border-luxury-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400 font-serif text-lg italic">Loading the archive...</p>
+          </div>
+        </div>
+      }>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
@@ -84,6 +93,7 @@ function App() {
           } />
         </Route>
       </Routes>
+      </Suspense>
       </ToastProvider>
       </ErrorBoundary>
     </BrowserRouter>

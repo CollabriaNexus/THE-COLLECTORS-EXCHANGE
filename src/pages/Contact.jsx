@@ -22,8 +22,8 @@ support@thecollectorsexchange.in
         icon: MessageSquare,
         title: 'Partnerships',
         content: (
-            <a href="mailto:partnerships@thecollectors.exchange" className="text-sm text-gray-600 hover:text-luxury-gold transition-colors break-words">
-                partnerships@thecollectors.exchange
+            <a href="mailto:support@thecollectorsexchange.in" className="text-sm text-gray-600 hover:text-luxury-gold transition-colors break-words">
+                support@thecollectorsexchange.in
             </a>
         ),
     },

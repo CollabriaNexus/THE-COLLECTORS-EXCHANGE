@@ -117,7 +117,7 @@ const ProductDetail = () => {
         <div className="min-h-screen bg-white">
             <SEO
                 title={product.title}
-                description={product.description?.replace(/<[^>]*>/g, '').substring(0, 160) || `Authentic ${product.category} collectible at ₹${product.price?.toLocaleString()}. Verified by The Collectors Exchange.`}
+                description={(product.description?.replace(/<[^>]*>/g, '')?.substring(0, 160)) || `Authentic ${product.category} collectible at ₹${product.price?.toLocaleString()}. Verified by The Collectors Exchange.`}
                 canonical={`/product/${product.id}`}
                 image={product.images?.[0] || product.image}
                 ogType="product"

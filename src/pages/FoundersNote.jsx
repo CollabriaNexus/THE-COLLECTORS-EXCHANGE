@@ -26,10 +26,7 @@ const FoundersNote = () => {
 
                     <div className="space-y-6 text-lg md:text-xl font-light leading-relaxed text-gray-800 font-serif">
                         <p className="italic text-black font-normal text-2xl border-l-4 border-luxury-gold pl-6">
-                            "The Collectors Exchange is not a 'startup dream,' it is a lifelong commitment to the soul of our nation.
-                        </p>
-                        <p>
-                            My intention is simple: to ensure that Indian heritage does not become a memory, but remains a living, breathing part of our homes.
+                            "The Collectors Exchange is not a 'startup dream,' it is a lifelong commitment to the soul of our nation. My intention is simple: to ensure that Indian heritage does not become a memory, but remains a living, breathing part of our homes.
                         </p>
                         <p>
                             We do not believe in the fleeting nature of 'startup bubbles.' Instead, we build on the timeless principles taught by our ancestors: integrity, longevity, and a deep respect for the trade. To us, every article we find is sacred. Our responsibility does not end at the point of sale; we remain the guardians of every piece we sell. This is why we check in with our collectors annually to ensure the health and preservation of these historic treasures.

@@ -128,14 +128,25 @@ const Account = () => {
                     phone: session.user.phone || undefined,
                     type: 'individual',
                 };
-                const user = await registerUser(syncData);
+                let user;
+                try {
+                    user = await registerUser(syncData);
+                } catch (err) {
+                    console.error('Backend sync failed (server may be waking up), using cached data', err);
+                    const cached = getUser();
+                    if (cached) {
+                        user = cached;
+                    } else {
+                        throw err;
+                    }
+                }
                 setLocalUser(user);
                 setLocalUserState(user);
                 queryClient.invalidateQueries({ queryKey: ['user'] });
                 showToast('Welcome back!', 'success');
             } catch (error) {
                 console.error('Auth sync failed', error);
-                showToast('Failed to sync account. Please try again.', 'error');
+                showToast('Could not reach the server. Please refresh the page to retry.', 'error');
             }
         } else {
             setLocalUserState(null);
@@ -527,9 +538,9 @@ const Account = () => {
                                 <p className="text-gray-600 mb-6 text-sm leading-relaxed">
                                     To register as a company please connect with us on the following email. We will get back to you within the next 2 working days.
                                 </p>
-                                <a href="mailto:partnerships@thecollectors.exchange" className="flex items-center justify-center w-full bg-black text-white py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors gap-2">
+                                <a href="mailto:support@thecollectorsexchange.in" className="flex items-center justify-center w-full bg-black text-white py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors gap-2">
                                     <Mail size={16} />
-                                    partnerships@thecollectors.exchange
+                                    support@thecollectorsexchange.in
                                 </a>
                             </div>
                         </div>
