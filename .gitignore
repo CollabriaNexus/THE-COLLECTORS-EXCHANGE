@@ -34,3 +34,6 @@ opencode.json
 .env
 backend/.env
 
+# Google Merchant API service account key
+backend/google-merchant-key.json
+
