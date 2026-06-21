@@ -9,8 +9,12 @@ export default async function googleMerchantRoutes(fastify) {
         try {
             await ensureDeveloperRegistration();
         } catch (err) {
-            if (!err.message?.includes('already')) {
-                request.log.warn({ err: err.message }, 'Developer registration note');
+            if (!err.message?.includes('already') && !err.message?.includes('registered')) {
+                return reply.status(500).send({
+                    error: 'GCP project not registered with Merchant Center.',
+                    detail: err.message,
+                    hint: 'Run this curl command to register:\n\ncurl -X POST "https://merchantapi.googleapis.com/accounts/v1/accounts/5812107292/developerRegistration:registerGcp" -H "Authorization: Bearer YOUR_ACCESS_TOKEN" -H "Content-Type: application/json"\n\nOr visit: https://console.cloud.google.com/apis/credentials?project=emerald-bastion-484309-j8',
+                });
             }
         }
 
