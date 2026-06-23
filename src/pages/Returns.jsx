@@ -17,9 +17,9 @@ const Returns = () => {
                     <p className="mb-3 text-gray-700">Every item sold on The Collectors Exchange is verified for authenticity before listing. We guarantee that what you receive is exactly what was described.</p>
                     <p className="mb-2 font-medium text-black">If an item is found to be inauthentic:</p>
                     <ul className="space-y-2 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Contact us within 7 days of delivery with a detailed description and supporting evidence from a certified independent expert.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Upon verification by our team, we will provide a full refund of the purchase price including shipping.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>The item must be returned in the same condition it was delivered.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Contact us within 7 days of delivery with a detailed description and supporting evidence from a certified independent expert.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Upon verification by our team, we will provide a full refund of the purchase price including shipping.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>The item must be returned in the same condition it was delivered.</span></li>
                     </ul>
                 </section>
 
@@ -28,9 +28,9 @@ const Returns = () => {
                     <p className="mb-3 text-gray-700">Because our articles are one-of-a-kind heritage pieces, we provide a 48-hour inspection period from the time of delivery.</p>
                     <p className="mb-2 font-medium text-black">During this period:</p>
                     <ul className="space-y-2 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Examine the item thoroughly. Compare it against the description, images, and condition notes provided on the listing.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>If there is a significant discrepancy (e.g., damage not disclosed, incorrect model, missing components), report it to us immediately at <a href="mailto:support@thecollectorsexchange.in" className="text-luxury-gold hover:underline">support@thecollectorsexchange.in</a>.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>We will review your claim and may offer a partial refund, full return, or replacement depending on the nature of the discrepancy.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Examine the item thoroughly. Compare it against the description, images, and condition notes provided on the listing.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>If there is a significant discrepancy (e.g., damage not disclosed, incorrect model, missing components), report it to us immediately at <a href="mailto:support@thecollectorsexchange.in" className="text-luxury-gold hover:underline">support@thecollectorsexchange.in</a>.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>We will review your claim and may offer a partial refund, full return, or replacement depending on the nature of the discrepancy.</span></li>
                     </ul>
                     <p className="text-sm text-gray-500 mt-2 italic">Note: Normal wear, patina, and character marks consistent with the item's age and described condition are not considered discrepancies.</p>
                 </section>
@@ -44,10 +44,10 @@ const Returns = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">4. Shipping & Delivery</h2>
                     <p className="mb-3 text-gray-700">We partner with trusted courier services to ensure your item arrives safely.</p>
                     <ul className="space-y-3 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5 font-bold">•</span><div><span className="font-medium text-black">Processing Time:</span><span className="block text-gray-600"> Orders are processed within 2-5 business days after payment confirmation. High-value or fragile items may require additional packaging time.</span></div></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5 font-bold">•</span><div><span className="font-medium text-black">Tracking:</span><span className="block text-gray-600"> A tracking ID is provided once the order is shipped. You can monitor your delivery status from your account dashboard under "My Orders."</span></div></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5 font-bold">•</span><div><span className="font-medium text-black">Insurance:</span><span className="block text-gray-600"> All shipments are insured against loss or damage during transit.</span></div></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5 font-bold">•</span><div><span className="font-medium text-black">Delivery Timeline:</span><span className="block text-gray-600"> Domestic deliveries typically arrive within 5-10 business days. International shipping timelines vary by destination.</span></div></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span><div><span className="font-medium text-black">Processing Time:</span><span className="block text-gray-600"> Orders are processed within 2-5 business days after payment confirmation. High-value or fragile items may require additional packaging time.</span></div></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span><div><span className="font-medium text-black">Tracking:</span><span className="block text-gray-600"> A tracking ID is provided once the order is shipped. You can monitor your delivery status from your account dashboard under "My Orders."</span></div></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span><div><span className="font-medium text-black">Insurance:</span><span className="block text-gray-600"> All shipments are insured against loss or damage during transit.</span></div></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span><div><span className="font-medium text-black">Delivery Timeline:</span><span className="block text-gray-600"> Domestic deliveries typically arrive within 5-10 business days. International shipping timelines vary by destination.</span></div></li>
                     </ul>
                 </section>
 
@@ -55,9 +55,9 @@ const Returns = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">5. Damaged or Lost in Transit</h2>
                     <p className="mb-3 text-gray-700">If your item arrives damaged or is lost during shipping:</p>
                     <ul className="space-y-2 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Document the damage with photographs and retain all packaging materials.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Contact us within 48 hours of delivery at <a href="mailto:support@thecollectorsexchange.in" className="text-luxury-gold hover:underline">support@thecollectorsexchange.in</a> with your order number and photos.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>We will file a claim with the courier and arrange a replacement or full refund, including shipping.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Document the damage with photographs and retain all packaging materials.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Contact us within 48 hours of delivery at <a href="mailto:support@thecollectorsexchange.in" className="text-luxury-gold hover:underline">support@thecollectorsexchange.in</a> with your order number and photos.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>We will file a claim with the courier and arrange a replacement or full refund, including shipping.</span></li>
                     </ul>
                 </section>
 
@@ -65,18 +65,18 @@ const Returns = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">6. Refund Processing</h2>
                     <p className="mb-3 text-gray-700">Approved refunds are processed within 5-10 business days and credited to the original payment method.</p>
                     <ul className="space-y-2 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Refunds cover the full purchase price and applicable shipping charges for approved return requests.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Return shipping costs for non-defect returns (where applicable) are borne by the buyer.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Payment gateway charges (if any) are non-refundable.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Refunds cover the full purchase price and applicable shipping charges for approved return requests.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Return shipping costs for non-defect returns (where applicable) are borne by the buyer.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Payment gateway charges (if any) are non-refundable.</span></li>
                     </ul>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">7. Exclusions</h2>
                     <ul className="space-y-2 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Auction purchases are final and are not eligible for returns unless the item is found to be inauthentic as per Section 1.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Custom or modified items cannot be returned.</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Items returned without prior authorization will not be accepted.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Auction purchases are final and are not eligible for returns unless the item is found to be inauthentic as per Section 1.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Custom or modified items cannot be returned.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Items returned without prior authorization will not be accepted.</span></li>
                     </ul>
                 </section>
             </div>

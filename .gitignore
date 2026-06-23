@@ -37,3 +37,9 @@ backend/.env
 # Google Merchant API service account key
 backend/google-merchant-key.json
 
+# Playwright test artifacts
+test-results/
+tests/playwright-report/
+tests/.auth/
+tests/.env.test
+

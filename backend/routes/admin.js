@@ -812,7 +812,7 @@ export default async function adminRoutes(fastify) {
             data: {
                 userId: updatedOrder.userId,
                 title: 'Your Order Has Shipped 📦',
-                message: `Your order is on its way! Tracking ID: ${trackingID}. Track at delhivery.com.`,
+                message: `Your order is on its way! Tracking ID: ${trackingID}. Track at ${process.env.TRACKING_URL || 'https://www.delhivery.com'}.`,
             }
         });
 

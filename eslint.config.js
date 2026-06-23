@@ -35,4 +35,16 @@ export default defineConfig([
       globals: globals.node,
     },
   },
+  {
+    files: ['tests/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {
+      'no-unused-vars': ['error', {
+        varsIgnorePattern: '^[A-Z_]',
+        argsIgnorePattern: '^(request|reply|options|_|context)$',
+      }],
+    },
+  },
 ])

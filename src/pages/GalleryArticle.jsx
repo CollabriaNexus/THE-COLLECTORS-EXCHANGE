@@ -415,7 +415,7 @@ const renderContent = (blocks) => {
           <ul key={idx} className="space-y-3 mb-8">
             {block.items.map((item, i) => (
               <li key={i} className="flex items-start gap-3 text-heritage-charcoal/80 font-serif text-lg">
-                <span className="text-luxury-gold mt-2 flex-shrink-0">•</span>
+                <span className="text-luxury-gold mt-2 flex-shrink-0" aria-hidden="true">•</span>
                 <span>{item}</span>
               </li>
             ))}

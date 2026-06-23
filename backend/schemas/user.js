@@ -4,7 +4,7 @@ export const UserSchema = z.object({
     id: z.string().optional(),
     email: z.string().email(),
     name: z.string().optional(),
-    password: z.string().min(6),
+    password: z.string().min(8).regex(/[A-Z]/, 'Must contain at least one uppercase letter').regex(/[a-z]/, 'Must contain at least one lowercase letter').regex(/[0-9]/, 'Must contain at least one number'),
     phone: z.string().optional(),
     type: z.enum(['individual', 'company']).default('individual'),
     role: z.enum(['user', 'admin', 'curator']).default('user'),

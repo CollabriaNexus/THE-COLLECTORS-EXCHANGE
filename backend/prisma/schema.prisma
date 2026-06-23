@@ -115,6 +115,9 @@ enum CartAction {
   REMOVE
 }
 
+// NOTE (#18): Future migration - convert Product.category (String) → enum ProductCategory, Product.condition (String) → enum ProductCondition, ContactMessage.subject (String) → enum ContactSubject, GalleryItem.theme/origin/timePeriod (String) → respective enums
+// NOTE (#39): Future migration - standardize enum case to PascalCase: UserType (individual→Individual, company→Company), UserRole (user→User, admin→Admin, curator→Curator), KycStatus, PhoneVerificationStatus, ListingCategory
+
 // ============== MODELS ==============
 
 model User {
@@ -147,6 +150,9 @@ model User {
   checkoutEvents   CheckoutEvent[]
   auditLogs        AuditLog[]
   ratings          Rating[]
+
+  @@index([kycStatus])
+  @@index([role])
 }
 
 model Product {
@@ -222,15 +228,20 @@ model GalleryItem {
   institution  String
   significance String
   theme        String
+  createdById  String?
+  createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([theme])
+  @@index([createdAt])
 }
 
 model Order {
   id              String        @id @default(cuid())
   displayId       String        @unique
   userId          String
-  user            User          @relation(fields: [userId], references: [id])
+  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
   status          OrderStatus   @default(Pending)
   totalAmount     Float
   shippingAddress String
@@ -252,6 +263,8 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([displayId])
+  @@index([paymentStatus])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -267,6 +280,7 @@ model OrderItem {
   createdAt  DateTime       @default(now())
 
   @@index([orderId])
+  @@index([productId])
 }
 
 model Vendor {
@@ -309,12 +323,15 @@ model Vendor {
 
   payouts       Payout[]
   ratings       Rating[]
+
+  @@index([status])
+  @@index([type])
 }
 
 model AuditLog {
   id          String   @id @default(cuid())
   adminId     String
-  admin       User     @relation(fields: [adminId], references: [id])
+  admin       User     @relation(fields: [adminId], references: [id], onDelete: SetNull)
   action      String
   targetType  String
   targetId    String
@@ -352,7 +369,7 @@ model AuctionBid {
   auctionId String
   auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount    Float
   createdAt DateTime @default(now())
 
@@ -420,6 +437,9 @@ model ContactMessage {
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([read])
+  @@index([createdAt])
 }
 
 model CheckoutEvent {
@@ -432,6 +452,7 @@ model CheckoutEvent {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([productId])
 }
 
 model PushSubscription {
@@ -467,12 +488,13 @@ model Rating {
   id        String   @id @default(cuid())
   userId    String
   vendorId  String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   rating    Int
   createdAt DateTime @default(now())
 
   @@unique([userId, vendorId])
+  @@index([userId])
   @@index([vendorId])
 }
 

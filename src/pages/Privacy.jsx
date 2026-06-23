@@ -32,21 +32,21 @@ const Privacy = () => {
                     <p className="mb-3 text-gray-700">To facilitate the transfer of heritage, we collect only the essentials:</p>
                     <ul className="space-y-3 text-gray-700 mb-3">
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5 font-bold">•</span>
+                            <span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span>
                             <div>
                                 <span className="font-medium text-black">Contact Information:</span>
                                 <span className="block text-gray-600"> Your name, delivery address, and digital coordinates (email/phone). This is required to bring history to your doorstep.</span>
                             </div>
                         </li>
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5 font-bold">•</span>
+                            <span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span>
                             <div>
                                 <span className="font-medium text-black">Historical Interests:</span>
                                 <span className="block text-gray-600"> We may note the categories you value (e.g., Timepieces, Sneakers, or Antiques) so we can alert you when we find a "needle in a haystack" that fits your collection.</span>
                             </div>
                         </li>
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5 font-bold">•</span>
+                            <span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span>
                             <div>
                                 <span className="font-medium text-black">Transaction History:</span>
                                 <span className="block text-gray-600"> A record of the articles you have rescued. This is not for marketing; it is for the Registry of History.</span>
@@ -78,11 +78,11 @@ const Privacy = () => {
                     <p className="mb-3 text-gray-700">The only time your data leaves our vault is when it is a mechanical necessity:</p>
                     <ul className="space-y-2 text-gray-700 mb-3">
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5">•</span>
+                            <span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span>
                             <span><span className="font-medium">Logistics:</span> Sharing your address with our trusted couriers to ensure the "hustle" ends at your doorstep.</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5">•</span>
+                            <span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span>
                             <span><span className="font-medium">Legal Compliance:</span> Should the laws of India require us to disclose information regarding a specific historic artifact, we will comply with the integrity our responsibility demands.</span>
                         </li>
                     </ul>
@@ -93,14 +93,14 @@ const Privacy = () => {
                     <p className="mb-3 text-gray-700">In the spirit of a pure business, you have total control:</p>
                     <ul className="space-y-3 text-gray-700 mb-3">
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5 font-bold">•</span>
+                            <span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span>
                             <div>
                                 <span className="font-medium text-black">The Right to Fade:</span>
                                 <span className="block text-gray-600"> If you decide to pass your collection to another custodian or simply wish to be removed from our registry, tell us. We will delete your personal data, though the Item's History will remain in our archives (without your name attached).</span>
                             </div>
                         </li>
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5 font-bold">•</span>
+                            <span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">•</span>
                             <div>
                                 <span className="font-medium text-black">Access:</span>
                                 <span className="block text-gray-600"> You can ask us at any time what information we hold. We will tell you the truth, without the "startup" jargon.</span>

@@ -74,15 +74,15 @@ const Terms = () => {
                     <p className="mb-3 text-gray-700">By purchasing from us, you agree to:</p>
                     <ul className="space-y-2 text-gray-700 mb-3">
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5">•</span>
+                            <span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span>
                             <span>Treat the article with the respect due to a piece of Indian heritage.</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5">•</span>
+                            <span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span>
                             <span>Avoid "cheap" or unverified repairs that could damage the historical value of the article.</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <span className="text-luxury-gold mt-1.5">•</span>
+                            <span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span>
                             <span>Notify us if you intend to sell the item in the future, as we often maintain a "Registry of History" for the pieces we have rescued.</span>
                         </li>
                     </ul>

@@ -12,7 +12,7 @@ export default async function testimonialsRoutes(fastify) {
             return testimonials;
         } catch (err) {
             request.log.error({ prismaError: err.message, stack: err.stack }, 'Testimonials query failed');
-            return reply.status(500).send({ error: err.name, message: err.message });
+            return reply.status(500).send({ error: err.message });
         }
     });
 

@@ -229,7 +229,7 @@ function OrderDetail() {
                                         <div className="flex items-center justify-between mt-1">
                                             <span className="font-mono font-bold text-heritage-charcoal">{order.trackingID}</span>
                                             <a
-                                                href={`https://www.delhivery.com/track/package/${order.trackingID}`}
+                                                href={`${import.meta.env.VITE_TRACKING_URL || 'https://www.delhivery.com'}/track/package/${order.trackingID}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-luxury-gold hover:underline flex items-center gap-1"

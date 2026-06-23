@@ -8,7 +8,7 @@ export default async function userRoutes(fastify) {
     const { prisma } = fastify;
 
     // Register or Sync user
-    fastify.post('/register', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+    fastify.post('/register', { preValidation: [fastify.authenticate], config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (request, reply) => {
         const userData = UserRegistrationSchema.parse(request.body);
 
         // request.user will contain the decoded Supabase JWT payload (sub is the userId)
@@ -213,7 +213,7 @@ export default async function userRoutes(fastify) {
             return updatedUser;
         } catch (err) {
             request.log.error({ prismaError: err.message, stack: err.stack }, 'KYC update failed');
-            return reply.status(500).send({ error: err.name, message: err.message });
+            return reply.status(500).send({ error: err.message });
         }
     });
 
@@ -326,7 +326,7 @@ export default async function userRoutes(fastify) {
     // --- Manual Phone Verification (WhatsApp) ---
 
     // User submits phone for manual verification
-    fastify.post('/phone/submit', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+    fastify.post('/phone/submit', { preValidation: [fastify.authenticate], config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (request, reply) => {
         const { phone } = request.body;
         if (!phone || phone.length < 10) return reply.status(400).send({ error: 'Invalid phone number' });
 

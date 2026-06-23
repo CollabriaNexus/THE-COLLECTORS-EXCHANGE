@@ -15,7 +15,7 @@ export default async function productRoutes(fastify) {
             const count = await prisma.product.count();
             return { connected: true, productCount: count, queryResult: result };
         } catch (err) {
-            return reply.status(500).send({ connected: false, error: err.name, message: err.message, stack: err.stack });
+            return reply.status(500).send({ connected: false, error: err.message, stack: err.stack });
         }
     });
 
@@ -82,7 +82,7 @@ export default async function productRoutes(fastify) {
             return { products, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) };
         } catch (dbError) {
             request.log.error({ prismaError: dbError.message, stack: dbError.stack }, 'Product query failed');
-            return reply.status(500).send({ error: dbError.name, message: dbError.message });
+            return reply.status(500).send({ error: dbError.message });
         }
     });
 

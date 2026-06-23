@@ -35,15 +35,15 @@ const SellerAgreement = () => {
                     <h3 className="text-lg font-serif font-medium mb-2 text-heritage-bronze">2.1 Individual Sellers</h3>
                     <p className="mb-3 text-gray-700">All individual sellers must complete mandatory identity verification by submitting:</p>
                     <ul className="space-y-1 text-gray-700 mb-4">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Aadhaar card</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>PAN card</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Aadhaar card</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>PAN card</span></li>
                     </ul>
                     <h3 className="text-lg font-serif font-medium mb-2 text-heritage-bronze">2.2 Company-led Resellers</h3>
                     <p className="mb-3 text-gray-700">All company-led resellers must submit:</p>
                     <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>GST registration certificate</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Certificate of Incorporation / LLP registration / other applicable government-issued business registration proof</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Any additional document reasonably requested by the Platform for verification</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>GST registration certificate</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Certificate of Incorporation / LLP registration / other applicable government-issued business registration proof</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Any additional document reasonably requested by the Platform for verification</span></li>
                     </ul>
                     <p className="text-gray-600 text-sm italic">The Platform may reject, suspend, or terminate any seller account if verification is incomplete, inaccurate, or unverifiable.</p>
                 </section>
@@ -52,17 +52,17 @@ const SellerAgreement = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">3. Product Authenticity and Fraud Policy</h2>
                     <p className="mb-3 text-gray-700">The Seller confirms that all products listed and sold on the Platform are:</p>
                     <ul className="space-y-1 text-gray-700 mb-4">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>genuine,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>legally owned or authorized for sale,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>accurately described, and</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>free from theft, fraud, duplication, or counterfeit risk.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>genuine,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>legally owned or authorized for sale,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>accurately described, and</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>free from theft, fraud, duplication, or counterfeit risk.</span></li>
                     </ul>
                     <p className="mb-3 text-gray-700">Any <strong>duplicate, fake, fraudulent, stolen, or misrepresented product</strong> will result in:</p>
                     <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>immediate removal of the listing,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>withholding of pending payouts,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>permanent account suspension or ban,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>and the Seller is prohibited from selling again on the Platform.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>immediate removal of the listing,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>withholding of pending payouts,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>permanent account suspension or ban,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>and the Seller is prohibited from selling again on the Platform.</span></li>
                     </ul>
                     <p className="text-gray-600 text-sm">The Platform may also take legal action where required.</p>
                 </section>
@@ -71,10 +71,10 @@ const SellerAgreement = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">4. Listing Rules</h2>
                     <p className="mb-3 text-gray-700">The Seller agrees to:</p>
                     <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>List only products that the Seller legally owns or is authorized to sell,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Provide correct descriptions, images, condition, and pricing,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>Update product status honestly,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>And not manipulate product condition, origin, or authenticity.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>List only products that the Seller legally owns or is authorized to sell,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Provide correct descriptions, images, condition, and pricing,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>Update product status honestly,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>And not manipulate product condition, origin, or authenticity.</span></li>
                     </ul>
                 </section>
 
@@ -82,11 +82,11 @@ const SellerAgreement = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">5. Payments</h2>
                     <p className="mb-3 text-gray-700">Payments to Sellers will be released <strong>after 7 days from confirmed delivery</strong> of the product to the buyer, subject to:</p>
                     <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>successful delivery,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>no active dispute,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>no return request,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>no authenticity issue,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>and completion of Platform checks.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>successful delivery,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>no active dispute,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>no return request,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>no authenticity issue,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>and completion of Platform checks.</span></li>
                     </ul>
                     <p className="text-gray-600 text-sm">The Platform may deduct applicable fees, commissions, refunds, penalties, or withheld amounts before payout.</p>
                 </section>
@@ -95,10 +95,10 @@ const SellerAgreement = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">6. Privacy and Discreet Seller Identity</h2>
                     <p className="mb-3 text-gray-700">For <strong>individual sellers</strong>, the Platform will keep the seller's identity <strong>private and discreet</strong> for buyer-facing purposes, subject to:</p>
                     <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>legal compliance,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>fraud prevention,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>dispute resolution,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>and requirements from law enforcement or government authorities.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>legal compliance,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>fraud prevention,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>dispute resolution,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>and requirements from law enforcement or government authorities.</span></li>
                     </ul>
                     <p className="text-gray-600 text-sm italic">Buyers will not be shown personal identity details of individual sellers unless required by law or necessary for a transaction-related dispute.</p>
                 </section>
@@ -107,12 +107,12 @@ const SellerAgreement = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">7. Seller Responsibility</h2>
                     <p className="mb-3 text-gray-700">The Seller is solely responsible for:</p>
                     <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>the authenticity of products,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>legal ownership,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>accurate listing details,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>packaging,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>safe handover,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>and compliance with all applicable laws.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>the authenticity of products,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>legal ownership,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>accurate listing details,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>packaging,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>safe handover,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>and compliance with all applicable laws.</span></li>
                     </ul>
                     <p className="text-gray-600 text-sm">The Seller agrees to indemnify and hold harmless the Platform against any claims, losses, damages, penalties, or legal actions arising from breach of this Agreement.</p>
                 </section>
@@ -121,11 +121,11 @@ const SellerAgreement = () => {
                     <h2 className="text-2xl font-serif font-semibold mb-4 text-black">8. Account Suspension and Termination</h2>
                     <p className="mb-3 text-gray-700">The Platform may suspend or terminate any Seller account immediately if the Seller:</p>
                     <ul className="space-y-1 text-gray-700 mb-3">
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>submits false information,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>lists counterfeit or duplicate products,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>violates Platform policy,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>engages in fraud,</span></li>
-                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5">•</span><span>or otherwise harms buyer trust or Platform integrity.</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>submits false information,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>lists counterfeit or duplicate products,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>violates Platform policy,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>engages in fraud,</span></li>
+                        <li className="flex items-start gap-3"><span className="text-luxury-gold mt-1.5" aria-hidden="true">•</span><span>or otherwise harms buyer trust or Platform integrity.</span></li>
                     </ul>
                     <p className="text-gray-600 text-sm">Termination may be permanent at the Platform's sole discretion.</p>
                 </section>
