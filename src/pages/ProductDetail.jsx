@@ -11,6 +11,7 @@ import { useAddToWishlist, useRemoveFromWishlist, useWishlist } from '../hooks/a
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
+import { useConfirm } from '../components/ConfirmDialog';
 
 const ProductDetail = () => {
     const { id } = useParams();
@@ -20,6 +21,7 @@ const ProductDetail = () => {
 
     const currentUser = getUser();
     const showToast = useToast();
+    const confirm = useConfirm();
     const { data: cartItems = [] } = useCart(currentUser?.id);
     const { data: wishlistItems = [] } = useWishlist(currentUser?.id);
     const addToCartMutation = useAddToCart();
@@ -54,7 +56,7 @@ const ProductDetail = () => {
 
     const handleWishlistToggle = async () => {
         if (!product || !currentUser) return;
-        if (inWishlist && !window.confirm('Remove this item from your wishlist?')) return;
+        if (inWishlist && !(await confirm('Remove this item from your wishlist?'))) return;
         try {
             if (inWishlist) {
                 await removeFromWishlistMutation.mutateAsync({ userId: currentUser.id, productId: product.id });

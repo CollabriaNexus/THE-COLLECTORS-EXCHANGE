@@ -3,6 +3,7 @@ import { useEffect, lazy, Suspense } from 'react';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
+import { ConfirmProvider } from './components/ConfirmDialog';
 import { HelmetProvider } from 'react-helmet-async';
 import { pageview } from './utils/gtag';
 
@@ -49,6 +50,7 @@ function App() {
       <GATracker />
       <ErrorBoundary>
       <ToastProvider>
+      <ConfirmProvider>
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center bg-white">
           <div className="text-center">
@@ -94,6 +96,7 @@ function App() {
         </Route>
       </Routes>
       </Suspense>
+      </ConfirmProvider>
       </ToastProvider>
       </ErrorBoundary>
     </BrowserRouter>

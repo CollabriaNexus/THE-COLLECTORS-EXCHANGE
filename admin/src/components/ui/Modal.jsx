@@ -1,7 +1,29 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 
 function Modal({ isOpen, onClose, title, children, size = 'md' }) {
+    const modalRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleEscape);
+
+        const prevFocus = document.activeElement;
+        if (modalRef.current) {
+            const focusable = modalRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusable.length > 0) focusable[0].focus();
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+            if (prevFocus?.focus) prevFocus.focus();
+        };
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const sizeClasses = {
@@ -12,7 +34,7 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-label={title}>
             {/* Backdrop */}
             <div
                 className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
@@ -22,6 +44,7 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
             {/* Modal */}
             <div className="flex min-h-full items-center justify-center p-4">
                 <div
+                    ref={modalRef}
                     className={`relative bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full`}
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -33,6 +56,7 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                         <button
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-600 transition-colors"
+                            aria-label="Close dialog"
                         >
                             <X size={24} />
                         </button>

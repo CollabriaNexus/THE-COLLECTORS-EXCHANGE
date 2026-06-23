@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import SEO from '../components/SEO';
-import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, Crown, Check, CreditCard, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
+import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Papa from 'papaparse';
@@ -15,6 +15,7 @@ import { supabase } from '../utils/supabase';
 import { uploadProductImage, uploadKycDocument, uploadTestimonialImage } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
+import { useConfirm } from '../components/ConfirmDialog';
 import { useVendorProfile, useVendorStats } from '../hooks/api/useVendor';
 import { useTestimonials, useSubmitTestimonial } from '../hooks/api/useTestimonials';
 import PhoneVerification from '../components/account/PhoneVerification';
@@ -65,10 +66,10 @@ const Account = () => {
         { label: 'B', action: () => insertMarkdown('**', '**'), title: 'Bold' },
         { label: 'I', action: () => insertMarkdown('*', '*'), title: 'Italic' },
         { label: 'H', action: () => insertMarkdown('## ', ''), title: 'Heading' },
-        { label: '•', action: () => insertMarkdown('- ', ''), title: 'Bullet List' },
+        { label: <span role="img" aria-label="Bullet List">•</span>, action: () => insertMarkdown('- ', ''), title: 'Bullet List' },
         { label: '1.', action: () => insertMarkdown('1. ', ''), title: 'Numbered List' },
-        { label: '🔗', action: () => insertMarkdown('[', '](url)'), title: 'Link' },
-        { label: '❝', action: () => insertMarkdown('> ', ''), title: 'Quote' },
+        { label: <span role="img" aria-label="Link">🔗</span>, action: () => insertMarkdown('[', '](url)'), title: 'Link' },
+        { label: <span role="img" aria-label="Quote">❝</span>, action: () => insertMarkdown('> ', ''), title: 'Quote' },
     ];
 
     // API Hooks
@@ -211,8 +212,20 @@ const Account = () => {
             showToast('Passwords do not match.', 'error');
             return;
         }
-        if (passwordForm.password.length < 6) {
-            showToast('Password must be at least 6 characters.', 'error');
+        if (passwordForm.password.length < 8) {
+            showToast('Password must be at least 8 characters.', 'error');
+            return;
+        }
+        if (!/[A-Z]/.test(passwordForm.password)) {
+            showToast('Password must contain at least one uppercase letter.', 'error');
+            return;
+        }
+        if (!/[a-z]/.test(passwordForm.password)) {
+            showToast('Password must contain at least one lowercase letter.', 'error');
+            return;
+        }
+        if (!/[0-9]/.test(passwordForm.password)) {
+            showToast('Password must contain at least one number.', 'error');
             return;
         }
         try {
@@ -430,8 +443,9 @@ const Account = () => {
         URL.revokeObjectURL(url);
     };
 
+    const confirm = useConfirm();
     const handleDeleteProduct = async (productId) => {
-        if (!window.confirm('Are you sure you want to delete this listing?')) return;
+        if (!(await confirm('Are you sure you want to delete this listing?'))) return;
         try {
             await deleteProductMutation.mutateAsync(productId);
             showToast('Product deleted.', 'success');
@@ -1606,11 +1620,11 @@ const Account = () => {
                                 <input
                                     type="password"
                                     required
-                                    minLength={6}
+                                    minLength={8}
                                     value={passwordForm.password}
                                     onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
                                     className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"
-                                    placeholder="At least 6 characters"
+                                    placeholder="Min 8 chars, uppercase, lowercase, number"
                                 />
                             </div>
                             <div>
@@ -1618,7 +1632,7 @@ const Account = () => {
                                 <input
                                     type="password"
                                     required
-                                    minLength={6}
+                                    minLength={8}
                                     value={passwordForm.confirm}
                                     onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
                                     className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors"

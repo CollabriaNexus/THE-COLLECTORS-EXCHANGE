@@ -139,7 +139,7 @@ const ArchiveProductCard = ({ product }) => {
                 {/* Wishlist Button */}
                 <button
                     onClick={handleWishlistToggle}
-                    className={`absolute top-1.5 right-1.5 sm:top-3 sm:right-3 p-1 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm transition-all duration-300 z-10 ${inWishlist ? 'text-heritage-bronze opacity-100' : 'text-heritage-charcoal/40 hover:text-heritage-bronze opacity-0 group-hover:opacity-100'}`}
+                    className={`absolute top-1.5 right-1.5 sm:top-3 sm:right-3 p-1 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm transition-all duration-300 z-10 ${inWishlist ? 'text-heritage-bronze opacity-100' : 'text-heritage-charcoal/40 hover:text-heritage-bronze sm:opacity-0 sm:group-hover:opacity-100'}`}
                 >
                     <Heart size={10} fill={inWishlist ? 'currentColor' : 'none'} className="sm:w-4 sm:h-4" />
                 </button>
@@ -160,7 +160,7 @@ const ArchiveProductCard = ({ product }) => {
                 {product.isVerified && (
                     <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[7px] sm:text-[10px] px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-[0.06em] sm:tracking-[0.1em] uppercase flex items-center gap-0.5 sm:gap-1">
                         <ShieldCheck size={7} className="sm:w-[10px] sm:h-[10px]" />
-                        <span className="hidden sm:inline">Verified</span>
+                        <span className="inline">Verified</span>
                     </div>
                 )}
             </Link>

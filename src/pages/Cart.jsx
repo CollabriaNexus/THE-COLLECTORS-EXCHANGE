@@ -5,6 +5,7 @@ import { useCart, useRemoveFromCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
+import { useConfirm } from '../components/ConfirmDialog';
 
 const Cart = () => {
     const user = getUser();
@@ -12,10 +13,12 @@ const Cart = () => {
     const showToast = useToast();
     const { data: cartItems = [], isLoading } = useCart(user?.id);
     const removeMutation = useRemoveFromCart();
+    const confirm = useConfirm();
 
     const handleRemove = async (productId) => {
         if (!user) return;
-        if (!window.confirm('Remove this item from your cart?')) return;
+        const confirmed = await confirm('Remove this item from your cart?');
+        if (!confirmed) return;
         try {
             await removeMutation.mutateAsync({ userId: user.id, productId });
             apiClient.post('/analytics/cart', { productId, action: 'REMOVE' }).catch(() => {});

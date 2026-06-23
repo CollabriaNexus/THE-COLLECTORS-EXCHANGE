@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { getUser } from './utils/storage';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ConfirmProvider } from './components/ConfirmDialog';
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -42,6 +43,7 @@ function ScrollToTop() {
 function App() {
     return (
         <ErrorBoundary>
+        <ConfirmProvider>
         <ScrollToTop />
         <Routes>
             <Route path="/login" element={<Login />} />
@@ -140,6 +142,7 @@ function App() {
             {/* Redirect to dashboard by default */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ConfirmProvider>
         </ErrorBoundary>
     );
 }

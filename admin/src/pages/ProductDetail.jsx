@@ -5,6 +5,7 @@ import { useProductDetail, useApproveProduct, useRejectProduct, useReviewProduct
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
+import { useConfirm } from '../components/ConfirmDialog';
 
 function ProductDetail() {
     const { id } = useParams();
@@ -32,9 +33,11 @@ function ProductDetail() {
     const deleteMutation = useDeleteProduct();
     const updateProductMutation = useUpdateProduct();
     const markAsSoldMutation = useMarkProductAsSold();
+    const confirm = useConfirm();
 
     const handleMarkAsSold = async () => {
-        if (!window.confirm(`Mark "${product.title}" as sold? This will unpublish the listing.`)) return;
+        const confirmed = await confirm(`Mark "${product.title}" as sold? This will unpublish the listing.`);
+        if (!confirmed) return;
         setError('');
         try {
             await markAsSoldMutation.mutateAsync(id);

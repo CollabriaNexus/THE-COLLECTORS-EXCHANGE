@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useGalleryItems, useCreateGalleryItem, useUpdateGalleryItem, useDeleteGalleryItem } from '../hooks/api/useGallery';
 import { Plus, Edit3, Trash2, X, Loader2, Image as ImageIcon, Upload, Search, MapPin, Clock, Landmark, Palette } from 'lucide-react';
 import { uploadGalleryImage } from '../utils/storage';
+import { useConfirm } from '../components/ConfirmDialog';
 
 const emptyForm = {
     title: '', teaser: '', description: '', images: '',
@@ -23,6 +24,7 @@ function GalleryManager() {
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState(emptyForm);
     const [imageUploading, setImageUploading] = useState(false);
+    const confirm = useConfirm();
     const [search, setSearch] = useState('');
     const [filterTheme, setFilterTheme] = useState('all');
     const fileInputRef = useRef(null);
@@ -81,7 +83,8 @@ function GalleryManager() {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Delete this gallery item?')) return;
+        const confirmed = await confirm('Delete this gallery item?');
+        if (!confirmed) return;
         try { await deleteMutation.mutateAsync(id); } catch (err) { console.error(err); }
     };
 

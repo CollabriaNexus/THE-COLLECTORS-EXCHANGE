@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Loader2, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import apiClient from '../hooks/api/apiClient';
+import { useConfirm } from '../components/ConfirmDialog';
 
 function Testimonials() {
     const queryClient = useQueryClient();
+    const confirm = useConfirm();
     const [statusFilter, setStatusFilter] = useState('');
 
     const { data: testimonials, isLoading } = useQuery({
@@ -115,7 +117,7 @@ function Testimonials() {
                                 )}
                                 <button
                                     type="button"
-                                    onClick={() => { if (window.confirm('Delete this testimonial?')) deleteMutation.mutate(t.id); }}
+                                    onClick={async () => { if (await confirm('Delete this testimonial?')) deleteMutation.mutate(t.id); }}
                                     className="p-2 bg-gray-50 text-gray-500 rounded hover:bg-red-50 hover:text-red-600"
                                     title="Delete"
                                 ><Trash2 size={18} /></button>
