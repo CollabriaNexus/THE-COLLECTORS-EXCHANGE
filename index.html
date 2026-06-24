@@ -8,13 +8,10 @@
   <meta name="theme-color" content="#000000" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MFQBH0YJ0K"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-MFQBH0YJ0K', { send_page_view: false });
-  </script>
+
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--color-primary-bg:#FFFFFF;--color-secondary-bg:#F9F9F9;--color-text-main:#000000;--color-text-inverse:#FFFFFF;--color-obsidian:#0A0A0A;--color-brass:#B8860B;--color-luxury-gold:#D4AF37;--color-heritage-charcoal:#1C1C1C;--color-heritage-dark:#2A2A2A;--color-heritage-brown:#3D3028;--color-heritage-warm:#4A3F35;--color-heritage-beige:#F5F0E8;--color-heritage-cream:#FAF8F5;--color-heritage-bronze:#7A6044;--color-heritage-gold-muted:#9A7C35;--font-family-serif:"Playfair Display",serif;--font-family-sans:"Inter",sans-serif}body{background-color:var(--color-primary-bg);color:var(--color-text-main);font-family:var(--font-family-sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}h1,h2,h3,h4,h5,h6{font-family:var(--font-family-serif)}img,video{aspect-ratio:attr(width)/attr(height)}img[loading=lazy]{background:#f5f5f5}.aspect-4-5{aspect-ratio:4/5}.aspect-square-ph{aspect-ratio:1/1}html{scroll-behavior:smooth}*:focus-visible{outline:2px solid var(--color-luxury-gold);outline-offset:2px}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}@media (hover:none) and (pointer:coarse){button,a,[role=button],input,select,textarea{min-height:44px}a:has(svg:only-child),button:has(svg:only-child){min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}}
+  </style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,6 +19,20 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" media="print" onload="this.media='all'; this.onload=null;" />
   <link rel="preload" href="/src/assets/hero-background.webp" as="image" fetchpriority="high" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" /></noscript>
+
+  <script>
+    (function(){
+      var d=document,w=window;
+      function loadGA(){
+        var s=d.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-MFQBH0YJ0K';
+        var g=d.createElement('script');g.innerHTML="window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-MFQBH0YJ0K',{send_page_view:false});";
+        d.head.appendChild(s);d.head.appendChild(g);
+      }
+      if(w.requestIdleCallback)w.requestIdleCallback(loadGA,{timeout:2000});
+      else setTimeout(loadGA,1000);
+    })();
+  </script>
+
 
   <title>The Collectors Exchange — Luxury Pre-Owned & Rare Collectibles</title>
 </head>

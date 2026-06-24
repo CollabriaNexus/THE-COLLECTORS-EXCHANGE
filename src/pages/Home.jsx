@@ -13,6 +13,7 @@ import { useCart, useAddToCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
 import { useToast } from '../components/Toast';
 import { useInView } from '../hooks/useInView';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 const Reveal = ({ children, className = '' }) => {
     const [ref, inView] = useInView();
@@ -181,6 +182,7 @@ const FeaturedProductsCarousel = () => {
 };
 
 const Home = () => {
+    const isMobile = useMediaQuery('(max-width: 768px)');
     return (
         <div className="flex flex-col">
             <SEO
@@ -192,16 +194,14 @@ const Home = () => {
             <WebSiteSchema />
             {/* Hero Section */}
             <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden">
-                <video
-                    autoPlay muted loop playsInline
-                    poster={heroPoster}
-                    fetchpriority="high"
-                    onEnded={() => window.dispatchEvent(new Event('homeVideoEnded'))}
-                    className="absolute inset-0 w-full h-full object-cover"
-                >
-                    <source src={heroVideoWebm} type="video/webm" />
-                    <source src={heroVideoMp4} type="video/mp4" />
-                </video>
+                {isMobile ? (
+                    <img src={heroPoster} alt="The Collectors Exchange" fetchpriority="high" className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                    <video autoPlay muted loop playsInline poster={heroPoster} fetchpriority="high" onEnded={() => window.dispatchEvent(new Event('homeVideoEnded'))} className="absolute inset-0 w-full h-full object-cover">
+                        <source src={heroVideoWebm} type="video/webm" />
+                        <source src={heroVideoMp4} type="video/mp4" />
+                    </video>
+                )}
                 <div className="absolute inset-0 bg-black/40"></div>
 
                 <div className="container mx-auto max-w-4xl relative z-10">
@@ -359,10 +359,10 @@ const Home = () => {
                     <div className="bg-[#0A0D12] border border-white/5 p-12 md:p-24 grid md:grid-cols-2 gap-20 text-left max-w-5xl mx-auto shadow-heritage relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
                         <div className="space-y-10 relative z-10">
-                            <h4 className="text-2xl font-serif text-luxury-gold flex items-center gap-4">
+                            <h3 className="text-2xl font-serif text-luxury-gold flex items-center gap-4">
                                 <div className="w-8 h-px bg-luxury-gold/50"></div>
                                 Individual Sellers
-                            </h4>
+                            </h3>
                             <ul className="space-y-6">
                                 {[
                                     "Mandatory KYC (Aadhaar/PAN)",
@@ -377,10 +377,10 @@ const Home = () => {
                             </ul>
                         </div>
                         <div className="space-y-10 relative z-10">
-                            <h4 className="text-2xl font-serif text-luxury-gold flex items-center gap-4">
+                            <h3 className="text-2xl font-serif text-luxury-gold flex items-center gap-4">
                                 <div className="w-8 h-px bg-luxury-gold/50"></div>
                                 Company Sellers
-                            </h4>
+                            </h3>
                             <ul className="space-y-6">
                                 {[
                                     "GST & Founder verification required",
