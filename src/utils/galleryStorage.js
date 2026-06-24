@@ -1,4 +1,4 @@
-import KohinoorImg from '../assets/kohinoor.png';
+import KohinoorImg from '../assets/kohinoor.webp';
 import KohinoorHistImg from '../assets/Kohinoor-OpIndia-e1684573231572.webp';
 import TipuTigerImg from '../assets/Tipu’s Tiger.jpg';
 import FabergeEggImg from '../assets/Faberge_pearl_egg_gallery.jpg';

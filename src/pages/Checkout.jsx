@@ -177,8 +177,28 @@ const Checkout = () => {
     // Order success screen
     if (orderSuccess) {
         return (
-            <div className="container mx-auto py-20 px-6 max-w-lg text-center">
+            <div className="container mx-auto py-12 px-6 max-w-lg text-center">
                 <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
+                {/* Step Indicator */}
+                <div className="flex items-center justify-center gap-0 mb-12">
+                    {[
+                        { label: 'Cart', step: 1 },
+                        { label: 'Checkout', step: 2 },
+                        { label: 'Confirmation', step: 3 },
+                    ].map((item, i) => (
+                        <React.Fragment key={item.label}>
+                            {i > 0 && <div className={`w-12 sm:w-20 h-px ${i <= 3 ? 'bg-luxury-gold' : 'bg-gray-200'}`} />}
+                            <div className={`flex flex-col items-center gap-1.5 ${i <= 3 ? 'text-luxury-gold' : 'text-gray-300'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors duration-300 ${
+                                    i < 3 ? 'bg-luxury-gold border-luxury-gold text-white' : i === 3 ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-gold' : 'border-gray-200 text-gray-300'
+                                }`}>
+                                    {i < 3 ? '\u2713' : item.step}
+                                </div>
+                                <span className="text-[10px] uppercase tracking-widest font-medium">{item.label}</span>
+                            </div>
+                        </React.Fragment>
+                    ))}
+                </div>
                 <div className="bg-white border border-gray-100 shadow-heritage p-12">
                     <CheckCircle size={64} className="mx-auto text-green-500 mb-6" />
                     <h1 className="text-3xl font-serif mb-3 text-heritage-charcoal">Order Confirmed</h1>
@@ -213,11 +233,41 @@ const Checkout = () => {
     return (
         <div className="container mx-auto py-12 px-6">
             <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
-            {/* Breadcrumb */}
-            <div className="flex items-center text-xs text-gray-500 uppercase tracking-widest gap-2 mb-8">
-                <Link to="/cart" className="hover:text-luxury-gold">Cart</Link>
-                <ChevronRight size={12} />
-                <span className="text-gray-800 font-medium">Checkout</span>
+            {/* Step Indicator */}
+            <div className="flex items-center justify-center gap-0 mb-12">
+                {[
+                    { label: 'Cart', href: '/cart', step: 1 },
+                    { label: 'Checkout', step: 2 },
+                    { label: 'Confirmation', step: 3 },
+                ].map((item, i) => (
+                    <React.Fragment key={item.label}>
+                        {i > 0 && (
+                            <div className={`w-12 sm:w-20 h-px ${i <= 2 ? 'bg-luxury-gold/50' : 'bg-gray-200'}`} />
+                        )}
+                        {item.href ? (
+                            <Link
+                                to={item.href}
+                                className={`flex flex-col items-center gap-1.5 ${i <= 2 ? 'text-luxury-gold' : 'text-gray-300'}`}
+                            >
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors duration-300 ${
+                                    i <= 2 ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-gold' : 'border-gray-200 text-gray-300'
+                                }`}>
+                                    {item.step}
+                                </div>
+                                <span className="text-[10px] uppercase tracking-widest font-medium">{item.label}</span>
+                            </Link>
+                        ) : (
+                            <div className={`flex flex-col items-center gap-1.5 ${i <= 2 ? 'text-luxury-gold' : 'text-gray-300'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors duration-300 ${
+                                    i <= 2 ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-gold' : 'border-gray-200 text-gray-300'
+                                }`}>
+                                    {item.step}
+                                </div>
+                                <span className="text-[10px] uppercase tracking-widest font-medium">{item.label}</span>
+                            </div>
+                        )}
+                    </React.Fragment>
+                ))}
             </div>
 
             <h1 className="text-4xl font-serif mb-10 text-heritage-charcoal">Secure Checkout</h1>

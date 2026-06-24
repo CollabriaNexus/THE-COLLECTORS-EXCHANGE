@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { getUser } from '../utils/storage';
@@ -15,6 +15,7 @@ const ProductCard = ({ product, onUpdate }) => {
     const { data: wishlistItems = [] } = useWishlist(user?.id);
     const addToWishlistMutation = useAddToWishlist();
     const removeFromWishlistMutation = useRemoveFromWishlist();
+    const [wishPulse, setWishPulse] = useState(false);
 
     const inCart = cartItems.some(item => item.productId === product.id);
     const inWishlist = wishlistItems.some(item => (item.product?.id === product.id) || item.productId === product.id);
@@ -27,6 +28,9 @@ const ProductCard = ({ product, onUpdate }) => {
             showToast('Please sign in to add to wishlist', 'error');
             return;
         }
+
+        setWishPulse(true);
+        setTimeout(() => setWishPulse(false), 200);
 
         if (inWishlist) {
             removeFromWishlistMutation.mutate({ userId: user.id, productId: product.id });
@@ -71,7 +75,7 @@ const ProductCard = ({ product, onUpdate }) => {
 
                 <button
                     onClick={handleWishlistToggle}
-                    className={`absolute top-4 right-4 p-2 bg-white rounded-full shadow-sm transition-colors z-10 ${inWishlist ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
+                    className={`absolute top-4 right-4 p-2 bg-white rounded-full shadow-sm transition-all duration-200 z-10 cursor-pointer ${inWishlist ? 'text-red-500' : 'text-gray-400 hover:text-red-500'} ${wishPulse ? 'scale-125' : 'scale-100'}`}
                 >
                     <Heart size={16} fill={inWishlist ? 'currentColor' : 'none'} />
                 </button>
@@ -95,7 +99,7 @@ const ProductCard = ({ product, onUpdate }) => {
                 <button
                     onClick={inCart ? () => navigate('/cart') : handleAddToCart}
                     disabled={addToCartMutation.isPending}
-                    className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mt-auto ${inCart
+                    className={`w-full py-3 text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-2 mt-auto active:scale-[0.97] ${inCart
                         ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                         : 'bg-black text-white hover:bg-luxury-gold'
                         }`}

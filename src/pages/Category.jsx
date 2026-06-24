@@ -68,6 +68,7 @@ const ArchiveProductCard = ({ product }) => {
     const { data: cartItems = [] } = useCart(user?.id);
     const addToCartMutation = useAddToCart();
     const [cartFeedback, setCartFeedback] = useState(false);
+    const [wishPulse, setWishPulse] = useState(false);
     const cartFeedbackTimer = useRef(null);
 
     const inCart = cartItems.some(item => item.productId === product.id);
@@ -85,6 +86,9 @@ const ArchiveProductCard = ({ product }) => {
             showToast("Please sign in to add to wishlist", 'error');
             return;
         }
+
+        setWishPulse(true);
+        setTimeout(() => setWishPulse(false), 200);
 
         if (inWishlist) {
             removeFromWishlistMutation.mutate({ userId: user.id, productId: product.id });
@@ -139,7 +143,7 @@ const ArchiveProductCard = ({ product }) => {
                 {/* Wishlist Button */}
                 <button
                     onClick={handleWishlistToggle}
-                    className={`absolute top-1.5 right-1.5 sm:top-3 sm:right-3 p-1 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm transition-all duration-300 z-10 ${inWishlist ? 'text-heritage-bronze opacity-100' : 'text-heritage-charcoal/40 hover:text-heritage-bronze sm:opacity-0 sm:group-hover:opacity-100'}`}
+                    className={`absolute top-1.5 right-1.5 sm:top-3 sm:right-3 p-1 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm transition-all duration-300 z-10 cursor-pointer ${inWishlist ? 'text-heritage-bronze opacity-100' : 'text-heritage-charcoal/40 hover:text-heritage-bronze sm:opacity-0 sm:group-hover:opacity-100'} ${wishPulse ? 'scale-125' : 'scale-100'}`}
                 >
                     <Heart size={10} fill={inWishlist ? 'currentColor' : 'none'} className="sm:w-4 sm:h-4" />
                 </button>
@@ -184,7 +188,7 @@ const ArchiveProductCard = ({ product }) => {
                     <button
                         onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
                         disabled={addToCartMutation.isPending || cartFeedback}
-                        className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${cartFeedback || inCart
+                        className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 active:scale-[0.97] ${cartFeedback || inCart
                             ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                             : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
                             }`}
@@ -385,9 +389,18 @@ const Category = () => {
                     </div>
 
                     {isLoading && allProducts.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 md:py-24">
-                            <Loader2 className="animate-spin text-luxury-gold mb-3 md:mb-4 md:w-12 md:h-12" size={32} />
-                            <p className="text-gray-500 font-serif text-sm md:text-lg italic">Accessing The Archive...</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-6">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <div key={i} className="bg-white border border-gray-100 flex flex-col animate-pulse">
+                                    <div className="aspect-square bg-heritage-beige/60" />
+                                    <div className="p-2 sm:p-5 space-y-2 sm:space-y-3">
+                                        <div className="h-2 sm:h-2.5 bg-heritage-beige/60 rounded w-1/3" />
+                                        <div className="h-3 sm:h-4 bg-heritage-beige/60 rounded w-3/4" />
+                                        <div className="h-2 sm:h-3 bg-heritage-beige/60 rounded w-1/4" />
+                                        <div className="h-6 sm:h-10 bg-heritage-beige/60 rounded mt-2" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : allProducts.length > 0 ? (
                         <>

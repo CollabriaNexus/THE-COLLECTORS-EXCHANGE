@@ -159,14 +159,34 @@ const ProductDetail = () => {
                             </div>
                         )}
                         {/* Main Image */}
-                        <div className="relative flex-1 aspect-[4/3] bg-gray-50 overflow-hidden shadow-sm border border-gray-100">
+                        <div className="relative flex-1 aspect-[4/3] bg-gray-50 overflow-hidden shadow-sm border border-gray-100 group">
                             {images.length > 0 ? (
-                                <img
-                                    width="800" height="600"
-                                    src={images[activeImageIndex]}
-                                    alt={product.title}
-                                    className="w-full h-full object-contain p-2 sm:p-6 md:p-8"
-                                />
+                                <>
+                                    {/* Desktop zoom version */}
+                                    <div
+                                        className="w-full h-full hidden lg:block"
+                                        onMouseMove={(e) => {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                            const y = ((e.clientY - rect.top) / rect.height) * 100;
+                                            e.currentTarget.querySelector('img').style.transformOrigin = `${x}% ${y}%`;
+                                        }}
+                                    >
+                                        <img
+                                            width="800" height="600"
+                                            src={images[activeImageIndex]}
+                                            alt={product.title}
+                                            className="w-full h-full object-contain p-2 sm:p-6 md:p-8 transition-transform duration-300 ease-out lg:group-hover:scale-150"
+                                        />
+                                    </div>
+                                    {/* Mobile fallback */}
+                                    <img
+                                        width="800" height="600"
+                                        src={images[activeImageIndex]}
+                                        alt={product.title}
+                                        className="w-full h-full object-contain p-2 sm:p-6 md:p-8 block lg:hidden"
+                                    />
+                                </>
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-300">
                                     <ImageOff size={48} strokeWidth={1} />

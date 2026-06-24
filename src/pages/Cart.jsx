@@ -1,7 +1,8 @@
-import { Trash2, ShoppingBag, Loader2 } from 'lucide-react';
+import { Trash2, ShoppingBag, Loader2, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart, useRemoveFromCart } from '../hooks/api/useCart';
+import { useProducts } from '../hooks/api/useProducts';
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
@@ -14,6 +15,10 @@ const Cart = () => {
     const { data: cartItems = [], isLoading } = useCart(user?.id);
     const removeMutation = useRemoveFromCart();
     const confirm = useConfirm();
+    const { data: featuredData } = useProducts(null, '', 1, 6);
+    const featuredProducts = (featuredData?.products || []).filter(
+        p => p.listingCategory === 'featured' || p.listingCategory === 'most_rare'
+    ).slice(0, 4);
 
     const handleRemove = async (productId) => {
         if (!user) return;
@@ -106,16 +111,61 @@ const Cart = () => {
                     </div>
                 </div>
             ) : (
-                <div className="text-center py-20 bg-white border border-gray-100">
+                <div className="text-center py-16">
                     <ShoppingBag size={64} className="mx-auto text-gray-300 mb-6" />
                     <h3 className="text-xl font-serif text-gray-600 mb-2">Your cart is empty</h3>
-                    <p className="text-gray-400 mb-6">Add items to your cart to proceed.</p>
+                    <p className="text-gray-400 mb-8">Add items to your cart to proceed.</p>
                     <Link
                         to="/category"
-                        className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+                        className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors mb-16"
                     >
                         Explore The Exchange
                     </Link>
+                    {featuredProducts.length > 0 && (
+                        <div className="max-w-4xl mx-auto">
+                            <div className="flex items-center justify-center gap-4 mb-8">
+                                <div className="h-px w-8 bg-luxury-gold/40" />
+                                <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Curated Picks</span>
+                                <div className="h-px w-8 bg-luxury-gold/40" />
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                {featuredProducts.map((product) => (
+                                    <Link
+                                        key={product.id}
+                                        to={`/product/${product.id}`}
+                                        className="group bg-white border border-gray-100 hover:shadow-heritage-hover transition-all duration-500"
+                                    >
+                                        <div className="aspect-square bg-heritage-beige overflow-hidden">
+                                            {product.image ? (
+                                                <img
+                                                    src={product.image}
+                                                    alt={product.title}
+                                                    loading="lazy"
+                                                    width="200" height="200"
+                                                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-heritage-bronze/30">
+                                                    <ShoppingBag size={24} strokeWidth={1} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-3 text-left">
+                                            <p className="text-xs text-heritage-bronze uppercase tracking-widest truncate">{product.category}</p>
+                                            <p className="font-serif text-sm font-medium truncate group-hover:text-luxury-gold transition-colors">{product.title}</p>
+                                            <p className="text-heritage-gold-muted text-xs font-medium mt-1">₹{product.price?.toLocaleString()}</p>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                            <Link
+                                to="/category"
+                                className="inline-flex items-center gap-2 mt-8 text-sm uppercase tracking-widest text-heritage-charcoal/60 hover:text-luxury-gold transition-colors group"
+                            >
+                                View All <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

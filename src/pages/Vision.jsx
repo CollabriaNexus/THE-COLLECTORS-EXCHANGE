@@ -2,8 +2,8 @@ import React from 'react';
 import { Landmark, ShieldCheck, History, Sparkles } from 'lucide-react';
 import SEO from '../components/SEO';
 import Bullet from '../components/Bullet';
-import collectorsStudy from '../assets/collectors_study.png';
-import artisanAtWork from '../assets/artisan2.png';
+import collectorsStudy from '../assets/collectors_study.webp';
+import artisanAtWork from '../assets/artisan2.webp';
 
 const InstitutionalIcon = () => (
     <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">

@@ -3,14 +3,28 @@ import { Link, useNavigate } from 'react-router-dom';
 import SEO, { OrganizationSchema, WebSiteSchema } from '../components/SEO';
 import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon, ShoppingBag, Sparkles, Check, XCircle } from 'lucide-react';
 import Bullet from '../components/Bullet';
-import heroPoster from '../assets/hero-background.png';
-import heroVideo from '../assets/hero_section.mp4';
-import verificationAuthenticity from '../assets/verification_authenticity.png';
+import heroPoster from '../assets/hero-background.webp';
+import heroVideoWebm from '../assets/hero_section.webm';
+import heroVideoMp4 from '../assets/hero_section-compressed.mp4';
+import verificationAuthenticity from '../assets/verification_authenticity.webp';
 import { useProducts } from '../hooks/api/useProducts';
 import { useTestimonials } from '../hooks/api/useTestimonials';
 import { useCart, useAddToCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
 import { useToast } from '../components/Toast';
+import { useInView } from '../hooks/useInView';
+
+const Reveal = ({ children, className = '' }) => {
+    const [ref, inView] = useInView();
+    return (
+        <div
+            ref={ref}
+            className={`transition-all duration-700 ease-out ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}
+        >
+            {children}
+        </div>
+    );
+};
 
 const FeaturedProductCard = ({ product }) => {
     const user = getUser();
@@ -88,7 +102,7 @@ const FeaturedProductCard = ({ product }) => {
                     <button
                         onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
                         disabled={addToCartMutation.isPending || cartFeedback}
-                        className={`w-full py-3 text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mt-4 ${
+                        className={`w-full py-3 text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-2 mt-4 active:scale-[0.97] ${
                             cartFeedback || inCart
                                 ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                                 : 'bg-black text-white hover:bg-luxury-gold'
@@ -123,14 +137,16 @@ const FeaturedProductsCarousel = () => {
     return (
         <section className="py-16 sm:py-20 px-6 bg-heritage-cream overflow-hidden">
             <div className="container mx-auto max-w-6xl">
-                <div className="text-center mb-10">
-                    <div className="flex items-center justify-center gap-4 mb-3">
-                        <div className="h-px w-8 bg-luxury-gold/40"></div>
-                        <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Curated Selection</span>
-                        <div className="h-px w-8 bg-luxury-gold/40"></div>
+                <Reveal>
+                    <div className="text-center mb-10">
+                        <div className="flex items-center justify-center gap-4 mb-3">
+                            <div className="h-px w-8 bg-luxury-gold/40"></div>
+                            <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Curated Selection</span>
+                            <div className="h-px w-8 bg-luxury-gold/40"></div>
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal">Featured <span className="text-luxury-gold italic font-light">Products</span></h2>
                     </div>
-                    <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal">Featured <span className="text-luxury-gold italic font-light">Products</span></h2>
-                </div>
+                </Reveal>
 
                 <div className="relative">
                     <style>{`
@@ -183,7 +199,8 @@ const Home = () => {
                     onEnded={() => window.dispatchEvent(new Event('homeVideoEnded'))}
                     className="absolute inset-0 w-full h-full object-cover"
                 >
-                    <source src={heroVideo} type="video/mp4" />
+                    <source src={heroVideoWebm} type="video/webm" />
+                    <source src={heroVideoMp4} type="video/mp4" />
                 </video>
                 <div className="absolute inset-0 bg-black/40"></div>
 
@@ -244,7 +261,9 @@ const Home = () => {
             <section className="py-12 sm:py-16 lg:py-20 px-6 bg-primary-bg">
                 <div className="container mx-auto max-w-5xl flex flex-col lg:flex-row items-center gap-10 sm:gap-14 lg:gap-16">
                     <div className="lg:w-1/2">
-                        <h2 className="text-3xl sm:text-4xl font-serif mb-6 leading-tight">The Standard of <br /> <span className="text-luxury-gold">Authenticity</span></h2>
+                        <Reveal>
+                            <h2 className="text-3xl sm:text-4xl font-serif mb-6 leading-tight">The Standard of <br /> <span className="text-luxury-gold">Authenticity</span></h2>
+                        </Reveal>
                         <p className="text-gray-600 mb-6 font-light leading-relaxed">
                             At The Collectors Exchange, trust is our currency. Our rigorous verification process ensures that every item you purchase is genuine.
                         </p>
@@ -257,8 +276,10 @@ const Home = () => {
                 <div className="container mx-auto max-w-7xl">
                     <div className="flex flex-col md:flex-row items-center justify-between mb-20 gap-8">
                         <div>
-                            <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-4 block">Institutional Framework</span>
-                            <h2 className="text-4xl md:text-6xl font-serif leading-tight text-heritage-charcoal">A New Standard <br /> of <span className="italic text-luxury-gold">Archival Integrity</span></h2>
+                            <Reveal>
+                                <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-4 block">Institutional Framework</span>
+                                <h2 className="text-4xl md:text-6xl font-serif leading-tight text-heritage-charcoal">A New Standard <br /> of <span className="italic text-luxury-gold">Archival Integrity</span></h2>
+                            </Reveal>
                         </div>
                         <Link to="/vision" className="group flex items-center gap-4 text-heritage-charcoal/50 hover:text-luxury-gold transition-colors text-xs font-bold tracking-widest uppercase">
                             Our Full Vision <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
@@ -330,8 +351,10 @@ const Home = () => {
             {/* Sell with Confidence Section */}
             <section className="py-32 px-6 bg-heritage-charcoal text-white text-center border-t border-white/5">
                 <div className="container mx-auto max-w-6xl">
-                    <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-8 block">Global Outreach</span>
-                    <h2 className="text-5xl md:text-7xl font-serif mb-20 leading-tight">Sell with Confidence</h2>
+                    <Reveal>
+                        <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-8 block">Global Outreach</span>
+                        <h2 className="text-5xl md:text-7xl font-serif mb-20 leading-tight">Sell with Confidence</h2>
+                    </Reveal>
 
                     <div className="bg-[#0A0D12] border border-white/5 p-12 md:p-24 grid md:grid-cols-2 gap-20 text-left max-w-5xl mx-auto shadow-heritage relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
@@ -398,12 +421,14 @@ const TestimonialsSection = () => {
     return (
         <section className="py-16 sm:py-20 px-6 bg-heritage-cream">
             <div className="container mx-auto max-w-4xl text-center">
-                <div className="flex items-center justify-center gap-4 mb-6">
-                    <div className="h-px w-8 bg-luxury-gold/40"></div>
-                    <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Testimonials</span>
-                    <div className="h-px w-8 bg-luxury-gold/40"></div>
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal mb-10">What Our <span className="text-luxury-gold italic font-light">Collectors</span> Say</h2>
+                <Reveal>
+                    <div className="flex items-center justify-center gap-4 mb-6">
+                        <div className="h-px w-8 bg-luxury-gold/40"></div>
+                        <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Testimonials</span>
+                        <div className="h-px w-8 bg-luxury-gold/40"></div>
+                    </div>
+                    <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal mb-10">What Our <span className="text-luxury-gold italic font-light">Collectors</span> Say</h2>
+                </Reveal>
                 <div className="bg-white p-8 sm:p-12 shadow-sm border border-gray-100 relative">
                     <Quote className="text-luxury-gold/20 absolute top-4 left-4 w-12 h-12 sm:w-16 sm:h-16" />
                     <p className="text-lg sm:text-xl text-gray-700 leading-relaxed font-sans italic mb-6 relative z-10">{"\u201C"}{t.content}{"\u201D"}</p>
