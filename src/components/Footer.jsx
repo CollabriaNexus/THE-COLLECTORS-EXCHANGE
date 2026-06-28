@@ -4,25 +4,25 @@ import { Instagram, Facebook, Linkedin, Mail } from 'lucide-react';
 
 const Footer = () => {
     return (
-        <footer className="bg-black text-white pt-20 pb-16 lg:pb-10 border-t border-gray-900">
-            <div className="container mx-auto px-6 md:px-12 lg:px-24">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <footer className="bg-black text-white pt-12 sm:pt-20 pb-12 md:pb-16 lg:pb-10 border-t border-gray-900">
+            <div className="px-3 sm:px-6 md:px-12 lg:px-24">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 md:gap-12">
 
                     {/* Left: Brand */}
-                    <div className="lg:col-span-5 flex flex-col space-y-6 text-left">
+                    <div className="lg:col-span-5 flex flex-col space-y-3 sm:space-y-6 text-left">
                         <div>
-                            <h2 className="text-2xl font-serif font-bold tracking-widest mb-2">THE COLLECTORS EXCHANGE</h2>
-                            <div className="w-16 h-0.5 bg-luxury-gold opacity-70"></div>
+                            <h2 className="text-base sm:text-2xl font-serif font-bold tracking-widest mb-1.5 sm:mb-2">THE COLLECTORS EXCHANGE</h2>
+                            <div className="w-12 sm:w-16 h-0.5 bg-luxury-gold opacity-70"></div>
                         </div>
-                        <p className="text-gray-400 font-light leading-relaxed max-w-sm text-sm">
+                        <p className="text-gray-400 font-light leading-relaxed max-w-sm text-xs sm:text-sm">
                             A curated marketplace for verified pre-owned collectibles, antiques, and limited pieces.
                         </p>
-                        <p className="font-serif italic text-white text-lg">
+                        <p className="font-serif italic text-white text-base sm:text-lg">
                             Preserving Value. Celebrating Authenticity.
                         </p>
-                        <div className="pt-2">
-                            <p className="text-[10px] uppercase tracking-widest text-luxury-gold mb-2">Contact Us</p>
-                            <a href="mailto:support@thecollectorsexchange.in" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
+                        <div className="pt-1 sm:pt-2">
+                            <p className="text-[8px] sm:text-[10px] uppercase tracking-widest text-luxury-gold mb-1.5 sm:mb-2">Contact Us</p>
+                            <a href="mailto:support@thecollectorsexchange.in" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs sm:text-sm">
                                 <Mail size={14} />
                                 support@thecollectorsexchange.in
                             </a>
@@ -30,32 +30,32 @@ const Footer = () => {
                     </div>
 
                     {/* Right: Links */}
-                    <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="flex flex-col space-y-6">
-                            <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Company</h3>
-                            <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
+                    <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+                        <div className="flex flex-col space-y-3 sm:space-y-6">
+                            <h3 className="text-base sm:text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Company</h3>
+                            <div className="flex flex-col space-y-2 sm:space-y-3 font-light text-gray-400 text-xs sm:text-sm">
                                 <Link to="/about" className="hover:text-white transition-colors duration-300">About Us</Link>
                                 <Link to="/vision" className="hover:text-white transition-colors duration-300">Our Vision</Link>
                                 <Link to="/founders-note" className="hover:text-white transition-colors duration-300">Founder&rsquo;s Note</Link>
                             </div>
                         </div>
-                        <div className="flex flex-col space-y-6">
-                            <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Support</h3>
-                            <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
+                        <div className="flex flex-col space-y-3 sm:space-y-6">
+                            <h3 className="text-base sm:text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Support</h3>
+                            <div className="flex flex-col space-y-2 sm:space-y-3 font-light text-gray-400 text-xs sm:text-sm">
                                 <Link to="/contact" className="hover:text-white transition-colors duration-300">Contact Us</Link>
                                 <Link to="/faq" className="hover:text-white transition-colors duration-300">FAQ</Link>
                                 <Link to="/returns" className="hover:text-white transition-colors duration-300">Returns & Refunds</Link>
                                 <Link to="/seller-agreement" className="hover:text-white transition-colors duration-300">Seller Agreement</Link>
                             </div>
                         </div>
-                        <div className="flex flex-col space-y-6">
-                            <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Legal</h3>
-                            <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">
+                        <div className="flex flex-col space-y-3 sm:space-y-6">
+                            <h3 className="text-base sm:text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Legal</h3>
+                            <div className="flex flex-col space-y-2 sm:space-y-3 font-light text-gray-400 text-xs sm:text-sm">
                                 <Link to="/terms" className="hover:text-white transition-colors duration-300">Terms &amp; Conditions</Link>
                                 <Link to="/privacy" className="hover:text-white transition-colors duration-300">Privacy Policy</Link>
                                 <Link to="/account" className="hover:text-white transition-colors duration-300">My Account</Link>
                             </div>
-                            <div className="flex gap-4 pt-2">
+                            <div className="flex gap-3 sm:gap-4 pt-1 sm:pt-2">
                                 <a href="https://www.instagram.com/the_collectors_exchange/?utm_source=ig_web_button_share_sheet" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-white hover:text-luxury-gold transition-colors duration-300">
                                     <Instagram size={20} strokeWidth={1.5} />
                                 </a>
@@ -74,8 +74,8 @@ const Footer = () => {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="border-t border-gray-900 mt-16 pt-8 text-center">
-                    <p className="text-gray-600 text-sm font-light tracking-wide">
+                <div className="border-t border-gray-900 mt-8 sm:mt-12 md:mt-16 pt-6 sm:pt-8 text-center">
+                    <p className="text-gray-600 text-xs sm:text-sm font-light tracking-wide">
                         &copy; {new Date().getFullYear()} The Collectors&rsquo; Exchange. All rights reserved.
                     </p>
                 </div>
