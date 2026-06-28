@@ -88,12 +88,12 @@ const ProductCard = ({ product, onUpdate }) => {
             </Link>
 
             <div className="p-3 sm:p-6 flex flex-col flex-grow">
-                <div className="flex-grow">
-                    <div className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest mb-1 sm:mb-2">{product.category}</div>
+                <div className="flex-grow flex flex-col gap-1 sm:gap-2">
+                    <div className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest">{product.category}</div>
                     <Link to={`/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
-                        <h3 className="font-serif text-sm sm:text-lg font-medium mb-1 sm:mb-2 line-clamp-1">{title}</h3>
+                        <h3 className="font-serif text-sm sm:text-lg font-medium leading-tight line-clamp-2">{title}</h3>
                     </Link>
-                    <p className="text-luxury-gold font-sans font-semibold text-sm sm:text-base mb-3 sm:mb-4">₹{product.price?.toLocaleString()}</p>
+                    <p className="text-luxury-gold font-sans font-semibold text-base sm:text-lg mt-0.5 sm:mt-1">₹{product.price?.toLocaleString()}</p>
                 </div>
 
                 <button

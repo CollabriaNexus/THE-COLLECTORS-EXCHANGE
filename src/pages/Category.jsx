@@ -9,7 +9,7 @@ import { useCart, useAddToCart } from '../hooks/api/useCart';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import Bullet from '../components/Bullet';
-import exchangeHeroBg from '../assets/The_Exchange_Modern.png';
+
 
 const CATEGORIES = [
     {
@@ -143,9 +143,10 @@ const ArchiveProductCard = ({ product }) => {
                 {/* Wishlist Button */}
                 <button
                     onClick={handleWishlistToggle}
-                    className={`absolute top-1.5 right-1.5 sm:top-3 sm:right-3 p-1 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm transition-all duration-300 z-10 cursor-pointer ${inWishlist ? 'text-heritage-bronze opacity-100' : 'text-heritage-charcoal/40 hover:text-heritage-bronze sm:opacity-0 sm:group-hover:opacity-100'} ${wishPulse ? 'scale-125' : 'scale-100'}`}
+                    style={{ minWidth: 0, minHeight: 0 }}
+                    className={`absolute top-1 right-1 sm:top-3 sm:right-3 p-1 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm transition-all duration-300 z-10 cursor-pointer ${inWishlist ? 'text-heritage-bronze opacity-100' : 'text-heritage-charcoal/40 hover:text-heritage-bronze sm:opacity-0 sm:group-hover:opacity-100'} ${wishPulse ? 'scale-125' : 'scale-100'}`}
                 >
-                    <Heart size={10} fill={inWishlist ? 'currentColor' : 'none'} className="sm:w-4 sm:h-4" />
+                    <Heart size={14} fill={inWishlist ? 'currentColor' : 'none'} className="sm:w-4 sm:h-4" />
                 </button>
 
                 {/* Condition Badge */}
@@ -174,13 +175,13 @@ const ArchiveProductCard = ({ product }) => {
                     <span className="text-[9px] sm:text-[11px] text-heritage-bronze/80 uppercase tracking-[0.08em] sm:tracking-[0.12em] truncate">{product.category}</span>
                 </div>
                 <Link to={`/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
-                    <h3 className="font-serif text-[11px] sm:text-base font-medium text-heritage-charcoal mb-0 sm:mb-1 leading-tight sm:leading-snug line-clamp-1 sm:line-clamp-2">{title}</h3>
+                    <h3 className="font-serif text-[10px] sm:text-base text-heritage-charcoal leading-tight sm:leading-snug line-clamp-2">{title}</h3>
                 </Link>
-                <p className="text-heritage-gold-muted font-sans text-[10px] sm:text-sm font-medium mb-1 sm:mb-4 mt-auto">₹{product.price?.toLocaleString()}</p>
+                <p className="text-heritage-gold-muted font-sans text-sm sm:text-base font-semibold mt-1 sm:mt-1.5">₹{product.price?.toLocaleString()}</p>
 
                 {/* Add to Cart / Sold Button */}
                 {product.status === 'Sold' ? (
-                    <div className="w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-2 bg-gray-100 text-gray-400 cursor-default">
+                    <div className="w-full py-1.5 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-2 bg-gray-100 text-gray-400 cursor-default">
                         <XCircle size={10} className="sm:w-[14px] sm:h-[14px]" />
                         Sold Out
                     </div>
@@ -188,7 +189,7 @@ const ArchiveProductCard = ({ product }) => {
                     <button
                         onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
                         disabled={addToCartMutation.isPending || cartFeedback}
-                                                    className={`w-full py-1 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.08em] sm:tracking-[0.12em] transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 active:scale-[0.97] ${cartFeedback || inCart
+                                                    className={`w-full py-1.5 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.08em] sm:tracking-[0.12em] transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 active:scale-[0.97] ${cartFeedback || inCart
                                                             ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                                                             : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
                                                             }`}
@@ -262,56 +263,6 @@ const Category = () => {
                 description="Browse The Collectors Exchange archive of authentic pre-owned collectibles. Shop curated timepieces, antiques, jewelry, and rare finds — all verified for authenticity."
                 canonical="/category"
             />
-            {/* Hero Section - The Collected Archive (Modern Dark Aesthetic) */}
-            <section className="relative h-screen min-h-[500px] flex items-center justify-center overflow-hidden border-b border-heritage-beige bg-heritage-charcoal">
-                {/* Visual Archive Background Layer */}
-                <div className="absolute inset-0 z-0">
-                    <img
-                        src={exchangeHeroBg}
-                        alt="The Exchange Archive"
-                        width="1920" height="1080"
-                        fetchpriority="high"
-                        className="w-full h-full object-cover object-center transition-transform duration-1000"
-                    />
-                    {/* Editorial Overlays for Readability - Dark for modern aesthetic */}
-                    <div className="absolute inset-0 bg-black/40"></div>
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80"></div>
-                </div>
-
-                {/* Narrative Content Layer */}
-                <div className="relative z-10 container mx-auto px-4 sm:px-6 flex flex-col items-center text-center">
-                    <div className="max-w-3xl">
-                        <div className="flex items-center justify-center gap-3 sm:gap-6 mb-4 sm:mb-6">
-                            <div className="h-px w-8 sm:w-12 bg-[#D4AF37]/50"></div>
-                            <h5 className="text-[#D4AF37] tracking-[0.3em] sm:tracking-[0.5em] font-sans text-[9px] sm:text-[11px] font-bold uppercase">
-                                Archive Vision
-                            </h5>
-                            <div className="h-px w-8 sm:w-12 bg-[#D4AF37]/50"></div>
-                        </div>
-
-                        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-serif text-white font-normal mb-4 sm:mb-6 leading-tight tracking-tighter drop-shadow-2xl">
-                            The <span className="italic text-[#D4AF37] font-light font-serif">Exchange</span>
-                        </h1>
-
-                        <div className="w-16 sm:w-24 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37]/80 to-transparent mx-auto mb-6 sm:mb-8"></div>
-
-                        <div className="relative mb-6 sm:mb-10">
-                            <p className="text-[#E5E1DA] font-serif italic text-base sm:text-xl md:text-2xl lg:text-3xl leading-relaxed max-w-2xl mx-auto drop-shadow-md">
-                                "Explore our curated archive of verified pre-owned treasures and rare collectibles."
-                            </p>
-                        </div>
-
-                        {/* Heritage Values */}
-                        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 md:gap-12 text-[8px] sm:text-[10px] uppercase tracking-[0.25em] sm:tracking-[0.35em] text-white/80 font-sans font-black">
-                            <span className="flex items-center gap-2 sm:gap-3"><Bullet className="text-[#D4AF37] w-2 h-2 sm:w-2.5 sm:h-2.5" />Provenance</span>
-                            <span className="flex items-center gap-2 sm:gap-3"><Bullet className="text-[#D4AF37] w-2 h-2 sm:w-2.5 sm:h-2.5" />Authenticity</span>
-                            <span className="flex items-center gap-2 sm:gap-3"><Bullet className="text-[#D4AF37] w-2 h-2 sm:w-2.5 sm:h-2.5" />Continuity</span>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
             {/* Category Icons Navigation - Polished with shadow and border */}
             <section className="py-8 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
                 <div className="container mx-auto max-w-5xl">
@@ -359,8 +310,8 @@ const Category = () => {
             {/* All Products Grid */}
             <section ref={productsRef} className="py-10 md:py-20 px-4 sm:px-6 bg-white">
                 <div className="container mx-auto max-w-6xl">
-                    <div className="flex flex-row md:flex-row justify-between items-center md:items-center mb-4 md:mb-10 gap-2 md:gap-4">
-                        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-10 gap-3 md:gap-4">
+                        <div className="flex items-center gap-2 md:gap-3 min-w-0 w-full sm:w-auto">
                             <h2 className="text-base md:text-3xl font-serif text-heritage-charcoal font-normal tracking-wide truncate">
                                 {selectedCategory || 'All Listings'}
                             </h2>
@@ -377,13 +328,13 @@ const Category = () => {
                             )}
                         </div>
 
-                        <div className="w-auto md:w-64 shrink-0 min-w-0">
+                        <div className="w-full sm:w-64 shrink-0">
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder="Search listings..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-3 py-1.5 md:px-4 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
+                                className="w-full px-3 py-2 md:px-4 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
                             />
                         </div>
                     </div>
