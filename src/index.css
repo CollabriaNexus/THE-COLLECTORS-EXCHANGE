@@ -54,10 +54,12 @@ h1, h2, h3, h4, h5, h6 {
     padding-right: 1rem !important;
   }
 
+  [class*="p-6"],
+  [class*="p-8"],
   [class*="p-10"],
   [class*="p-12"],
   [class*="p-16"] {
-    padding: 1.25rem !important;
+    padding: 1rem !important;
   }
 
   [class*="px-10"],
@@ -75,9 +77,15 @@ h1, h2, h3, h4, h5, h6 {
     padding-bottom: 2rem !important;
   }
 
+  [class*="gap-8"] {
+    gap: 1rem !important;
+  }
+
   [class*="gap-12"] {
     gap: 1.5rem !important;
   }
+
+
 
   input, select, textarea, button, a {
     font-size: 14px !important;

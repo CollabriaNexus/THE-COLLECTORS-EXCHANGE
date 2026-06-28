@@ -65,51 +65,51 @@ const FeaturedProductCard = ({ product }) => {
     };
 
     return (
-        <div className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 snap-start flex flex-col">
+        <div className="flex-shrink-0 w-[240px] sm:w-[280px] md:w-[320px] bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 snap-start flex flex-col">
             <Link to={`/product/${product.id}`} className="block">
                 <div className="relative aspect-[4/5] bg-heritage-beige overflow-hidden">
                     {product.image ? (
                         <img loading="lazy" width="400" height="500" src={product.image} alt={title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/40 bg-heritage-beige">
-                            <Gem size={48} strokeWidth={1} />
+                            <Gem size={36} strokeWidth={1} />
                         </div>
                     )}
                     {product.status === 'Sold' && (
                         <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center z-10">
-                            <span className="bg-white/90 text-heritage-charcoal text-sm font-bold px-4 py-1.5 uppercase tracking-[0.15em] shadow-lg">Sold Out</span>
+                            <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-sm font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-[0.15em] shadow-lg">Sold Out</span>
                         </div>
                     )}
-                    <div className="absolute bottom-4 left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-xs px-4 py-2 font-sans tracking-[0.15em] uppercase flex items-center gap-2">
-                        <Award size={14} strokeWidth={1.5} />
+                    <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] sm:text-xs px-2 sm:px-4 py-1 sm:py-2 font-sans tracking-[0.15em] uppercase flex items-center gap-1 sm:gap-2">
+                        <Award size={12} strokeWidth={1.5} />
                         <span>Featured</span>
                     </div>
                 </div>
             </Link>
-            <div className="p-5 flex flex-col flex-grow">
+            <div className="p-3 sm:p-5 flex flex-col flex-grow">
                 <div className="flex-grow">
-                    <span className="text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">{product.category}</span>
+                    <span className="text-[10px] sm:text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">{product.category}</span>
                     <Link to={`/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
-                        <h3 className="font-serif text-lg font-medium text-heritage-charcoal mb-1 leading-tight mt-1">{title}</h3>
+                        <h3 className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal mb-1 leading-tight mt-1">{title}</h3>
                     </Link>
-                    <p className="text-heritage-gold-muted font-serif text-lg font-medium mt-2">₹{product.price?.toLocaleString()}</p>
+                    <p className="text-heritage-gold-muted font-serif text-sm sm:text-base md:text-lg font-medium mt-2">₹{product.price?.toLocaleString()}</p>
                 </div>
                 {product.status === 'Sold' ? (
-                    <div className="w-full py-3 text-sm uppercase tracking-widest flex items-center justify-center gap-2 mt-4 bg-gray-100 text-gray-400 cursor-default">
-                        <XCircle size={16} />
+                    <div className="w-full py-2 sm:py-3 text-[11px] sm:text-sm uppercase tracking-widest flex items-center justify-center gap-1 sm:gap-2 mt-3 sm:mt-4 bg-gray-100 text-gray-400 cursor-default">
+                        <XCircle size={13} />
                         Sold Out
                     </div>
                 ) : (
                     <button
                         onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
                         disabled={addToCartMutation.isPending || cartFeedback}
-                        className={`w-full py-3 text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-2 mt-4 active:scale-[0.97] ${
+                        className={`w-full py-2 sm:py-3 text-[11px] sm:text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 mt-3 sm:mt-4 active:scale-[0.97] ${
                             cartFeedback || inCart
                                 ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                                 : 'bg-black text-white hover:bg-luxury-gold'
                         }`}
                     >
-                        {cartFeedback ? <Check size={16} /> : product.status === 'Sold' ? <XCircle size={16} /> : <ShoppingBag size={16} />}
+                        {cartFeedback ? <Check size={13} /> : product.status === 'Sold' ? <XCircle size={13} /> : <ShoppingBag size={13} />}
                         {addToCartMutation.isPending ? 'Adding...' : cartFeedback ? 'Added' : inCart ? 'In Cart →' : 'Add to Cart'}
                     </button>
                 )}
@@ -125,11 +125,18 @@ const FeaturedProductsCarousel = () => {
     const allProducts = data?.products || [];
 
     // Only show products marked as featured or most_rare
-    const products = allProducts.filter(
+    let products = allProducts.filter(
         p => p.listingCategory === 'featured' || p.listingCategory === 'most_rare'
     );
 
     if (isLoading || products.length === 0) return null;
+
+    // Sort: non-sold items first, sold items last
+    products = [...products].sort((a, b) => {
+        if (a.status === 'Sold' && b.status !== 'Sold') return 1;
+        if (a.status !== 'Sold' && b.status === 'Sold') return -1;
+        return 0;
+    });
 
     const cards = products.map((product) => (
         <FeaturedProductCard key={product.id} product={product} />
@@ -228,7 +235,7 @@ const Home = () => {
             {/* Marketplace Overview */}
             <section className="py-12 sm:py-16 lg:py-20 px-6 bg-secondary-bg">
                 <div className="container mx-auto max-w-6xl">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 text-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 text-center">
                         <div className="p-6 sm:p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                             <Archive className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
                             <h3 className="text-xl sm:text-2xl font-serif mb-4">Curated Collection</h3>
@@ -356,7 +363,7 @@ const Home = () => {
                         <h2 className="text-5xl md:text-7xl font-serif mb-20 leading-tight">Sell with Confidence</h2>
                     </Reveal>
 
-                    <div className="bg-[#0A0D12] border border-white/5 p-12 md:p-24 grid md:grid-cols-2 gap-20 text-left max-w-5xl mx-auto shadow-heritage relative overflow-hidden">
+                    <div className="bg-[#0A0D12] border border-white/5 p-8 sm:p-12 md:p-24 grid md:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 text-left max-w-5xl mx-auto shadow-heritage relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
                         <div className="space-y-10 relative z-10">
                             <h3 className="text-2xl font-serif text-luxury-gold flex items-center gap-4">

@@ -8,7 +8,11 @@ const STORAGE_KEYS = {
 // ============== USER ==============
 export const getUser = () => {
     const user = localStorage.getItem(STORAGE_KEYS.ADMIN_USER);
-    return user ? JSON.parse(user) : null;
+    try {
+        return user ? JSON.parse(user) : null;
+    } catch {
+        return null;
+    }
 };
 
 export const setUser = (userData) => {

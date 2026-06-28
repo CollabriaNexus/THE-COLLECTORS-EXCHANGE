@@ -335,7 +335,7 @@ const Checkout = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div>
                                         <label htmlFor="zipCode" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">PIN Code</label>
                                         <input
@@ -377,7 +377,7 @@ const Checkout = () => {
                         </div>
 
                         {/* Trust Badges */}
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {[
                                 { icon: ShieldCheck, label: 'Secure Payment', sub: 'Razorpay encrypted' },
                                 { icon: ShieldCheck, label: 'Authenticity', sub: 'Expert verified' },
@@ -394,7 +394,7 @@ const Checkout = () => {
 
                     {/* Order Summary */}
                     <div className="w-full lg:w-2/5">
-                        <div className="bg-white border border-gray-100 shadow-sm p-8 sticky top-24">
+                        <div className="bg-white border border-gray-100 shadow-sm p-8 lg:sticky lg:top-24">
                             <h2 className="text-xl font-serif font-bold text-heritage-charcoal mb-6">Order Summary</h2>
 
                             {/* Items */}

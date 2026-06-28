@@ -66,9 +66,9 @@ const Header = () => {
         <>
             <div style={{ height: showNav ? headerHeight : 0 }} className="transition-[height] duration-300" />
             <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-50 bg-white text-text-main transition-transform duration-300 ${showNav ? 'translate-y-0 border-b border-gray-100 shadow-sm' : '-translate-y-full'}`}>
-                <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-                    {/* Logo */}
-                    <Link to="/" className="text-[11px] xs:text-[13px] sm:text-lg md:text-xl lg:text-2xl font-serif font-bold tracking-tight sm:tracking-wide shrink-0 leading-tight">
+                <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-center lg:justify-between relative">
+                    {/* Logo - centered on mobile, left-aligned on desktop */}
+                    <Link to="/" className="text-[11px] xs:text-[13px] sm:text-lg md:text-xl lg:text-2xl font-serif font-bold tracking-tight sm:tracking-wide shrink-0 leading-tight text-center lg:text-left">
                         THE COLLECTORS<br className="hidden xs:block sm:hidden" /> EXCHANGE
                     </Link>
 
@@ -108,9 +108,9 @@ const Header = () => {
                         </Link>
                     </div>
 
-                    {/* Mobile hamburger */}
+                    {/* Mobile hamburger - absolute positioned right */}
                     <button
-                        className="lg:hidden"
+                        className="lg:hidden absolute right-4 sm:right-6"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         aria-label="Toggle menu"
                         aria-expanded={isMenuOpen}

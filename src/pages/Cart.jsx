@@ -82,7 +82,7 @@ const Cart = () => {
 
                     {/* Checkout Summary */}
                     <div className="w-full lg:w-1/3">
-                        <div className="bg-white p-8 shadow-sm border border-gray-100 sticky top-24">
+                        <div className="bg-white p-8 shadow-sm border border-gray-100 lg:sticky lg:top-24">
                             <h3 className="text-xl font-serif mb-6">Order Summary</h3>
                             <div className="space-y-4 text-sm text-gray-600 border-b border-gray-100 pb-6">
                                 <div className="flex justify-between">

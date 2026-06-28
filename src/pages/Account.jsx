@@ -596,7 +596,7 @@ const Account = () => {
                                 } catch {
                                     showToast('Failed to update profile.', 'error');
                                 }
-                            }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            }} className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
                                     <input type="text" required value={editProfileForm.name}
@@ -623,7 +623,7 @@ const Account = () => {
                                 </div>
                             </form>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
                                     <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 font-serif">{user.name}</div>
@@ -1335,7 +1335,11 @@ const Account = () => {
 
                             {userProducts.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {userProducts.map(product => (
+                                    {[...userProducts].sort((a, b) => {
+                                        if (a.status === 'Sold' && b.status !== 'Sold') return 1;
+                                        if (a.status !== 'Sold' && b.status === 'Sold') return -1;
+                                        return 0;
+                                    }).map(product => (
                                         editingProductId === product.id ? (
                                             <div key={product.id} className="border border-luxury-gold bg-white col-span-1 sm:col-span-2 lg:col-span-3">
                                                 <div className="p-6">
@@ -1652,14 +1656,54 @@ const Account = () => {
         );
     }
 
+    const renderMobileTabBar = () => (
+        <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-50 bg-heritage-cream/30">
+                <div className="w-8 h-8 rounded-full bg-heritage-cream flex items-center justify-center text-heritage-bronze flex-shrink-0">
+                    <User size={14} />
+                </div>
+                <div className="min-w-0 flex-1">
+                    <p className="text-xs font-serif font-medium truncate">{localUser.name}</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider truncate">{localUser.type}</p>
+                </div>
+            </div>
+            <nav className="flex overflow-x-auto gap-0 scrollbar-hide">
+                <button onClick={() => setActiveTab('profile')}
+                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'profile' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><User size={13} className="inline -mt-0.5 mr-1" /> Profile</button>
+                <button onClick={() => setActiveTab('seller')}
+                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'seller' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><Store size={13} className="inline -mt-0.5 mr-1" /> {user?.kycStatus === 'verified' ? 'Seller' : 'Register'}</button>
+                <button onClick={() => setActiveTab('listings')}
+                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'listings' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><Package size={13} className="inline -mt-0.5 mr-1" /> Portfolio</button>
+                <button onClick={() => setActiveTab('orders')}
+                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'orders' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><ShoppingBag size={13} className="inline -mt-0.5 mr-1" /> Orders</button>
+                <button onClick={() => setActiveTab('notifications')}
+                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'notifications' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><Bell size={13} className="inline -mt-0.5 mr-1" /> Alerts</button>
+                {vendorProfile?.status === 'APPROVED' && (
+                    <Link to="/vendor-dashboard"
+                        className="flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all"
+                    ><BarChart3 size={13} className="inline -mt-0.5 mr-1" /> Dashboard</Link>
+                )}
+                <button onClick={handleLogout}
+                    className="flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap text-red-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+                ><LogOut size={13} className="inline -mt-0.5 mr-1" /> Sign Out</button>
+            </nav>
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-secondary-bg">
             <SEO title="My Account" description="Manage your profile, orders, and seller account on The Collectors Exchange." canonical="/account" noindex />
-            <div className="container mx-auto py-16 px-6">
-                <div className="flex flex-col lg:flex-row gap-12">
-                    {/* Sidebar */}
-                    <div className="w-full lg:w-1/4">
-                        <div className="bg-white shadow-sm border border-gray-100 sticky top-24">
+            {renderMobileTabBar()}
+            <div className="container mx-auto py-12 lg:py-16 px-6">
+                <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                    {/* Desktop Sidebar */}
+                    <div className="hidden lg:block lg:w-1/4">
+                        <div className="bg-white shadow-sm border border-gray-100 lg:sticky lg:top-24">
                             <div className="p-8 border-b border-gray-100 text-center">
                                 <div className="w-20 h-20 rounded-full bg-heritage-cream mx-auto flex items-center justify-center mb-4 text-heritage-bronze">
                                     <User size={32} />
@@ -1668,51 +1712,29 @@ const Account = () => {
                                 <p className="text-xs text-gray-500 uppercase tracking-widest border px-2 py-0.5 inline-block rounded-sm border-gray-200">{localUser.type}</p>
                             </div>
                             <nav className="p-4 space-y-1">
-                                <button
-                                    onClick={() => setActiveTab('profile')}
-                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'profile' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                                >
-                                    <User size={18} /> Profile
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('seller')}
-                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'seller' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                                >
-                                    <Store size={18} /> {user?.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('listings')}
-                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'listings' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                                >
-                                    <Package size={18} /> Portfolio
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('orders')}
-                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'orders' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                                >
-                                    <ShoppingBag size={18} /> My Orders
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('notifications')}
-                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all ${activeTab === 'notifications' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                                >
-                                    <Bell size={18} /> Notifications
-                                </button>
-
+                                <button onClick={() => setActiveTab('profile')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                ><User size={18} /> Profile</button>
+                                <button onClick={() => setActiveTab('seller')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'seller' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                ><Store size={18} /> {user?.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}</button>
+                                <button onClick={() => setActiveTab('listings')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'listings' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                ><Package size={18} /> Portfolio</button>
+                                <button onClick={() => setActiveTab('orders')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'orders' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                ><ShoppingBag size={18} /> My Orders</button>
+                                <button onClick={() => setActiveTab('notifications')}
+                                    className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'notifications' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                                ><Bell size={18} /> Notifications</button>
                                 {vendorProfile?.status === 'APPROVED' && (
-                                    <Link
-                                        to="/vendor-dashboard"
+                                    <Link to="/vendor-dashboard"
                                         className="flex items-center gap-4 w-full p-4 text-sm font-medium transition-all text-gray-600 hover:bg-gray-50"
-                                    >
-                                        <BarChart3 size={18} /> Vendor Dashboard
-                                    </Link>
+                                    ><BarChart3 size={18} /> Vendor Dashboard</Link>
                                 )}
-                                <button
-                                    onClick={handleLogout}
-                                    className="flex items-center gap-4 w-full p-4 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors mt-8 border-t border-gray-100"
-                                >
-                                    <LogOut size={18} /> Sign Out
-                                </button>
+                                <button onClick={handleLogout}
+                                    className="flex items-center gap-4 w-full p-4 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors mt-8 border-t border-gray-100 cursor-pointer"
+                                ><LogOut size={18} /> Sign Out</button>
                             </nav>
                         </div>
                     </div>

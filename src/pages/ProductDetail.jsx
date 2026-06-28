@@ -146,7 +146,7 @@ const ProductDetail = () => {
                     <div className="w-full lg:w-3/5 flex gap-2 sm:gap-4 order-1">
                         {/* Thumbnails */}
                         {images.length > 1 && (
-                            <div className="flex flex-col gap-1 sm:gap-3 w-10 sm:w-16 md:w-20 shrink-0">
+                            <div className="flex flex-col gap-1 sm:gap-3 w-12 sm:w-16 md:w-20 shrink-0">
                                 {images.map((img, idx) => (
                                     <button
                                         key={idx}

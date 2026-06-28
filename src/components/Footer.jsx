@@ -30,7 +30,7 @@ const Footer = () => {
                     </div>
 
                     {/* Right: Links */}
-                    <div className="lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-8">
+                    <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="flex flex-col space-y-6">
                             <h3 className="text-lg font-serif font-semibold text-luxury-gold uppercase tracking-wider">Company</h3>
                             <div className="flex flex-col space-y-3 font-light text-gray-400 text-sm">

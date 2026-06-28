@@ -87,24 +87,24 @@ const ProductCard = ({ product, onUpdate }) => {
                 )}
             </Link>
 
-            <div className="p-6 flex flex-col flex-grow">
+            <div className="p-3 sm:p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
-                    <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">{product.category}</div>
+                    <div className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest mb-1 sm:mb-2">{product.category}</div>
                     <Link to={`/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
-                        <h3 className="font-serif text-lg font-medium mb-2">{title}</h3>
+                        <h3 className="font-serif text-sm sm:text-lg font-medium mb-1 sm:mb-2 line-clamp-1">{title}</h3>
                     </Link>
-                    <p className="text-luxury-gold font-sans font-semibold mb-4">₹{product.price?.toLocaleString()}</p>
+                    <p className="text-luxury-gold font-sans font-semibold text-sm sm:text-base mb-3 sm:mb-4">₹{product.price?.toLocaleString()}</p>
                 </div>
 
                 <button
                     onClick={inCart ? () => navigate('/cart') : handleAddToCart}
                     disabled={addToCartMutation.isPending}
-                    className={`w-full py-3 text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-2 mt-auto active:scale-[0.97] ${inCart
+                    className={`w-full py-2 sm:py-3 text-[11px] sm:text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 mt-auto active:scale-[0.97] ${inCart
                         ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                         : 'bg-black text-white hover:bg-luxury-gold'
                         }`}
                 >
-                    <ShoppingBag size={16} />
+                    <ShoppingBag size={13} />
                     {addToCartMutation.isPending ? 'Adding...' : inCart ? 'In Cart →' : 'Add to Cart'}
                 </button>
             </div>

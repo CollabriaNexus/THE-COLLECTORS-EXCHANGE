@@ -188,12 +188,12 @@ const ArchiveProductCard = ({ product }) => {
                     <button
                         onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
                         disabled={addToCartMutation.isPending || cartFeedback}
-                        className={`w-full py-1 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 active:scale-[0.97] ${cartFeedback || inCart
-                            ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
-                            : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
-                            }`}
-                    >
-                        {cartFeedback ? <Check size={10} className="sm:w-[14px] sm:h-[14px]" /> : <ShoppingBag size={10} className="sm:w-[14px] sm:h-[14px]" />}
+                                                    className={`w-full py-1 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.08em] sm:tracking-[0.12em] transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 active:scale-[0.97] ${cartFeedback || inCart
+                                                            ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
+                                                            : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
+                                                            }`}
+                                                    >
+                                                        {cartFeedback ? <Check size={10} className="sm:w-[12px] sm:h-[12px]" /> : <ShoppingBag size={10} className="sm:w-[12px] sm:h-[12px]" />}
                         {addToCartMutation.isPending ? 'Adding...' : cartFeedback ? 'Added' : inCart ? 'In Cart →' : 'Add to Cart'}
                     </button>
                 )}
@@ -377,13 +377,13 @@ const Category = () => {
                             )}
                         </div>
 
-                        <div className="w-[120px] md:w-64 shrink-0">
+                        <div className="w-auto md:w-64 shrink-0 min-w-0">
                             <input
                                 type="text"
                                 placeholder="Search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-2 py-1.5 md:px-4 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
+                                className="w-full px-3 py-1.5 md:px-4 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
                             />
                         </div>
                     </div>
@@ -404,11 +404,20 @@ const Category = () => {
                         </div>
                     ) : allProducts.length > 0 ? (
                         <>
+                            {(() => {
+                                const sorted = [...allProducts].sort((a, b) => {
+                                    if (a.status === 'Sold' && b.status !== 'Sold') return 1;
+                                    if (a.status !== 'Sold' && b.status === 'Sold') return -1;
+                                    return 0;
+                                });
+                                return (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-6">
-                                {allProducts.map((product) => (
+                                {sorted.map((product) => (
                                     <ArchiveProductCard key={product.id} product={product} />
                                 ))}
                             </div>
+                                );
+                            })()}
                             {totalPages > 1 && (
                                 <div className="flex justify-center mt-12">
                                     <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto max-w-full pb-2 scrollbar-hide">

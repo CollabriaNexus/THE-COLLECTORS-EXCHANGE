@@ -68,14 +68,20 @@ const Wishlist = () => {
 
             {wishlistItems.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {wishlistItems.map(product => (
+                    {[...wishlistItems].sort((a, b) => {
+                        const aSold = a.status === 'Sold' || a.product?.status === 'Sold';
+                        const bSold = b.status === 'Sold' || b.product?.status === 'Sold';
+                        if (aSold && !bSold) return 1;
+                        if (!aSold && bSold) return -1;
+                        return 0;
+                    }).map(product => (
                         <div key={product.id} className="bg-white border border-gray-100 shadow-sm group">
                             {/* Image */}
                             <div className="relative overflow-hidden">
                                 <img
                                     src={product.image || 'https://via.placeholder.com/400'}
                                     alt={product.title}
-                                    className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                                    className="w-full h-48 sm:h-64 object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                                 {product.isVerified && (
                                     <div className="absolute top-3 left-3 bg-black text-white px-3 py-1 text-xs uppercase tracking-widest flex items-center gap-1">
@@ -85,25 +91,25 @@ const Wishlist = () => {
                             </div>
 
                             {/* Content */}
-                            <div className="p-6">
-                                <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">{product.category}</p>
-                                <h3 className="font-serif text-lg font-medium mb-2">{product.title}</h3>
-                                <p className="text-xl font-semibold mb-4">₹{product.price?.toLocaleString()}</p>
+                            <div className="p-3 sm:p-6">
+                                <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest mb-1 sm:mb-2">{product.category}</p>
+                                <h3 className="font-serif text-sm sm:text-lg font-medium mb-1 sm:mb-2 line-clamp-1">{product.title}</h3>
+                                <p className="text-base sm:text-xl font-semibold mb-3 sm:mb-4">₹{product.price?.toLocaleString()}</p>
 
-                                <div className="flex gap-3">
+                                <div className="flex gap-2 sm:gap-3">
                                     <button
                                         onClick={() => handleAddToCart(product.id)}
                                         disabled={isInCart(product.id)}
-                                        className="flex-1 bg-black text-white py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors disabled:bg-gray-300 flex items-center justify-center gap-2"
+                                        className="flex-1 bg-black text-white py-2 sm:py-3 text-xs sm:text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors disabled:bg-gray-300 flex items-center justify-center gap-1 sm:gap-2"
                                     >
-                                        <ShoppingBag size={16} />
+                                        <ShoppingBag size={13} />
                                         {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
                                     </button>
                                     <button
                                         onClick={() => handleRemove(product.id)}
-                                        className="px-4 py-3 border border-gray-200 text-red-500 hover:bg-red-50 transition-colors"
+                                        className="px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 text-red-500 hover:bg-red-50 transition-colors"
                                     >
-                                        <Trash2 size={18} />
+                                        <Trash2 size={16} />
                                     </button>
                                 </div>
                             </div>
