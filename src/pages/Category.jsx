@@ -170,14 +170,14 @@ const ArchiveProductCard = ({ product }) => {
                 )}
             </Link>
 
-            <div className="p-2 sm:p-5 flex flex-col flex-grow">
-                <div className="flex items-center gap-0.5 sm:gap-2 mb-0.5 sm:mb-1.5">
+            <div className="p-3 sm:p-5 flex flex-col flex-grow">
+                <div className="flex items-center gap-0.5 sm:gap-2 mb-1 sm:mb-2">
                     <span className="text-[8px] sm:text-[11px] text-heritage-bronze/80 uppercase tracking-[0.08em] sm:tracking-[0.12em] truncate">{product.category}</span>
                 </div>
                 <Link to={`/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
-                    <h3 className="font-serif text-[9px] sm:text-base text-heritage-charcoal leading-tight sm:leading-snug line-clamp-2">{title}</h3>
+                    <h3 className="font-serif text-[9.5px] sm:text-base text-heritage-charcoal leading-tight sm:leading-snug line-clamp-2">{title}</h3>
                 </Link>
-                <p className="text-heritage-gold-muted font-sans text-xs sm:text-base font-semibold mt-1 sm:mt-1.5">₹{product.price?.toLocaleString()}</p>
+                <p className="text-heritage-gold-muted font-sans text-xs sm:text-base font-semibold mt-1.5 sm:mt-2">₹{product.price?.toLocaleString()}</p>
 
                 {/* Add to Cart / Sold Button */}
                 {product.status === 'Sold' ? (
@@ -308,8 +308,8 @@ const Category = () => {
 
 
             {/* All Products Grid */}
-            <section ref={productsRef} className="py-8 md:py-20 px-2 sm:px-4 lg:px-6 bg-white">
-                <div className="w-full px-2 sm:px-0">
+            <section ref={productsRef} className="py-8 md:py-20 px-3 sm:px-4 lg:px-6 bg-white">
+                <div className="w-full max-w-7xl mx-auto">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 md:mb-10 gap-2 sm:gap-3 md:gap-4 px-0 sm:px-0">
                         <div className="flex items-center gap-2 md:gap-3 min-w-0 w-full sm:w-auto">
                             <h2 className="text-base sm:text-2xl md:text-3xl font-serif text-heritage-charcoal font-normal tracking-wide truncate">
@@ -340,7 +340,7 @@ const Category = () => {
                     </div>
 
                     {isLoading && allProducts.length === 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-3 md:gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                             {Array.from({ length: 8 }).map((_, i) => (
                                 <div key={i} className="bg-white border border-gray-100 flex flex-col animate-pulse">
                                     <div className="aspect-square bg-heritage-beige/60" />
@@ -362,7 +362,7 @@ const Category = () => {
                                     return 0;
                                 });
                                 return (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-3 md:gap-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                                 {sorted.map((product) => (
                                     <ArchiveProductCard key={product.id} product={product} />
                                 ))}
