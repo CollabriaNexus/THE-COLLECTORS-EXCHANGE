@@ -340,7 +340,7 @@ const Category = () => {
                     </div>
 
                     {isLoading && allProducts.length === 0 ? (
-                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-3 md:gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-3 md:gap-6">
                             {Array.from({ length: 8 }).map((_, i) => (
                                 <div key={i} className="bg-white border border-gray-100 flex flex-col animate-pulse">
                                     <div className="aspect-square bg-heritage-beige/60" />
@@ -362,7 +362,7 @@ const Category = () => {
                                     return 0;
                                 });
                                 return (
-                            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-3 md:gap-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-3 md:gap-6">
                                 {sorted.map((product) => (
                                     <ArchiveProductCard key={product.id} product={product} />
                                 ))}
