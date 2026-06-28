@@ -3,7 +3,7 @@ import SEO from '../components/SEO';
 
 const SellerAgreement = () => {
     return (
-        <div className="min-h-screen bg-white text-black py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
+        <div className="min-h-screen bg-white text-black py-8 sm:py-12 px-4 sm:px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
             <SEO title="Seller Agreement" description="Read the official Seller Agreement for listing items on The Collectors Exchange. Understand the terms, fees, and verification requirements for sellers." canonical="/seller-agreement" />
 
             {/* Header */}

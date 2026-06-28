@@ -34,7 +34,7 @@ const Account = () => {
     const [passwordForm, setPasswordForm] = useState({ password: '', confirm: '' });
     const [showCompanyPopup, setShowCompanyPopup] = useState(false);
     const navigate = useNavigate();
-    const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '', aadhaarDoc: '', panDoc: '', gstDoc: '', incorporationDoc: '', signedByName: '', signedAgreementDoc: '' });
+    const [kycForm, setKycForm] = useState({ aadhaar: '', pan: '', companyName: '', gst: '', founderName: '', aadhaarDoc: '', panDoc: '', gstDoc: '', incorporationDoc: '', signedByName: '' });
     const [tncAccepted, setTncAccepted] = useState(false);
     const [productForm, setProductForm] = useState({
         title: '',
@@ -245,11 +245,6 @@ const Account = () => {
             ? { aadhaar: kycForm.aadhaar, pan: kycForm.pan, aadhaarDoc: kycForm.aadhaarDoc, panDoc: kycForm.panDoc }
             : { companyName: kycForm.companyName, gst: kycForm.gst, founderName: kycForm.founderName, aadhaarDoc: kycForm.aadhaarDoc, panDoc: kycForm.panDoc, gstDoc: kycForm.gstDoc, incorporationDoc: kycForm.incorporationDoc };
 
-        if (!kycForm.signedByName.trim()) {
-            showToast('Please enter your full name to digitally sign the Seller Agreement.', 'error');
-            return;
-        }
-
         if (!tncAccepted) {
             showToast('Please accept the Terms & Conditions.', 'error');
             return;
@@ -258,9 +253,7 @@ const Account = () => {
         const kycData = {
             ...base,
             agreementAccepted: true,
-            agreementSignedByName: kycForm.signedByName.trim(),
-            agreementSignedAt: new Date().toISOString(),
-            signedAgreementDoc: kycForm.signedAgreementDoc || '',
+            agreementAcceptedAt: new Date().toISOString(),
         };
 
         try {
@@ -276,7 +269,7 @@ const Account = () => {
         setKycDocUploading(prev => ({ ...prev, [docType]: true }));
         try {
             const url = await uploadKycDocument(file, docType);
-            const fieldMap = { aadhaar: 'aadhaarDoc', pan: 'panDoc', gst: 'gstDoc', incorporation: 'incorporationDoc', signedAgreement: 'signedAgreementDoc' };
+            const fieldMap = { aadhaar: 'aadhaarDoc', pan: 'panDoc', gst: 'gstDoc', incorporation: 'incorporationDoc' };
             setKycForm(prev => ({ ...prev, [fieldMap[docType]]: url }));
             showToast(`${docType.charAt(0).toUpperCase() + docType.slice(1)} document uploaded successfully`, 'success');
         } catch (err) {
@@ -294,7 +287,7 @@ const Account = () => {
 
     // Image URL handling
     const [imageUploading, setImageUploading] = useState(false);
-    const [kycDocUploading, setKycDocUploading] = useState({ aadhaar: false, pan: false, gst: false, incorporation: false, signedAgreement: false });
+    const [kycDocUploading, setKycDocUploading] = useState({ aadhaar: false, pan: false, gst: false, incorporation: false });
 
     const handleImageUrlChange = (index, value) => {
         const newUrls = [...productForm.imageUrls];
@@ -523,7 +516,7 @@ const Account = () => {
                     <p className="text-gray-500 font-light">Sign in to The Collectors' Exchange secure portal.</p>
                 </div>
 
-                <div className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
+                <div className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-6">
                     <button
                         type="button"
                         onClick={handleGoogleLogin}
@@ -568,7 +561,7 @@ const Account = () => {
         switch (activeTab) {
             case 'profile':
                 return (
-                    <div className="bg-white p-10 shadow-sm border border-gray-100">
+                    <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
                         <div className="flex justify-between items-start mb-8">
                             <h3 className="text-3xl font-serif text-heritage-charcoal">Collector Profile</h3>
                             <button onClick={() => {
@@ -616,7 +609,7 @@ const Account = () => {
                                 </div>
                                 <div className="flex items-end">
                                     <button type="submit" disabled={updateProfileMutation.isPending}
-                                        className="bg-heritage-charcoal text-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors flex items-center gap-2">
+                                        className="bg-heritage-charcoal text-white px-6 sm:px-8 py-3 sm:py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors flex items-center gap-2">
                                         {updateProfileMutation.isPending && <Loader2 size={16} className="animate-spin" />}
                                         Save Changes
                                     </button>
@@ -659,7 +652,7 @@ const Account = () => {
 
             case 'seller':
                 return (
-                    <div className="bg-white p-10 shadow-sm border border-gray-100">
+                    <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
                         <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">
                             {user.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}
                         </h3>
@@ -862,7 +855,7 @@ const Account = () => {
                                                             required
                                                             value={kycForm.companyName}
                                                             onChange={(e) => setKycForm({ ...kycForm, companyName: e.target.value })}
-                                                            className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                            className="w-full p-3 sm:p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
                                                         />
                                                     </div>
                                                     <DocUploadField
@@ -882,7 +875,7 @@ const Account = () => {
                                                             required
                                                             value={kycForm.founderName}
                                                             onChange={(e) => setKycForm({ ...kycForm, founderName: e.target.value })}
-                                                            className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
+                                                            className="w-full p-3 sm:p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold"
                                                         />
                                                     </div>
                                                     <DocUploadField
@@ -919,47 +912,6 @@ const Account = () => {
                                             </p>
                                         </div>
 
-                                        <div className="mt-4 flex items-center gap-4">
-                                            <a
-                                                href={`${import.meta.env.VITE_API_URL}/users/seller-agreement/pdf`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 bg-heritage-charcoal text-white px-5 py-3 text-xs uppercase tracking-widest hover:bg-luxury-gold transition-colors"
-                                            >
-                                                <Download size={14} />
-                                                Download Seller Agreement (PDF)
-                                            </a>
-                                        </div>
-
-                                        <div className="mt-4">
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Upload Signed Agreement</label>
-                                            <p className="text-xs text-gray-400 mb-2">Print, sign, scan, and upload the signed agreement as a PDF</p>
-                                            <DocUploadField
-                                                label="Signed Agreement"
-                                                docUrl={kycForm.signedAgreementDoc}
-                                                docType="signedAgreement"
-                                                uploading={kycDocUploading.signedAgreement}
-                                                hideTextInput
-                                                onFileUpload={(file) => handleKycDocUpload('signedAgreement', file)}
-                                            />
-                                        </div>
-
-                                        <div className="mt-4">
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Digital Signature</label>
-                                            <p className="text-xs text-gray-400 mb-2">Type your full legal name as your electronic signature</p>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Enter your full name as digital signature"
-                                                value={kycForm.signedByName}
-                                                onChange={(e) => setKycForm({ ...kycForm, signedByName: e.target.value })}
-                                                className="w-full p-4 border border-gray-300 focus:outline-none focus:border-luxury-gold font-serif"
-                                            />
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                By typing your name above, you electronically sign the Seller Agreement.
-                                            </p>
-                                        </div>
-
                                         <div className="mt-6 flex items-start gap-3">
                                             <input
                                                 type="checkbox"
@@ -969,7 +921,7 @@ const Account = () => {
                                                 className="mt-1 h-4 w-4 border-gray-300 rounded"
                                             />
                                             <label htmlFor="tnc" className="text-sm text-gray-600 leading-relaxed">
-                                                I confirm that I have read, downloaded, signed, and uploaded the Seller Agreement. I agree to the Terms & Conditions and confirm that all information provided is accurate and truthful.
+                                                I have read and agree to the Seller Agreement and Terms & Conditions. I confirm that all information provided is accurate and truthful.
                                             </label>
                                         </div>
                                     </div>
@@ -977,7 +929,7 @@ const Account = () => {
                                     <button
                                         type="submit"
                                         disabled={kycMutation.isPending}
-                                        className="bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center justify-center gap-2"
+                                        className="bg-black text-white px-6 sm:px-10 py-3 sm:py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center justify-center gap-2"
                                     >
                                         {kycMutation.isPending && <Loader2 size={16} className="animate-spin" />}
                                         Submit Verification Documents
@@ -993,7 +945,7 @@ const Account = () => {
                     <div className="space-y-12">
                         {/* Add New Product Form */}
                         {user.kycStatus === 'verified' && (
-                            <div className="bg-white p-10 shadow-sm border border-gray-100">
+                            <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
                                 <div className="mb-8 pb-8 border-b border-gray-100">
                                     <h3 className="text-3xl font-serif mb-2 text-heritage-charcoal">Broker a New Item</h3>
                                     <p className="text-gray-500 font-light text-sm">
@@ -1014,7 +966,7 @@ const Account = () => {
                                                 placeholder="e.g., 1950s Hans Wegner Papa Bear Chair"
                                                 value={productForm.title}
                                                 onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
-                                                className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold font-serif text-lg"
+                                                className="w-full p-3 sm:p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold font-serif text-lg"
                                             />
                                             <p className="text-xs text-gray-400 mt-2">Use the official name or a factual description. No decorative adjectives in title.</p>
                                         </div>
@@ -1026,7 +978,7 @@ const Account = () => {
                                             <select
                                                 value={productForm.category}
                                                 onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                                                className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold bg-white"
+                                                className="w-full p-3 sm:p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold bg-white"
                                             >
                                                 {CATEGORIES.map(cat => (
                                                     <option key={cat} value={cat}>{cat}</option>
@@ -1044,7 +996,7 @@ const Account = () => {
                                                 min="1"
                                                 value={productForm.price}
                                                 onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                                                className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold"
+                                                className="w-full p-3 sm:p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold"
                                             />
                                         </div>
                                     </div>
@@ -1106,7 +1058,7 @@ const Account = () => {
                                                     placeholder="Describe your item... Supports Markdown (use the toolbar above for formatting)"
                                                     value={productForm.description}
                                                     onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                                                    className="w-full p-4 border-0 focus:outline-none focus:ring-0 leading-relaxed resize-y"
+                                                    className="w-full p-3 sm:p-4 border-0 focus:outline-none focus:ring-0 leading-relaxed resize-y"
                                                 />
                                             )}
                                         </div>
@@ -1120,7 +1072,7 @@ const Account = () => {
                                             <select
                                                 value={productForm.condition}
                                                 onChange={(e) => setProductForm({ ...productForm, condition: e.target.value })}
-                                                className="w-full p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold bg-white"
+                                                className="w-full p-3 sm:p-4 border border-gray-200 focus:outline-none focus:border-luxury-gold bg-white"
                                             >
                                                 {CONDITIONS.map(cond => (
                                                     <option key={cond} value={cond}>{cond}</option>
@@ -1222,7 +1174,7 @@ const Account = () => {
                                         <button
                                             type="submit"
                                             disabled={addProductMutation.isPending}
-                                            className="bg-heritage-charcoal text-white px-12 py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg flex items-center justify-center gap-2"
+                                            className="bg-heritage-charcoal text-white px-6 sm:px-12 py-3 sm:py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg flex items-center justify-center gap-2"
                                         >
                                             {addProductMutation.isPending && <Loader2 size={16} className="animate-spin" />}
                                             Submit for Brokerage
@@ -1233,7 +1185,7 @@ const Account = () => {
                         )}
 
                         {/* User's Listings / Portfolio */}
-                        <div className="bg-white p-10 shadow-sm border border-gray-100">
+                        <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
                             <div className="flex items-center justify-between mb-8">
                                 <div>
                                     <h3 className="text-3xl font-serif text-heritage-charcoal">My Collection</h3>
@@ -1611,7 +1563,7 @@ const Account = () => {
             <div className="min-h-screen bg-secondary-bg">
                 <SEO title="Set Your Password — The Collectors Exchange" description="" canonical="/account" noindex />
                 <div className="container mx-auto py-20 px-6 max-w-xl">
-                    <div className="bg-white p-10 shadow-heritage border border-gray-100 space-y-6">
+                    <div className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-6">
                         <div className="text-center mb-4">
                             <h1 className="text-3xl font-serif mb-3">Set Your Password</h1>
                             <p className="text-gray-500 font-light">
@@ -1669,28 +1621,28 @@ const Account = () => {
             </div>
             <nav className="flex overflow-x-auto gap-0 scrollbar-hide">
                 <button onClick={() => setActiveTab('profile')}
-                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'profile' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><User size={13} className="inline -mt-0.5 mr-1" /> Profile</button>
+                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'profile' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><User size={11} className="inline -mt-0.5 mr-1" /> Profile</button>
                 <button onClick={() => setActiveTab('seller')}
-                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'seller' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><Store size={13} className="inline -mt-0.5 mr-1" /> {user?.kycStatus === 'verified' ? 'Seller' : 'Register'}</button>
+                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'seller' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><Store size={11} className="inline -mt-0.5 mr-1" /> {user?.kycStatus === 'verified' ? 'Seller' : 'Register'}</button>
                 <button onClick={() => setActiveTab('listings')}
-                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'listings' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><Package size={13} className="inline -mt-0.5 mr-1" /> Portfolio</button>
+                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'listings' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><Package size={11} className="inline -mt-0.5 mr-1" /> Portfolio</button>
                 <button onClick={() => setActiveTab('orders')}
-                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'orders' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><ShoppingBag size={13} className="inline -mt-0.5 mr-1" /> Orders</button>
+                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'orders' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><ShoppingBag size={11} className="inline -mt-0.5 mr-1" /> Orders</button>
                 <button onClick={() => setActiveTab('notifications')}
-                    className={`flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'notifications' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><Bell size={13} className="inline -mt-0.5 mr-1" /> Alerts</button>
+                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'notifications' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                ><Bell size={11} className="inline -mt-0.5 mr-1" /> Alerts</button>
                 {vendorProfile?.status === 'APPROVED' && (
                     <Link to="/vendor-dashboard"
-                        className="flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all"
-                    ><BarChart3 size={13} className="inline -mt-0.5 mr-1" /> Dashboard</Link>
+                        className="flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all"
+                    ><BarChart3 size={11} className="inline -mt-0.5 mr-1" /> Dashboard</Link>
                 )}
                 <button onClick={handleLogout}
-                    className="flex-shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap text-red-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
-                ><LogOut size={13} className="inline -mt-0.5 mr-1" /> Sign Out</button>
+                    className="flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap text-red-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+                ><LogOut size={11} className="inline -mt-0.5 mr-1" /> Sign Out</button>
             </nav>
         </div>
     );
@@ -1699,7 +1651,7 @@ const Account = () => {
         <div className="min-h-screen bg-secondary-bg">
             <SEO title="My Account" description="Manage your profile, orders, and seller account on The Collectors Exchange." canonical="/account" noindex />
             {renderMobileTabBar()}
-            <div className="container mx-auto py-12 lg:py-16 px-6">
+            <div className="container mx-auto py-8 sm:py-12 lg:py-16 px-4 sm:px-6">
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
                     {/* Desktop Sidebar */}
                     <div className="hidden lg:block lg:w-1/4">
