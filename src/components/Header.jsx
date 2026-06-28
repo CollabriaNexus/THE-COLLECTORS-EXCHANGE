@@ -66,69 +66,75 @@ const Header = () => {
         <>
             <div style={{ height: showNav ? headerHeight : 0 }} className="transition-[height] duration-300" />
             <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-50 bg-white text-text-main transition-transform duration-300 ${showNav ? 'translate-y-0 border-b border-gray-100 shadow-sm' : '-translate-y-full'}`}>
-                <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-center lg:justify-between relative">
-                    {/* Logo - centered on mobile, left-aligned on desktop */}
-                    <Link to="/" className="text-[11px] xs:text-[13px] sm:text-lg md:text-xl lg:text-2xl font-serif font-bold tracking-tight sm:tracking-wide shrink-0 leading-tight text-center lg:text-left">
-                        THE COLLECTORS<br className="hidden xs:block sm:hidden" /> EXCHANGE
-                    </Link>
-
-                    {/* Desktop Navigation */}
-                    <nav aria-label="Main navigation" className="hidden lg:flex space-x-4 xl:space-x-8">
-                        {navItems.map((item) => (
-                            <Link
-                                key={item.name}
-                                to={item.path}
-                                className="text-[9px] xl:text-xs font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.15em] whitespace-nowrap"
+                <div className="px-3 sm:px-6 lg:container lg:mx-auto lg:px-8 xl:px-10 pt-3 pb-3 md:py-4">
+                    {/* Mobile layout */}
+                    <div className="flex items-center justify-between lg:hidden min-h-[44px]">
+                        <div className="flex-1" />
+                        <Link to="/" className="text-[15px] xs:text-[16px] sm:text-base md:text-lg font-serif font-bold tracking-tight leading-snug text-center shrink-0 inline-flex items-center justify-center px-2">
+                            THE COLLECTORS<br className="hidden xs:block sm:hidden" /> EXCHANGE
+                        </Link>
+                        <div className="flex-1 flex justify-end">
+                            <button
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                aria-label="Toggle menu"
+                                aria-expanded={isMenuOpen}
+                                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
                             >
-                                {item.name}
-                            </Link>
-                        ))}
-                    </nav>
-
-                    {/* Desktop Icons (hidden on mobile) */}
-                    <div className="hidden lg:flex items-center space-x-6">
-                        <Link to="/wishlist" className="relative hover:text-luxury-gold transition-colors" aria-label="Wishlist">
-                            <Heart size={20} />
-                            {wishlistCount > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-luxury-gold text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-                                    {wishlistCount}
-                                </span>
-                            )}
-                        </Link>
-                        <Link to="/account" className="hover:text-luxury-gold transition-colors" aria-label="Account">
-                            <User size={20} />
-                        </Link>
-                        <Link to="/cart" className="relative hover:text-luxury-gold transition-colors" aria-label="Cart">
-                            <ShoppingBag size={20} />
-                            {cartItems.length > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-                                    {cartItems.length}
-                                </span>
-                            )}
-                        </Link>
+                                {isMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Mobile hamburger - absolute positioned right */}
-                    <button
-                        className="lg:hidden absolute right-4 sm:right-6"
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        aria-label="Toggle menu"
-                        aria-expanded={isMenuOpen}
-                    >
-                        {isMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
-                    </button>
+                    {/* Desktop layout */}
+                    <div className="hidden lg:flex items-center justify-between">
+                        <Link to="/" className="text-lg lg:text-xl xl:text-2xl font-serif font-bold tracking-wide shrink-0 leading-tight">
+                            THE COLLECTORS EXCHANGE
+                        </Link>
+                        <nav aria-label="Main navigation" className="flex items-center space-x-8 xl:space-x-12">
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className="text-[10px] xl:text-xs font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.15em] whitespace-nowrap"
+                                >
+                                    {item.name}
+                                </Link>
+                            ))}
+                        </nav>
+                        <div className="flex items-center space-x-5 xl:space-x-7">
+                            <Link to="/wishlist" className="relative hover:text-luxury-gold transition-colors" aria-label="Wishlist">
+                                <Heart size={20} />
+                                {wishlistCount > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-luxury-gold text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                                        {wishlistCount}
+                                    </span>
+                                )}
+                            </Link>
+                            <Link to="/account" className="hover:text-luxury-gold transition-colors" aria-label="Account">
+                                <User size={20} />
+                            </Link>
+                            <Link to="/cart" className="relative hover:text-luxury-gold transition-colors" aria-label="Cart">
+                                <ShoppingBag size={20} />
+                                {cartItems.length > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                                        {cartItems.length}
+                                    </span>
+                                )}
+                            </Link>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Mobile Menu */}
                 {isMenuOpen && (
                     <div className="lg:hidden bg-white border-t border-gray-100 px-4 sm:px-6 py-4 shadow-inner">
-                        <nav className="flex flex-col space-y-3">
+                        <nav className="flex flex-col space-y-1">
                             {navItems.map((item) => (
                                 <Link
                                     key={item.name}
                                     to={item.path}
                                     onClick={() => setIsMenuOpen(false)}
-                                    className="text-xs font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.2em] py-2 border-b border-gray-50 last:border-0"
+                                    className="text-sm sm:text-base font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.2em] py-3 px-2 rounded-md border-b border-gray-50 last:border-0"
                                 >
                                     {item.name}
                                 </Link>
@@ -139,14 +145,14 @@ const Header = () => {
             </header>
 
             {/* Mobile Bottom Navigation Bar */}
-            <nav aria-label="Mobile navigation" className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg flex items-center justify-around py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-transform duration-300 ${showNav ? 'translate-y-0' : 'translate-y-full'}`}>
+            <nav aria-label="Mobile navigation" className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] flex items-center justify-around py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-transform duration-300 ${showNav ? 'translate-y-0' : 'translate-y-full'}`}>
                 {bottomNav.map((item) => {
                     const Icon = item.icon;
                     return (
                         <Link
                             key={item.name}
                             to={item.path}
-                            className="flex flex-col items-center gap-0.5 px-4 py-1 text-gray-500 hover:text-luxury-gold transition-colors relative"
+                            className="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-1 text-gray-500 hover:text-luxury-gold transition-colors relative"
                         >
                             <div className="relative">
                                 <Icon size={20} aria-hidden="true" />
@@ -156,7 +162,7 @@ const Header = () => {
                                     </span>
                                 )}
                             </div>
-                            <span className="text-[10px] uppercase tracking-wider font-medium">{item.name}</span>
+                            <span className="text-[10px] uppercase tracking-wider font-medium leading-none">{item.name}</span>
                         </Link>
                     );
                 })}

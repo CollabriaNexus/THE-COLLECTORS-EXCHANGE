@@ -520,7 +520,7 @@ const Account = () => {
                     <button
                         type="button"
                         onClick={handleGoogleLogin}
-                        className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-4 text-sm font-medium hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-3.5 sm:py-4 text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors"
                     >
                         <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
                         Continue with Google
@@ -561,9 +561,9 @@ const Account = () => {
         switch (activeTab) {
             case 'profile':
                 return (
-                    <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
-                        <div className="flex justify-between items-start mb-8">
-                            <h3 className="text-3xl font-serif text-heritage-charcoal">Collector Profile</h3>
+                    <div className="bg-white p-4 sm:p-10 shadow-sm border border-gray-100">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start mb-6 sm:mb-8">
+                            <h3 className="text-2xl sm:text-3xl font-serif text-heritage-charcoal">Collector Profile</h3>
                             <button onClick={() => {
                                 if (editingProfile) {
                                     setEditingProfile(false);
@@ -573,7 +573,7 @@ const Account = () => {
                                     setEditingProfile(true);
                                 }
                             }}
-                                className="text-sm text-luxury-gold hover:underline font-medium uppercase tracking-wider">
+                                className="text-sm text-luxury-gold hover:underline font-medium uppercase tracking-wider self-start">
                                 {editingProfile ? 'Cancel' : 'Edit Profile'}
                             </button>
                         </div>
@@ -652,8 +652,8 @@ const Account = () => {
 
             case 'seller':
                 return (
-                    <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
-                        <h3 className="text-3xl font-serif mb-8 text-heritage-charcoal">
+                    <div className="bg-white p-4 sm:p-10 shadow-sm border border-gray-100">
+                        <h3 className="text-2xl sm:text-3xl font-serif mb-6 sm:mb-8 text-heritage-charcoal">
                             {user.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}
                         </h3>
 
@@ -946,16 +946,16 @@ const Account = () => {
                         {/* Add New Product Form */}
                         {user.kycStatus === 'verified' && (
                             <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
-                                <div className="mb-8 pb-8 border-b border-gray-100">
-                                    <h3 className="text-3xl font-serif mb-2 text-heritage-charcoal">Broker a New Item</h3>
+                                <div className="mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-100">
+                                    <h3 className="text-2xl sm:text-3xl font-serif mb-2 text-heritage-charcoal">Broker a New Item</h3>
                                     <p className="text-gray-500 font-light text-sm">
                                         All listings are subject to administrator approval. Please provide accurate, detailed information to ensure swift verification.
                                     </p>
                                 </div>
 
-                                <form onSubmit={handleProductSubmit} className="space-y-8">
+                                <form onSubmit={handleProductSubmit} className="space-y-6 sm:space-y-8">
                                     {/* Essential Details */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                                         <div className="col-span-1 md:col-span-2">
                                             <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                                 Item Title <span className="text-luxury-gold">*</span>
@@ -1007,32 +1007,32 @@ const Account = () => {
                                             Provenance & Description <span className="text-luxury-gold">*</span>
                                         </label>
                                         <div className="border border-gray-200">
-                                            <div className="flex items-center border-b border-gray-200">
+                                            <div className="flex items-center border-b border-gray-200 overflow-x-auto">
                                                 <button
                                                     type="button"
                                                     onClick={() => setDescPreview(false)}
-                                                    className={`px-4 py-2 text-xs uppercase tracking-widest font-medium flex items-center gap-1.5 transition-colors ${!descPreview ? 'bg-luxury-gold text-black' : 'text-gray-500 hover:text-gray-800'}`}
+                                                    className={`px-3 sm:px-4 py-2 text-[10px] sm:text-xs uppercase tracking-widest font-medium flex items-center gap-1 sm:gap-1.5 transition-colors shrink-0 ${!descPreview ? 'bg-luxury-gold text-black' : 'text-gray-500 hover:text-gray-800'}`}
                                                 >
-                                                    <Edit3 size={12} />
+                                                    <Edit3 size={11} className="hidden sm:block" />
                                                     Write
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setDescPreview(true)}
-                                                    className={`px-4 py-2 text-xs uppercase tracking-widest font-medium flex items-center gap-1.5 transition-colors ${descPreview ? 'bg-luxury-gold text-black' : 'text-gray-500 hover:text-gray-800'}`}
+                                                    className={`px-3 sm:px-4 py-2 text-[10px] sm:text-xs uppercase tracking-widest font-medium flex items-center gap-1 sm:gap-1.5 transition-colors shrink-0 ${descPreview ? 'bg-luxury-gold text-black' : 'text-gray-500 hover:text-gray-800'}`}
                                                 >
-                                                    <Eye size={12} />
+                                                    <Eye size={11} className="hidden sm:block" />
                                                     Preview
                                                 </button>
                                                 {!descPreview && (
-                                                    <div className="flex items-center gap-0.5 ml-auto px-2 border-l border-gray-200">
+                                                    <div className="flex items-center gap-0.5 ml-auto pl-2 border-l border-gray-200 overflow-x-auto">
                                                         {toolbarItems.map((item) => (
                                                             <button
                                                                 key={item.label}
                                                                 type="button"
                                                                 onClick={item.action}
                                                                 title={item.title}
-                                                                className="w-7 h-7 flex items-center justify-center text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors font-bold"
+                                                                className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-[10px] sm:text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors font-bold shrink-0"
                                                             >
                                                                 {item.label}
                                                             </button>
@@ -1090,66 +1090,62 @@ const Account = () => {
                                                     placeholder="Separate with commas (e.g., vintage, gold, 1980s)"
                                                     value={productForm.keywords}
                                                     onChange={(e) => setProductForm({ ...productForm, keywords: e.target.value })}
-                                                    className="w-full p-4 pl-10 border border-gray-200 focus:outline-none focus:border-luxury-gold"
+                                                    className="w-full pt-3 pb-3 pr-3 pl-9 sm:pt-4 sm:pb-4 sm:pr-4 sm:pl-10 border border-gray-200 focus:outline-none focus:border-luxury-gold"
                                                 />
-                                                <Tag size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                <Tag size={16} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Image Upload Section */}
-                                    <div className="bg-gray-50 p-6 border border-gray-100 rounded-sm">
-                                        <div className="flex items-center justify-between mb-4">
+                                    <div className="bg-gray-50 p-4 sm:p-6 border border-gray-100 rounded-sm">
+                                        <div className="flex items-center justify-between mb-3 sm:mb-4">
                                             <label className="block text-xs font-bold uppercase tracking-widest text-gray-600">
                                                 Image Gallery (Min 4 Required) <span className="text-luxury-gold">*</span>
                                             </label>
                                             <span className="text-xs text-gray-500">{productForm.imageUrls.filter(u => u).length} / 10 Images</span>
                                         </div>
 
-                                        <div className="space-y-4">
+                                        <div className="space-y-3 sm:space-y-4">
                                             {productForm.imageUrls.map((url, index) => (
-                                                <div key={index} className="flex gap-4 items-center">
-                                                    <div className="w-8 text-xs text-gray-400 font-mono text-center">
-                                                        {index === 0 ? 'MAIN' : `#${index + 1}`}
-                                                    </div>
-                                                    {url && (
-                                                        <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-                                                            <img src={url} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+                                                <div key={index}>
+                                                    {/* Mobile: stacked layout */}
+                                                    <div className="sm:hidden flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                            <div className={`${url ? 'w-8 h-8' : 'w-8'} flex-shrink-0 bg-gray-100 rounded overflow-hidden`}>
+                                                                {url ? <img src={url} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} /> : <div className="w-8 h-8 flex items-center justify-center text-[9px] text-gray-400 font-mono">{index === 0 ? '1' : `${index + 1}`}</div>}
+                                                            </div>
+                                                            <div className="flex-1 relative">
+                                                                <input type="url" placeholder={index === 0 ? "Image URL..." : `Image ${index + 1} URL...`} value={url} onChange={(e) => handleImageUrlChange(index, e.target.value)} className="w-full p-2 pr-7 border border-gray-200 focus:outline-none focus:border-luxury-gold text-[13px]" />
+                                                            </div>
                                                         </div>
-                                                    )}
-                                                    <div className="flex-grow relative">
-                                                        <input
-                                                            type="url"
-                                                            placeholder={index === 0 ? "Primary image URL..." : "Additional image URL..."}
-                                                            value={url}
-                                                            onChange={(e) => handleImageUrlChange(index, e.target.value)}
-                                                            className="w-full p-3 pl-10 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
-                                                        />
-                                                        <ImageIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                        <label className="cursor-pointer p-1.5 text-gray-400 hover:text-luxury-gold transition-colors shrink-0" title="Upload file"><Upload size={13} /><input type="file" accept="image/*" className="hidden" disabled={imageUploading} onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(index, file); e.target.value = ''; }} /></label>
+                                                        {productForm.imageUrls.length > 1 && (
+                                                            <button type="button" onClick={() => removeImageField(index)} className="text-gray-400 hover:text-red-500 p-1.5 shrink-0"><Trash2 size={13} /></button>
+                                                        )}
                                                     </div>
-                                                    <label className="cursor-pointer p-2 text-gray-400 hover:text-luxury-gold transition-colors" title="Upload file">
-                                                        <Upload size={16} />
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            disabled={imageUploading}
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0];
-                                                                if (file) handleFileUpload(index, file);
-                                                                e.target.value = '';
-                                                            }}
-                                                        />
-                                                    </label>
-                                                    {productForm.imageUrls.length > 1 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeImageField(index)}
-                                                            className="text-gray-400 hover:text-red-500 p-2"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    )}
+                                                    {/* Desktop: inline layout */}
+                                                    <div className="hidden sm:flex gap-4 items-center">
+                                                        <div className="w-8 text-xs text-gray-400 font-mono text-center">
+                                                            {index === 0 ? 'MAIN' : `#${index + 1}`}
+                                                        </div>
+                                                        {url && (
+                                                            <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                                                                <img src={url} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-grow relative">
+                                                            <input type="url" placeholder={index === 0 ? "Primary image URL..." : "Additional image URL..."} value={url} onChange={(e) => handleImageUrlChange(index, e.target.value)} className="w-full p-3 pl-10 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm" />
+                                                            <ImageIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                        </div>
+                                                        <label className="cursor-pointer p-2 text-gray-400 hover:text-luxury-gold transition-colors" title="Upload file">
+                                                            <Upload size={16} />
+                                                            <input type="file" accept="image/*" className="hidden" disabled={imageUploading} onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(index, file); e.target.value = ''; }} />
+                                                        </label>
+                                                        {productForm.imageUrls.length > 1 && (
+                                                            <button type="button" onClick={() => removeImageField(index)} className="text-gray-400 hover:text-red-500 p-2"><Trash2 size={16} /></button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -1158,14 +1154,14 @@ const Account = () => {
                                             <button
                                                 type="button"
                                                 onClick={addImageField}
-                                                className="mt-4 flex items-center gap-2 text-sm text-luxury-gold font-semibold hover:underline"
+                                                className="mt-3 sm:mt-4 flex items-center gap-2 text-xs sm:text-sm text-luxury-gold font-semibold hover:underline"
                                             >
-                                                <Plus size={16} /> Add Another Image
+                                                <Plus size={14} className="sm:hidden" /><Plus size={16} className="hidden sm:block" /> Add Another Image
                                             </button>
                                         )}
 
-                                        <div className="mt-4 flex items-start gap-2 text-xs text-gray-400 bg-white p-3 border border-gray-100">
-                                            <Info size={14} className="mt-0.5 flex-shrink-0" />
+                                        <div className="mt-3 sm:mt-4 flex items-start gap-2 text-[10px] sm:text-xs text-gray-400 bg-white p-2 sm:p-3 border border-gray-100">
+                                            <Info size={12} className="mt-0.5 flex-shrink-0 hidden sm:block" /><Info size={14} className="mt-0.5 flex-shrink-0 sm:hidden" />
                                             <p>Upload images directly or paste image URLs. The first image will be the primary detailed view and card thumbnail. {imageUploading && <span className="text-luxury-gold font-medium">Uploading...</span>}</p>
                                         </div>
                                     </div>
@@ -1174,7 +1170,7 @@ const Account = () => {
                                         <button
                                             type="submit"
                                             disabled={addProductMutation.isPending}
-                                            className="bg-heritage-charcoal text-white px-6 sm:px-12 py-3 sm:py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg flex items-center justify-center gap-2"
+                                            className="w-full sm:w-auto bg-heritage-charcoal text-white px-6 sm:px-12 py-3 sm:py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg flex items-center justify-center gap-2"
                                         >
                                             {addProductMutation.isPending && <Loader2 size={16} className="animate-spin" />}
                                             Submit for Brokerage
@@ -1186,9 +1182,9 @@ const Account = () => {
 
                         {/* User's Listings / Portfolio */}
                         <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
-                            <div className="flex items-center justify-between mb-8">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
                                 <div>
-                                    <h3 className="text-3xl font-serif text-heritage-charcoal">My Collection</h3>
+                                    <h3 className="text-2xl sm:text-3xl font-serif text-heritage-charcoal">My Collection</h3>
                                     {vendorProfile ? (
                                         <p className="text-sm text-gray-500 mt-1">
                                             {vendorProfile.type === 'BULK' ? (
@@ -1203,7 +1199,7 @@ const Account = () => {
                                         </p>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 mt-3 sm:mt-0 flex-wrap">
                                     {vendorProfile?.type === 'BULK' && (
                                         <>
                                             <button type="button" onClick={handleDownloadCsvTemplate} className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium">
@@ -1265,22 +1261,22 @@ const Account = () => {
                             )}
 
                             {userProducts.length > 0 && (
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                                    <div className="bg-gray-50 p-4 border border-gray-100">
-                                        <p className="text-2xl font-serif font-bold text-heritage-charcoal">{userProducts.length}</p>
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Total Listings</p>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                                    <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
+                                        <p className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal">{userProducts.length}</p>
+                                        <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">Total Listings</p>
                                     </div>
-                                    <div className="bg-gray-50 p-4 border border-gray-100">
-                                        <p className="text-2xl font-serif font-bold text-green-700">{userProducts.filter(p => p.status === 'Approved').length}</p>
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Live / Published</p>
+                                    <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
+                                        <p className="text-lg sm:text-2xl font-serif font-bold text-green-700">{userProducts.filter(p => p.status === 'Approved').length}</p>
+                                        <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">Live / Published</p>
                                     </div>
-                                    <div className="bg-gray-50 p-4 border border-gray-100">
-                                        <p className="text-2xl font-serif font-bold text-heritage-charcoal">{userProducts.filter(p => p.status !== 'Approved').length}</p>
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Pending Review</p>
+                                    <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
+                                        <p className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal">{userProducts.filter(p => p.status !== 'Approved' && p.status !== 'Sold').length}</p>
+                                        <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">In Review</p>
                                     </div>
-                                    <div className="bg-gray-50 p-4 border border-gray-100">
-                                        <p className="text-2xl font-serif font-bold text-luxury-gold">{vendorStats ? `₹${(vendorStats.totalSales || 0).toLocaleString()}` : '₹0'}</p>
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Total Sales</p>
+                                    <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
+                                        <p className="text-lg sm:text-2xl font-serif font-bold text-luxury-gold">{vendorStats ? `₹${(vendorStats.totalSales || 0).toLocaleString()}` : '₹0'}</p>
+                                        <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">Total Sales</p>
                                     </div>
                                 </div>
                             )}
@@ -1352,46 +1348,77 @@ const Account = () => {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div key={product.id} className="border border-gray-100 hover:shadow-md transition-shadow group bg-white">
-                                                <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
-                                                    <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                                                    <div className="absolute top-2 right-2">
-                                                        {product.status === 'Sold' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] text-gray-700 bg-gray-100 px-2 py-1 rounded"><Tag size={10} /> Sold</span>
-                                                        ) : product.status === 'Rejected' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] text-red-700 bg-red-50 px-2 py-1 rounded"><XCircle size={10} /> Rejected</span>
-                                                        ) : product.authenticityStatus === 'Verified' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-1 rounded"><ShieldCheck size={10} /> Authenticated</span>
-                                                        ) : product.status === 'Approved' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">Published</span>
-                                                        ) : product.status === 'In_Review' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] text-purple-700 bg-purple-50 px-2 py-1 rounded">In Review</span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">Pending</span>
+                                            <div key={product.id} className="border border-gray-100 bg-white sm:border-gray-100 sm:hover:shadow-md sm:transition-shadow sm:group">
+                                                {/* Mobile: horizontal compact card */}
+                                                <div className="flex sm:hidden">
+                                                    <div className="relative w-[88px] h-[88px] shrink-0 bg-gray-50 overflow-hidden">
+                                                        <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} className="w-full h-full object-cover" />
+                                                        {product.status === 'Sold' && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><span className="text-[9px] text-white font-semibold uppercase tracking-wider">Sold</span></div>}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 p-2.5">
+                                                        <div className="flex items-start justify-between gap-1">
+                                                            <div className="min-w-0">
+                                                                <span className="text-[8px] text-gray-500 uppercase tracking-wider">{product.category}</span>
+                                                                <h4 className="font-serif text-xs font-medium text-heritage-charcoal truncate">{product.title}</h4>
+                                                            </div>
+                                                            <span className={`shrink-0 text-[8px] font-medium px-1.5 py-0.5 rounded ${product.status === 'Approved' ? 'bg-blue-50 text-blue-700' : product.status === 'Rejected' ? 'bg-red-50 text-red-700' : product.status === 'In_Review' ? 'bg-purple-50 text-purple-700' : product.status === 'Sold' ? 'bg-gray-100 text-gray-700' : 'bg-amber-50 text-amber-700'}`}>{product.status === 'Sold' ? 'Sold' : product.status === 'Approved' ? 'Live' : product.status === 'In_Review' ? 'In Review' : product.status === 'Rejected' ? 'Rejected' : 'Pending'}</span>
+                                                        </div>
+                                                        <p className="text-luxury-gold font-sans text-xs font-medium mt-0.5">₹{product.price?.toLocaleString()}</p>
+                                                        {product.status === 'Rejected' && product.rejectionReason && (
+                                                            <p className="text-[8px] text-red-500 leading-tight mt-0.5 line-clamp-2">{product.rejectionReason}</p>
+                                                        )}
+                                                        <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                                                            <span className="text-[8px] text-gray-400">{product.condition}</span>
+                                                            <div className="flex items-center gap-0.5">
+                                                                <button type="button" onClick={() => handleStartEdit(product)} className={`transition-colors p-1 ${product.status === 'Rejected' ? 'text-orange-500' : 'text-gray-400 hover:text-luxury-gold'}`} title="Edit listing"><Edit3 size={12} /></button>
+                                                                <button type="button" onClick={() => markAsSoldMutation.mutate(product.id)} disabled={markAsSoldMutation.isPending} className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30" title="Mark as sold">{markAsSoldMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Tag size={12} />}</button>
+                                                                <button type="button" onClick={() => handleDeleteProduct(product.id)} disabled={deleteProductMutation.isPending} className="text-gray-400 hover:text-red-500 transition-colors p-1 disabled:opacity-30" title="Delete listing">{deleteProductMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {/* Desktop: vertical card */}
+                                                <div className="hidden sm:block">
+                                                    <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
+                                                        <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                        <div className="absolute top-2 right-2">
+                                                            {product.status === 'Sold' ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] text-gray-700 bg-gray-100 px-2 py-1 rounded"><Tag size={10} /> Sold</span>
+                                                            ) : product.status === 'Rejected' ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] text-red-700 bg-red-50 px-2 py-1 rounded"><XCircle size={10} /> Rejected</span>
+                                                            ) : product.authenticityStatus === 'Verified' ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-1 rounded"><ShieldCheck size={10} /> Authenticated</span>
+                                                            ) : product.status === 'Approved' ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">Published</span>
+                                                            ) : product.status === 'In_Review' ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] text-purple-700 bg-purple-50 px-2 py-1 rounded">In Review</span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">Pending</span>
+                                                            )}
+                                                        </div>
+                                                        {product.status === 'Approved' && (
+                                                            <div className="absolute top-2 left-2"><span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">Live</span></div>
                                                         )}
                                                     </div>
-                                                    {product.status === 'Approved' && (
-                                                        <div className="absolute top-2 left-2"><span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">Live</span></div>
-                                                    )}
-                                                </div>
-                                                <div className="p-4">
-                                                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">{product.category}</span>
-                                                    <h4 className="font-serif text-base font-medium text-heritage-charcoal line-clamp-1 mt-0.5">{product.title}</h4>
-                                                    <p className="text-luxury-gold font-sans text-sm font-medium mt-1">₹{product.price?.toLocaleString()}</p>
-                                                    <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">{product.description}</p>
-                                                    {product.status === 'Rejected' && product.rejectionReason && (
-                                                        <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded">
-                                                            <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1">Reason for Rejection</p>
-                                                            <p className="text-xs text-red-600 leading-relaxed">{product.rejectionReason}</p>
-                                                            <p className="text-[10px] text-red-500 mt-2">Edit your listing to fix the issues and it will be sent for review again. For queries, contact <a href="mailto:support@thecollectorsexchange.in" className="underline font-medium">support@thecollectorsexchange.in</a>.</p>
-                                                        </div>
-                                                    )}
-                                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                                        <span className="text-[10px] text-gray-400">{product.condition}</span>
-                                                        <div className="flex items-center gap-1">
-                                                            <button type="button" onClick={() => handleStartEdit(product)} className={`transition-colors p-1 ${product.status === 'Rejected' ? 'text-orange-500 hover:text-orange-700 bg-orange-50 rounded' : 'text-gray-400 hover:text-luxury-gold'}`} title="Edit listing"><Edit3 size={14} /></button>
-                                                            <button type="button" onClick={() => markAsSoldMutation.mutate(product.id)} disabled={markAsSoldMutation.isPending} className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30" title="Mark as sold">{markAsSoldMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}</button>
-                                                            <button type="button" onClick={() => handleDeleteProduct(product.id)} disabled={deleteProductMutation.isPending} className="text-gray-400 hover:text-red-500 transition-colors p-1 disabled:opacity-30" title="Delete listing">{deleteProductMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
+                                                    <div className="p-4">
+                                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">{product.category}</span>
+                                                        <h4 className="font-serif text-base font-medium text-heritage-charcoal line-clamp-1 mt-0.5">{product.title}</h4>
+                                                        <p className="text-luxury-gold font-sans text-sm font-medium mt-1">₹{product.price?.toLocaleString()}</p>
+                                                        <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">{product.description}</p>
+                                                        {product.status === 'Rejected' && product.rejectionReason && (
+                                                            <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded">
+                                                                <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1">Reason for Rejection</p>
+                                                                <p className="text-xs text-red-600 leading-relaxed">{product.rejectionReason}</p>
+                                                                <p className="text-[10px] text-red-500 mt-2">Edit your listing to fix the issues and it will be sent for review again. For queries, contact <a href="mailto:support@thecollectorsexchange.in" className="underline font-medium">support@thecollectorsexchange.in</a>.</p>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                                            <span className="text-[10px] text-gray-400">{product.condition}</span>
+                                                            <div className="flex items-center gap-1">
+                                                                <button type="button" onClick={() => handleStartEdit(product)} className={`transition-colors p-1 ${product.status === 'Rejected' ? 'text-orange-500 hover:text-orange-700 bg-orange-50 rounded' : 'text-gray-400 hover:text-luxury-gold'}`} title="Edit listing"><Edit3 size={14} /></button>
+                                                                <button type="button" onClick={() => markAsSoldMutation.mutate(product.id)} disabled={markAsSoldMutation.isPending} className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30" title="Mark as sold">{markAsSoldMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}</button>
+                                                                <button type="button" onClick={() => handleDeleteProduct(product.id)} disabled={deleteProductMutation.isPending} className="text-gray-400 hover:text-red-500 transition-colors p-1 disabled:opacity-30" title="Delete listing">{deleteProductMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1610,7 +1637,7 @@ const Account = () => {
 
     const renderMobileTabBar = () => (
         <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-50 bg-heritage-cream/30">
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-50 bg-heritage-cream/30">
                 <div className="w-8 h-8 rounded-full bg-heritage-cream flex items-center justify-center text-heritage-bronze flex-shrink-0">
                     <User size={14} />
                 </div>
@@ -1618,31 +1645,31 @@ const Account = () => {
                     <p className="text-xs font-serif font-medium truncate">{localUser.name}</p>
                     <p className="text-[10px] text-gray-400 uppercase tracking-wider truncate">{localUser.type}</p>
                 </div>
+                <button onClick={handleLogout} className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer" aria-label="Sign out">
+                    <LogOut size={16} />
+                </button>
             </div>
-            <nav className="flex overflow-x-auto gap-0 scrollbar-hide">
+            <nav className="flex overflow-x-auto gap-1 px-2 py-1.5 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <button onClick={() => setActiveTab('profile')}
-                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'profile' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><User size={11} className="inline -mt-0.5 mr-1" /> Profile</button>
+                    className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'profile' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                >Profile</button>
                 <button onClick={() => setActiveTab('seller')}
-                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'seller' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><Store size={11} className="inline -mt-0.5 mr-1" /> {user?.kycStatus === 'verified' ? 'Seller' : 'Register'}</button>
+                    className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'seller' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                >{user?.kycStatus === 'verified' ? 'Seller' : 'Register'}</button>
                 <button onClick={() => setActiveTab('listings')}
-                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'listings' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><Package size={11} className="inline -mt-0.5 mr-1" /> Portfolio</button>
+                    className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'listings' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                >Portfolio</button>
                 <button onClick={() => setActiveTab('orders')}
-                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'orders' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><ShoppingBag size={11} className="inline -mt-0.5 mr-1" /> Orders</button>
+                    className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'orders' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                >Orders</button>
                 <button onClick={() => setActiveTab('notifications')}
-                    className={`flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${activeTab === 'notifications' ? 'text-luxury-gold border-b-2 border-luxury-gold bg-heritage-cream/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                ><Bell size={11} className="inline -mt-0.5 mr-1" /> Alerts</button>
+                    className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'notifications' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                >Alerts</button>
                 {vendorProfile?.status === 'APPROVED' && (
                     <Link to="/vendor-dashboard"
-                        className="flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all"
-                    ><BarChart3 size={11} className="inline -mt-0.5 mr-1" /> Dashboard</Link>
+                        className="flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all inline-flex items-center rounded-full"
+                    >Dashboard</Link>
                 )}
-                <button onClick={handleLogout}
-                    className="flex-shrink-0 px-3 py-2.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap text-red-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
-                ><LogOut size={11} className="inline -mt-0.5 mr-1" /> Sign Out</button>
             </nav>
         </div>
     );
