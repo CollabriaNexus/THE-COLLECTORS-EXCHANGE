@@ -72,6 +72,11 @@ enum PaymentStatus {
   Refunded
 }
 
+enum PaymentMethod {
+  online
+  cod
+}
+
 enum OrderItemStatus {
   Pending
   Shipped
@@ -150,6 +155,7 @@ model User {
   checkoutEvents   CheckoutEvent[]
   auditLogs        AuditLog[]
   ratings          Rating[]
+  galleryItems     GalleryItem[]
 
   @@index([kycStatus])
   @@index([role])
@@ -252,6 +258,7 @@ model Order {
   trackingID      String?
 
   paymentStatus   PaymentStatus @default(Pending)
+  paymentMethod   PaymentMethod @default(online)
   paymentId       String?       @unique
   paymentOrderId  String?
   paymentSignature String?

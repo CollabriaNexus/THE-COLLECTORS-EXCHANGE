@@ -262,6 +262,38 @@ function OrderDetail() {
                         </div>
                     </div>
 
+                    {/* Payment Information */}
+                    <div className="bg-white rounded-lg shadow-heritage p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <CreditCard className="text-luxury-gold" size={20} />
+                            <h3 className="text-lg font-serif font-bold text-heritage-charcoal">Payment Information</h3>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Method</span>
+                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${order.paymentMethod === 'cod' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
+                                    {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Status</span>
+                                <StatusBadge status={order.paymentStatus} />
+                            </div>
+                            {order.paymentId && (
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-500">Payment ID</span>
+                                    <span className="text-xs font-mono text-gray-700">{order.paymentId}</span>
+                                </div>
+                            )}
+                            {order.paymentMethod !== 'cod' && order.paymentOrderId && (
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-500">Gateway Order ID</span>
+                                    <span className="text-xs font-mono text-gray-700">{order.paymentOrderId}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Customer Info Card */}
                     <div className="bg-white rounded-lg shadow-heritage p-6">
                         <div className="flex items-center gap-3 mb-4">

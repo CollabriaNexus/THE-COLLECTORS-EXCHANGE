@@ -26,6 +26,7 @@ const Checkout = () => {
         country: 'India',
         phone: currentUser?.phone || '',
     });
+    const [paymentMethod, setPaymentMethod] = useState('online');
     const [errors, setErrors] = useState({});
 
     // Load Razorpay script
@@ -64,6 +65,7 @@ const Checkout = () => {
         try {
             const orderPayload = {
                 ...form,
+                paymentMethod,
                 items: cartItems.map(item => ({
                     productId: item.productId,
                     quantity: 1,
@@ -80,13 +82,25 @@ const Checkout = () => {
                 }).catch(() => {});
             });
 
+            // COD: skip Razorpay, verify directly
+            if (orderData.isCOD) {
+                const verifyData = await verifyPaymentMutation.mutateAsync({
+                    orderId: orderData.orderId,
+                    razorpayOrderId: `cod_${orderData.orderId}`,
+                    razorpayPaymentId: `cod_${orderData.orderId}`,
+                    razorpaySignature: `cod_${orderData.orderId}`,
+                });
+                setOrderSuccess(verifyData.order);
+                return;
+            }
+
+            // Mock mode: skip Razorpay, directly verify
             if (orderData.isMock) {
-                // Mock mode: skip Razorpay, directly verify
                 const verifyData = await verifyPaymentMutation.mutateAsync({
                     orderId: orderData.orderId,
                     razorpayOrderId: orderData.razorpayOrderId,
-                    razorpayPaymentId: `pay_mock_${Date.now()}`,
-                    razorpaySignature: `sig_mock_${Date.now()}`,
+                    razorpayPaymentId: `pay_mock_${orderData.orderId}`,
+                    razorpaySignature: `sig_mock_${orderData.orderId}`,
                 });
                 setOrderSuccess(verifyData.order);
                 return;
@@ -203,12 +217,18 @@ const Checkout = () => {
                     <CheckCircle size={64} className="mx-auto text-green-500 mb-6" />
                     <h1 className="text-3xl font-serif mb-3 text-heritage-charcoal">Order Confirmed</h1>
                     <p className="text-gray-500 mb-6">
-                        Your acquisition is being processed. You will receive a confirmation shortly.
+                        {orderSuccess.paymentMethod === 'cod'
+                            ? 'Your order has been placed. Keep cash ready for delivery.'
+                            : 'Your acquisition is being processed. You will receive a confirmation shortly.'}
                     </p>
                     <div className="bg-gray-50 border border-gray-100 p-4 mb-8 text-left space-y-2 text-sm">
                         <div className="flex justify-between">
                             <span className="text-gray-500 uppercase tracking-widest text-xs">Order ID</span>
                             <span className="font-mono text-xs text-gray-700">{orderSuccess.displayId || orderSuccess.id}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-500 uppercase tracking-widest text-xs">Payment</span>
+                            <span className="font-medium">{orderSuccess.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-500 uppercase tracking-widest text-xs">Status</span>
@@ -376,10 +396,45 @@ const Checkout = () => {
                             </div>
                         </div>
 
+                        {/* Payment Method */}
+                        <div className="bg-white border border-gray-100 shadow-sm p-8">
+                            <h2 className="text-xl font-serif font-bold text-heritage-charcoal mb-6">Payment Method</h2>
+                            <div className="space-y-3">
+                                <label className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'online' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value="online"
+                                        checked={paymentMethod === 'online'}
+                                        onChange={() => setPaymentMethod('online')}
+                                        className="w-4 h-4 text-luxury-gold focus:ring-luxury-gold"
+                                    />
+                                    <div>
+                                        <p className="font-medium text-heritage-charcoal">Online Payment</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">UPI, Credit/Debit Card, Net Banking via Razorpay</p>
+                                    </div>
+                                </label>
+                                <label className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'cod' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value="cod"
+                                        checked={paymentMethod === 'cod'}
+                                        onChange={() => setPaymentMethod('cod')}
+                                        className="w-4 h-4 text-luxury-gold focus:ring-luxury-gold"
+                                    />
+                                    <div>
+                                        <p className="font-medium text-heritage-charcoal">Cash on Delivery</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">Pay when your order arrives at your doorstep</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
                         {/* Trust Badges */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {[
-                                { icon: ShieldCheck, label: 'Secure Payment', sub: 'Razorpay encrypted' },
+                                { icon: ShieldCheck, label: 'Secure Payment', sub: 'Online & COD available' },
                                 { icon: ShieldCheck, label: 'Authenticity', sub: 'Expert verified' },
                                 { icon: ShieldCheck, label: 'Insured Shipping', sub: 'Full coverage' },
                             ].map(({ icon: Icon, label, sub }) => (
@@ -432,7 +487,7 @@ const Checkout = () => {
                                 <span>₹{total.toLocaleString('en-IN')}</span>
                             </div>
 
-                            {razorpayError && (
+                            {razorpayError && paymentMethod === 'online' && (
                                 <p className="text-xs text-red-600 text-center mb-2">Payment gateway failed to load. Please disable ad blockers and refresh.</p>
                             )}
                             <button
@@ -444,6 +499,11 @@ const Checkout = () => {
                                     <>
                                         <Loader2 size={18} className="animate-spin" />
                                         Processing...
+                                    </>
+                                ) : paymentMethod === 'cod' ? (
+                                    <>
+                                        <ShieldCheck size={18} />
+                                        Place Order (Cash on Delivery)
                                     </>
                                 ) : (
                                     <>

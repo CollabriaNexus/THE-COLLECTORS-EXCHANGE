@@ -47,6 +47,15 @@ function Orders() {
             render: (amount) => `₹${amount?.toFixed(2)}`,
         },
         {
+            key: 'paymentMethod',
+            label: 'Payment',
+            render: (method) => (
+                <span className={`text-xs font-medium px-2 py-1 rounded-full ${method === 'cod' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
+                    {method === 'cod' ? 'COD' : 'Online'}
+                </span>
+            ),
+        },
+        {
             key: 'status',
             label: 'Status',
             render: (status) => <StatusBadge status={status} />,

@@ -6,11 +6,11 @@ const FAQ_ITEMS = [
     {
         category: 'Buying',
         questions: [
-            { q: 'How do I purchase an item on The Collectors Exchange?', a: 'Browse The Exchange, find an item you love, add it to your cart, and proceed to checkout. You\'ll need to create an account and complete the payment via our secure Razorpay integration.' },
-            { q: 'Is there a buyer\'s premium or additional fee?', a: 'A 5% platform fee is included in the checkout total. This covers authentication, secure transactions, and collector support.' },
+            { q: 'How do I purchase an item on The Collectors Exchange?', a: 'Browse The Exchange, find an item you love, add it to your cart, and proceed to checkout. You\'ll need to create an account and choose your preferred payment method — pay online via our secure Razorpay integration (UPI, cards, net banking) or select Cash on Delivery.' },
+            { q: 'Is there a buyer\'s premium or additional fee?', a: 'For online payments, a 5% platform fee is included in the checkout total. Cash on Delivery orders have a small additional handling fee. This covers authentication, secure transactions, and collector support.' },
             { q: 'Can I return an item?', a: 'Items are eligible for return within 48 hours of delivery if they do not match the described condition. Please refer to our Terms & Conditions for the full inspection period policy.' },
             { q: 'How are items authenticated?', a: 'All items listed on The Exchange go through a rigorous verification process by our curation team before being published. Each item is individually reviewed for authenticity and condition.' },
-            { q: 'What payment methods are accepted?', a: 'We accept payments through Razorpay, which supports UPI, credit/debit cards, net banking, and other major Indian payment methods.' },
+            { q: 'What payment methods are accepted?', a: 'We offer two payment options: (1) Online Payment via Razorpay — supports UPI, credit/debit cards, net banking, and other major Indian payment methods. (2) Cash on Delivery (COD) — pay in cash when your order arrives at your doorstep.' },
         ]
     },
     {

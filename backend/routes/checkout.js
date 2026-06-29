@@ -39,7 +39,7 @@ export default async function checkoutRoutes(fastify) {
             return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
-        const { shippingAddress, city, state, zipCode, phone, items } = CreateOrderSchema.parse(request.body);
+        const { shippingAddress, city, state, zipCode, phone, items, paymentMethod } = CreateOrderSchema.parse(request.body);
 
         // Fetch user's cart to cross-reference against submitted items
         const cartItems = await prisma.cartItem.findMany({
@@ -110,6 +110,7 @@ export default async function checkoutRoutes(fastify) {
                     zipCode,
                     phone,
                     paymentStatus: 'Pending',
+                    paymentMethod: paymentMethod || 'online',
                     items: {
                         create: orderItemsData
                     }
@@ -126,11 +127,14 @@ export default async function checkoutRoutes(fastify) {
             throw err;
         }
 
-        // Initialize Razorpay Order
+        // Initialize Razorpay Order (skip for COD)
         const razorpay = getRazorpayInstance();
         let razorpayOrderId = null;
 
-        if (razorpay) {
+        if (paymentMethod === 'cod') {
+            // COD: No Razorpay order needed
+            razorpayOrderId = null;
+        } else if (razorpay) {
             try {
                 // Razorpay expects amount in paise (1 INR = 100 paise)
                 const options = {
@@ -166,7 +170,8 @@ export default async function checkoutRoutes(fastify) {
             orderId: dbOrder.id,
             amount: totalAmount,
             razorpayOrderId,
-            isMock: !razorpay,
+            isMock: !razorpay && paymentMethod !== 'cod',
+            isCOD: paymentMethod === 'cod',
             keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock',
             user: {
                 name: dbUser.name,
@@ -201,9 +206,17 @@ export default async function checkoutRoutes(fastify) {
             return reply.status(422).send({ error: 'Order has already been paid' });
         }
 
+        // Prevent re-processing an order that's already been confirmed
+        if (['Processing', 'Shipped', 'Delivered', 'Cancelled'].includes(dbOrder.status)) {
+            return reply.status(422).send({ error: 'Order has already been processed' });
+        }
+
         const razorpay = getRazorpayInstance();
 
-        if (razorpay) {
+        if (dbOrder.paymentMethod === 'cod') {
+            // COD orders: skip signature verification, mark as confirmed
+            console.log(`[COD] Payment on delivery confirmed for order ${orderId}`);
+        } else if (razorpay) {
             // Live verification
             const keySecret = process.env.RAZORPAY_KEY_SECRET;
             const hmac = crypto.createHmac('sha256', keySecret);
@@ -226,14 +239,19 @@ export default async function checkoutRoutes(fastify) {
             console.log(`[SIMULATION] Verification bypassed for order ${orderId} (Mock Mode)`);
         }
 
-        // Update DB Order to Paid and update status to Processing
+        // Update DB Order — COD keeps Pending payment status, online marks as Paid
+        const isCOD = dbOrder.paymentMethod === 'cod';
         const updatedOrder = await prisma.order.update({
             where: { id: orderId },
             data: {
-                paymentStatus: 'Paid',
+                paymentStatus: isCOD ? 'Pending' : 'Paid',
                 status: 'Processing',
-                paymentId: razorpayPaymentId || `pay_mock_${Math.random().toString(36).substring(2, 11)}`,
-                paymentSignature: razorpaySignature || `sig_mock_${Math.random().toString(36).substring(2, 11)}`,
+                paymentId: isCOD
+                    ? null
+                    : (razorpayPaymentId || `pay_mock_${Math.random().toString(36).substring(2, 11)}`),
+                paymentSignature: isCOD
+                    ? null
+                    : (razorpaySignature || `sig_mock_${Math.random().toString(36).substring(2, 11)}`),
             },
             include: { items: true }
         });
@@ -261,13 +279,15 @@ export default async function checkoutRoutes(fastify) {
             data: {
                 userId: dbUser.id,
                 title: 'Order Confirmed',
-                message: 'Your order has been placed and payment received. We will process it shortly.',
+                message: isCOD
+                    ? 'Your order has been placed. Keep cash ready — payment will be collected on delivery.'
+                    : 'Your order has been placed and payment received. We will process it shortly.',
             }
         });
 
         return {
             success: true,
-            message: 'Payment verified and order is now being processed',
+            message: isCOD ? 'Order placed successfully. Pay on delivery.' : 'Payment verified and order is now being processed',
             order: updatedOrder
         };
     });

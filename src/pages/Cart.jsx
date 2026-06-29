@@ -17,7 +17,7 @@ const Cart = () => {
     const confirm = useConfirm();
     const { data: featuredData } = useProducts(null, '', 1, 6);
     const featuredProducts = (featuredData?.products || []).filter(
-        p => p.listingCategory === 'featured' || p.listingCategory === 'most_rare'
+        p => (p.listingCategory === 'featured' || p.listingCategory === 'most_rare') && p.status !== 'Sold'
     ).slice(0, 4);
 
     const handleRemove = async (productId) => {
@@ -47,7 +47,7 @@ const Cart = () => {
     return (
         <div className="container mx-auto py-12 px-6">
             <SEO title="Cart" description="Review your curated collection of authenticated collectibles before checkout on The Collectors Exchange." canonical="/cart" noindex />
-            <h1 className="text-4xl font-serif mb-12 text-center md:text-left">Shopping Cart</h1>
+            <h1 className="text-2xl sm:text-4xl font-serif mb-6 sm:mb-12 text-center md:text-left">Shopping Cart</h1>
 
             {cartItems.length > 0 ? (
                 <div className="flex flex-col lg:flex-row gap-12">
@@ -55,24 +55,24 @@ const Cart = () => {
                     <div className="w-full lg:w-2/3">
                         <div className="bg-white shadow-sm border border-gray-100">
                             {cartItems.map(item => (
-                                <div key={item.id} className="flex gap-6 p-6 border-b border-gray-100 last:border-0 items-center">
+                                <div key={item.id} className="flex gap-3 sm:gap-6 p-3 sm:p-6 border-b border-gray-100 last:border-0 items-center">
                                     <img
                                         src={item.product?.image || 'https://via.placeholder.com/100'}
                                         alt={item.product?.title || 'Product'}
-                                        className="w-24 h-24 object-cover"
+                                        className="w-16 sm:w-24 h-16 sm:h-24 object-cover"
                                     />
-                                    <div className="flex-grow">
-                                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">{item.product?.category || 'Unknown'}</p>
-                                        <h3 className="font-serif text-lg font-medium">{item.product?.title || 'Unavailable'}</h3>
-                                        <p className="text-sm text-gray-500 mt-1">{item.product?.condition || ''}</p>
+                                    <div className="flex-grow min-w-0">
+                                        <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest mb-0.5 sm:mb-1">{item.product?.category || 'Unknown'}</p>
+                                        <h3 className="font-serif text-sm sm:text-lg font-medium truncate">{item.product?.title || 'Unavailable'}</h3>
+                                        <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1">{item.product?.condition || ''}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-sans font-semibold mb-2">₹{item.product?.price?.toLocaleString() || '0'}</p>
+                                    <div className="text-right shrink-0">
+                                        <p className="font-sans text-xs sm:text-base font-semibold mb-1 sm:mb-2">₹{item.product?.price?.toLocaleString() || '0'}</p>
                                         <button
                                             onClick={() => handleRemove(item.product?.id || item.productId)}
                                             className="text-red-500 hover:text-red-700 transition-colors"
                                         >
-                                            <Trash2 size={18} />
+                                            <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                                         </button>
                                     </div>
                                 </div>
@@ -83,7 +83,7 @@ const Cart = () => {
                     {/* Checkout Summary */}
                     <div className="w-full lg:w-1/3">
                         <div className="bg-white p-8 shadow-sm border border-gray-100 lg:sticky lg:top-24">
-                            <h3 className="text-xl font-serif mb-6">Order Summary</h3>
+                            <h3 className="text-lg sm:text-xl font-serif mb-4 sm:mb-6">Order Summary</h3>
                             <div className="space-y-4 text-sm text-gray-600 border-b border-gray-100 pb-6">
                                 <div className="flex justify-between">
                                     <span>Subtotal ({cartItems.length} items)</span>
@@ -105,7 +105,7 @@ const Cart = () => {
                                 Proceed to Checkout
                             </button>
                             <div className="mt-4 text-center">
-                                <p className="text-xs text-gray-400">Secure checkout powered by Razorpay.</p>
+                                <p className="text-xs text-gray-400">Secure checkout with online payment or Cash on Delivery.</p>
                             </div>
                         </div>
                     </div>
@@ -117,7 +117,7 @@ const Cart = () => {
                     <p className="text-gray-400 mb-8">Add items to your cart to proceed.</p>
                     <Link
                         to="/category"
-                        className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors mb-16"
+                        className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors mb-8 sm:mb-16"
                     >
                         Explore The Exchange
                     </Link>
@@ -128,12 +128,12 @@ const Cart = () => {
                                 <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Curated Picks</span>
                                 <div className="h-px w-8 bg-luxury-gold/40" />
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div className="flex sm:grid sm:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible scrollbar-hide snap-x snap-mandatory sm:snap-none -mx-6 sm:mx-0 px-6 sm:px-0 pb-1 sm:pb-0">
                                 {featuredProducts.map((product) => (
                                     <Link
                                         key={product.id}
                                         to={`/product/${product.id}`}
-                                        className="group bg-white border border-gray-100 hover:shadow-heritage-hover transition-all duration-500"
+                                        className="snap-start shrink-0 w-[65vw] sm:w-auto group bg-white border border-gray-100 hover:shadow-heritage-hover transition-all duration-500"
                                     >
                                         <div className="aspect-square bg-heritage-beige overflow-hidden">
                                             {product.image ? (
@@ -150,10 +150,10 @@ const Cart = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="p-3 text-left">
-                                            <p className="text-xs text-heritage-bronze uppercase tracking-widest truncate">{product.category}</p>
-                                            <p className="font-serif text-sm font-medium truncate group-hover:text-luxury-gold transition-colors">{product.title}</p>
-                                            <p className="text-heritage-gold-muted text-xs font-medium mt-1">₹{product.price?.toLocaleString()}</p>
+                                        <div className="p-2 sm:p-3 text-left">
+                                            <p className="text-[10px] sm:text-xs text-heritage-bronze uppercase tracking-widest truncate">{product.category}</p>
+                                            <p className="font-serif text-xs sm:text-sm font-medium truncate group-hover:text-luxury-gold transition-colors">{product.title}</p>
+                                            <p className="text-heritage-gold-muted text-[11px] sm:text-xs font-medium mt-0.5 sm:mt-1">₹{product.price?.toLocaleString()}</p>
                                         </div>
                                     </Link>
                                 ))}

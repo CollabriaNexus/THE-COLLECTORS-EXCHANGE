@@ -12,6 +12,7 @@ export const CreateOrderSchema = z.object({
     zipCode: z.string().min(1, 'ZIP code is required'),
     phone: z.string().min(10, 'Phone must be at least 10 characters'),
     items: z.array(CreateOrderItemSchema).min(1, 'At least one item is required'),
+    paymentMethod: z.enum(['online', 'cod']).default('online'),
 });
 
 export const VerifyPaymentSchema = z.object({
