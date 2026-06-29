@@ -127,7 +127,7 @@ const ProductDetail = () => {
             <ProductSchema product={product} />
             <BreadcrumbSchema items={breadcrumbItems} />
             {/* Breadcrumbs */}
-            <div className="border-b border-gray-100 bg-gray-50/50">
+            <div className="hidden sm:block border-b border-gray-100 bg-gray-50/50">
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-center text-xs text-gray-500 uppercase tracking-widest gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap">
                         <Link to="/" className="hover:text-luxury-gold shrink-0">Home</Link>
@@ -159,7 +159,7 @@ const ProductDetail = () => {
                             </div>
                         )}
                         {/* Main Image */}
-                        <div className="relative flex-1 aspect-[4/3] bg-gray-50 overflow-hidden shadow-sm border border-gray-100 group">
+                        <div className="relative flex-1 min-h-[300px] sm:min-h-[400px] max-h-[500px] sm:max-h-[600px] bg-gray-50 overflow-hidden shadow-sm border border-gray-100 group">
                             {images.length > 0 ? (
                                 <>
                                     {/* Desktop zoom version */}

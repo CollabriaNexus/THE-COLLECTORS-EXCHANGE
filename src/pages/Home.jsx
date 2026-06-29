@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import SEO, { OrganizationSchema, WebSiteSchema } from '../components/SEO';
 import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon, ShoppingBag, Sparkles, Check, XCircle } from 'lucide-react';
 import Bullet from '../components/Bullet';
-import heroPoster from '../assets/hero-background.webp';
 import heroVideoWebm from '../assets/hero_section.webm';
 import heroVideoMp4 from '../assets/hero_section-compressed.mp4';
 import verificationAuthenticity from '../assets/verification_authenticity.webp';
@@ -13,7 +12,6 @@ import { useCart, useAddToCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
 import { useToast } from '../components/Toast';
 import { useInView } from '../hooks/useInView';
-import { useMediaQuery } from '../hooks/useMediaQuery';
 
 const Reveal = ({ children, className = '' }) => {
     const [ref, inView] = useInView();
@@ -143,10 +141,10 @@ const FeaturedProductsCarousel = () => {
     ));
 
     return (
-        <section className="py-16 sm:py-20 px-6 bg-heritage-cream overflow-hidden">
+        <section className="py-12 sm:py-20 px-6 bg-heritage-cream overflow-hidden">
             <div className="container mx-auto max-w-6xl">
                 <Reveal>
-                    <div className="text-center mb-10">
+                    <div className="text-center mb-8 sm:mb-10">
                         <div className="flex items-center justify-center gap-4 mb-3">
                             <div className="h-px w-8 bg-luxury-gold/40"></div>
                             <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">Curated Selection</span>
@@ -189,7 +187,6 @@ const FeaturedProductsCarousel = () => {
 };
 
 const Home = () => {
-    const isMobile = useMediaQuery('(max-width: 768px)');
     return (
         <div className="flex flex-col">
             <SEO
@@ -200,25 +197,21 @@ const Home = () => {
             <OrganizationSchema />
             <WebSiteSchema />
             {/* Hero Section */}
-            <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden">
-                {isMobile ? (
-                    <img src={heroPoster} alt="The Collectors Exchange" fetchpriority="high" className="absolute inset-0 w-full h-full object-cover" />
-                ) : (
-                    <video autoPlay muted loop playsInline poster={heroPoster} fetchpriority="high" onEnded={() => window.dispatchEvent(new Event('homeVideoEnded'))} className="absolute inset-0 w-full h-full object-cover">
+            <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden bg-black">
+                    <video autoPlay muted playsInline preload="auto" fetchpriority="high" onEnded={() => window.dispatchEvent(new Event('homeVideoEnded'))} className="absolute inset-0 w-full h-full object-cover">
                         <source src={heroVideoWebm} type="video/webm" />
                         <source src={heroVideoMp4} type="video/mp4" />
                     </video>
-                )}
                 <div className="absolute inset-0 bg-black/40"></div>
 
                 <div className="container mx-auto max-w-4xl relative z-10">
                     <h5 className="text-luxury-gold tracking-[0.2em] font-sans text-[10px] sm:text-sm font-semibold uppercase mb-3 sm:mb-4">
                         Authorized & Premium
                     </h5>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif text-white font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg">
+                    <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif text-white font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg">
                         A Marketplace for Authentic <span className="italic text-luxury-gold">Collectibles</span> & Timeless Antiques
                     </h1>
-                    <p className="text-base sm:text-lg md:text-xl text-gray-200 font-sans font-light mb-6 sm:mb-10 max-w-2xl mx-auto">
+                    <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 font-sans font-light mb-4 sm:mb-10 max-w-2xl mx-auto">
                         Verified. Original. Limited. Discover a curated world of rare finds and verified sellers.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
@@ -279,13 +272,13 @@ const Home = () => {
             </section>
 
             {/* Institutional Registry Section */}
-            <section className="py-32 px-6 bg-gray-100 relative">
+            <section className="py-16 sm:py-24 lg:py-32 px-6 bg-gray-100 relative">
                 <div className="container mx-auto max-w-7xl">
-                    <div className="flex flex-col md:flex-row items-center justify-between mb-20 gap-8">
+                    <div className="flex flex-col md:flex-row items-center justify-between mb-12 sm:mb-20 gap-6 sm:gap-8">
                         <div>
                             <Reveal>
                                 <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-4 block">Institutional Framework</span>
-                                <h2 className="text-4xl md:text-6xl font-serif leading-tight text-heritage-charcoal">A New Standard <br /> of <span className="italic text-luxury-gold">Archival Integrity</span></h2>
+                                <h2 className="text-3xl sm:text-4xl font-serif leading-tight text-heritage-charcoal">A New Standard of <span className="italic text-luxury-gold">Archival Integrity</span></h2>
                             </Reveal>
                         </div>
                         <Link to="/vision" className="group flex items-center gap-4 text-heritage-charcoal/50 hover:text-luxury-gold transition-colors text-xs font-bold tracking-widest uppercase">
@@ -293,24 +286,24 @@ const Home = () => {
                         </Link>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div className="p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
-                            <Archive className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                            <h3 className="text-xl font-serif uppercase tracking-widest mb-6 font-bold text-heritage-charcoal">The Archive</h3>
+                    <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
+                        <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
+                            <Archive className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                            <h3 className="text-lg sm:text-xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">The Archive</h3>
                             <p className="text-sm text-heritage-charcoal/80 leading-relaxed font-medium">
                                 Hand-picked artifacts sourced directly from the streets and private vaults. We don't list items; we archive history.
                             </p>
                         </div>
-                        <div className="p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
-                            <ShieldCheck className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                            <h3 className="text-xl font-serif uppercase tracking-widest mb-6 font-bold text-heritage-charcoal">Verification</h3>
+                        <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
+                            <ShieldCheck className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                            <h3 className="text-lg sm:text-xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">Verification</h3>
                             <p className="text-sm text-heritage-charcoal/80 leading-relaxed font-medium">
                                 Our institutional verification process ensures that every piece is original. We restore the trust lost in the pre-owned market.
                             </p>
                         </div>
-                        <div className="p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
-                            <UserCheck className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                            <h3 className="text-xl font-serif uppercase tracking-widest mb-6 font-bold text-heritage-charcoal">Handshake</h3>
+                        <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
+                            <UserCheck className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                            <h3 className="text-lg sm:text-xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">Handshake</h3>
                             <p className="text-sm text-heritage-charcoal/80 leading-relaxed font-medium">
                                 Sellers are vetted with archival rigor. We ensure every agreement is honored and every transaction is backed by integrity.
                             </p>
@@ -320,18 +313,18 @@ const Home = () => {
             </section>
 
             {/* Authenticated Heritage Section */}
-            <section className="py-32 px-6 bg-white overflow-hidden">
+            <section className="py-16 sm:py-24 lg:py-32 px-6 bg-white overflow-hidden">
                 <div className="container mx-auto max-w-6xl">
-                    <div className="flex flex-col lg:flex-row items-center gap-24">
-                        <div className="lg:w-1/2 space-y-10 relative">
-                            <h2 className="text-5xl md:text-6xl font-serif text-heritage-charcoal leading-[1.1] tracking-tighter uppercase relative z-10">
+                    <div className="flex flex-col lg:flex-row items-center gap-12 sm:gap-16 lg:gap-24">
+                        <div className="lg:w-1/2 space-y-6 sm:space-y-10 relative">
+                            <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal leading-[1.1] tracking-tighter uppercase relative z-10">
                                 The Truth Of <br />
                                 <span className="text-luxury-gold">Heritage</span>
                             </h2>
-                            <p className="text-xl text-heritage-charcoal font-sans font-medium leading-relaxed max-w-xl relative z-10">
+                            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-heritage-charcoal font-sans font-medium leading-relaxed max-w-xl relative z-10">
                                 Trust is our only currency. Our verification process is not a check; it is a commitment to the preservation of truth.
                             </p>
-                            <ul className="space-y-6 relative z-10">
+                            <ul className="space-y-4 sm:space-y-6 relative z-10">
                                 {[
                                     "Institutional verification with heritage brands",
                                     "Expert archival appraisal for all artifacts",
@@ -356,21 +349,21 @@ const Home = () => {
             </section>
 
             {/* Sell with Confidence Section */}
-            <section className="py-32 px-6 bg-heritage-charcoal text-white text-center border-t border-white/5">
+            <section className="py-16 sm:py-24 lg:py-32 px-6 bg-heritage-charcoal text-white text-center border-t border-white/5">
                 <div className="container mx-auto max-w-6xl">
                     <Reveal>
-                        <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-8 block">Global Outreach</span>
-                        <h2 className="text-5xl md:text-7xl font-serif mb-20 leading-tight">Sell with Confidence</h2>
+                        <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-6 sm:mb-8 block">Global Outreach</span>
+                        <h2 className="text-3xl sm:text-4xl font-serif mb-12 sm:mb-20 leading-tight">Sell with Confidence</h2>
                     </Reveal>
 
-                    <div className="bg-[#0A0D12] border border-white/5 p-8 sm:p-12 md:p-24 grid md:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 text-left max-w-5xl mx-auto shadow-heritage relative overflow-hidden">
+                    <div className="bg-[#0A0D12] border border-white/5 p-6 sm:p-12 lg:p-24 grid md:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 text-left max-w-5xl mx-auto shadow-heritage relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
-                        <div className="space-y-10 relative z-10">
-                            <h3 className="text-2xl font-serif text-luxury-gold flex items-center gap-4">
+                        <div className="space-y-6 sm:space-y-10 relative z-10">
+                            <h3 className="text-xl sm:text-2xl font-serif text-luxury-gold flex items-center gap-4">
                                 <div className="w-8 h-px bg-luxury-gold/50"></div>
                                 Individual Sellers
                             </h3>
-                            <ul className="space-y-6">
+                            <ul className="space-y-4 sm:space-y-6">
                                 {[
                                     "Mandatory KYC (Aadhaar/PAN)",
                                     "Limit of 5 listings per account",
@@ -383,12 +376,12 @@ const Home = () => {
                                 ))}
                             </ul>
                         </div>
-                        <div className="space-y-10 relative z-10">
-                            <h3 className="text-2xl font-serif text-luxury-gold flex items-center gap-4">
+                        <div className="space-y-6 sm:space-y-10 relative z-10">
+                            <h3 className="text-xl sm:text-2xl font-serif text-luxury-gold flex items-center gap-4">
                                 <div className="w-8 h-px bg-luxury-gold/50"></div>
                                 Company Sellers
                             </h3>
-                            <ul className="space-y-6">
+                            <ul className="space-y-4 sm:space-y-6">
                                 {[
                                     "GST & Founder verification required",
                                     "Company profile archival audit",
@@ -403,9 +396,9 @@ const Home = () => {
                         </div>
                     </div>
 
-                    <div className="mt-24">
-                        <Link to="/account" className="inline-flex items-center gap-6 text-white border border-white/20 px-12 py-6 hover:bg-white hover:text-black transition-all duration-500 font-sans text-xs tracking-[0.4em] uppercase font-black group">
-                            Start Selling <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-500" />
+                    <div className="mt-12 sm:mt-24">
+                        <Link to="/account" className="inline-flex items-center gap-4 sm:gap-6 text-white border border-white/20 px-8 sm:px-12 py-4 sm:py-6 hover:bg-white hover:text-black transition-all duration-500 font-sans text-[10px] sm:text-xs tracking-[0.4em] uppercase font-black group">
+                            Start Selling <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-2 transition-transform duration-500" />
                         </Link>
                     </div>
                 </div>

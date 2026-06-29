@@ -320,6 +320,41 @@ const Account = () => {
         }
     };
 
+    const handleMultipleFileUpload = async (files) => {
+        if (!files?.length) return;
+        setImageUploading(true);
+        const fileArray = Array.from(files);
+        const urls = [...productForm.imageUrls];
+
+        try {
+            const results = await Promise.allSettled(
+                fileArray.map(file => uploadProductImage(file))
+            );
+
+            for (const result of results) {
+                if (result.status === 'fulfilled' && result.value) {
+                    const emptyIndex = urls.findIndex(u => u.trim() === '');
+                    if (emptyIndex !== -1) {
+                        urls[emptyIndex] = result.value;
+                    } else if (urls.length < 10) {
+                        urls.push(result.value);
+                    }
+                }
+            }
+
+            setProductForm({ ...productForm, imageUrls: urls });
+
+            const failedCount = results.filter(r => r.status === 'rejected').length;
+            if (failedCount > 0) {
+                showToast(`${results.length - failedCount} uploaded, ${failedCount} failed.`, 'error');
+            }
+        } catch (err) {
+            showToast('Failed to upload images.', 'error');
+        } finally {
+            setImageUploading(false);
+        }
+    };
+
     const handleProductSubmit = async (e) => {
         e.preventDefault();
 
@@ -1151,13 +1186,21 @@ const Account = () => {
                                         </div>
 
                                         {productForm.imageUrls.length < 10 && (
-                                            <button
-                                                type="button"
-                                                onClick={addImageField}
-                                                className="mt-3 sm:mt-4 flex items-center gap-2 text-xs sm:text-sm text-luxury-gold font-semibold hover:underline"
-                                            >
-                                                <Plus size={14} className="sm:hidden" /><Plus size={16} className="hidden sm:block" /> Add Another Image
-                                            </button>
+                                            <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={addImageField}
+                                                    className="flex items-center gap-2 text-xs sm:text-sm text-luxury-gold font-semibold hover:underline"
+                                                >
+                                                    <Plus size={14} className="sm:hidden" /><Plus size={16} className="hidden sm:block" /> Add Another Image
+                                                </button>
+                                                <span className="text-gray-300 hidden sm:inline">|</span>
+                                                <label className="cursor-pointer flex items-center gap-2 text-xs sm:text-sm text-gray-500 hover:text-luxury-gold font-semibold transition-colors">
+                                                    <Upload size={14} className="sm:hidden" /><Upload size={16} className="hidden sm:block" />
+                                                    Upload Multiple Images
+                                                    <input type="file" accept="image/*" multiple className="hidden" disabled={imageUploading} onChange={(e) => { const files = e.target.files; if (files?.length) handleMultipleFileUpload(files); e.target.value = ''; }} />
+                                                </label>
+                                            </div>
                                         )}
 
                                         <div className="mt-3 sm:mt-4 flex items-start gap-2 text-[10px] sm:text-xs text-gray-400 bg-white p-2 sm:p-3 border border-gray-100">

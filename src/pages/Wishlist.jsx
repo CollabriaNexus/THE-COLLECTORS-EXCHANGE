@@ -40,7 +40,7 @@ const Wishlist = () => {
 
     if (!user) {
         return (
-            <div className="container mx-auto py-20 px-6 text-center">
+            <div className="container mx-auto py-12 sm:py-20 px-6 text-center">
                 <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
                 <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
                 <p className="text-gray-500 mb-6">You need to be logged in to view your wishlist.</p>
@@ -53,7 +53,7 @@ const Wishlist = () => {
 
     if (isLoading) {
         return (
-            <div className="container mx-auto py-20 text-center">
+            <div className="container mx-auto py-12 sm:py-20 text-center">
                 <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
                 <Loader2 className="animate-spin mx-auto text-luxury-gold mb-4" size={40} />
                 <p className="font-serif italic text-gray-400">Loading your collection...</p>
@@ -64,7 +64,7 @@ const Wishlist = () => {
     return (
         <div className="container mx-auto py-12 px-6">
             <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
-            <h1 className="text-4xl font-serif mb-8 text-center md:text-left">My Wishlist</h1>
+            <h1 className="text-2xl sm:text-4xl font-serif mb-6 sm:mb-8 text-center md:text-left">My Wishlist</h1>
 
             {wishlistItems.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -117,7 +117,7 @@ const Wishlist = () => {
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-20 bg-white border border-gray-100">
+                <div className="text-center py-12 sm:py-20 bg-white border border-gray-100">
                     <Heart size={64} className="mx-auto text-gray-300 mb-6" />
                     <h3 className="text-xl font-serif text-gray-600 mb-2">Your wishlist is empty</h3>
                     <p className="text-gray-400 mb-6">Save items you love by clicking the heart icon.</p>
