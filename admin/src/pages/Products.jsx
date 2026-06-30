@@ -1,21 +1,53 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, RefreshCw } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
 import Table from '../components/ui/Table';
 import StatusBadge from '../components/ui/StatusBadge';
+import apiClient from '../hooks/api/apiClient';
 
 function Products() {
     const navigate = useNavigate();
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [syncing, setSyncing] = useState(false);
+    const [syncMsg, setSyncMsg] = useState(null);
+    const [syncingId, setSyncingId] = useState(null);
 
     const { data: products, isLoading } = useProducts({
         category: categoryFilter !== 'all' ? categoryFilter : undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         search: searchQuery || undefined,
     });
+
+    const handleSyncToGoogle = async () => {
+        setSyncing(true);
+        setSyncMsg(null);
+        try {
+            const res = await apiClient.post('/products/sync-to-google');
+            setSyncMsg({ type: 'success', text: res.data.message || `Synced ${res.data.results?.synced || 0} products` });
+        } catch (err) {
+            const msg = err.response?.data?.detail || err.response?.data?.error || err.message || 'Sync failed';
+            setSyncMsg({ type: 'error', text: msg });
+        } finally {
+            setSyncing(false);
+        }
+    };
+
+    const handleSyncSingleProduct = async (product, e) => {
+        e.stopPropagation();
+        setSyncingId(product.id);
+        try {
+            const res = await apiClient.post(`/products/${product.id}/sync-to-google`);
+            setSyncMsg({ type: 'success', text: res.data.message });
+        } catch (err) {
+            const msg = err.response?.data?.detail || err.response?.data?.error || err.message || 'Sync failed';
+            setSyncMsg({ type: 'error', text: msg });
+        } finally {
+            setSyncingId(null);
+        }
+    };
 
     const columns = [
         {
@@ -68,6 +100,21 @@ function Products() {
             key: 'createdAt',
             label: 'Date Submitted',
             render: (date) => new Date(date).toLocaleDateString(),
+        },
+        {
+            key: 'id',
+            label: 'Actions',
+            render: (id, row) => (
+                <button
+                    type="button"
+                    onClick={(e) => handleSyncSingleProduct(row, e)}
+                    disabled={syncingId === id}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs bg-luxury-gold text-black hover:bg-luxury-gold/80 rounded transition-colors font-medium disabled:opacity-50"
+                >
+                    <RefreshCw size={12} className={syncingId === id ? 'animate-spin' : ''} />
+                    {syncingId === id ? 'Syncing...' : 'Sync'}
+                </button>
+            ),
         },
     ];
 
@@ -133,6 +180,30 @@ function Products() {
                             className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold focus:border-transparent outline-none"
                         />
                     </div>
+                </div>
+            </div>
+
+            {/* Google Merchant Sync */}
+            <div className="bg-white rounded-lg shadow-heritage p-6 mb-6">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-heritage-charcoal">Google Merchant Sync</h3>
+                        <p className="text-sm text-gray-500 mt-1">Sync all Approved products to Google Merchant Center</p>
+                        {syncMsg && (
+                            <p className={`text-sm mt-2 ${syncMsg.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                                {syncMsg.text}
+                            </p>
+                        )}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleSyncToGoogle}
+                        disabled={syncing}
+                        className="flex items-center gap-2 px-5 py-2.5 text-sm bg-black text-white hover:bg-gray-800 rounded-md transition-colors font-medium disabled:opacity-50"
+                    >
+                        <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+                        {syncing ? 'Syncing...' : 'Sync to Google'}
+                    </button>
                 </div>
             </div>
 

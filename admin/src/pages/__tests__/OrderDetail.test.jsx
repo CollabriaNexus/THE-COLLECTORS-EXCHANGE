@@ -1,0 +1,133 @@
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import OrderDetail from '../OrderDetail';
+
+const mockNavigate = vi.fn();
+const mockGet = vi.fn();
+const mockPatch = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return { ...actual, useNavigate: () => mockNavigate, useParams: () => ({ id: 'order123' }) };
+});
+
+vi.mock('../../hooks/api/apiClient', () => ({
+  default: {
+    get: (...args) => mockGet(...args),
+    patch: (...args) => mockPatch(...args),
+  },
+}));
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  });
+  return ({ children }) => (
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </MemoryRouter>
+  );
+};
+
+const mockOrder = {
+  id: 'order123', status: 'Pending', createdAt: '2024-01-01T00:00:00Z',
+  totalAmount: 2500, shippingAddress: '123 Main St', city: 'Mumbai', state: 'MH', zipCode: '400001',
+  phone: '9999999999', trackingID: null,
+  user: { id: 'u1', name: 'John Doe', email: 'john@test.com' },
+  items: [{ id: 'item1', product: { image: 'img.jpg', title: 'Product A', category: 'Timepieces' }, price: 2500, quantity: 1 }],
+};
+
+describe('OrderDetail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGet.mockResolvedValue({ data: mockOrder });
+  });
+
+  it('shows loading spinner', () => {
+    mockGet.mockReturnValue(new Promise(() => {}));
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+  });
+
+  it('renders order details', async () => {
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText(/ORDER123/i)).toBeInTheDocument();
+      expect(screen.getAllByText('John Doe').length).toBeGreaterThan(0);
+      expect(screen.getByText('Product A')).toBeInTheDocument();
+      expect(screen.getByText(/Mumbai/)).toBeInTheDocument();
+    });
+  });
+
+  it('shows "Order not found" when order is null', async () => {
+    mockGet.mockResolvedValue({ data: null });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText('Order not found')).toBeInTheDocument();
+    });
+  });
+
+  it('marks order as Processing', async () => {
+    mockPatch.mockResolvedValue({ data: {} });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      fireEvent.click(screen.getByText('Mark as Processing'));
+    });
+    expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/status', { status: 'Processing' });
+  });
+
+  it('opens ship modal and ships order', async () => {
+    mockGet.mockResolvedValue({ data: { ...mockOrder, status: 'Processing' } });
+    mockPatch.mockResolvedValue({ data: {} });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      fireEvent.click(screen.getByText('Confirm Shipment'));
+    });
+    const awbInput = screen.getByPlaceholderText(/e\.g\. 129384756201/);
+    fireEvent.change(awbInput, { target: { value: 'AWB123' } });
+    fireEvent.click(screen.getByText('Confirm Dispatch'));
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/ship', { trackingID: 'AWB123' });
+    });
+  });
+
+  it('shows error when shipping without tracking ID', async () => {
+    mockGet.mockResolvedValue({ data: { ...mockOrder, status: 'Processing' } });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      fireEvent.click(screen.getByText('Confirm Shipment'));
+    });
+    fireEvent.click(screen.getByText('Confirm Dispatch'));
+    await waitFor(() => {
+      expect(screen.getByText('Please provide a tracking ID (AWB Number)')).toBeInTheDocument();
+    });
+  });
+
+  it('marks shipped order as Delivered', async () => {
+    mockGet.mockResolvedValue({ data: { ...mockOrder, status: 'Shipped', trackingID: 'AWB123' } });
+    mockPatch.mockResolvedValue({ data: {} });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      fireEvent.click(screen.getByText('Mark as Delivered'));
+    });
+    expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/status', { status: 'Delivered' });
+  });
+
+  it('shows customer profile section with link', async () => {
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText('Customer Profile')).toBeInTheDocument();
+      expect(screen.getByText('View Customer History')).toBeInTheDocument();
+    });
+  });
+
+  it('shows tracking info when trackingID exists', async () => {
+    mockGet.mockResolvedValue({ data: { ...mockOrder, status: 'Shipped', trackingID: 'TRACK123' } });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText('TRACK123')).toBeInTheDocument();
+    });
+  });
+});

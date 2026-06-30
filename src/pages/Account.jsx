@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import SEO from '../components/SEO';
-import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Papa from 'papaparse';
@@ -102,7 +102,6 @@ const Account = () => {
     // Pickup address state
     const [editingPickup, setEditingPickup] = useState(false);
     const [pickupSaving, setPickupSaving] = useState(false);
-    const [syncingToGoogle, setSyncingToGoogle] = useState(false);
     const [pickupForm, setPickupForm] = useState({ pickupAddress: '', pickupCity: '', pickupState: '', pickupZip: '', pickupContactName: '', pickupPhone: '' });
 
     const handlePickupSubmit = async (e) => {
@@ -470,19 +469,6 @@ const Account = () => {
         a.download = 'my-portfolio-export.csv';
         a.click();
         URL.revokeObjectURL(url);
-    };
-
-    const handleSyncToGoogle = async () => {
-        setSyncingToGoogle(true);
-        try {
-            const res = await apiClient.post('/products/sync-to-google');
-            showToast(res.data.message || `Synced ${res.data.results?.synced || 0} products`, 'success');
-        } catch (err) {
-            const msg = err.response?.data?.detail || err.response?.data?.error || err.message || 'Sync failed';
-            showToast(msg, 'error');
-        } finally {
-            setSyncingToGoogle(false);
-        }
     };
 
     const confirm = useConfirm();
@@ -1778,19 +1764,6 @@ const Account = () => {
                     {/* Main Content */}
                     <div className="w-full lg:w-3/4">
                         {renderContent()}
-                        {user?.role === 'admin' && (
-                            <div className="mt-8 bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
-                                <div className="flex items-center justify-between flex-wrap gap-4">
-                                    <div>
-                                        <h3 className="text-2xl sm:text-3xl font-serif text-heritage-charcoal">Google Merchant Sync</h3>
-                                        <p className="text-sm text-gray-500 mt-1">Sync all Approved products to Google Merchant Center</p>
-                                    </div>
-                                    <button type="button" onClick={handleSyncToGoogle} disabled={syncingToGoogle} className="flex items-center gap-2 px-6 py-3 text-sm bg-luxury-gold text-black hover:bg-luxury-gold/80 transition-colors font-medium disabled:opacity-50">
-                                        <RefreshCw size={16} className={syncingToGoogle ? 'animate-spin' : ''} /> {syncingToGoogle ? 'Syncing...' : 'Sync to Google'}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>

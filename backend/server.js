@@ -19,6 +19,8 @@ import auctionRoutes from './routes/auction.js';
 import analyticsRoutes from './routes/analytics.js';
 import contactRoutes from './routes/contact.js';
 import testimonialRoutes from './routes/testimonials.js';
+import blogRoutes from './routes/blog.js';
+import blogAiRoutes from './routes/blog-ai.js';
 import googleMerchantRoutes from './routes/googleMerchant.js';
 
 dotenv.config();
@@ -92,6 +94,8 @@ fastify.register(auctionRoutes, { prefix: '/api/auctions' });
 fastify.register(analyticsRoutes, { prefix: '/api/analytics' });
 fastify.register(contactRoutes, { prefix: '/api/contact' });
 fastify.register(testimonialRoutes, { prefix: '/api/testimonials' });
+fastify.register(blogRoutes, { prefix: '/api/blog' });
+fastify.register(blogAiRoutes, { prefix: '/api/blog/ai' });
 fastify.register(googleMerchantRoutes, { prefix: '/api' });
 
 

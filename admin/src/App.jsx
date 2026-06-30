@@ -20,6 +20,8 @@ import Payouts from './pages/Payouts';
 import TCEStore from './pages/TCEStore';
 import Testimonials from './pages/Testimonials';
 import PhoneVerifications from './pages/PhoneVerifications';
+import BlogManager from './pages/BlogManager';
+import BlogEditor from './pages/BlogEditor';
 import AdminLayout from './components/AdminLayout';
 
 // Protected Route wrapper
@@ -130,6 +132,24 @@ function App() {
             <Route path="/testimonials" element={
                 <ProtectedRoute>
                     <Testimonials />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/blog" element={
+                <ProtectedRoute>
+                    <BlogManager />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/blog/new" element={
+                <ProtectedRoute>
+                    <BlogEditor />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/blog/:id/edit" element={
+                <ProtectedRoute>
+                    <BlogEditor />
                 </ProtectedRoute>
             } />
 

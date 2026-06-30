@@ -10,6 +10,8 @@
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "seed:upload-agreement": "node scripts/upload-agreement-pdf.js"
   },
   "dependencies": {

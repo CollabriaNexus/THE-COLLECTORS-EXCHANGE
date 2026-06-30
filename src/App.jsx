@@ -23,6 +23,8 @@ const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const GalleryDetail = lazy(() => import('./pages/GalleryDetail'));
 const GalleryArticle = lazy(() => import('./pages/GalleryArticle'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
 const SellerAgreement = lazy(() => import('./pages/SellerAgreement'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const VendorDashboard = lazy(() => import('./pages/VendorDashboard'));
@@ -77,6 +79,8 @@ function App() {
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/gallery/:id" element={<GalleryDetail />} />
           <Route path="/gallery/article/:slug" element={<GalleryArticle />} />
+          <Route path="/archive" element={<BlogPage />} />
+          <Route path="/archive/:slug" element={<BlogPost />} />
           <Route path="/seller-agreement" element={<SellerAgreement />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/vendor-dashboard" element={<VendorDashboard />} />

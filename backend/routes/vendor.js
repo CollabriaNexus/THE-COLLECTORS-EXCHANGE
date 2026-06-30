@@ -94,6 +94,17 @@ export default async function vendorRoutes(fastify) {
         }
     }
 
+    // Helper: get offline-sold products (marked Sold by admin, no order items)
+    async function getOfflineSold(prisma, sellerId, dateFilter) {
+        const where = {
+            sellerId,
+            status: 'Sold',
+            orderItems: { none: {} },
+        };
+        if (dateFilter) where.updatedAt = { gte: dateFilter };
+        return prisma.product.findMany({ where });
+    }
+
     // Get vendor analytics overview
     fastify.get('/analytics/overview', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const dbUser = request.dbUser;
@@ -113,20 +124,26 @@ export default async function vendorRoutes(fastify) {
             ...(dateFilter ? { createdAt: { gte: dateFilter } } : {}),
         };
 
-        const orderItems = await prisma.orderItem.findMany({
-            where: {
-                ...orderWhere,
-                order: { status: { not: 'Cancelled' } }
-            },
-            include: { order: true }
-        });
+        const [orderItems, offlineSold] = await Promise.all([
+            prisma.orderItem.findMany({
+                where: {
+                    ...orderWhere,
+                    order: { status: { not: 'Cancelled' } }
+                },
+                include: { order: true }
+            }),
+            getOfflineSold(prisma, dbUser.id, dateFilter),
+        ]);
 
-        const totalRevenue = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        const totalItemsSold = orderItems.reduce((acc, item) => acc + item.quantity, 0);
+        const orderRevenue = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const orderItemsSold = orderItems.reduce((acc, item) => acc + item.quantity, 0);
         const uniqueOrders = new Set(orderItems.map(item => item.orderId)).size;
 
         const paidItems = orderItems.filter(item => item.order.paymentStatus === 'Paid');
         const paidRevenue = paidItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+        const offlineRevenue = offlineSold.reduce((sum, p) => sum + p.price, 0);
+        const offlineCount = offlineSold.length;
 
         const pendingPayouts = await prisma.payout.aggregate({
             where: { vendorId: vendor.id, status: { in: ['PENDING', 'PROCESSING'] } },
@@ -139,13 +156,15 @@ export default async function vendorRoutes(fastify) {
         });
 
         return {
-            orderCount: uniqueOrders,
-            saleCount: totalItemsSold,
-            totalRevenue,
-            paidRevenue,
+            orderCount: uniqueOrders + offlineCount,
+            saleCount: orderItemsSold + offlineCount,
+            totalRevenue: orderRevenue + offlineRevenue,
+            paidRevenue: paidRevenue + offlineRevenue,
             pendingPayout: pendingPayouts._sum.amount || 0,
             totalListings,
             activeListings,
+            offlineSaleCount: offlineCount,
+            offlineRevenue,
         };
     });
 
@@ -190,15 +209,18 @@ export default async function vendorRoutes(fastify) {
             select: { id: true }
         })).map(p => p.id);
 
-        const orderItems = await prisma.orderItem.findMany({
-            where: {
-                productId: { in: productIds },
-                ...(dateFilter ? { createdAt: { gte: dateFilter } } : {}),
-                order: { status: { not: 'Cancelled' } }
-            },
-            include: { order: true },
-            orderBy: { createdAt: 'asc' }
-        });
+        const [orderItems, offlineSold] = await Promise.all([
+            prisma.orderItem.findMany({
+                where: {
+                    productId: { in: productIds },
+                    ...(dateFilter ? { createdAt: { gte: dateFilter } } : {}),
+                    order: { status: { not: 'Cancelled' } }
+                },
+                include: { order: true },
+                orderBy: { createdAt: 'asc' }
+            }),
+            getOfflineSold(prisma, dbUser.id, dateFilter),
+        ]);
 
         const useMonthly = !period || period === 'all' || period === '1y' || period === '6m';
         const groupMap = new Map();
@@ -213,6 +235,20 @@ export default async function vendorRoutes(fastify) {
             entry.sales += item.price * item.quantity;
             entry.orders.add(item.orderId);
             entry.items += item.quantity;
+        }
+
+        // Add offline-sold products to graph
+        for (const product of offlineSold) {
+            const key = useMonthly
+                ? product.updatedAt.toISOString().slice(0, 7)
+                : product.updatedAt.toISOString().split('T')[0];
+            if (!groupMap.has(key)) {
+                groupMap.set(key, { date: key, sales: 0, orders: new Set(), items: 0 });
+            }
+            const entry = groupMap.get(key);
+            entry.sales += product.price;
+            entry.orders.add(`offline-${product.id}`);
+            entry.items += 1;
         }
 
         const graphData = Array.from(groupMap.values()).map(d => ({
@@ -236,14 +272,17 @@ export default async function vendorRoutes(fastify) {
             select: { id: true }
         })).map(p => p.id);
 
-        const orderItems = await prisma.orderItem.findMany({
-            where: {
-                productId: { in: productIds },
-                ...(dateFilter ? { createdAt: { gte: dateFilter } } : {}),
-                order: { status: { not: 'Cancelled' } }
-            },
-            include: { product: true },
-        });
+        const [orderItems, offlineSold] = await Promise.all([
+            prisma.orderItem.findMany({
+                where: {
+                    productId: { in: productIds },
+                    ...(dateFilter ? { createdAt: { gte: dateFilter } } : {}),
+                    order: { status: { not: 'Cancelled' } }
+                },
+                include: { product: true },
+            }),
+            getOfflineSold(prisma, dbUser.id, dateFilter),
+        ]);
 
         const productMap = new Map();
         for (const item of orderItems) {
@@ -262,6 +301,25 @@ export default async function vendorRoutes(fastify) {
             entry.totalRevenue += item.price * item.quantity;
             entry.quantitySold += item.quantity;
             entry.orderCount.add(item.orderId);
+        }
+
+        // Add offline-sold products
+        for (const product of offlineSold) {
+            if (!productMap.has(product.id)) {
+                productMap.set(product.id, {
+                    id: product.id,
+                    title: product.title,
+                    image: product.image,
+                    price: product.price,
+                    totalRevenue: 0,
+                    quantitySold: 0,
+                    orderCount: new Set(),
+                });
+            }
+            const entry = productMap.get(product.id);
+            entry.totalRevenue += product.price;
+            entry.quantitySold += 1;
+            entry.orderCount.add(`offline-${product.id}`);
         }
 
         const topProducts = Array.from(productMap.values())

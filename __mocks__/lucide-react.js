@@ -1,0 +1,48 @@
+import React from 'react'
+
+const mockIcon = (name) => {
+  const Icon = (props) => {
+    const { className, size, color, strokeWidth, 'aria-label': ariaLabel, ...rest } = props || {}
+    return React.createElement('svg', {
+      'data-testid': `lucide-${(ariaLabel || name || 'icon').toLowerCase().replace(/\s+/g, '-')}`,
+      className,
+      width: size || 24,
+      height: size || 24,
+      ...rest
+    })
+  }
+  Icon.displayName = name
+  return Icon
+}
+
+const icons = [
+  'AlertCircle', 'Archive', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp',
+  'Award', 'BarChart3', 'Bell', 'BellRing', 'BookOpen', 'Box',
+  'Calendar', 'Camera', 'Check', 'CheckCircle', 'ChevronDown', 'ChevronLeft',
+  'ChevronRight', 'ChevronUp', 'Clock', 'Compass', 'CreditCard',
+  'DollarSign', 'Download',
+  'Edit3', 'ExternalLink', 'Eye', 'EyeOff',
+  'Facebook', 'FileText', 'Filter',
+  'Gamepad2', 'Gavel', 'Gem', 'Grid',
+  'Heart', 'History', 'Home',
+  'Image', 'ImageIcon', 'ImageOff', 'Info', 'Instagram',
+  'Landmark', 'Linkedin', 'List', 'Loader2', 'LogOut',
+  'Mail', 'MapPin', 'Menu', 'MessageCircle', 'MessageSquare', 'Minus',
+  'Package', 'Palette', 'Pause', 'Phone', 'PieChart', 'Play', 'Plus', 'Printer',
+  'Quote',
+  'RefreshCw',
+  'ScrollText', 'Search', 'Send', 'Settings', 'Share2', 'Shield', 'ShieldCheck',
+  'ShoppingBag', 'ShoppingCart', 'SlidersHorizontal', 'Sparkles', 'Star', 'Store',
+  'Tag', 'Trash2', 'TrendingUp', 'Truck',
+  'Upload', 'User', 'UserCheck', 'Users',
+  'Volume2',
+  'Watch',
+  'X', 'XCircle'
+]
+
+const exports = {}
+for (const name of icons) {
+  exports[name] = mockIcon(name)
+}
+
+module.exports = exports

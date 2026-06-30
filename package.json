@@ -6,20 +6,26 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "gh-pages -d dist",
     "predeploy": "npm run build",
-    "test": "npx playwright test --config=tests/playwright.config.js",
+    "deploy": "wrangler pages deploy dist --project-name=tce-user",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node scripts/test-unit.mjs",
+    "test:e2e": "npx playwright test --config=tests/playwright.config.js",
     "test:headed": "npx playwright test --config=tests/playwright.config.js --headed",
     "test:ui": "npx playwright test --config=tests/playwright.config.js --ui",
-    "test:debug": "npx playwright test --config=tests/playwright.config.js --debug"
+    "test:debug": "npx playwright test --config=tests/playwright.config.js --debug",
+    "prepare": "husky"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.90.1",
     "@tanstack/react-query": "^5.90.17",
     "autoprefixer": "^10.4.23",
     "axios": "^1.13.2",
+    "dompurify": "^3.4.11",
     "lucide-react": "^0.562.0",
     "papaparse": "^5.5.3",
     "pngjs": "^7.0.0",
@@ -31,6 +37,15 @@
     "react-router-dom": "^7.11.0",
     "recharts": "^3.8.1",
     "remark-gfm": "^4.0.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

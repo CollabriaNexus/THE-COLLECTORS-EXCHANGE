@@ -50,7 +50,7 @@ const Header = () => {
     const navItems = [
         { name: 'About Us', path: '/about' },
         { name: 'The Exchange', path: '/category' },
-        { name: 'The Gallery', path: '/gallery' },
+        { name: 'The Gallery', path: '/archive' },
         { name: 'Auction', path: '/auction' },
         { name: 'Vision', path: '/vision' },
     ];

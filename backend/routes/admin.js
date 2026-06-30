@@ -29,8 +29,10 @@ export default async function adminRoutes(fastify) {
 
     // Get analytics data for dashboard charts
     fastify.get('/stats/analytics', { preValidation: [fastify.authenticateAdmin] }, async (request, reply) => {
-        const [revenueData, userGrowth, ordersByStatus, productsByCategory] = await Promise.all([
-            // Daily revenue for last 30 days
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+        const [revenueData, userGrowth, ordersByStatus, productsByCategory, offlineSold] = await Promise.all([
+            // Daily revenue for last 30 days from paid orders
             prisma.$queryRaw`
                 SELECT DATE(o."createdAt") as date, SUM(o."totalAmount") as revenue
                 FROM "Order" o
@@ -58,9 +60,34 @@ export default async function adminRoutes(fastify) {
                 FROM "Product" p
                 GROUP BY p."category"
             `,
+            // Offline-sold products (no order items)
+            prisma.product.findMany({
+                where: {
+                    status: 'Sold',
+                    orderItems: { none: {} },
+                    updatedAt: { gte: thirtyDaysAgo }
+                },
+                select: { price: true, updatedAt: true }
+            }),
         ]);
 
-        return { revenueData, userGrowth, ordersByStatus, productsByCategory };
+        // Merge offline-sold products into revenueData by date
+        const revenueMap = new Map();
+        for (const row of revenueData) {
+            const dateStr = typeof row.date === 'object' && row.date instanceof Date
+                ? row.date.toISOString().split('T')[0]
+                : String(row.date).split('T')[0];
+            revenueMap.set(dateStr, Number(row.revenue));
+        }
+        for (const product of offlineSold) {
+            const dateStr = product.updatedAt.toISOString().split('T')[0];
+            revenueMap.set(dateStr, (revenueMap.get(dateStr) || 0) + product.price);
+        }
+        const mergedRevenue = Array.from(revenueMap.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, revenue]) => ({ date, revenue }));
+
+        return { revenueData: mergedRevenue, userGrowth, ordersByStatus, productsByCategory };
     });
 
     // ============== KYC MANAGEMENT ==============

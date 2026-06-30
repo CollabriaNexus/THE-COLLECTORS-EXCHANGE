@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: cd backend && npm ci
+      - run: cd admin && npm ci
+
+      - run: npx prisma generate
+        working-directory: backend
+
+      - run: npm run lint
+
+      - run: npm run test:unit
+
+      - run: npm run build

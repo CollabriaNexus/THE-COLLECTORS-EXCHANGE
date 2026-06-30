@@ -5,8 +5,7 @@ import {
 } from 'recharts';
 import {
     ShoppingBag, DollarSign, TrendingUp, Eye, ShoppingCart, CreditCard,
-    Package, Store, Loader2, Calendar, Download, ArrowUp, ArrowDown,
-    AlertCircle, RefreshCw,
+    Package, Store, Loader2, Calendar, Download, AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { useVendorProfile, useVendorAnalyticsOverview, useVendorAnalyticsInterest, useVendorSalesGraph, useVendorTopProducts, useVendorPayouts } from '../hooks/api/useVendor';
 
@@ -26,7 +25,7 @@ function Skeleton({ className = '' }) {
     return <div className={`animate-pulse bg-gray-200 rounded ${className}`} />;
 }
 
-function StatCard({ title, value, icon: Icon, color, prefix, loading, change, error, onRetry }) {
+function StatCard({ title, value, icon: Icon, color, prefix, loading, error, onRetry }) {
     if (error) {
         return (
             <div className="bg-white rounded-lg shadow-sm border border-red-100 p-6">
@@ -53,12 +52,6 @@ function StatCard({ title, value, icon: Icon, color, prefix, loading, change, er
                     ) : (
                         <p className="text-3xl font-bold text-heritage-charcoal">
                             {`${prefix || ''}${value ?? 0}`}
-                        </p>
-                    )}
-                    {change !== undefined && !loading && (
-                        <p className={`text-xs flex items-center gap-1 mt-1 ${change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                            {change >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
-                            {Math.abs(change).toFixed(1)}% vs previous period
                         </p>
                     )}
                 </div>

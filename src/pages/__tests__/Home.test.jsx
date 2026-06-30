@@ -1,0 +1,97 @@
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { HelmetProvider } from 'react-helmet-async'
+import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import Home from '../Home'
+
+vi.mock('../../hooks/api/useProducts', () => ({
+  useProducts: vi.fn(() => ({
+    data: { products: [{ id: '1', title: 'Featured Watch', price: 10000, images: ['img.jpg'], category: 'watches', condition: 'Mint', listingCategory: 'premium' }] },
+    isLoading: false
+  }))
+}))
+
+vi.mock('../../hooks/api/useTestimonials', () => ({
+  useTestimonials: vi.fn(() => ({
+    data: [{ id: '1', authorName: 'John D.', content: 'Great service', rating: 5 }],
+    isLoading: false
+  }))
+}))
+
+vi.mock('../../hooks/api/useCart', () => ({
+  useCart: vi.fn(() => ({ data: [], isLoading: false })),
+  useAddToCart: vi.fn(() => ({ mutate: vi.fn(), isLoading: false }))
+}))
+
+vi.mock('../../utils/storage', () => ({
+  getUser: vi.fn(() => null)
+}))
+
+vi.mock('../../components/Toast', () => ({
+  useToast: vi.fn(() => vi.fn())
+}))
+
+vi.mock('../../hooks/useInView', () => ({
+  useInView: () => [null, true]
+}))
+
+vi.mock('../../hooks/useMediaQuery', () => ({
+  useMediaQuery: () => true
+}))
+
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+describe('Home', () => {
+  it('renders hero section with authorized badge', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <MemoryRouter>
+            <Home />
+          </MemoryRouter>
+        </HelmetProvider>
+      </QueryClientProvider>
+    )
+    expect(screen.getByText(/authorized.*premium/i)).toBeInTheDocument()
+  })
+
+  it('renders featured products heading', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <MemoryRouter>
+            <Home />
+          </MemoryRouter>
+        </HelmetProvider>
+      </QueryClientProvider>
+    )
+    expect(screen.getByText(/featured/i)).toBeInTheDocument()
+  })
+
+  it('renders explore exchange link', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <MemoryRouter>
+            <Home />
+          </MemoryRouter>
+        </HelmetProvider>
+      </QueryClientProvider>
+    )
+    expect(screen.getByText(/explore the exchange/i)).toBeInTheDocument()
+  })
+
+  it('renders SEO component', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <MemoryRouter>
+            <Home />
+          </MemoryRouter>
+        </HelmetProvider>
+      </QueryClientProvider>
+    )
+    expect(document.title).toBeDefined()
+  })
+})

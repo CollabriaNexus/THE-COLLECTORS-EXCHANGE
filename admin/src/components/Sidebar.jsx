@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Users, Package, ShoppingCart, Store, Image as ImageIcon, DollarSign, Crown, MessageSquare, Smartphone } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Package, ShoppingCart, Store, Image as ImageIcon, DollarSign, Crown, MessageSquare, Smartphone, BookOpen } from 'lucide-react';
 
 function Sidebar() {
     const location = useLocation();
@@ -50,6 +50,11 @@ function Sidebar() {
             name: 'Payouts',
             path: '/payouts',
             icon: DollarSign,
+        },
+        {
+            name: 'Blog / Archive',
+            path: '/blog',
+            icon: BookOpen,
         },
         {
             name: 'Testimonials',

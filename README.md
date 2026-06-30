@@ -1,16 +1,84 @@
-# React + Vite
+# The Collectors Exchange
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A curated marketplace for verified pre-owned collectibles, antiques, and limited pieces.
 
-Currently, two official plugins are available:
+**Live:**
+- User Frontend: [tce-user.pages.dev](https://tce-user.pages.dev)
+- Admin Dashboard: [tce-admin.pages.dev](https://tce-admin.pages.dev)
+- Backend API: [the-collectors-exchange.onrender.com](https://the-collectors-exchange.onrender.com)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Architecture
 
-## React Compiler
+```
+THE-COLLECTORS-EXCHANGE/
+├── src/              — User-facing React app (Vite + Tailwind v4)
+├── backend/          — API server (Fastify + Prisma + Supabase)
+├── admin/            — Admin dashboard (React + Vite + Tailwind v3)
+├── tests/            — Playwright E2E tests (38 tests, 5 flows)
+└── docs/             — Architecture decisions & documentation
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Tech Stack
 
-## Expanding the ESLint configuration
+| Layer | Tech |
+|-------|------|
+| **Frontend (User)** | React 18, Vite 7, Tailwind CSS v4, React Router 7, TanStack Query 5, Axios, lucide-react |
+| **Frontend (Admin)** | React 19, Vite 7, Tailwind CSS v3, Recharts, TanStack Query |
+| **Backend** | Fastify 5, Prisma 6, Zod, Supabase Auth (JWT), Razorpay, Delhivery |
+| **Database** | PostgreSQL (Supabase) |
+| **Auth** | Supabase Auth (Email OTP + Google OAuth) |
+| **Testing** | Vitest (unit), Playwright (E2E) |
+| **Deployment** | Cloudflare Pages (frontends), Render (backend) |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Quick Start
+
+```bash
+# User frontend
+npm install
+npm run dev          # http://localhost:5173
+
+# Backend
+cd backend
+npm install
+npx prisma generate
+npm run dev          # http://localhost:3000
+
+# Admin dashboard
+cd admin
+npm install
+npm run dev          # http://localhost:5174
+
+# E2E tests (from root)
+npm test
+```
+
+## Documentation
+
+- [Design System](DESIGN.md) — Colors, typography, components, patterns, accessibility
+- [AI Agent Context](AGENTS.md) — Context for AI coding assistants
+- [Session Memory](MEMORY.md) — Persistent decision log for AI sessions
+- [Project Specification](PROJECT_SPECIFICATION.md) — Visual identity, design tokens, component architecture
+- [Features](FEATURES.md) — Full feature inventory with API endpoints
+- [Vendor Flow](vendor-flow.md) — Vendor lifecycle, KYC, payouts
+- [Audit Progress](audit-progress.md) — Security audit: 61 issues, 58 fixed
+- [Admin Docs](admin/ADMIN_DOCUMENTATION.md) — Admin architecture & workflows
+
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Vite dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint check |
+| `npm test` | Run Playwright E2E tests |
+| `npm run test:headed` | E2E tests with browser visible |
+| `npm run test:ui` | Playwright UI mode |
+
+## Environment
+
+Copy `.env.example` to `.env` and configure:
+
+- `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — Supabase project credentials
+- `VITE_RAZORPAY_KEY_ID` — Razorpay payment gateway key
+- `VITE_BACKEND_URL` — Backend API URL (default: `http://localhost:3000`)
