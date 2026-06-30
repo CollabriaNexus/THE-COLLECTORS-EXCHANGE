@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import SEO from '../components/SEO';
-import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
+import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Papa from 'papaparse';
@@ -102,6 +102,7 @@ const Account = () => {
     // Pickup address state
     const [editingPickup, setEditingPickup] = useState(false);
     const [pickupSaving, setPickupSaving] = useState(false);
+    const [syncingToGoogle, setSyncingToGoogle] = useState(false);
     const [pickupForm, setPickupForm] = useState({ pickupAddress: '', pickupCity: '', pickupState: '', pickupZip: '', pickupContactName: '', pickupPhone: '' });
 
     const handlePickupSubmit = async (e) => {
@@ -469,6 +470,19 @@ const Account = () => {
         a.download = 'my-portfolio-export.csv';
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    const handleSyncToGoogle = async () => {
+        setSyncingToGoogle(true);
+        try {
+            const res = await apiClient.post('/products/sync-to-google');
+            showToast(res.data.message || `Synced ${res.data.results?.synced || 0} products`, 'success');
+        } catch (err) {
+            const msg = err.response?.data?.detail || err.response?.data?.error || err.message || 'Sync failed';
+            showToast(msg, 'error');
+        } finally {
+            setSyncingToGoogle(false);
+        }
     };
 
     const confirm = useConfirm();
@@ -1256,6 +1270,11 @@ const Account = () => {
                                     {userProducts.length > 0 && (
                                         <button type="button" onClick={handleExportPortfolioCsv} className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium">
                                             <Download size={16} /> Export CSV
+                                        </button>
+                                    )}
+                                    {user?.role === 'admin' && (
+                                        <button type="button" onClick={handleSyncToGoogle} disabled={syncingToGoogle} className="flex items-center gap-2 px-4 py-2 text-sm bg-luxury-gold text-black hover:bg-luxury-gold/80 transition-colors font-medium disabled:opacity-50">
+                                            <RefreshCw size={16} className={syncingToGoogle ? 'animate-spin' : ''} /> {syncingToGoogle ? 'Syncing...' : 'Sync to Google'}
                                         </button>
                                     )}
                                 </div>
