@@ -1272,11 +1272,6 @@ const Account = () => {
                                             <Download size={16} /> Export CSV
                                         </button>
                                     )}
-                                    {user?.role === 'admin' && (
-                                        <button type="button" onClick={handleSyncToGoogle} disabled={syncingToGoogle} className="flex items-center gap-2 px-4 py-2 text-sm bg-luxury-gold text-black hover:bg-luxury-gold/80 transition-colors font-medium disabled:opacity-50">
-                                            <RefreshCw size={16} className={syncingToGoogle ? 'animate-spin' : ''} /> {syncingToGoogle ? 'Syncing...' : 'Sync to Google'}
-                                        </button>
-                                    )}
                                 </div>
                             </div>
 
@@ -1783,6 +1778,19 @@ const Account = () => {
                     {/* Main Content */}
                     <div className="w-full lg:w-3/4">
                         {renderContent()}
+                        {user?.role === 'admin' && (
+                            <div className="mt-8 bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
+                                <div className="flex items-center justify-between flex-wrap gap-4">
+                                    <div>
+                                        <h3 className="text-2xl sm:text-3xl font-serif text-heritage-charcoal">Google Merchant Sync</h3>
+                                        <p className="text-sm text-gray-500 mt-1">Sync all Approved products to Google Merchant Center</p>
+                                    </div>
+                                    <button type="button" onClick={handleSyncToGoogle} disabled={syncingToGoogle} className="flex items-center gap-2 px-6 py-3 text-sm bg-luxury-gold text-black hover:bg-luxury-gold/80 transition-colors font-medium disabled:opacity-50">
+                                        <RefreshCw size={16} className={syncingToGoogle ? 'animate-spin' : ''} /> {syncingToGoogle ? 'Syncing...' : 'Sync to Google'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
