@@ -70,6 +70,24 @@ describe('checkout routes', () => {
       expect(res.json().success).toBe(true);
     });
 
+    it('calculates platformFee from commissionPercent in the order response', async () => {
+      mockPrisma.cartItem.findMany.mockResolvedValue([{ productId: 'p1', product: { id: 'p1', title: 'Test', price: 200, commissionPercent: 20, sellerId: 'seller-id' } }]);
+      mockPrisma.$transaction.mockImplementation(async (cb) => {
+        const tx = {
+          product: { findUnique: vi.fn().mockResolvedValue({ id: 'p1', title: 'Test', price: 200, commissionPercent: 20, sellerId: 'seller-id', status: 'Approved' }) },
+          order: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn().mockResolvedValue({ id: 'order-1', displayId: 'HOR00001', items: [] }) },
+        };
+        return cb(tx);
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/checkout.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'POST', url: '/create-order', payload: validBody, headers: { authorization: 'Bearer buyer' } });
+      expect(res.statusCode).toBe(200);
+      // 20% of 200 = 40
+      expect(res.json().platformFee).toBe(40);
+    });
+
     it('returns 401 without dbUser', async () => {
       const app = buildApp(mockPrisma);
       app.ready();

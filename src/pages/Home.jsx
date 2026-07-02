@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO, { OrganizationSchema, WebSiteSchema } from '../components/SEO';
-import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon, ShoppingBag, Sparkles, Check, XCircle } from 'lucide-react';
+import { ShieldCheck, UserCheck, Star, ArrowRight, Archive, Award, Gem, Quote, QuoteIcon, ShoppingBag, Sparkles, Check, XCircle, Instagram, Facebook, Linkedin, Mail } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import heroVideoWebm from '../assets/hero_section.webm';
 import heroVideoMp4 from '../assets/hero_section-compressed.mp4';
@@ -87,27 +87,30 @@ const FeaturedProductCard = ({ product }) => {
             <div className="p-3 sm:p-5 flex flex-col flex-grow">
                 <div className="flex-grow">
                     <span className="text-[10px] sm:text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">{product.category}</span>
+                    {product.seller?.name && (
+                        <p className="text-[10px] sm:text-xs text-heritage-charcoal/50 truncate mt-0.5">by {product.seller.name}</p>
+                    )}
                     <Link to={`/product/${product.id}`} className="block hover:text-luxury-gold transition-colors">
                         <h3 className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal mb-1 leading-tight mt-1">{title}</h3>
                     </Link>
-                    <p className="text-heritage-gold-muted font-serif text-sm sm:text-base md:text-lg font-medium mt-2">₹{product.price?.toLocaleString()}</p>
+                    <p className="text-heritage-gold-muted font-serif text-xs sm:text-base lg:text-lg font-medium mt-2">₹{product.price?.toLocaleString()}</p>
                 </div>
                 {product.status === 'Sold' ? (
-                    <div className="w-full py-2 sm:py-3 text-[11px] sm:text-sm uppercase tracking-widest flex items-center justify-center gap-1 sm:gap-2 mt-3 sm:mt-4 bg-gray-100 text-gray-400 cursor-default">
-                        <XCircle size={13} />
+                    <div className="w-full py-1.5 sm:py-2 text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 bg-gray-100 text-gray-400 cursor-default">
+                        <XCircle size={11} className="sm:w-[12px] sm:h-[12px]" />
                         Sold Out
                     </div>
                 ) : (
                     <button
                         onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
                         disabled={addToCartMutation.isPending || cartFeedback}
-                        className={`w-full py-2 sm:py-3 text-[11px] sm:text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 mt-3 sm:mt-4 active:scale-[0.97] ${
+                        className={`w-full py-1.5 sm:py-2 text-[10px] sm:text-xs uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 active:scale-[0.97] ${
                             cartFeedback || inCart
                                 ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                                 : 'bg-black text-white hover:bg-luxury-gold'
                         }`}
                     >
-                        {cartFeedback ? <Check size={13} /> : product.status === 'Sold' ? <XCircle size={13} /> : <ShoppingBag size={13} />}
+                        {cartFeedback ? <Check size={11} className="sm:w-[12px] sm:h-[12px]" /> : <ShoppingBag size={11} className="sm:w-[12px] sm:h-[12px]" />}
                         {addToCartMutation.isPending ? 'Adding...' : cartFeedback ? 'Added' : inCart ? 'In Cart →' : 'Add to Cart'}
                     </button>
                 )}
@@ -232,7 +235,7 @@ const Home = () => {
                         <div className="p-6 sm:p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                             <Archive className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
                             <h3 className="text-xl sm:text-2xl font-serif mb-4">Curated Collection</h3>
-                            <p className="text-gray-600 font-sans font-light">
+                            <p className="text-sm sm:text-base text-gray-600 font-sans font-light">
                                 From vintage artifacts to limited edition luxury goods, every item is hand-picked for its uniqueness.
                             </p>
                         </div>
@@ -246,7 +249,7 @@ const Home = () => {
                         <div className="p-6 sm:p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 sm:col-span-2 lg:col-span-1">
                             <UserCheck className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
                             <h3 className="text-xl sm:text-2xl font-serif mb-4">Trusted Sellers</h3>
-                            <p className="text-gray-600 font-sans font-light">
+                            <p className="text-sm sm:text-base text-gray-600 font-sans font-light">
                                 Sellers are strictly vetted with mandatory KYC and compliance checks before they can list.
                             </p>
                         </div>
@@ -277,7 +280,7 @@ const Home = () => {
                     <div className="flex flex-col md:flex-row items-center justify-between mb-12 sm:mb-20 gap-6 sm:gap-8">
                         <div>
                             <Reveal>
-                                <span className="text-luxury-gold text-xs font-bold tracking-[0.4em] uppercase mb-4 block">Institutional Framework</span>
+                                <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 block">Institutional Framework</span>
                                 <h2 className="text-3xl sm:text-4xl font-serif leading-tight text-heritage-charcoal">A New Standard of <span className="italic text-luxury-gold">Archival Integrity</span></h2>
                             </Reveal>
                         </div>
@@ -289,22 +292,22 @@ const Home = () => {
                     <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
                         <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
                             <Archive className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                            <h3 className="text-lg sm:text-xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">The Archive</h3>
-                            <p className="text-sm text-heritage-charcoal/80 leading-relaxed font-medium">
+                            <h3 className="text-lg sm:text-2xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">The Archive</h3>
+                            <p className="text-sm sm:text-base text-heritage-charcoal/80 leading-relaxed font-medium">
                                 Hand-picked artifacts sourced directly from the streets and private vaults. We don't list items; we archive history.
                             </p>
                         </div>
                         <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
                             <ShieldCheck className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                            <h3 className="text-lg sm:text-xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">Verification</h3>
-                            <p className="text-sm text-heritage-charcoal/80 leading-relaxed font-medium">
+                            <h3 className="text-lg sm:text-2xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">Verification</h3>
+                            <p className="text-sm sm:text-base text-heritage-charcoal/80 leading-relaxed font-medium">
                                 Our institutional verification process ensures that every piece is original. We restore the trust lost in the pre-owned market.
                             </p>
                         </div>
                         <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
                             <UserCheck className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                            <h3 className="text-lg sm:text-xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">Handshake</h3>
-                            <p className="text-sm text-heritage-charcoal/80 leading-relaxed font-medium">
+                            <h3 className="text-lg sm:text-2xl font-serif uppercase tracking-widest mb-4 sm:mb-6 font-bold text-heritage-charcoal">Handshake</h3>
+                            <p className="text-sm sm:text-base text-heritage-charcoal/80 leading-relaxed font-medium">
                                 Sellers are vetted with archival rigor. We ensure every agreement is honored and every transaction is backed by integrity.
                             </p>
                         </div>
@@ -330,7 +333,7 @@ const Home = () => {
                                     "Expert archival appraisal for all artifacts",
                                     "Transparent provenance and documented history"
                                 ].map((item, i) => (
-                                    <li key={i} className="flex items-center gap-4 text-heritage-charcoal font-sans font-bold text-sm tracking-wide">
+                                    <li key={i} className="flex items-center gap-4 text-heritage-charcoal font-sans font-bold text-xs sm:text-sm tracking-wide">
                                         <Sparkles className="text-luxury-gold w-4 h-4 flex-shrink-0" strokeWidth={2} />
                                         {item}
                                     </li>
@@ -369,7 +372,7 @@ const Home = () => {
                                     "Limit of 5 listings per account",
                                     "Strict manual archival approval"
                                 ].map((item, i) => (
-                                    <li key={i} className="flex items-center gap-4 text-xs text-gray-300 font-sans font-bold tracking-widest uppercase">
+                                    <li key={i} className="flex items-center gap-4 text-[10px] sm:text-xs text-gray-300 font-sans font-bold tracking-widest uppercase">
                                         <Sparkles className="text-luxury-gold/50 w-4 h-4" strokeWidth={2} />
                                         {item}
                                     </li>
@@ -387,7 +390,7 @@ const Home = () => {
                                     "Company profile archival audit",
                                     "Unlimited listings (post-approval)"
                                 ].map((item, i) => (
-                                    <li key={i} className="flex items-center gap-4 text-xs text-gray-300 font-sans font-bold tracking-widest uppercase">
+                                    <li key={i} className="flex items-center gap-4 text-[10px] sm:text-xs text-gray-300 font-sans font-bold tracking-widest uppercase">
                                         <Sparkles className="text-luxury-gold/50 w-4 h-4" strokeWidth={2} />
                                         {item}
                                     </li>
@@ -406,6 +409,27 @@ const Home = () => {
 
             {/* Testimonials Section */}
             <TestimonialsSection />
+
+            {/* Social Links - Mobile only */}
+            <div className="lg:hidden py-8 px-6 bg-heritage-cream border-t border-heritage-beige">
+                <div className="max-w-md mx-auto flex items-center justify-center gap-5">
+                    <a href="https://www.instagram.com/the_collectors_exchange/?utm_source=ig_web_button_share_sheet" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-heritage-bronze/60 hover:text-luxury-gold transition-colors">
+                        <Instagram size={20} strokeWidth={1.5} />
+                    </a>
+                    <a href="https://www.facebook.com/share/18mue4rLC4/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-heritage-bronze/60 hover:text-luxury-gold transition-colors">
+                        <Facebook size={20} strokeWidth={1.5} />
+                    </a>
+                    <a href="https://x.com/TCE_store" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" className="text-heritage-bronze/60 hover:text-luxury-gold transition-colors">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="none"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                    <a href="https://www.linkedin.com/company/thecollectorsexchange" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-heritage-bronze/60 hover:text-luxury-gold transition-colors">
+                        <Linkedin size={20} strokeWidth={1.5} />
+                    </a>
+                    <a href="mailto:support@thecollectorsexchange.in" aria-label="Email" className="text-heritage-bronze/60 hover:text-luxury-gold transition-colors">
+                        <Mail size={20} strokeWidth={1.5} />
+                    </a>
+                </div>
+            </div>
         </div>
     );
 };

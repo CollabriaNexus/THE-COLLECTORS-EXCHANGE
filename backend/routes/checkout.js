@@ -1,6 +1,7 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { CreateOrderSchema, VerifyPaymentSchema } from '../schemas/checkout.js';
+import { Prisma } from '@prisma/client';
+import { CreateOrderSchema, VerifyPaymentSchema, ValidateCouponSchema } from '../schemas/checkout.js';
 
 class OrderError extends Error {
     constructor(statusCode, message) {
@@ -21,7 +22,7 @@ export default async function checkoutRoutes(fastify) {
         const keyId = process.env.RAZORPAY_KEY_ID;
         const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-        if (!keyId || !keySecret) {
+        if (!keyId || !keySecret || keyId.includes('xxxx') || keySecret.includes('your-')) {
             // Simulated/Mock mode fallback
             return null;
         }
@@ -32,6 +33,51 @@ export default async function checkoutRoutes(fastify) {
         });
     };
 
+    // Validate coupon against cart items (no order needed)
+    fastify.post('/validate-coupon', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+        const { code, items } = ValidateCouponSchema.parse(request.body);
+
+        const coupon = await prisma.coupon.findUnique({ where: { code } });
+        if (!coupon) {
+            return reply.status(404).send({ valid: false, error: 'Coupon not found' });
+        }
+        if (!coupon.isActive) {
+            return reply.status(422).send({ valid: false, error: 'Coupon is no longer active' });
+        }
+        if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+            return reply.status(422).send({ valid: false, error: 'Coupon has expired' });
+        }
+
+        let eligibleTotal = 0;
+        for (const item of items) {
+            if (!coupon.productId || item.productId === coupon.productId) {
+                eligibleTotal += item.price * (item.quantity || 1);
+            }
+        }
+
+        if (eligibleTotal === 0) {
+            return reply.status(422).send({ valid: false, error: 'Coupon does not apply to any items in your cart' });
+        }
+
+        if (coupon.minPurchase > 0 && eligibleTotal < coupon.minPurchase) {
+            return reply.status(422).send({
+                valid: false,
+                error: `Minimum purchase of ₹${coupon.minPurchase.toLocaleString('en-IN')} required`,
+            });
+        }
+
+        const discountPercent = coupon.discountPercent;
+        const discountAmount = Math.round(eligibleTotal * discountPercent / 100 * 100) / 100;
+
+        return {
+            valid: true,
+            couponCode: coupon.code,
+            discountPercent,
+            discountAmount,
+            eligibleTotal,
+        };
+    });
+
     // Create payment order
     fastify.post('/create-order', { preValidation: [fastify.authenticate] }, async (request, reply) => {
         const dbUser = request.dbUser;
@@ -39,7 +85,7 @@ export default async function checkoutRoutes(fastify) {
             return reply.status(401).send({ error: 'User profile not synchronized' });
         }
 
-        const { shippingAddress, city, state, zipCode, phone, items, paymentMethod } = CreateOrderSchema.parse(request.body);
+        const { shippingAddress, city, state, zipCode, phone, items, paymentMethod, couponCode } = CreateOrderSchema.parse(request.body);
 
         // Fetch user's cart to cross-reference against submitted items
         const cartItems = await prisma.cartItem.findMany({
@@ -50,6 +96,7 @@ export default async function checkoutRoutes(fastify) {
 
         // Calculate total amount on backend to prevent fraud
         let totalAmount = 0;
+        let totalPlatformFee = 0;
         const orderItemsData = [];
 
         let dbOrder;
@@ -78,11 +125,19 @@ export default async function checkoutRoutes(fastify) {
                     throw new OrderError(422, 'You cannot purchase your own product');
                 }
 
-                totalAmount += product.price * (item.quantity || 1);
+                const qty = item.quantity || 1;
+                const itemPrice = product.price;
+                const commPct = product.commissionPercent ?? 10;
+                const fee = Math.round(itemPrice * commPct / 100 * 100) / 100; // round to 2 decimals
+
+                totalAmount += itemPrice * qty;
+                totalPlatformFee += fee * qty;
                 orderItemsData.push({
                     productId: product.id,
-                    quantity: item.quantity || 1,
-                    price: product.price,
+                    quantity: qty,
+                    price: itemPrice,
+                    commissionPercent: commPct,
+                    platformFee: fee,
                 });
             }
 
@@ -124,7 +179,64 @@ export default async function checkoutRoutes(fastify) {
             if (err instanceof OrderError) {
                 return reply.status(err.statusCode).send({ error: err.message });
             }
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
+                request.log.error({ prismaCode: err.code, prismaMeta: err.meta, route: 'create-order' }, 'Prisma error in checkout');
+                return reply.status(409).send({ error: 'Database Error', message: 'Could not create order. Please try again.' });
+            }
             throw err;
+        }
+
+        // Apply coupon if provided
+        let discountPercent = 0;
+        let discountAmount = 0;
+        let finalAmount = totalAmount;
+
+        if (couponCode) {
+            const coupon = await prisma.coupon.findUnique({ where: { code: couponCode } });
+            if (!coupon) {
+                return reply.status(404).send({ error: 'Coupon not found' });
+            }
+            if (!coupon.isActive) {
+                return reply.status(422).send({ error: 'Coupon is no longer active' });
+            }
+            if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+                return reply.status(422).send({ error: 'Coupon has expired' });
+            }
+            if (coupon.maxUses > 0) {
+                const usageCount = await prisma.couponUsage.count({ where: { couponId: coupon.id } });
+                if (usageCount >= coupon.maxUses) {
+                    return reply.status(422).send({ error: 'Coupon usage limit reached' });
+                }
+            }
+            if (coupon.maxUsesPerUser > 0) {
+                const userUsageCount = await prisma.couponUsage.count({ where: { couponId: coupon.id, userId: dbUser.id } });
+                if (userUsageCount >= coupon.maxUsesPerUser) {
+                    return reply.status(422).send({ error: 'You have already used this coupon the maximum number of times' });
+                }
+            }
+
+            discountPercent = coupon.discountPercent;
+            discountAmount = Math.round(totalAmount * discountPercent / 100 * 100) / 100;
+            finalAmount = Math.max(0, totalAmount - discountAmount);
+
+            await prisma.order.update({
+                where: { id: dbOrder.id },
+                data: {
+                    couponId: coupon.id,
+                    discountPercent,
+                    discountAmount,
+                    subtotalBeforeDiscount: totalAmount,
+                    totalAmount: finalAmount,
+                },
+            });
+
+            await prisma.couponUsage.create({
+                data: {
+                    couponId: coupon.id,
+                    orderId: dbOrder.id,
+                    userId: dbUser.id,
+                },
+            });
         }
 
         // Initialize Razorpay Order (skip for COD)
@@ -132,20 +244,17 @@ export default async function checkoutRoutes(fastify) {
         let razorpayOrderId = null;
 
         if (paymentMethod === 'cod') {
-            // COD: No Razorpay order needed
             razorpayOrderId = null;
         } else if (razorpay) {
             try {
-                // Razorpay expects amount in paise (1 INR = 100 paise)
                 const options = {
-                    amount: Math.round(totalAmount * 100),
+                    amount: Math.round(finalAmount * 100),
                     currency: 'INR',
                     receipt: `receipt_order_${dbOrder.id}`,
                 };
                 const rpOrder = await razorpay.orders.create(options);
                 razorpayOrderId = rpOrder.id;
 
-                // Save Razorpay order ID to the order record
                 await prisma.order.update({
                     where: { id: dbOrder.id },
                     data: { paymentOrderId: razorpayOrderId }
@@ -157,7 +266,6 @@ export default async function checkoutRoutes(fastify) {
         } else if (process.env.NODE_ENV === 'production') {
             return reply.status(500).send({ error: 'Payment gateway not configured' });
         } else {
-            // Simulated/Mock Mode (dev only)
             razorpayOrderId = `order_mock_${Math.random().toString(36).substring(2, 11)}`;
             await prisma.order.update({
                 where: { id: dbOrder.id },
@@ -168,11 +276,15 @@ export default async function checkoutRoutes(fastify) {
         return {
             success: true,
             orderId: dbOrder.id,
-            amount: totalAmount,
+            amount: finalAmount,
+            platformFee: totalPlatformFee,
             razorpayOrderId,
             isMock: !razorpay && paymentMethod !== 'cod',
             isCOD: paymentMethod === 'cod',
             keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock',
+            couponApplied: !!couponCode,
+            discountPercent,
+            discountAmount,
             user: {
                 name: dbUser.name,
                 email: dbUser.email,
@@ -272,6 +384,22 @@ export default async function checkoutRoutes(fastify) {
             await prisma.wishlistItem.deleteMany({
                 where: { productId: item.productId }
             });
+        }
+
+        // Record coupon usage (if coupon was applied)
+        if (updatedOrder.couponId) {
+            const existingUsage = await prisma.couponUsage.findFirst({
+                where: { couponId: updatedOrder.couponId, orderId: updatedOrder.id },
+            });
+            if (!existingUsage) {
+                await prisma.couponUsage.create({
+                    data: {
+                        couponId: updatedOrder.couponId,
+                        orderId: updatedOrder.id,
+                        userId: dbUser.id,
+                    },
+                });
+            }
         }
 
         // Notify buyer that order is confirmed

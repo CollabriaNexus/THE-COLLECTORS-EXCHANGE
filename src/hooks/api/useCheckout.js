@@ -14,6 +14,30 @@ export const useCreateOrder = () => {
 };
 
 /**
+ * Hook to apply a coupon code to an order
+ */
+export const useApplyCoupon = () => {
+    return useMutation({
+        mutationFn: async ({ code, orderId }) => {
+            const { data } = await apiClient.post('/apply-coupon', { code, orderId });
+            return data;
+        },
+    });
+};
+
+/**
+ * Hook to validate a coupon code against cart items before placing order
+ */
+export const useValidateCoupon = () => {
+    return useMutation({
+        mutationFn: async ({ code, items }) => {
+            const { data } = await apiClient.post('/checkout/validate-coupon', { code, items });
+            return data;
+        },
+    });
+};
+
+/**
  * Hook to verify order payment signature
  */
 export const useVerifyPayment = () => {

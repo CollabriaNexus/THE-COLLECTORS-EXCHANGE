@@ -13,6 +13,16 @@ export const CreateOrderSchema = z.object({
     phone: z.string().min(10, 'Phone must be at least 10 characters'),
     items: z.array(CreateOrderItemSchema).min(1, 'At least one item is required'),
     paymentMethod: z.enum(['online', 'cod']).default('online'),
+    couponCode: z.string().optional(),
+});
+
+export const ValidateCouponSchema = z.object({
+    code: z.string().min(1).transform(s => s.toUpperCase()),
+    items: z.array(z.object({
+        productId: z.string(),
+        price: z.number().positive(),
+        quantity: z.number().int().positive().optional().default(1),
+    })).min(1),
 });
 
 export const VerifyPaymentSchema = z.object({

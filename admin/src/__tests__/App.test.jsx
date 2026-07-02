@@ -67,10 +67,6 @@ vi.mock('../pages/Vendors', () => ({
   default: () => <div>Vendors Page</div>,
 }));
 
-vi.mock('../pages/GalleryManager', () => ({
-  default: () => <div>Gallery Page</div>,
-}));
-
 vi.mock('../pages/Payouts', () => ({
   default: () => <div>Payouts Page</div>,
 }));
@@ -187,12 +183,6 @@ describe('App', () => {
     getUser.mockReturnValue({ role: 'admin' });
     renderApp('/vendors');
     expect(screen.getByText('Vendors Page')).toBeInTheDocument();
-  });
-
-  it('renders Gallery page for admin', () => {
-    getUser.mockReturnValue({ role: 'admin' });
-    renderApp('/gallery');
-    expect(screen.getByText('Gallery Page')).toBeInTheDocument();
   });
 
   it('renders Payouts page for admin', () => {

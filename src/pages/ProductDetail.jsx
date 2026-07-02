@@ -222,7 +222,7 @@ const ProductDetail = () => {
                             <h1 className="text-lg sm:text-3xl md:text-4xl lg:text-5xl font-serif text-heritage-charcoal leading-tight mb-2 sm:mb-6">
                                 {product.title}
                             </h1>
-                            <p className="text-lg sm:text-3xl font-light text-heritage-charcoal">
+                            <p className="text-xl sm:text-3xl font-light text-heritage-charcoal">
                                 ₹{product.price?.toLocaleString()}
                             </p>
                             {product.brand && (
@@ -312,21 +312,21 @@ const ProductDetail = () => {
                             <div className="flex gap-2 sm:gap-3 items-start" title="Every item is verified by our expert team before shipping.">
                                 <ShieldCheck size={16} className="sm:w-5 sm:h-5 text-luxury-gold flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h4 className="font-serif text-xs sm:text-sm font-medium text-black">Authenticity Guarantee</h4>
+                                    <h4 className="font-serif text-xs sm:text-sm md:text-base font-medium text-black">Authenticity Guarantee</h4>
                                     <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">Every item is verified by our expert team before shipping.</p>
                                 </div>
                             </div>
                             <div className="flex gap-2 sm:gap-3 items-start" title="Insured shipping and secure ownership transfer.">
                                 <Share2 size={16} className="sm:w-5 sm:h-5 text-luxury-gold flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h4 className="font-serif text-xs sm:text-sm font-medium text-black">Secure Transfer</h4>
+                                    <h4 className="font-serif text-xs sm:text-sm md:text-base font-medium text-black">Secure Transfer</h4>
                                     <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">Insured shipping and secure ownership transfer.</p>
                                 </div>
                             </div>
                             <div className="flex gap-2 sm:gap-3 items-start" title="Detailed condition assessment available on request.">
                                 <Info size={16} className="sm:w-5 sm:h-5 text-luxury-gold flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h4 className="font-serif text-xs sm:text-sm font-medium text-black">Condition Report</h4>
+                                    <h4 className="font-serif text-xs sm:text-sm md:text-base font-medium text-black">Condition Report</h4>
                                     <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">Detailed condition assessment available on request.</p>
                                 </div>
                             </div>
@@ -340,7 +340,7 @@ const ProductDetail = () => {
                 <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12 mt-8 sm:mt-16 pt-8 sm:pt-16 border-t border-gray-100">
                     {/* Provenance & Story */}
                     <div>
-                        <h3 className="text-[10px] sm:text-sm font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-6">Provenance & Story</h3>
+                        <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-6">Provenance & Story</h3>
                         <div className="font-serif text-gray-700 text-sm sm:text-lg leading-relaxed">
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
@@ -375,7 +375,7 @@ const ProductDetail = () => {
                             <div className="flex items-start gap-2 sm:gap-4">
                                 <ShieldCheck size={20} className="sm:w-8 sm:h-8 text-green-700 flex-shrink-0" />
                                 <div>
-                                    <h4 className="font-serif text-sm sm:text-lg font-medium text-heritage-charcoal mb-0.5 sm:mb-1">The Exchange's Guarantee</h4>
+                                    <h4 className="font-serif text-sm sm:text-base font-medium text-heritage-charcoal mb-0.5 sm:mb-1">The Exchange's Guarantee</h4>
                                     <p className="text-[11px] sm:text-sm text-heritage-charcoal/70 leading-relaxed">
                                         This item is marked <strong>Verified Authentic</strong> by The Collectors Exchange. When you purchase this item, you receive our unconditional guarantee of authenticity — backed by our expert curation team.
                                     </p>
@@ -404,7 +404,7 @@ const SuggestedProducts = ({ category, currentId }) => {
             <div className="container mx-auto max-w-6xl">
                 <div className="flex items-center justify-between mb-6 sm:mb-10">
                     <div>
-                        <h2 className="text-xl sm:text-4xl font-serif text-heritage-charcoal">Suggested <span className="text-luxury-gold italic font-light">Products</span></h2>
+                        <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal">Suggested <span className="text-luxury-gold italic font-light">Products</span></h2>
                         <p className="text-heritage-bronze/70 font-sans text-xs sm:text-sm mt-1 sm:mt-2">You may also be interested in</p>
                     </div>
                     <Link to="/category" className="flex items-center gap-1 sm:gap-2 text-heritage-charcoal/60 hover:text-luxury-gold text-[10px] sm:text-xs uppercase tracking-widest transition-colors border-b border-transparent hover:border-luxury-gold pb-0.5">
@@ -451,7 +451,7 @@ const SuggestedProducts = ({ category, currentId }) => {
                                     </div>
                                 </div>
                                 <div className="p-4">
-                                    <h3 className="font-serif text-sm font-medium text-heritage-charcoal leading-snug line-clamp-1" title={title}>{title}</h3>
+                                    <h3 className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal leading-snug line-clamp-1" title={title}>{title}</h3>
                                     <p className={`font-sans text-sm font-medium mt-1.5 ${product.status === 'Sold' ? 'text-gray-400 line-through' : 'text-heritage-gold-muted'}`}>₹{product.price?.toLocaleString()}</p>
                                 </div>
                             </Link>

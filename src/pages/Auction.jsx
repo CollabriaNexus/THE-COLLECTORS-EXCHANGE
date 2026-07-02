@@ -50,7 +50,7 @@ const Auction = () => {
                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-heritage-charcoal/5 flex items-center justify-center mx-auto mb-8">
                         <Gavel size={36} className="text-heritage-gold-muted/60 sm:w-[44px] sm:h-[44px]" strokeWidth={1} />
                     </div>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-heritage-charcoal mb-6 leading-tight">
+                    <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal mb-6 leading-tight">
                         The Gavel Will <span className="italic text-luxury-gold">Soon</span> Fall
                     </h2>
                     <p className="text-heritage-charcoal/60 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-4">

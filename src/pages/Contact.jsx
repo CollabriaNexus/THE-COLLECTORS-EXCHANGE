@@ -67,8 +67,8 @@ const Contact = () => {
             <SEO title="Contact Us" />
             <div className="w-full container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-24">
                 <div className="text-center mb-10 sm:mb-14 md:mb-16">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-3 sm:mb-4">Contact Us</h1>
-                    <p className="text-gray-500 text-base sm:text-lg font-light max-w-2xl mx-auto px-2">Have a question or need assistance? We're here to help.</p>
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-3 sm:mb-4">Contact Us</h1>
+                    <p className="text-gray-500 text-sm sm:text-base font-light max-w-2xl mx-auto px-2">Have a question or need assistance? We're here to help.</p>
                 </div>
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 max-w-5xl mx-auto">
@@ -90,27 +90,27 @@ const Contact = () => {
                 </div>
 
                 <div className="bg-white rounded-lg p-6 sm:p-8 md:p-12 shadow-sm border border-gray-100 max-w-3xl mx-auto">
-                    <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8 text-center">Send us a message</h2>
+                    <h2 className="text-lg sm:text-2xl font-serif mb-6 sm:mb-8 text-center">Send us a message</h2>
                     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                         <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">Name</label>
+                                <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">Name</label>
                                 <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                                     className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors rounded text-sm sm:text-base" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">Email</label>
+                                <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">Email</label>
                                 <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
                                     className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors rounded text-sm sm:text-base" />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">Subject</label>
+                            <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">Subject</label>
                             <input type="text" required value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}
                                 className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors rounded text-sm sm:text-base" />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">Message</label>
+                            <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">Message</label>
                             <textarea required rows={5} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })}
                                 className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors leading-relaxed rounded text-sm sm:text-base" />
                         </div>

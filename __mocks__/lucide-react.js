@@ -37,6 +37,7 @@ const icons = [
   'Upload', 'User', 'UserCheck', 'Users',
   'Volume2',
   'Watch',
+  'Zap',
   'X', 'XCircle'
 ]
 

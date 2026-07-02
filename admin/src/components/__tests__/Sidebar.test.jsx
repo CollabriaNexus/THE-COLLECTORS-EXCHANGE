@@ -19,7 +19,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Products')).toBeInTheDocument();
     expect(screen.getByText('TCE Store')).toBeInTheDocument();
     expect(screen.getByText('Orders')).toBeInTheDocument();
-    expect(screen.getByText('Gallery')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Payouts')).toBeInTheDocument();
     expect(screen.getByText('Testimonials')).toBeInTheDocument();
     expect(screen.getByText('Phone Verification')).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Products').closest('a')).toHaveAttribute('href', '/products');
     expect(screen.getByText('TCE Store').closest('a')).toHaveAttribute('href', '/tce-store');
     expect(screen.getByText('Orders').closest('a')).toHaveAttribute('href', '/orders');
-    expect(screen.getByText('Gallery').closest('a')).toHaveAttribute('href', '/gallery');
+    expect(screen.getByText('Dashboard').closest('a')).toHaveAttribute('href', '/');
     expect(screen.getByText('Payouts').closest('a')).toHaveAttribute('href', '/payouts');
     expect(screen.getByText('Testimonials').closest('a')).toHaveAttribute('href', '/testimonials');
     expect(screen.getByText('Phone Verification').closest('a')).toHaveAttribute('href', '/phone-verifications');

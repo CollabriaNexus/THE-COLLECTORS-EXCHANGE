@@ -1,4 +1,7 @@
 import AboutImage from '../assets/About_US.jpg';
+import VerificationImage from '../assets/verification_authenticity.webp';
+import SourcingImage from '../assets/artisan2.webp';
+import FounderImage from '../assets/collectors_study.webp';
 import SEO from '../components/SEO';
 import { History, ShieldCheck, Landmark, Compass, Users, Sparkles, Heart } from 'lucide-react';
 import Bullet from '../components/Bullet';
@@ -64,7 +67,7 @@ const About = () => {
 
                         <div className="p-6 sm:p-10 lg:p-12 bg-white rounded-sm border border-heritage-bronze/10 relative overflow-hidden shadow-heritage">
                             <Landmark className="absolute -right-8 -bottom-8 text-heritage-bronze/5 w-40 h-40" />
-                            <h2 className="text-3xl sm:text-4xl font-serif mb-4 sm:mb-6 text-heritage-charcoal">Why We Do It</h2>
+                            <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif mb-4 sm:mb-6 text-heritage-charcoal">Why We Do It</h2>
                             <p className="text-heritage-brown leading-relaxed text-sm sm:text-base font-medium">
                                 Finding that one dream watch or a relic that honors the memory of your forefathers shouldn't require endless hours of digital rabbit holes or navigating the uncertainty of local markets.
                             </p>
@@ -77,7 +80,7 @@ const About = () => {
                     <div className="flex flex-col h-full">
                         <div className="h-full p-6 sm:p-10 bg-heritage-beige/30 border border-heritage-bronze/10 rounded-sm hover:border-heritage-bronze/30 transition-all duration-500 hover:shadow-heritage group">
                             <History className="text-luxury-gold mb-6 sm:mb-8 group-hover:scale-110 transition-transform duration-500" size={32} strokeWidth={1} />
-                            <h3 className="text-xl sm:text-2xl font-serif mb-4 sm:mb-6 text-heritage-charcoal">Mission: Reviving the Soul of Indian Heritage</h3>
+                            <h3 className="text-lg sm:text-2xl font-serif mb-4 sm:mb-6 text-heritage-charcoal">Mission: Reviving the Soul of Indian Heritage</h3>
                             <div className="space-y-4 sm:space-y-6 text-sm text-heritage-brown/80 leading-relaxed font-light">
                                 <p>In an era dominated by the digital, the tangible history of India is at risk of fading away. Our mission is to reclaim that "dead value" and bring it back to life. We don't just trade articles; we preserve stories.</p>
                                 <p>We act as the lifejacket for our national heritage, ensuring that every collectible is backed by trust and authenticity. We are dedicated to educating the next generation of collectors, helping them understand and protect the true worth of the past.</p>
@@ -94,7 +97,7 @@ const About = () => {
                 <div className="container mx-auto px-6 relative z-10">
                     <div className="text-center mb-12 sm:mb-20">
                         <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 block">Core Values</span>
-                        <h2 className="text-3xl sm:text-4xl font-serif mb-6 text-heritage-charcoal">Our Belief</h2>
+                        <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif mb-6 text-heritage-charcoal">Our Belief</h2>
                         <div className="w-24 h-0.5 bg-luxury-gold/40 mx-auto"></div>
                     </div>
 
@@ -127,7 +130,7 @@ const About = () => {
                             <div className="h-px w-16 bg-luxury-gold/30"></div>
                         </div>
 
-                        <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal font-normal leading-tight tracking-tight text-center mb-8 sm:mb-12">
+                        <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal font-normal leading-tight tracking-tight text-center mb-8 sm:mb-12">
                             The <span className="italic text-luxury-gold font-light">Legacy</span> Statement
                         </h2>
 
@@ -162,7 +165,7 @@ const About = () => {
                     <div className="flex flex-col md:flex-row gap-20 items-center">
                         <div className="md:w-1/2">
                             <div className="text-xs uppercase tracking-[0.4em] text-luxury-gold font-bold mb-4 sm:mb-6">Authentication</div>
-                            <h2 className="text-3xl sm:text-4xl font-serif mb-6 sm:mb-8 text-heritage-charcoal">Truth Over Misbranding</h2>
+                            <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif mb-6 sm:mb-8 text-heritage-charcoal">Truth Over Misbranding</h2>
                             <p className="text-sm sm:text-base md:text-lg text-heritage-gold-muted italic font-serif mb-6 sm:mb-8 border-l-2 border-luxury-gold/30 pl-4 sm:pl-6">You cannot ask a cobbler to stitch a wound and call him a doctor.</p>
                             <div className="space-y-4 sm:space-y-6 text-heritage-brown/80 text-sm sm:text-base leading-relaxed font-light">
                                 <p>While many brands sell "lifestyle" through clever marketing, we sell the Truth. We specialize in the mechanical heartbeat of history and the raw authenticity of heritage. If it isn't genuine, it isn't on our platform. Period.</p>
@@ -173,8 +176,8 @@ const About = () => {
                             <div className="absolute inset-0 bg-luxury-gold/5 blur-3xl transform rotate-3"></div>
                             <div className="h-[400px] md:h-[500px] p-2 bg-white border border-heritage-bronze/10 shadow-2xl relative z-10">
                                 <img
-                                    src={AboutImage}
-                                    alt="Verification"
+                                    src={VerificationImage}
+                                    alt="Expert examining a vintage pocket watch for authenticity"
                                     className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-1000"
                                 />
                             </div>
@@ -185,7 +188,7 @@ const About = () => {
                     {/* Collectors Segment */}
                     <div className="space-y-20">
                         <div className="text-center">
-                            <h2 className="text-3xl sm:text-4xl font-serif mb-4 sm:mb-6 text-heritage-charcoal">Built for Collectors</h2>
+                            <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif mb-4 sm:mb-6 text-heritage-charcoal">Built for Collectors</h2>
                             <p className="text-sm sm:text-base md:text-lg text-heritage-brown/70 max-w-2xl mx-auto leading-relaxed italic">
                                 "The courage to collect is the courage to remember."
                             </p>
@@ -212,7 +215,7 @@ const About = () => {
 
                         <div className="relative z-10">
                             <ShieldCheck className="mx-auto mb-6 sm:mb-8 text-luxury-gold w-12 h-12 sm:w-16 sm:h-16" strokeWidth={1} />
-                            <h2 className="text-3xl sm:text-4xl font-serif mb-4 sm:mb-6 text-white">Stewardship, Not Just Sales</h2>
+                            <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif mb-4 sm:mb-6 text-white">Stewardship, Not Just Sales</h2>
                             <p className="text-heritage-beige/60 mb-8 sm:mb-12 text-base sm:text-lg md:text-xl italic font-serif">"Most businesses end their relationship with you at the checkout. We are just getting started."</p>
                             <p className="text-heritage-beige/70 mb-8 sm:mb-12 text-sm sm:text-base md:text-lg font-light leading-relaxed max-w-2xl mx-auto">
                                 As stewards of Indian history, we provide annual "health checks" for the articles you purchase. We stay in touch to ensure your timepieces and collectibles are preserved correctly, honoring the lineage they represent.
@@ -234,7 +237,7 @@ const About = () => {
                     <div className="space-y-6 sm:space-y-8">
                         <div className="space-y-3 sm:space-y-4">
                             <span className="text-luxury-gold font-serif text-2xl sm:text-3xl md:text-4xl block">01.</span>
-                            <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal tracking-tight uppercase">A New Standard of Trust</h2>
+                            <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal tracking-tight uppercase">A New Standard of Trust</h2>
                         </div>
                         <div className="space-y-4 sm:space-y-6 text-heritage-charcoal/80 text-sm sm:text-base md:text-lg leading-relaxed font-medium border-l-2 border-luxury-gold/20 pl-4 sm:pl-8">
                             <p>
@@ -250,7 +253,7 @@ const About = () => {
                         <div className="space-y-6 sm:space-y-8 order-2 md:order-1">
                             <div className="space-y-3 sm:space-y-4">
                                 <span className="text-luxury-gold font-serif text-2xl sm:text-3xl md:text-4xl block">02.</span>
-                                <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal tracking-tight uppercase">Direct From the Source</h2>
+                                <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal tracking-tight uppercase">Direct From the Source</h2>
                             </div>
                             <div className="space-y-4 sm:space-y-6 text-heritage-charcoal/80 text-sm sm:text-base md:text-lg leading-relaxed font-medium border-l-2 border-luxury-gold/20 pl-4 sm:pl-8">
                                 <p>
@@ -262,7 +265,7 @@ const About = () => {
                             </div>
                         </div>
                         <div className="aspect-square bg-white border border-heritage-bronze/10 p-2 shadow-heritage order-1 md:order-2 overflow-hidden">
-                            <img src={AboutImage} alt="Sourcing" className="w-full h-full object-cover grayscale-[0.5]" />
+                            <img src={SourcingImage} alt="Vintage market vendor with antique wares" className="w-full h-full object-cover grayscale-[0.5]" />
                         </div>
                     </div>
                 </div>
@@ -272,7 +275,7 @@ const About = () => {
             <section className="py-16 sm:py-24 bg-heritage-charcoal text-white relative">
                 <div className="container mx-auto px-6 max-w-4xl text-center">
                     <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 sm:mb-6 block">The Story</span>
-                    <h2 className="text-3xl sm:text-4xl font-serif mb-8 sm:mb-12">The Journey</h2>
+                    <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif mb-8 sm:mb-12">The Journey</h2>
                     <div className="space-y-6 sm:space-y-8 text-sm sm:text-base md:text-lg lg:text-xl text-white/70 font-light leading-relaxed font-serif italic max-w-3xl mx-auto">
                         <p>
                             What started as a personal passion for historical finds has grown into a dedicated platform for collectors worldwide. We’ve spent years building relationships with local markets and experts to bridge the gap between local street markets and global collections.
@@ -291,7 +294,7 @@ const About = () => {
                         <div className="space-y-8 sm:space-y-12">
                             <div className="space-y-3 sm:space-y-4">
                                 <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase block">Founder's message</span>
-                                <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal leading-tight">A Letter from <br />Our Founder</h2>
+                                <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal leading-tight">A Letter from <br />Our Founder</h2>
                             </div>
                             <div className="relative p-6 sm:p-12 bg-heritage-cream border border-heritage-bronze/10">
                                 <Sparkles className="absolute -top-4 -left-4 text-luxury-gold w-8 h-8" />
@@ -304,14 +307,14 @@ const About = () => {
                                     </p>
                                 </div>
                                 <div className="mt-12">
-                                    <p className="text-2xl font-serif text-heritage-charcoal mb-1">Shaik Faraz</p>
+                                    <p className="text-lg sm:text-2xl font-serif text-heritage-charcoal mb-1">Shaik Faraz</p>
                                     <p className="text-xs uppercase tracking-[0.2em] text-luxury-gold font-bold">Founder, The Collectors Exchange</p>
                                 </div>
                             </div>
                         </div>
                         <div className="pt-20">
                             <div className="aspect-[3/4] bg-heritage-charcoal overflow-hidden p-2 shadow-2xl">
-                                <img src={AboutImage} alt="Founder" className="w-full h-full object-cover contrast-[1.1] grayscale" />
+                                <img src={FounderImage} alt="Founder" className="w-full h-full object-cover contrast-[1.1] grayscale" />
                             </div>
                         </div>
                     </div>

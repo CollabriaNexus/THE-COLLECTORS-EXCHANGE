@@ -40,10 +40,10 @@ const Wishlist = () => {
 
     if (!user) {
         return (
-            <div className="container mx-auto py-12 sm:py-20 px-6 text-center">
+            <div className="container mx-auto py-8 sm:py-20 px-4 sm:px-6 text-center">
                 <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
-                <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
-                <p className="text-gray-500 mb-6">You need to be logged in to view your wishlist.</p>
+                <h1 className="text-2xl sm:text-4xl font-serif mb-4">Please Sign In</h1>
+                <p className="text-sm sm:text-base text-gray-500 mb-6">You need to be logged in to view your wishlist.</p>
                 <Link to="/account" className="bg-black text-white px-6 py-2 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
                     Sign In
                 </Link>
@@ -53,21 +53,21 @@ const Wishlist = () => {
 
     if (isLoading) {
         return (
-            <div className="container mx-auto py-12 sm:py-20 text-center">
+            <div className="container mx-auto py-8 sm:py-20 px-4 sm:px-6 text-center">
                 <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
                 <Loader2 className="animate-spin mx-auto text-luxury-gold mb-4" size={40} />
-                <p className="font-serif italic text-gray-400">Loading your collection...</p>
+                <p className="font-serif italic text-sm sm:text-base text-gray-400">Loading your collection...</p>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto py-12 px-6">
+        <div className="container mx-auto py-8 px-4 sm:py-12 sm:px-6">
             <SEO title="Wishlist" description="View your saved collectibles and rare finds on The Collectors Exchange wishlist." canonical="/wishlist" noindex />
-            <h1 className="text-2xl sm:text-4xl font-serif mb-6 sm:mb-8 text-center md:text-left">My Wishlist</h1>
+            <h1 className="text-2xl sm:text-3xl font-serif mb-6 sm:mb-8 text-center md:text-left">My Wishlist</h1>
 
             {wishlistItems.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                     {[...wishlistItems].sort((a, b) => {
                         const aSold = a.status === 'Sold' || a.product?.status === 'Sold';
                         const bSold = b.status === 'Sold' || b.product?.status === 'Sold';
@@ -75,55 +75,81 @@ const Wishlist = () => {
                         if (!aSold && bSold) return -1;
                         return 0;
                     }).map(product => (
-                        <div key={product.id} className="bg-white border border-gray-100 shadow-sm group">
+                        <div key={product.id} className="bg-white border border-gray-100 group hover:shadow-heritage transition-all duration-500 flex flex-col h-full">
                             {/* Image */}
-                            <div className="relative overflow-hidden">
+                            <Link to={`/product/${product.id}`} className="block relative aspect-square bg-heritage-beige overflow-hidden shrink-0">
                                 <img
                                     src={product.image || 'https://via.placeholder.com/400'}
                                     alt={product.title}
-                                    className="w-full h-48 sm:h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
                                 />
-                                {product.isVerified && (
-                                    <div className="absolute top-3 left-3 bg-black text-white px-3 py-1 text-xs uppercase tracking-widest flex items-center gap-1">
-                                        <ShieldCheck size={12} /> Verified
+
+                                {/* Condition Badge */}
+                                <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-white/90 backdrop-blur-sm text-heritage-charcoal/70 text-[10px] sm:text-xs px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase">
+                                    {product.condition || 'Excellent'}
+                                </div>
+
+                                {/* Sold Badge */}
+                                {product.status === 'Sold' && (
+                                    <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
+                                        <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-widest shadow-lg">Sold Out</span>
                                     </div>
                                 )}
-                            </div>
+
+                                {/* Verified Badge */}
+                                {product.isVerified && (
+                                    <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[9px] sm:text-[10px] px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase flex items-center gap-0.5 sm:gap-1">
+                                        <ShieldCheck size={7} className="sm:w-[10px] sm:h-[10px]" />
+                                        <span className="inline">Verified</span>
+                                    </div>
+                                )}
+                            </Link>
 
                             {/* Content */}
-                            <div className="p-3 sm:p-6">
-                                <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest mb-1 sm:mb-2">{product.category}</p>
-                                <h3 className="font-serif text-sm sm:text-lg font-medium mb-1 sm:mb-2 line-clamp-1">{product.title}</h3>
-                                <p className="text-base sm:text-xl font-semibold mb-3 sm:mb-4">₹{product.price?.toLocaleString()}</p>
+                            <div className="p-3 sm:p-5 flex flex-col flex-grow">
+                                <p className="text-[10px] sm:text-xs text-heritage-bronze/80 uppercase tracking-widest truncate mb-0.5 sm:mb-1">{product.category}</p>
+                                {product.seller?.name && (
+                                    <p className="text-[10px] sm:text-xs text-heritage-charcoal/50 truncate mb-0.5 sm:mb-1">by {product.seller.name}</p>
+                                )}
+                                <Link to={`/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
+                                    <h3 className="font-serif text-sm md:text-base text-heritage-charcoal leading-tight line-clamp-2">{product.title}</h3>
+                                </Link>
+                                <p className="text-heritage-gold-muted font-sans text-xs md:text-sm font-semibold mt-1.5 sm:mt-2 mb-2 sm:mb-3">₹{product.price?.toLocaleString()}</p>
 
-                                <div className="flex gap-2 sm:gap-3">
-                                    <button
-                                        onClick={() => handleAddToCart(product.id)}
-                                        disabled={isInCart(product.id)}
-                                        className="flex-1 bg-black text-white py-2 sm:py-3 text-xs sm:text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors disabled:bg-gray-300 flex items-center justify-center gap-1 sm:gap-2"
-                                    >
-                                        <ShoppingBag size={13} />
-                                        {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
-                                    </button>
-                                    <button
-                                        onClick={() => handleRemove(product.id)}
-                                        className="px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 text-red-500 hover:bg-red-50 transition-colors"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
+                                {product.status === 'Sold' ? (
+                                    <div className="w-full py-1 sm:py-1.5 text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-1.5 bg-gray-100 text-gray-400 cursor-default mt-auto">
+                                        Sold Out
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-1.5 sm:gap-2 mt-auto">
+                                        <button
+                                            onClick={() => handleAddToCart(product.id)}
+                                            disabled={isInCart(product.id)}
+                                            className="flex-1 bg-heritage-charcoal text-white py-1 sm:py-1.5 text-[9px] sm:text-[10px] uppercase tracking-widest hover:bg-luxury-gold transition-colors disabled:bg-gray-300 flex items-center justify-center gap-1"
+                                        >
+                                            <ShoppingBag size={8} className="sm:w-[10px] sm:h-[10px]" />
+                                            {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleRemove(product.id)}
+                                            className="px-2 sm:px-3 py-1 sm:py-1.5 border border-gray-200 text-red-500 hover:bg-red-50 transition-colors"
+                                        >
+                                            <Trash2 size={12} className="sm:w-[14px] sm:h-[14px]" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
                 <div className="text-center py-12 sm:py-20 bg-white border border-gray-100">
-                    <Heart size={64} className="mx-auto text-gray-300 mb-6" />
-                    <h3 className="text-xl font-serif text-gray-600 mb-2">Your wishlist is empty</h3>
-                    <p className="text-gray-400 mb-6">Save items you love by clicking the heart icon.</p>
+                    <Heart size={48} className="mx-auto text-gray-300 mb-4 sm:mb-6" />
+                    <h3 className="text-lg sm:text-xl font-serif text-gray-600 mb-2">Your wishlist is empty</h3>
+                    <p className="text-sm sm:text-base text-gray-400 mb-6">Save items you love by clicking the heart icon.</p>
                     <Link
                         to="/category"
-                        className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+                        className="inline-block bg-black text-white px-6 sm:px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
                     >
                         Explore The Exchange
                     </Link>

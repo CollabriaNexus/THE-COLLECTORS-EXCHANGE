@@ -12,7 +12,7 @@ vi.mock('../../hooks/api/useCheckout', () => ({
 
 vi.mock('../../hooks/api/useCart', () => ({
   useCart: vi.fn(() => ({
-    data: [{ id: '1', product: { id: 'p1', title: 'Checkout Watch', price: 15000, images: ['img.jpg'] }, quantity: 1 }],
+    data: [{ id: '1', product: { id: 'p1', title: 'Checkout Watch', price: 15000, images: ['img.jpg'], commissionPercent: 20, condition: 'Mint' }, quantity: 1 }],
     isLoading: false
   }))
 }))
@@ -83,5 +83,45 @@ describe('Checkout', () => {
       </QueryClientProvider>
     )
     expect(screen.getByRole('button', { name: /place order/i })).toBeInTheDocument()
+  })
+
+  it('displays Platform Contribution in order summary', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <MemoryRouter>
+            <Checkout />
+          </MemoryRouter>
+        </HelmetProvider>
+      </QueryClientProvider>
+    )
+    expect(screen.getByText('Platform Contribution')).toBeInTheDocument()
+  })
+
+  it('shows commission percent breakdown per item', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <MemoryRouter>
+            <Checkout />
+          </MemoryRouter>
+        </HelmetProvider>
+      </QueryClientProvider>
+    )
+    expect(screen.getByText('20%')).toBeInTheDocument()
+  })
+
+  it('displays GST @ 18% in order summary', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <MemoryRouter>
+            <Checkout />
+          </MemoryRouter>
+        </HelmetProvider>
+      </QueryClientProvider>
+    )
+    expect(screen.getByText('GST @ 18%')).toBeInTheDocument()
+    expect(screen.getByText(/540/)).toBeInTheDocument()
   })
 })

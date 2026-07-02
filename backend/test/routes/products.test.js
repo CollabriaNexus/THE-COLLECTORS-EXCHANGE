@@ -105,6 +105,21 @@ describe('products routes', () => {
       expect(res.statusCode).toBe(200);
     });
 
+    it('sorts public catalog by commissionPercent DESC then createdAt DESC', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([
+        { id: 'p2', title: 'High Comm', price: 100, commissionPercent: 25, seller: { name: 'S' }, status: 'Approved' },
+        { id: 'p1', title: 'Low Comm', price: 100, commissionPercent: 10, seller: { name: 'S' }, status: 'Approved' },
+      ]);
+      mockPrisma.product.count.mockResolvedValue(2);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/' });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().products[0].id).toBe('p2');
+      expect(res.json().products[1].id).toBe('p1');
+    });
+
     it('returns 500 on DB error', async () => {
       mockPrisma.product.findMany.mockRejectedValue(new Error('DB error'));
       const app = buildApp(mockPrisma);
@@ -145,6 +160,16 @@ describe('products routes', () => {
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
       const res = await app.inject({ method: 'POST', url: '/', payload: validProduct, headers: { authorization: 'Bearer vendor' } });
+      expect(res.statusCode).toBe(201);
+    });
+
+    it('creates a product with custom commissionPercent', async () => {
+      mockPrisma.product.count.mockResolvedValue(0);
+      mockPrisma.product.create.mockResolvedValue({ id: 'new-p', ...validProduct, commissionPercent: 20, images: [], keywords: [] });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'POST', url: '/', payload: { ...validProduct, commissionPercent: 20 }, headers: { authorization: 'Bearer vendor' } });
       expect(res.statusCode).toBe(201);
     });
 
@@ -218,6 +243,16 @@ describe('products routes', () => {
       await app.ready();
       const res = await app.inject({ method: 'PUT', url: '/p1', payload: { title: 'Updated' }, headers: { authorization: 'Bearer vendor' } });
       expect(res.statusCode).toBe(403);
+    });
+
+    it('updates commissionPercent on an owned product', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sellerId: 'vendor-id', status: 'Approved' });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', title: 'Updated', commissionPercent: 20 });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'PUT', url: '/p1', payload: { commissionPercent: 20 }, headers: { authorization: 'Bearer vendor' } });
+      expect(res.statusCode).toBe(200);
     });
   });
 

@@ -15,7 +15,7 @@ import ProductDetail from './pages/ProductDetail';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import Vendors from './pages/Vendors';
-import GalleryManager from './pages/GalleryManager';
+
 import Payouts from './pages/Payouts';
 import TCEStore from './pages/TCEStore';
 import Testimonials from './pages/Testimonials';
@@ -108,12 +108,6 @@ function App() {
             <Route path="/vendors" element={
                 <ProtectedRoute>
                     <Vendors />
-                </ProtectedRoute>
-            } />
-
-            <Route path="/gallery" element={
-                <ProtectedRoute>
-                    <GalleryManager />
                 </ProtectedRoute>
             } />
 

@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import { ZodError } from 'zod';
+import { Prisma } from '@prisma/client';
 import dotenv from 'dotenv';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -22,6 +23,7 @@ import testimonialRoutes from './routes/testimonials.js';
 import blogRoutes from './routes/blog.js';
 import blogAiRoutes from './routes/blog-ai.js';
 import googleMerchantRoutes from './routes/googleMerchant.js';
+import couponRoutes from './routes/coupon.js';
 
 dotenv.config();
 
@@ -50,6 +52,7 @@ fastify.register(cors, {
         process.env.FRONTEND_URL || 'http://localhost:5173',
         'http://localhost:5173',
         'http://localhost:5174',
+        'http://localhost:5176',
         'https://thecollectorsexchange.in',
         'https://tce-admin.pages.dev',
     ].filter(Boolean),
@@ -67,12 +70,21 @@ fastify.setErrorHandler((error, request, reply) => {
         });
     }
 
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        request.log.error({ prismaCode: error.code, prismaMeta: error.meta }, 'Prisma known request error');
+        return reply.status(409).send({ error: 'Database Error', message: 'A database error occurred. Please try again.' });
+    }
+
+    if (error instanceof Prisma.PrismaClientValidationError) {
+        request.log.error({ prismaMessage: error.message }, 'Prisma validation error');
+        return reply.status(400).send({ error: 'Database Validation Error', message: 'Invalid data provided.' });
+    }
+
     // Default handler for other errors
-    request.log.error(error);
-    const isProduction = process.env.NODE_ENV === 'production';
+    request.log.error({ err: error.message, stack: error.stack }, 'Unhandled error');
     reply.status(error.statusCode || 500).send({
         error: error.name || 'Internal Server Error',
-        message: isProduction && reply.statusCode >= 500 ? 'An unexpected error occurred' : error.message,
+        message: error.message || 'An unexpected error occurred',
     });
 });
 
@@ -97,6 +109,7 @@ fastify.register(testimonialRoutes, { prefix: '/api/testimonials' });
 fastify.register(blogRoutes, { prefix: '/api/blog' });
 fastify.register(blogAiRoutes, { prefix: '/api/blog/ai' });
 fastify.register(googleMerchantRoutes, { prefix: '/api' });
+fastify.register(couponRoutes, { prefix: '/api' });
 
 
 fastify.get('/health', async (request, reply) => {

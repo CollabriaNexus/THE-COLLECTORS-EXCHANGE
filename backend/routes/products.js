@@ -21,7 +21,7 @@ export default async function productRoutes(fastify) {
 
     // Get all products (Public catalog)
     fastify.get('/', async (request, reply) => {
-        const { category, search, sellerId, page, limit, listingCategory } = request.query;
+        const { category, search, condition, sellerId, page, limit, listingCategory } = request.query;
 
         const where = {};
 
@@ -58,6 +58,10 @@ export default async function productRoutes(fastify) {
             where.listingCategory = listingCategory;
         }
 
+        if (condition) {
+            where.condition = { equals: condition, mode: 'insensitive' };
+        }
+
         if (search) {
             where.OR = [
                 { title: { contains: search, mode: 'insensitive' } },
@@ -69,10 +73,15 @@ export default async function productRoutes(fastify) {
         const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
 
         try {
+            // Higher commissionPercent = boosted visibility in catalog
+            const orderBy = sellerId
+                ? { createdAt: 'desc' }
+                : [{ commissionPercent: 'desc' }, { createdAt: 'desc' }];
+
             const [products, total] = await Promise.all([
                 prisma.product.findMany({
                     where,
-                    orderBy: { createdAt: 'desc' },
+                    orderBy,
                     include: { seller: { select: { name: true, type: true, role: true } } },
                     skip: (pageNum - 1) * limitNum,
                     take: limitNum,
@@ -82,6 +91,23 @@ export default async function productRoutes(fastify) {
             return { products, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) };
         } catch (dbError) {
             request.log.error({ prismaError: dbError.message, stack: dbError.stack }, 'Product query failed');
+            return reply.status(500).send({ error: dbError.message });
+        }
+    });
+
+    // Get product counts per category
+    fastify.get('/category-counts', async (request, reply) => {
+        try {
+            const counts = await prisma.product.groupBy({
+                by: ['category'],
+                where: { status: { in: ['Approved', 'Sold'] } },
+                _count: { id: true },
+            });
+            const result = {};
+            counts.forEach(c => { result[c.category] = c._count.id; });
+            return result;
+        } catch (dbError) {
+            request.log.error({ prismaError: dbError.message }, 'Category counts query failed');
             return reply.status(500).send({ error: dbError.message });
         }
     });
@@ -158,6 +184,7 @@ export default async function productRoutes(fastify) {
                 ...productData,
                 images: productData.images || [],
                 keywords: productData.keywords || [],
+                commissionPercent: productData.commissionPercent ?? 10,
                 authenticityStatus: 'Pending',
                 status: 'Pending',
                 isPublished: false,
@@ -284,6 +311,7 @@ export default async function productRoutes(fastify) {
                     ...item,
                     sellerId: dbUser.id,
                     price: parseFloat(item.price),
+                    commissionPercent: item.commissionPercent ? parseInt(item.commissionPercent, 10) : 10,
                     keywords: item.keywords ? (typeof item.keywords === 'string' ? item.keywords.split(',').map(k => k.trim()).filter(Boolean) : item.keywords) : [],
                     images: item.images || (item.image ? [item.image] : []),
                 });
@@ -292,6 +320,7 @@ export default async function productRoutes(fastify) {
                         ...parsed,
                         images: parsed.images || [],
                         keywords: parsed.keywords || [],
+                        commissionPercent: parsed.commissionPercent ?? 10,
                         authenticityStatus: 'Pending',
                         status: 'Pending',
                         isPublished: false,

@@ -69,11 +69,14 @@ export default async function vendorRoutes(fastify) {
 
         // Calculate statistics
         const totalSales = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const totalPlatformFees = orderItems.reduce((acc, item) => acc + (item.platformFee || 0), 0);
         const totalItemsSold = orderItems.reduce((acc, item) => acc + item.quantity, 0);
         const uniqueOrders = new Set(orderItems.map(item => item.orderId)).size;
 
         return {
             totalSales,
+            totalPlatformFees,
+            netEarnings: totalSales - totalPlatformFees,
             totalItemsSold,
             uniqueOrders,
         };
@@ -136,11 +139,13 @@ export default async function vendorRoutes(fastify) {
         ]);
 
         const orderRevenue = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const orderPlatformFees = orderItems.reduce((acc, item) => acc + (item.platformFee || 0), 0);
         const orderItemsSold = orderItems.reduce((acc, item) => acc + item.quantity, 0);
         const uniqueOrders = new Set(orderItems.map(item => item.orderId)).size;
 
         const paidItems = orderItems.filter(item => item.order.paymentStatus === 'Paid');
         const paidRevenue = paidItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const paidPlatformFees = paidItems.reduce((acc, item) => acc + (item.platformFee || 0), 0);
 
         const offlineRevenue = offlineSold.reduce((sum, p) => sum + p.price, 0);
         const offlineCount = offlineSold.length;
@@ -159,7 +164,10 @@ export default async function vendorRoutes(fastify) {
             orderCount: uniqueOrders + offlineCount,
             saleCount: orderItemsSold + offlineCount,
             totalRevenue: orderRevenue + offlineRevenue,
+            totalPlatformFees: orderPlatformFees,
+            netEarnings: orderRevenue - orderPlatformFees,
             paidRevenue: paidRevenue + offlineRevenue,
+            paidPlatformFees,
             pendingPayout: pendingPayouts._sum.amount || 0,
             totalListings,
             activeListings,

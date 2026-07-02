@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import ProductCard from '../ProductCard'
 
 vi.mock('../../hooks/api/useCart', () => ({
-  useCart: vi.fn(() => ({ data: { items: [] } })),
+  useCart: vi.fn(() => ({ data: [], isLoading: false })),
   useAddToCart: vi.fn(() => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false })),
   useRemoveFromCart: vi.fn(() => ({ mutate: vi.fn(), isPending: false }))
 }))
@@ -103,5 +103,45 @@ describe('ProductCard', () => {
       </QueryClientProvider>
     )
     expect(getByText('Verified')).toBeInTheDocument()
+  })
+
+  it('does not show Promoted badge at default 10% commission', () => {
+    renderProductCard()
+    expect(screen.queryByText('Promoted')).not.toBeInTheDocument()
+    expect(screen.queryByText('Premium')).not.toBeInTheDocument()
+  })
+
+  it('shows Promoted badge when commissionPercent >= 20', () => {
+    const { getByText } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ProductCard product={{ ...mockProduct, commissionPercent: 20 }} />
+        </MemoryRouter>
+      </QueryClientProvider>
+    )
+    expect(getByText('Promoted')).toBeInTheDocument()
+  })
+
+  it('shows Premium badge when commissionPercent >= 25', () => {
+    const { getByText } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ProductCard product={{ ...mockProduct, commissionPercent: 25 }} />
+        </MemoryRouter>
+      </QueryClientProvider>
+    )
+    expect(getByText('Premium')).toBeInTheDocument()
+  })
+
+  it('shows both Promoted and Premium when commissionPercent is 25', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ProductCard product={{ ...mockProduct, commissionPercent: 25 }} />
+        </MemoryRouter>
+      </QueryClientProvider>
+    )
+    expect(screen.getByText('Promoted')).toBeInTheDocument()
+    expect(screen.getByText('Premium')).toBeInTheDocument()
   })
 })

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import SEO from '../components/SEO';
 import { User, Package, LogOut, Plus, ShieldCheck, Trash2, Tag, Info, Loader2, ShoppingBag, Store, BarChart3, Eye, Edit3, Download, XCircle, Bell, X, Mail, Upload, Image as ImageIcon } from 'lucide-react';
+import CommissionSlider from '../components/account/CommissionSlider';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Papa from 'papaparse';
@@ -44,6 +45,7 @@ const Account = () => {
         price: '',
         imageUrls: [''],
         keywords: '',
+        commissionPercent: 10,
     });
     const descRef = useRef(null);
 
@@ -97,12 +99,14 @@ const Account = () => {
     const updateProfileMutation = useUpdateProfile();
     const updateProductMutation = useUpdateProduct();
     const [editingProductId, setEditingProductId] = useState(null);
-    const [editProductForm, setEditProductForm] = useState({ title: '', description: '', price: '', condition: '', category: '', keywords: '', image: '', images: [] });
+    const [editProductForm, setEditProductForm] = useState({ title: '', description: '', price: '', condition: '', category: '', keywords: '', image: '', images: [], commissionPercent: 10 });
 
     // Pickup address state
     const [editingPickup, setEditingPickup] = useState(false);
     const [pickupSaving, setPickupSaving] = useState(false);
     const [pickupForm, setPickupForm] = useState({ pickupAddress: '', pickupCity: '', pickupState: '', pickupZip: '', pickupContactName: '', pickupPhone: '' });
+
+    const welcomeShown = useRef(false);
 
     const handlePickupSubmit = async (e) => {
         e.preventDefault();
@@ -144,7 +148,10 @@ const Account = () => {
                 setLocalUser(user);
                 setLocalUserState(user);
                 queryClient.invalidateQueries({ queryKey: ['user'] });
-                showToast('Welcome back!', 'success');
+                if (!welcomeShown.current) {
+                    welcomeShown.current = true;
+                    showToast('Welcome back!', 'success');
+                }
             } catch (error) {
                 console.error('Auth sync failed', error);
                 showToast('Could not reach the server. Please refresh the page to retry.', 'error');
@@ -389,6 +396,7 @@ const Account = () => {
                 images: validImages,
                 image: validImages[0],
                 keywords: keywordsArray,
+                commissionPercent: productForm.commissionPercent,
             });
 
             setProductForm({
@@ -399,6 +407,7 @@ const Account = () => {
                 price: '',
                 imageUrls: [''],
                 keywords: '',
+                commissionPercent: 10,
             });
             showToast('Product listed successfully! Your item is now live in The Exchange.', 'success');
         } catch {
@@ -436,8 +445,8 @@ const Account = () => {
     };
 
     const handleDownloadCsvTemplate = () => {
-        const headers = ['title', 'category', 'description', 'condition', 'price', 'image', 'keywords'];
-        const sampleRow = ['Example Item', 'Timepieces', 'A detailed description of the item.', 'Excellent', '999', 'https://example.com/image.jpg', 'vintage, luxury, rare'];
+        const headers = ['title', 'category', 'description', 'condition', 'price', 'image', 'keywords', 'commissionPercent'];
+        const sampleRow = ['Example Item', 'Timepieces', 'A detailed description of the item.', 'Excellent', '999', 'https://example.com/image.jpg', 'vintage, luxury, rare', '15'];
         const csv = Papa.unparse({ fields: headers, data: [sampleRow] });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
@@ -494,6 +503,7 @@ const Account = () => {
             keywords: (product.keywords || []).join(', '),
             image: product.image || '',
             images: product.images || [],
+            commissionPercent: product.commissionPercent ?? 10,
         });
     };
 
@@ -515,6 +525,7 @@ const Account = () => {
                     keywords: editProductForm.keywords.split(',').map(k => k.trim()).filter(Boolean),
                     image: editProductForm.image || undefined,
                     images: editProductForm.images.length > 0 ? editProductForm.images : undefined,
+                    commissionPercent: editProductForm.commissionPercent,
                 },
             });
             showToast('Product updated! It will be re-reviewed.', 'success');
@@ -547,7 +558,7 @@ const Account = () => {
             <div className="container mx-auto py-20 px-6 max-w-xl">
                 <SEO title="My Account" description="Manage your profile, orders, and seller account on The Collectors Exchange." canonical="/account" noindex />
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-serif mb-4">Welcome Back</h1>
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-4">Welcome Back</h1>
                     <p className="text-gray-500 font-light">Sign in to The Collectors' Exchange secure portal.</p>
                 </div>
 
@@ -576,7 +587,7 @@ const Account = () => {
                                 <div className="w-12 h-12 bg-luxury-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Info size={24} className="text-luxury-gold" />
                                 </div>
-                                <h3 className="font-serif text-xl mb-3 text-heritage-charcoal">Company Registration</h3>
+                                <h3 className="font-serif text-base sm:text-xl mb-3 text-heritage-charcoal">Company Registration</h3>
                                 <p className="text-gray-600 mb-6 text-sm leading-relaxed">
                                     To register as a company please connect with us on the following email. We will get back to you within the next 2 working days.
                                 </p>
@@ -598,7 +609,7 @@ const Account = () => {
                 return (
                     <div className="bg-white p-4 sm:p-10 shadow-sm border border-gray-100">
                         <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start mb-6 sm:mb-8">
-                            <h3 className="text-2xl sm:text-3xl font-serif text-heritage-charcoal">Collector Profile</h3>
+                            <h3 className="text-lg sm:text-2xl font-serif text-heritage-charcoal">Collector Profile</h3>
                             <button onClick={() => {
                                 if (editingProfile) {
                                     setEditingProfile(false);
@@ -626,18 +637,18 @@ const Account = () => {
                                 }
                             }} className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
+                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
                                     <input type="text" required value={editProfileForm.name}
                                         onChange={e => setEditProfileForm({ ...editProfileForm, name: e.target.value })}
                                         className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email</label>
+                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email</label>
                                     <div className="p-4 bg-gray-100 border border-gray-200 text-gray-500 cursor-not-allowed">{user.email}</div>
                                     <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
+                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
                                     <input type="tel" value={editProfileForm.phone}
                                         onChange={e => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
                                         className="w-full p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold" />
@@ -653,15 +664,15 @@ const Account = () => {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
+                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
                                     <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 font-serif">{user.name}</div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
+                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
                                     <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800">{user.email}</div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
+                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
                                     {user.phone ? (
                                         <div className={`p-4 border flex justify-between items-center ${user.phoneVerificationStatus === 'verified' ? 'bg-green-50 border-green-100 text-green-800' : user.phoneVerificationStatus === 'pending' ? 'bg-amber-50 border-amber-200 text-amber-800' : user.phoneVerificationStatus === 'rejected' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-gray-50 border-gray-100 text-gray-800'}`}>
                                             <span>{user.phone}</span>
@@ -674,7 +685,7 @@ const Account = () => {
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Membership Type</label>
+                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Membership Type</label>
                                     <div className="p-4 bg-gray-50 border border-gray-100 text-gray-800 capitalize flex items-center gap-2">
                                         {user.type}
                                         {user.kycStatus === 'verified' && <ShieldCheck size={16} className="text-luxury-gold" />}
@@ -688,7 +699,7 @@ const Account = () => {
             case 'seller':
                 return (
                     <div className="bg-white p-4 sm:p-10 shadow-sm border border-gray-100">
-                        <h3 className="text-2xl sm:text-3xl font-serif mb-6 sm:mb-8 text-heritage-charcoal">
+                        <h3 className="text-lg sm:text-2xl font-serif mb-6 sm:mb-8 text-heritage-charcoal">
                             {user.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}
                         </h3>
 
@@ -697,14 +708,14 @@ const Account = () => {
                                 <div className="bg-green-50 text-green-800 p-6 border border-green-100 flex items-start gap-4 mb-8">
                                     <ShieldCheck size={32} className="text-green-600 mt-1" />
                                     <div>
-                                        <h4 className="font-serif text-lg font-medium mb-1">Verified Status: Active</h4>
+                                        <h4 className="font-serif text-base sm:text-lg font-medium mb-1">Verified Status: Active</h4>
                                         <p className="text-sm opacity-80">Your identity has been verified. You have full access to list items on The Exchange.</p>
                                     </div>
                                 </div>
 
                                 {/* Pickup Address */}
                                 <div className="border-t border-gray-100 pt-8">
-                                    <h4 className="font-serif text-xl mb-2 text-heritage-charcoal">Pickup Address</h4>
+                                    <h4 className="font-serif text-base sm:text-xl mb-2 text-heritage-charcoal">Pickup Address</h4>
                                     <p className="text-sm text-gray-500 mb-6">This address will be used by our delivery partner to collect items for shipping to buyers.</p>
 
                                     {vendorProfile && (vendorProfile.pickupAddress || vendorProfile.pickupCity) ? (
@@ -756,7 +767,7 @@ const Account = () => {
                                     {(editingPickup || !vendorProfile?.pickupAddress) && (
                                         <form onSubmit={handlePickupSubmit} className="bg-gray-50 p-6 border border-gray-100 space-y-4">
                                             <div className="md:col-span-2">
-                                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Pickup Address</label>
+                                                <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Pickup Address</label>
                                                 <textarea
                                                     required
                                                     rows={2}
@@ -768,29 +779,29 @@ const Account = () => {
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div>
-                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">City</label>
+                                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">City</label>
                                                     <input required value={pickupForm.pickupCity} onChange={e => setPickupForm({ ...pickupForm, pickupCity: e.target.value })}
                                                         className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">State</label>
+                                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">State</label>
                                                     <input required value={pickupForm.pickupState} onChange={e => setPickupForm({ ...pickupForm, pickupState: e.target.value })}
                                                         className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">ZIP Code</label>
+                                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">ZIP Code</label>
                                                     <input required value={pickupForm.pickupZip} onChange={e => setPickupForm({ ...pickupForm, pickupZip: e.target.value })}
                                                         className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Contact Person Name</label>
+                                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Contact Person Name</label>
                                                     <input value={pickupForm.pickupContactName} onChange={e => setPickupForm({ ...pickupForm, pickupContactName: e.target.value })}
                                                         className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" placeholder="Optional" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Contact Phone</label>
+                                                    <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Contact Phone</label>
                                                     <input value={pickupForm.pickupPhone} onChange={e => setPickupForm({ ...pickupForm, pickupPhone: e.target.value })}
                                                         className="w-full p-3 border border-gray-200 text-sm focus:outline-none focus:border-luxury-gold" placeholder="Optional" />
                                                 </div>
@@ -816,7 +827,7 @@ const Account = () => {
                             <div className="bg-yellow-50 text-yellow-800 p-6 border border-yellow-100 flex items-start gap-4">
                                 <ShieldCheck size={32} className="text-yellow-600 mt-1" />
                                 <div>
-                                    <h4 className="font-serif text-lg font-medium mb-1">Application Submitted</h4>
+                                    <h4 className="font-serif text-base sm:text-lg font-medium mb-1">Application Submitted</h4>
                                     <p className="text-sm opacity-80">
                                         Your application has been submitted successfully. Verification will be completed within 48 hours.
                                         <br />
@@ -834,7 +845,7 @@ const Account = () => {
 
                                     {/* ── Section 1: Identity Documents ── */}
                                     <div className="bg-gray-50 p-6 border border-gray-100">
-                                        <h4 className="font-serif text-lg font-medium mb-6 text-heritage-charcoal">1. Upload Identity Documents</h4>
+                                        <h4 className="font-serif text-base sm:text-lg font-medium mb-4 text-heritage-charcoal">1. Upload Identity Documents</h4>
 
                                         {user.type === 'individual' ? (
                                             <>
@@ -882,9 +893,9 @@ const Account = () => {
                                                     onFileUpload={(f) => handleKycDocUpload('pan', f)}
                                                 />
                                                 <div className="space-y-4 pt-4 border-t border-gray-200">
-                                                    <h5 className="text-xs font-bold uppercase tracking-widest text-gray-500">Company Details</h5>
+                                                    <h5 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500">Company Details</h5>
                                                     <div>
-                                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Registered Company Name</label>
+                                                        <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Registered Company Name</label>
                                                         <input
                                                             type="text"
                                                             required
@@ -904,7 +915,7 @@ const Account = () => {
                                                         onFileUpload={(f) => handleKycDocUpload('gst', f)}
                                                     />
                                                     <div>
-                                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Founder / Director Name</label>
+                                                        <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Founder / Director Name</label>
                                                         <input
                                                             type="text"
                                                             required
@@ -927,7 +938,7 @@ const Account = () => {
 
                                     {/* ── Section 2: Seller Agreement ── */}
                                     <div className="bg-gray-50 p-6 border border-gray-100">
-                                        <h4 className="font-serif text-lg font-medium mb-4 text-heritage-charcoal">2. Seller Agreement</h4>
+                                        <h4 className="font-serif text-base sm:text-lg font-medium mb-4 text-heritage-charcoal">2. Seller Agreement</h4>
 
                                         <div className="bg-white p-6 border border-gray-200 max-h-80 overflow-y-auto text-sm text-gray-700 leading-relaxed space-y-3">
                                             <p className="font-semibold text-heritage-charcoal">Seller Agreement — The Collectors Exchange</p>
@@ -982,7 +993,7 @@ const Account = () => {
                         {user.kycStatus === 'verified' && (
                             <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
                                 <div className="mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-100">
-                                    <h3 className="text-2xl sm:text-3xl font-serif mb-2 text-heritage-charcoal">Broker a New Item</h3>
+                                    <h3 className="text-lg sm:text-2xl font-serif mb-2 text-heritage-charcoal">Broker a New Item</h3>
                                     <p className="text-gray-500 font-light text-sm">
                                         All listings are subject to administrator approval. Please provide accurate, detailed information to ensure swift verification.
                                     </p>
@@ -992,7 +1003,7 @@ const Account = () => {
                                     {/* Essential Details */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                                         <div className="col-span-1 md:col-span-2">
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                            <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                                 Item Title <span className="text-luxury-gold">*</span>
                                             </label>
                                             <input
@@ -1007,7 +1018,7 @@ const Account = () => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                            <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                                 Primary Category <span className="text-luxury-gold">*</span>
                                             </label>
                                             <select
@@ -1022,7 +1033,7 @@ const Account = () => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                            <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                                 Listing Price (₹) <span className="text-luxury-gold">*</span>
                                             </label>
                                             <input
@@ -1038,7 +1049,7 @@ const Account = () => {
 
                                     {/* Story & Provenance */}
                                     <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                        <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                             Provenance & Description <span className="text-luxury-gold">*</span>
                                         </label>
                                         <div className="border border-gray-200">
@@ -1101,7 +1112,7 @@ const Account = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div>
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                            <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                                 Condition Grade <span className="text-luxury-gold">*</span>
                                             </label>
                                             <select
@@ -1115,7 +1126,7 @@ const Account = () => {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                            <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                                 Keywords / Tags <span className="text-luxury-gold">*</span>
                                             </label>
                                             <div className="relative">
@@ -1209,6 +1220,14 @@ const Account = () => {
                                         </div>
                                     </div>
 
+                                    {/* Commission / Partner Contribution */}
+                                    <CommissionSlider
+                                        value={productForm.commissionPercent}
+                                        price={productForm.price}
+                                        onChange={(val) => setProductForm({ ...productForm, commissionPercent: val })}
+                                        disabled={addProductMutation.isPending}
+                                    />
+
                                     <div className="pt-4 border-t border-gray-100 flex justify-end">
                                         <button
                                             type="submit"
@@ -1227,7 +1246,7 @@ const Account = () => {
                         <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
                                 <div>
-                                    <h3 className="text-2xl sm:text-3xl font-serif text-heritage-charcoal">My Collection</h3>
+                                    <h3 className="text-lg sm:text-2xl font-serif text-heritage-charcoal">My Collection</h3>
                                     {vendorProfile ? (
                                         <p className="text-sm text-gray-500 mt-1">
                                             {vendorProfile.type === 'BULK' ? (
@@ -1318,9 +1337,21 @@ const Account = () => {
                                         <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">In Review</p>
                                     </div>
                                     <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
-                                        <p className="text-lg sm:text-2xl font-serif font-bold text-luxury-gold">{vendorStats ? `₹${(vendorStats.totalSales || 0).toLocaleString()}` : '₹0'}</p>
+                                        <p className="text-lg sm:text-2xl font-serif font-bold text-luxury-gold">{vendorStats ? `₹${(vendorStats.totalSales || 0).toLocaleString('en-IN')}` : '₹0'}</p>
                                         <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">Total Sales</p>
                                     </div>
+                                    {vendorStats?.netEarnings !== undefined && (
+                                        <div className="bg-green-50 p-3 sm:p-4 border border-green-100">
+                                            <p className="text-lg sm:text-2xl font-serif font-bold text-green-700">₹{vendorStats.netEarnings.toLocaleString('en-IN')}</p>
+                                            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">Net Earnings</p>
+                                        </div>
+                                    )}
+                                    {vendorStats?.totalPlatformFees !== undefined && vendorStats.totalPlatformFees > 0 && (
+                                        <div className="bg-amber-50 p-3 sm:p-4 border border-amber-100">
+                                            <p className="text-lg sm:text-2xl font-serif font-bold text-amber-700">₹{vendorStats.totalPlatformFees.toLocaleString('en-IN')}</p>
+                                            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">Platform Contribution</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -1335,7 +1366,7 @@ const Account = () => {
                                             <div key={product.id} className="border border-luxury-gold bg-white col-span-1 sm:col-span-2 lg:col-span-3">
                                                 <div className="p-6">
                                                     <div className="flex items-center justify-between mb-4">
-                                                        <h4 className="font-serif text-lg font-medium">Edit: {product.title}</h4>
+                                                        <h4 className="font-serif text-base sm:text-lg font-medium">Edit: {product.title}</h4>
                                                         <button type="button" onClick={handleCancelEdit} className="text-gray-400 hover:text-black"><X size={18} /></button>
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1380,6 +1411,14 @@ const Account = () => {
                                                             <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Keywords (comma separated)</label>
                                                             <input value={editProductForm.keywords} onChange={e => setEditProductForm({...editProductForm, keywords: e.target.value})} className="w-full p-3 border border-gray-200 text-sm" />
                                                         </div>
+                                                    </div>
+                                                    <div className="mt-4">
+                                                        <CommissionSlider
+                                                            value={editProductForm.commissionPercent}
+                                                            price={editProductForm.price}
+                                                            onChange={(val) => setEditProductForm({ ...editProductForm, commissionPercent: val })}
+                                                            disabled={updateProductMutation.isPending}
+                                                        />
                                                     </div>
                                                     <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
                                                         <button type="button" onClick={handleCancelEdit} className="px-6 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50">Cancel</button>
@@ -1642,7 +1681,7 @@ const Account = () => {
                         </div>
                         <form onSubmit={handleSetPassword} className="space-y-6">
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Password</label>
+                                <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Password</label>
                                 <input
                                     type="password"
                                     required
@@ -1654,7 +1693,7 @@ const Account = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Confirm Password</label>
+                                <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Confirm Password</label>
                                 <input
                                     type="password"
                                     required

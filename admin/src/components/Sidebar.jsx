@@ -42,11 +42,6 @@ function Sidebar() {
             icon: ShoppingCart,
         },
         {
-            name: 'Gallery',
-            path: '/gallery',
-            icon: ImageIcon,
-        },
-        {
             name: 'Payouts',
             path: '/payouts',
             icon: DollarSign,

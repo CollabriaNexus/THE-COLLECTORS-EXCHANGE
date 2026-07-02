@@ -162,6 +162,8 @@ model User {
   auditLogs        AuditLog[]
   ratings          Rating[]
   galleryItems     GalleryItem[]
+  createdCoupons   Coupon[]
+  couponUsages     CouponUsage[]
 
   @@index([kycStatus])
   @@index([role])
@@ -181,6 +183,7 @@ model Product {
   keywords           String[]
   isVerified         Boolean          @default(false)
   authenticityStatus AuthenticityStatus @default(Pending)
+  commissionPercent  Float            @default(10)
 
   status             ProductStatus    @default(Pending)
   isPublished        Boolean          @default(false)
@@ -200,6 +203,7 @@ model Product {
   productViews   ProductView[]
   cartEvents     CartEvent[]
   checkoutEvents CheckoutEvent[]
+  coupons        Coupon[]
 
   @@index([sellerId])
   @@index([category])
@@ -276,6 +280,45 @@ model Blog {
   @@index([featured])
 }
 
+model Coupon {
+  id              String        @id @default(cuid())
+  code            String        @unique
+  description     String?
+  discountPercent Float         @default(10)
+  productId       String?
+  product         Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minPurchase     Float         @default(0)
+  maxUses         Int           @default(0)
+  maxUsesPerUser  Int           @default(0)
+  isActive        Boolean       @default(true)
+  expiresAt       DateTime?
+  createdById     String
+  createdBy       User          @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  usages          CouponUsage[]
+  orders          Order[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model CouponUsage {
+  id        String   @id @default(cuid())
+  couponId  String
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usedAt    DateTime @default(now())
+
+  @@unique([couponId, orderId])
+  @@index([couponId])
+  @@index([userId])
+}
+
 model Order {
   id              String        @id @default(cuid())
   displayId       String        @unique
@@ -290,6 +333,12 @@ model Order {
   phone           String
   trackingID      String?
 
+  couponId        String?
+  coupon          Coupon?       @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  discountPercent Float         @default(0)
+  discountAmount  Float         @default(0)
+  subtotalBeforeDiscount Float  @default(0)
+
   paymentStatus   PaymentStatus @default(Pending)
   paymentMethod   PaymentMethod @default(online)
   paymentId       String?       @unique
@@ -297,6 +346,7 @@ model Order {
   paymentSignature String?
 
   items           OrderItem[]
+  couponUsages    CouponUsage[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -308,16 +358,18 @@ model Order {
 }
 
 model OrderItem {
-  id         String         @id @default(cuid())
-  orderId    String
-  order      Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId  String
-  product    Product        @relation(fields: [productId], references: [id])
-  quantity   Int            @default(1)
-  price      Float
-  status     OrderItemStatus @default(Pending)
-  trackingID String?
-  createdAt  DateTime       @default(now())
+  id                String         @id @default(cuid())
+  orderId           String
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product        @relation(fields: [productId], references: [id])
+  quantity          Int            @default(1)
+  price             Float
+  commissionPercent Float          @default(10)
+  platformFee       Float          @default(0)
+  status            OrderItemStatus @default(Pending)
+  trackingID        String?
+  createdAt         DateTime       @default(now())
 
   @@index([orderId])
   @@index([productId])

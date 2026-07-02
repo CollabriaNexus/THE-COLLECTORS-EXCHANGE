@@ -71,8 +71,8 @@ const FAQ = () => {
             <FAQSchema items={faqItems} />
             <div className="container mx-auto py-20 px-6 max-w-3xl">
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-serif mb-4">Frequently Asked Questions</h1>
-                    <p className="text-gray-500 font-light mb-8">Find answers to common questions about buying, selling, and using The Collectors Exchange.</p>
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-4">Frequently Asked Questions</h1>
+                    <p className="text-gray-500 text-sm sm:text-base font-light mb-8">Find answers to common questions about buying, selling, and using The Collectors Exchange.</p>
                     <div className="relative max-w-md mx-auto">
                         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input type="text" placeholder="Search FAQs..." value={search}
@@ -84,7 +84,7 @@ const FAQ = () => {
                 <div className="space-y-8">
                     {filtered.map((category, catIdx) => (
                         <div key={category.category}>
-                            <h2 className="text-2xl font-serif mb-4 text-heritage-charcoal border-b border-gray-200 pb-3">{category.category}</h2>
+                            <h2 className="text-xl sm:text-2xl font-serif mb-4 text-heritage-charcoal border-b border-gray-200 pb-3">{category.category}</h2>
                             <div className="space-y-2">
                                 {category.questions.map((item, qIdx) => {
                                     const key = `${catIdx}-${qIdx}`;
@@ -110,7 +110,7 @@ const FAQ = () => {
                 </div>
 
                 <div className="mt-16 text-center bg-white p-10 border border-gray-100 shadow-sm">
-                    <h2 className="text-2xl font-serif mb-4">Still have questions?</h2>
+                    <h2 className="text-xl sm:text-2xl font-serif mb-4">Still have questions?</h2>
                     <p className="text-gray-500 mb-6">We're here to help you.</p>
                     <a href="/contact"
                         className="inline-block bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors">

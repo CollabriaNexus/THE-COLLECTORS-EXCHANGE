@@ -14,6 +14,7 @@ export const ProductSchema = z.object({
     keywords: z.array(z.string()).optional(),
     isVerified: z.boolean().optional(),
     authenticityStatus: z.string().optional(),
+    commissionPercent: z.number().min(10).max(25).optional().default(10),
     sellerId: z.string(),
 });
 
@@ -32,5 +33,6 @@ export const AdminProductUpdateSchema = z.object({
     image: z.string().optional(),
     images: z.array(z.string()).optional(),
     keywords: z.array(z.string()).optional(),
+    commissionPercent: z.number().min(10).max(25).optional(),
 });
 

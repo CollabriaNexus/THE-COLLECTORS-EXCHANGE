@@ -90,7 +90,7 @@ const Vision = () => {
                                 <div className="w-5 h-5 rounded-full border border-[#C9A962] flex items-center justify-center">
                                     <div className="w-1.5 h-1.5 bg-[#C9A962] rounded-full"></div>
                                 </div>
-                                <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif text-[#1A1816]">For Collectors</h2>
+                                <h2 className="text-lg sm:text-2xl font-serif text-[#1A1816]">For Collectors</h2>
                             </div>
 
                             <div className="space-y-4 text-[#4A443E] leading-relaxed text-sm lg:text-base font-light">
@@ -109,7 +109,7 @@ const Vision = () => {
                                             "Pursue their passion without fear of fraud, misrepresentation, or compromise",
                                             "Trust that authenticity, provenance, and integrity are never optional"
                                         ].map((item, i) => (
-                                            <li key={i} className="flex items-start gap-2.5 group text-xs md:text-sm">
+                                            <li key={i} className="flex items-start gap-2.5 group text-xs sm:text-sm">
                                                 <Bullet className="text-[#C9A962] mt-0.5" />
                                                 <span className="text-[#6B635B] group-hover:text-[#1A1816] transition-colors">{item}</span>
                                             </li>
@@ -161,7 +161,7 @@ const Vision = () => {
 
                         <div className="lg:col-span-5 order-1 lg:order-2 space-y-5">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif text-[#1A1816]">For Brands & Creators</h2>
+                                <h2 className="text-lg sm:text-2xl font-serif text-[#1A1816]">For Brands & Creators</h2>
                                 <div className="w-5 h-5 rounded-full border border-[#C9A962] flex items-center justify-center">
                                     <div className="w-1 h-1 bg-[#C9A962] rounded-full"></div>
                                 </div>
@@ -183,7 +183,7 @@ const Vision = () => {
                                             "A transparent and respectful ecosystem that protects intellectual property",
                                             "A secondary market that strengthens brand legacy rather than eroding it"
                                         ].map((item, i) => (
-                                            <li key={i} className="flex items-start gap-2 group text-xs md:text-sm text-right justify-end">
+                                            <li key={i} className="flex items-start gap-2 group text-xs sm:text-sm text-right justify-end">
                                                 <span className="text-[#6B635B] group-hover:text-[#1A1816] transition-colors">{item}</span>
                                                 <Bullet className="text-[#C9A962] mt-0.5" />
                                             </li>
@@ -247,21 +247,21 @@ const Vision = () => {
                     <div className="grid md:grid-cols-3 gap-12">
                         <div className="bg-white p-12 border border-heritage-bronze/10 group hover:border-luxury-gold transition-all duration-500 shadow-sm">
                             <History className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform duration-500" strokeWidth={1} />
-                            <h3 className="text-xl font-serif mb-6 text-heritage-charcoal uppercase tracking-widest">Global Access</h3>
+                            <h3 className="text-lg sm:text-2xl font-serif mb-6 text-heritage-charcoal uppercase tracking-widest">Global Access</h3>
                             <p className="text-sm text-heritage-charcoal/70 leading-relaxed font-medium">
                                 Bringing the hidden treasures of India's street markets to the world's most discerning collectors.
                             </p>
                         </div>
                         <div className="bg-white p-12 border border-heritage-bronze/10 group hover:border-luxury-gold transition-all duration-500 shadow-sm">
                             <ShieldCheck className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform duration-500" strokeWidth={1} />
-                            <h3 className="text-xl font-serif mb-6 text-heritage-charcoal uppercase tracking-widest">Digital Integrity</h3>
+                            <h3 className="text-lg sm:text-2xl font-serif mb-6 text-heritage-charcoal uppercase tracking-widest">Digital Integrity</h3>
                             <p className="text-sm text-heritage-charcoal/70 leading-relaxed font-medium">
                                 Using technology to verify provenance and ensure every transaction is rooted in absolute transparency.
                             </p>
                         </div>
                         <div className="bg-white p-12 border border-heritage-bronze/10 group hover:border-luxury-gold transition-all duration-500 shadow-sm">
                             <Landmark className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform duration-500" strokeWidth={1} />
-                            <h3 className="text-xl font-serif mb-6 text-heritage-charcoal uppercase tracking-widest">Heritage Trust</h3>
+                            <h3 className="text-lg sm:text-2xl font-serif mb-6 text-heritage-charcoal uppercase tracking-widest">Heritage Trust</h3>
                             <p className="text-sm text-heritage-charcoal/70 leading-relaxed font-medium">
                                 Establishing an institutional registry that protects the legacy of every artifact we touch.
                             </p>
@@ -284,7 +284,7 @@ const Vision = () => {
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex items-center gap-4 mb-10">
                         <InstitutionalIcon />
-                        <h2 className="text-3xl md:text-4xl font-serif text-heritage-charcoal tracking-tight">For Collectors</h2>
+                        <h2 className="text-xl sm:text-3xl font-serif text-heritage-charcoal tracking-tight">For Collectors</h2>
                     </div>
 
                     <div className="space-y-6 mb-12">
@@ -331,7 +331,7 @@ const Vision = () => {
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex items-center gap-4 mb-10">
                         <InstitutionalIcon />
-                        <h2 className="text-3xl md:text-4xl font-serif text-heritage-charcoal tracking-tight">For Originators</h2>
+                        <h2 className="text-xl sm:text-3xl font-serif text-heritage-charcoal tracking-tight">For Originators</h2>
                     </div>
 
                     <div className="space-y-6 mb-12">

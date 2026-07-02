@@ -25,12 +25,14 @@ const Layout = () => {
                 Skip to main content
             </a>
             <Header />
-            <main id="main-content" className="flex-grow">
+            <main id="main-content" className="flex-grow pb-16 lg:pb-0">
                 <div key={location.pathname} className="animate-page-enter">
                     <Outlet />
                 </div>
             </main>
-            <Footer />
+            <div className="hidden lg:block">
+                <Footer />
+            </div>
             <button
                 onClick={scrollToTop}
                 aria-label="Scroll to top"

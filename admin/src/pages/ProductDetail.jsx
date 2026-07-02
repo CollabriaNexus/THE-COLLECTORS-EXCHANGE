@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, XCircle, Package, Eye, EyeOff, Clock, MessageSquare, Trash2, Plus, Edit3, BadgeIndianRupee } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Eye, EyeOff, Clock, MessageSquare, Trash2, Plus, Edit3, BadgeIndianRupee, Tag, Percent, Copy } from 'lucide-react';
 import { useProductDetail, useApproveProduct, useRejectProduct, useReviewProduct, useUpdateAuthenticityStatus, useDeleteProduct, useUpdateProduct, useBrands, useMarkProductAsSold } from '../hooks/api/useProducts';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
 import { useConfirm } from '../components/ConfirmDialog';
+import { useProductCoupon, useGenerateCoupon, useDeleteCoupon } from '../hooks/api/useCoupons';
 
 function ProductDetail() {
     const { id } = useParams();
@@ -34,6 +35,10 @@ function ProductDetail() {
     const updateProductMutation = useUpdateProduct();
     const markAsSoldMutation = useMarkProductAsSold();
     const confirm = useConfirm();
+
+    const { data: coupon, isLoading: couponLoading } = useProductCoupon(id);
+    const generateCouponMutation = useGenerateCoupon();
+    const deleteCouponMutation = useDeleteCoupon();
 
     const handleMarkAsSold = async () => {
         const confirmed = await confirm(`Mark "${product.title}" as sold? This will unpublish the listing.`);
@@ -476,6 +481,91 @@ function ProductDetail() {
                                 </p>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Coupon Management */}
+                    <div className="bg-white rounded-lg shadow-heritage p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <Tag className="w-5 h-5 text-luxury-gold" />
+                            <h3 className="text-lg font-serif font-bold text-heritage-charcoal">
+                                Product Coupon
+                            </h3>
+                        </div>
+
+                        {couponLoading ? (
+                            <div className="text-sm text-gray-400">Loading...</div>
+                        ) : coupon ? (
+                            <div className="space-y-3">
+                                <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Code</span>
+                                        <button
+                                            onClick={() => { navigator.clipboard.writeText(coupon.code); setSuccess('Coupon code copied!'); setTimeout(() => setSuccess(''), 2000); }}
+                                            className="text-luxury-gold hover:text-luxury-gold/80"
+                                            title="Copy code"
+                                        >
+                                            <Copy size={14} />
+                                        </button>
+                                    </div>
+                                    <p className="text-lg font-bold text-heritage-charcoal tracking-wider">{coupon.code}</p>
+                                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
+                                        <span className="flex items-center gap-1"><Percent size={12} />{coupon.discountPercent}% off</span>
+                                        {!coupon.isActive && <span className="text-red-500 font-medium">Used / Inactive</span>}
+                                        {coupon._count?.usages > 0 && <span className="text-orange-500">(used {coupon._count.usages} time)</span>}
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await generateCouponMutation.mutateAsync({ productId: id, discountPercent: 10 });
+                                                setSuccess('New coupon generated! Old one expired.');
+                                                setTimeout(() => setSuccess(''), 3000);
+                                            } catch (err) {
+                                                setError(err.message || 'Failed to generate coupon');
+                                            }
+                                        }}
+                                        disabled={generateCouponMutation.isPending}
+                                        className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-50 text-indigo-700 py-2 rounded-md text-sm font-medium hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                                    >
+                                        <Edit3 size={14} /> {generateCouponMutation.isPending ? 'Generating...' : 'Regenerate'}
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            const confirmed = await confirm(`Delete coupon "${coupon.code}"? This cannot be undone.`);
+                                            if (!confirmed) return;
+                                            try {
+                                                await deleteCouponMutation.mutateAsync({ id: coupon.id, productId: coupon.productId });
+                                                setSuccess('Coupon deleted');
+                                                setTimeout(() => setSuccess(''), 3000);
+                                            } catch (err) {
+                                                setError(err.message || 'Failed to delete coupon');
+                                            }
+                                        }}
+                                        disabled={deleteCouponMutation.isPending}
+                                        className="flex-1 flex items-center justify-center gap-1.5 bg-red-50 text-red-700 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
+                                    >
+                                        <Trash2 size={14} /> {deleteCouponMutation.isPending ? 'Deleting...' : 'Delete'}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        await generateCouponMutation.mutateAsync({ productId: id, discountPercent: 10 });
+                                        setSuccess('Coupon generated!');
+                                        setTimeout(() => setSuccess(''), 3000);
+                                    } catch (err) {
+                                        setError(err.message || 'Failed to generate coupon');
+                                    }
+                                }}
+                                disabled={generateCouponMutation.isPending}
+                                className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-700 py-3 rounded-md font-medium hover:bg-amber-100 transition-colors disabled:opacity-50"
+                            >
+                                <Plus size={18} /> {generateCouponMutation.isPending ? 'Generating...' : 'Generate Coupon Code'}
+                            </button>
+                        )}
                     </div>
 
                     {/* Seller Info */}

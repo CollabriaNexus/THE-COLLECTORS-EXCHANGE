@@ -70,6 +70,14 @@ describe('useProducts', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith('/products?listingCategory=premium&page=1&limit=12')
     })
 
+    it('includes condition parameter when provided', async () => {
+      mockApiClient.get.mockResolvedValue({ data: [] })
+      const { useProducts } = await import('../useProducts')
+      renderHook(() => useProducts(null, null, 1, 12, null, 'Excellent'), { wrapper: createWrapper() })
+      await waitFor(() => expect(mockApiClient.get).toHaveBeenCalled())
+      expect(mockApiClient.get).toHaveBeenCalledWith('/products?condition=Excellent&page=1&limit=12')
+    })
+
     it('uses custom page and pageSize', async () => {
       mockApiClient.get.mockResolvedValue({ data: [] })
       const { useProducts } = await import('../useProducts')

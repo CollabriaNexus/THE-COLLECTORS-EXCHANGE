@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { ShieldCheck, Loader2, ChevronRight, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Loader2, CheckCircle, Tag, Percent, X } from 'lucide-react';
 import { useCart } from '../hooks/api/useCart';
-import { useCreateOrder, useVerifyPayment } from '../hooks/api/useCheckout';
+import { useCreateOrder, useVerifyPayment, useValidateCoupon } from '../hooks/api/useCheckout';
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
@@ -15,6 +15,7 @@ const Checkout = () => {
     const showToast = useToast();
     const createOrderMutation = useCreateOrder();
     const verifyPaymentMutation = useVerifyPayment();
+    const validateCouponMutation = useValidateCoupon();
 
     const [orderSuccess, setOrderSuccess] = useState(null);
     const [form, setForm] = useState({
@@ -27,6 +28,9 @@ const Checkout = () => {
         phone: currentUser?.phone || '',
     });
     const [paymentMethod, setPaymentMethod] = useState('online');
+    const [couponInput, setCouponInput] = useState('');
+    const [couponCode, setCouponCode] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [errors, setErrors] = useState({});
 
     // Load Razorpay script
@@ -43,7 +47,8 @@ const Checkout = () => {
     }, []);
 
     const subtotal = cartItems.reduce((sum, item) => sum + (item.product?.price || 0), 0);
-    const total = subtotal;
+    const discountAmount = appliedCoupon?.discountAmount || 0;
+    const total = Math.max(0, subtotal - discountAmount);
 
     const validate = () => {
         const newErrors = {};
@@ -71,8 +76,16 @@ const Checkout = () => {
                     quantity: 1,
                 })),
             };
+            if (couponCode.trim()) {
+                orderPayload.couponCode = couponCode.trim();
+            }
 
             const orderData = await createOrderMutation.mutateAsync(orderPayload);
+
+            // Set applied coupon state if coupon was applied
+            if (orderData.couponApplied) {
+                setAppliedCoupon({ discountPercent: orderData.discountPercent, discountAmount: orderData.discountAmount });
+            }
 
             // Track checkout events for each product
             cartItems.forEach(item => {
@@ -157,7 +170,7 @@ const Checkout = () => {
         return (
             <div className="container mx-auto py-20 px-6 text-center">
                 <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
-                <h1 className="text-2xl font-serif mb-4">Please Sign In</h1>
+                <h1 className="text-2xl sm:text-4xl font-serif mb-4">Please Sign In</h1>
                 <p className="text-gray-500 mb-6">You need to be logged in to checkout.</p>
                 <Link to="/account" className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
                     Sign In
@@ -180,7 +193,7 @@ const Checkout = () => {
         return (
             <div className="container mx-auto py-20 px-6 text-center">
                 <SEO title="Checkout" description="Securely complete your purchase of authentic collectibles on The Collectors Exchange." canonical="/checkout" noindex />
-                <h1 className="text-2xl font-serif mb-4">Your cart is empty</h1>
+                <h1 className="text-2xl sm:text-4xl font-serif mb-4">Your cart is empty</h1>
                 <Link to="/category" className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors">
                     Explore The Exchange
                 </Link>
@@ -215,30 +228,31 @@ const Checkout = () => {
                 </div>
                 <div className="bg-white border border-gray-100 shadow-heritage p-12">
                     <CheckCircle size={64} className="mx-auto text-green-500 mb-6" />
-                    <h1 className="text-3xl font-serif mb-3 text-heritage-charcoal">Order Confirmed</h1>
+                    <h1 className="text-2xl sm:text-4xl font-serif mb-3 text-heritage-charcoal">Order Confirmed</h1>
                     <p className="text-gray-500 mb-6">
                         {orderSuccess.paymentMethod === 'cod'
                             ? 'Your order has been placed. Keep cash ready for delivery.'
                             : 'Your acquisition is being processed. You will receive a confirmation shortly.'}
                     </p>
-                    <div className="bg-gray-50 border border-gray-100 p-4 mb-8 text-left space-y-2 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-gray-500 uppercase tracking-widest text-xs">Order ID</span>
-                            <span className="font-mono text-xs text-gray-700">{orderSuccess.displayId || orderSuccess.id}</span>
+                        <div className="bg-gray-50 border border-gray-100 p-4 mb-8 text-left space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-gray-500 uppercase tracking-widest text-xs">Order ID</span>
+                                <span className="font-mono text-xs text-gray-700">{orderSuccess.displayId || orderSuccess.id}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500 uppercase tracking-widest text-xs">Payment</span>
+                                <span className="font-medium">{orderSuccess.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500 uppercase tracking-widest text-xs">Status</span>
+                                <span className="font-medium text-green-600">{orderSuccess.status}</span>
+                            </div>
+
+                            <div className="flex justify-between pt-2 border-t border-gray-200">
+                                <span className="text-gray-700 uppercase tracking-widest text-xs font-bold">Total Paid</span>
+                                <span className="font-semibold">₹{orderSuccess.totalAmount?.toLocaleString('en-IN')}</span>
+                            </div>
                         </div>
-                        <div className="flex justify-between">
-                            <span className="text-gray-500 uppercase tracking-widest text-xs">Payment</span>
-                            <span className="font-medium">{orderSuccess.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-gray-500 uppercase tracking-widest text-xs">Status</span>
-                            <span className="font-medium text-green-600">{orderSuccess.status}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-gray-500 uppercase tracking-widest text-xs">Total</span>
-                            <span className="font-semibold">₹{orderSuccess.totalAmount?.toLocaleString()}</span>
-                        </div>
-                    </div>
                     <Link
                         to="/"
                         className="inline-block bg-black text-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
@@ -290,18 +304,18 @@ const Checkout = () => {
                 ))}
             </div>
 
-            <h1 className="text-4xl font-serif mb-10 text-heritage-charcoal">Secure Checkout</h1>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-10 text-heritage-charcoal">Secure Checkout</h1>
 
             <form onSubmit={handlePlaceOrder}>
                 <div className="flex flex-col lg:flex-row gap-12">
                     {/* Shipping Form */}
                     <div className="w-full lg:w-3/5 space-y-6">
                         <div className="bg-white border border-gray-100 shadow-sm p-8">
-                            <h2 className="text-xl font-serif font-bold text-heritage-charcoal mb-6">Shipping Details</h2>
+                            <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">Shipping Details</h2>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label htmlFor="recipientName" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Recipient Name</label>
+                                    <label htmlFor="recipientName" className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Recipient Name</label>
                                     <input
                                         id="recipientName"
                                         type="text"
@@ -314,7 +328,7 @@ const Checkout = () => {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="shippingAddress" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                    <label htmlFor="shippingAddress" className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                                         Street Address
                                     </label>
                                     <input
@@ -330,7 +344,7 @@ const Checkout = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="city" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">City</label>
+                                        <label htmlFor="city" className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">City</label>
                                         <input
                                             id="city"
                                             type="text"
@@ -342,7 +356,7 @@ const Checkout = () => {
                                         {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
                                     </div>
                                     <div>
-                                        <label htmlFor="state" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">State</label>
+                                        <label htmlFor="state" className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">State</label>
                                         <input
                                             id="state"
                                             type="text"
@@ -357,7 +371,7 @@ const Checkout = () => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div>
-                                        <label htmlFor="zipCode" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">PIN Code</label>
+                                        <label htmlFor="zipCode" className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">PIN Code</label>
                                         <input
                                             id="zipCode"
                                             type="text"
@@ -369,7 +383,7 @@ const Checkout = () => {
                                         {errors.zipCode && <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>}
                                     </div>
                                     <div>
-                                        <label htmlFor="country" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Country</label>
+                                        <label htmlFor="country" className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Country</label>
                                         <input
                                             id="country"
                                             type="text"
@@ -381,7 +395,7 @@ const Checkout = () => {
                                         {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
                                     </div>
                                     <div>
-                                        <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
+                                        <label htmlFor="phone" className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Phone</label>
                                         <input
                                             id="phone"
                                             type="tel"
@@ -398,7 +412,7 @@ const Checkout = () => {
 
                         {/* Payment Method */}
                         <div className="bg-white border border-gray-100 shadow-sm p-8">
-                            <h2 className="text-xl font-serif font-bold text-heritage-charcoal mb-6">Payment Method</h2>
+                            <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">Payment Method</h2>
                             <div className="space-y-3">
                                 <label className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'online' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}>
                                     <input
@@ -450,7 +464,7 @@ const Checkout = () => {
                     {/* Order Summary */}
                     <div className="w-full lg:w-2/5">
                         <div className="bg-white border border-gray-100 shadow-sm p-8 lg:sticky lg:top-24">
-                            <h2 className="text-xl font-serif font-bold text-heritage-charcoal mb-6">Order Summary</h2>
+                            <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">Order Summary</h2>
 
                             {/* Items */}
                             <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
@@ -470,22 +484,89 @@ const Checkout = () => {
                                 ))}
                             </div>
 
+                            {/* Coupon Code */}
+                            <div className="border-t border-gray-100 pt-4 mb-4">
+                                {appliedCoupon ? (
+                                    <div className="flex items-center justify-between bg-green-50 border border-green-200 p-3">
+                                        <div className="flex items-center gap-2">
+                                            <Percent size={14} className="text-green-600" />
+                                            <div>
+                                                <p className="text-xs font-semibold text-green-700">{couponCode}</p>
+                                                <p className="text-[10px] text-green-600">{appliedCoupon.discountPercent}% off applied</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setAppliedCoupon(null); setCouponCode(''); setCouponInput(''); }}
+                                            className="text-green-600 hover:text-green-800 transition-colors"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={couponInput}
+                                            onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                                            onKeyDown={e => { if (e.key === 'Enter' && couponInput.trim()) document.getElementById('apply-coupon-btn').click(); }}
+                                            placeholder="Enter coupon code"
+                                            className="flex-grow p-3 bg-gray-50 border border-gray-200 text-xs uppercase tracking-widest focus:outline-none focus:border-luxury-gold transition-colors"
+                                        />
+                                        <button
+                                            id="apply-coupon-btn"
+                                            type="button"
+                                            disabled={!couponInput.trim() || validateCouponMutation.isPending}
+                                            onClick={async () => {
+                                                try {
+                                                    const items = cartItems.map(item => ({
+                                                        productId: item.productId,
+                                                        price: item.product?.price,
+                                                        quantity: 1,
+                                                    })).filter(i => i.price > 0);
+                                                    if (items.length === 0) { showToast('Cart is empty or invalid', 'error'); return; }
+                                                    const result = await validateCouponMutation.mutateAsync({ code: couponInput.trim(), items });
+                                                    if (result.valid) {
+                                                        setCouponCode(couponInput.trim());
+                                                        setAppliedCoupon({ discountPercent: result.discountPercent, discountAmount: result.discountAmount });
+                                                    }
+                                                } catch (err) {
+                                                    showToast(err?.response?.data?.error || 'Invalid coupon code', 'error');
+                                                }
+                                            }}
+                                            className="bg-black text-white px-4 text-[10px] uppercase tracking-widest hover:bg-luxury-gold transition-colors disabled:opacity-50 whitespace-nowrap"
+                                        >
+                                            {validateCouponMutation.isPending ? '...' : 'Apply'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Totals */}
                             <div className="border-t border-gray-100 pt-4 space-y-3 text-sm text-gray-600">
                                 <div className="flex justify-between">
                                     <span>Subtotal ({cartItems.length} items)</span>
-                                    <span>₹{subtotal.toLocaleString()}</span>
+                                    <span>₹{subtotal.toLocaleString('en-IN')}</span>
                                 </div>
+
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Discount ({appliedCoupon?.discountPercent}% off)</span>
+                                        <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between">
                                     <span>Shipping</span>
                                     <span className="text-green-600">Free</span>
                                 </div>
                             </div>
 
-                            <div className="flex justify-between pt-4 border-t border-gray-100 font-serif font-bold text-lg mt-4 mb-8">
+                            <div className="flex justify-between pt-4 border-t border-gray-100 font-serif font-bold text-lg mt-4 mb-1">
                                 <span>Total</span>
                                 <span>₹{total.toLocaleString('en-IN')}</span>
                             </div>
+                            <p className="text-[10px] text-gray-400 text-right mb-8">* Inclusive of all taxes</p>
 
                             {razorpayError && paymentMethod === 'online' && (
                                 <p className="text-xs text-red-600 text-center mb-2">Payment gateway failed to load. Please disable ad blockers and refresh.</p>
@@ -495,7 +576,7 @@ const Checkout = () => {
                                 disabled={createOrderMutation.isPending || verifyPaymentMutation.isPending}
                                 className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-3 disabled:opacity-60"
                             >
-                                {(createOrderMutation.isPending || verifyPaymentMutation.isPending) ? (
+                                {createOrderMutation.isPending || verifyPaymentMutation.isPending ? (
                                     <>
                                         <Loader2 size={18} className="animate-spin" />
                                         Processing...

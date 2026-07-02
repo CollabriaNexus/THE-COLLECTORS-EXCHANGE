@@ -69,6 +69,55 @@ describe('ProductSchema', () => {
     const { sellerId, ...rest } = valid;
     expect(() => ProductSchema.parse(rest)).toThrow();
   });
+
+  // ---- commissionPercent ----
+
+  it('defaults commissionPercent to 10 when not provided', () => {
+    const result = ProductSchema.parse(valid);
+    expect(result.commissionPercent).toBe(10);
+  });
+
+  it('passes with commissionPercent = 10 (minimum)', () => {
+    expect(() => ProductSchema.parse({ ...valid, commissionPercent: 10 })).not.toThrow();
+  });
+
+  it('passes with commissionPercent = 25 (maximum)', () => {
+    expect(() => ProductSchema.parse({ ...valid, commissionPercent: 25 })).not.toThrow();
+  });
+
+  it('passes with commissionPercent = 18 (mid-range)', () => {
+    expect(() => ProductSchema.parse({ ...valid, commissionPercent: 18 })).not.toThrow();
+  });
+
+  it('fails with commissionPercent below 10', () => {
+    expect(() => ProductSchema.parse({ ...valid, commissionPercent: 5 })).toThrow();
+  });
+
+  it('fails with commissionPercent above 25', () => {
+    expect(() => ProductSchema.parse({ ...valid, commissionPercent: 30 })).toThrow();
+  });
+
+  it('fails with commissionPercent as non-integer string', () => {
+    expect(() => ProductSchema.parse({ ...valid, commissionPercent: '20' })).toThrow();
+  });
+});
+
+describe('AdminProductUpdateSchema — commissionPercent', () => {
+  it('passes with commissionPercent = 10', () => {
+    expect(() => AdminProductUpdateSchema.parse({ commissionPercent: 10 })).not.toThrow();
+  });
+
+  it('passes with commissionPercent = 25', () => {
+    expect(() => AdminProductUpdateSchema.parse({ commissionPercent: 25 })).not.toThrow();
+  });
+
+  it('fails with commissionPercent = 9', () => {
+    expect(() => AdminProductUpdateSchema.parse({ commissionPercent: 9 })).toThrow();
+  });
+
+  it('fails with commissionPercent = 26', () => {
+    expect(() => AdminProductUpdateSchema.parse({ commissionPercent: 26 })).toThrow();
+  });
 });
 
 describe('ProductIdParam', () => {

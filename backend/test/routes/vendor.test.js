@@ -69,13 +69,30 @@ describe('vendor routes', () => {
     it('returns vendor stats', async () => {
       mockPrisma.vendor.findUnique.mockResolvedValue({ id: 'v1' });
       mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1' }]);
-      mockPrisma.orderItem.findMany.mockResolvedValue([{ price: 100, quantity: 2, orderId: 'o1' }]);
+      mockPrisma.orderItem.findMany.mockResolvedValue([{ price: 100, quantity: 2, orderId: 'o1', platformFee: 20 }]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
       const res = await app.inject({ method: 'GET', url: '/stats', headers: { authorization: 'Bearer vendor' } });
       expect(res.statusCode).toBe(200);
       expect(res.json().totalSales).toBe(200);
+    });
+
+    it('returns totalPlatformFees and netEarnings in stats', async () => {
+      mockPrisma.vendor.findUnique.mockResolvedValue({ id: 'v1' });
+      mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1' }]);
+      mockPrisma.orderItem.findMany.mockResolvedValue([
+        { price: 100, quantity: 1, orderId: 'o1', platformFee: 20 },
+        { price: 200, quantity: 1, orderId: 'o2', platformFee: 50 },
+      ]);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/vendor.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/stats', headers: { authorization: 'Bearer vendor' } });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().totalSales).toBe(300);
+      expect(res.json().totalPlatformFees).toBe(70);
+      expect(res.json().netEarnings).toBe(230);
     });
 
     it('returns 404 without vendor', async () => {
@@ -101,6 +118,27 @@ describe('vendor routes', () => {
       const res = await app.inject({ method: 'GET', url: '/analytics/overview', headers: { authorization: 'Bearer vendor' } });
       expect(res.statusCode).toBe(200);
     });
+
+    it('returns totalPlatformFees and netEarnings in analytics overview', async () => {
+      mockPrisma.vendor.findUnique.mockResolvedValue({ id: 'v1' });
+      mockPrisma.product.findMany
+        .mockResolvedValueOnce([{ id: 'p1' }, { id: 'p2' }])
+        .mockResolvedValue([]);
+      mockPrisma.orderItem.findMany.mockResolvedValue([
+        { price: 100, quantity: 2, orderId: 'o1', platformFee: 20, createdAt: new Date(), order: { paymentStatus: 'Paid', status: 'Delivered' } },
+        { price: 50, quantity: 1, orderId: 'o2', platformFee: 5, createdAt: new Date(), order: { paymentStatus: 'Pending', status: 'Processing' } },
+      ]);
+      mockPrisma.payout.aggregate.mockResolvedValue({ _sum: { amount: 0 } });
+      mockPrisma.product.count.mockResolvedValue(2);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/vendor.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/analytics/overview', headers: { authorization: 'Bearer vendor' } });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().totalRevenue).toBe(250);
+      expect(res.json().totalPlatformFees).toBe(25);
+      expect(res.json().netEarnings).toBe(225);
+    });
   });
 
   describe('GET /analytics/interest', () => {
@@ -120,7 +158,9 @@ describe('vendor routes', () => {
 
   describe('GET /analytics/sales-graph', () => {
     it('returns sales graph data', async () => {
-      mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1' }]);
+      mockPrisma.product.findMany
+        .mockResolvedValueOnce([{ id: 'p1' }])
+        .mockResolvedValue([]);
       mockPrisma.orderItem.findMany.mockResolvedValue([{ price: 100, quantity: 1, orderId: 'o1', createdAt: new Date('2024-01-15'), order: { status: 'Delivered' } }]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);

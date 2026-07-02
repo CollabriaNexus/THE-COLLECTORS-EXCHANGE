@@ -20,9 +20,6 @@ const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
 const FoundersNote = lazy(() => import('./pages/FoundersNote'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-const GalleryPage = lazy(() => import('./pages/GalleryPage'));
-const GalleryDetail = lazy(() => import('./pages/GalleryDetail'));
-const GalleryArticle = lazy(() => import('./pages/GalleryArticle'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
 const SellerAgreement = lazy(() => import('./pages/SellerAgreement'));
@@ -31,6 +28,7 @@ const VendorDashboard = lazy(() => import('./pages/VendorDashboard'));
 const Contact = lazy(() => import('./pages/Contact'));
 const FAQ = lazy(() => import('./pages/FAQ'));
 const Returns = lazy(() => import('./pages/Returns'));
+const Links = lazy(() => import('./pages/Links'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -76,9 +74,6 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/founders-note" element={<FoundersNote />} />
           <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/gallery" element={<GalleryPage />} />
-          <Route path="/gallery/:id" element={<GalleryDetail />} />
-          <Route path="/gallery/article/:slug" element={<GalleryArticle />} />
           <Route path="/archive" element={<BlogPage />} />
           <Route path="/archive/:slug" element={<BlogPost />} />
           <Route path="/seller-agreement" element={<SellerAgreement />} />
@@ -87,6 +82,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/returns" element={<Returns />} />
+          <Route path="/links" element={<Links />} />
           <Route path="*" element={
             <div className="container mx-auto py-24 px-6 text-center">
               <h1 className="text-6xl font-serif text-luxury-gold mb-6">404</h1>

@@ -80,11 +80,23 @@ const ProductCard = ({ product, onUpdate }) => {
                     <Heart size={16} fill={inWishlist ? 'currentColor' : 'none'} />
                 </button>
 
-                {product.isVerified && (
-                    <div className="absolute bottom-4 left-4 bg-black text-white text-xs px-3 py-1 font-sans tracking-widest uppercase flex items-center gap-1">
-                        <ShieldCheck size={12} /> Verified
-                    </div>
-                )}
+                <div className="absolute top-4 left-4 flex flex-col gap-1">
+                    {product.isVerified && (
+                        <div className="bg-black text-white text-[10px] px-2 py-1 font-sans tracking-widest uppercase flex items-center gap-1 shadow-sm">
+                            <ShieldCheck size={10} /> Verified
+                        </div>
+                    )}
+                    {(product.commissionPercent ?? 10) >= 20 && (
+                        <div className="bg-luxury-gold text-black text-[10px] px-2 py-1 font-sans tracking-widest uppercase flex items-center gap-1 shadow-sm">
+                            <ShieldCheck size={10} /> Promoted
+                        </div>
+                    )}
+                    {(product.commissionPercent ?? 10) >= 25 && (
+                        <div className="bg-purple-700 text-white text-[10px] px-2 py-1 font-sans tracking-widest uppercase flex items-center gap-1 shadow-sm">
+                            <ShieldCheck size={10} /> Premium
+                        </div>
+                    )}
+                </div>
             </Link>
 
             <div className="p-3 sm:p-6 flex flex-col flex-grow">

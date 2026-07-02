@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { Watch, Gem, Landmark, Gamepad2, ShieldCheck, Award, Heart, ShoppingBag, Loader2, Sparkles, Box, XCircle, Check } from 'lucide-react';
 import { useProducts } from '../hooks/api/useProducts';
+import { useCategoryCounts } from '../hooks/api/useCategoryCounts';
 import { getUser } from '../utils/storage';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useCart, useAddToCart } from '../hooks/api/useCart';
@@ -150,20 +151,20 @@ const ArchiveProductCard = ({ product }) => {
                 </button>
 
                 {/* Condition Badge */}
-                <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-white/90 backdrop-blur-sm text-heritage-charcoal/70 text-[8px] sm:text-[10px] px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-[0.06em] sm:tracking-[0.1em] uppercase">
+                <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-white/90 backdrop-blur-sm text-heritage-charcoal/70 text-[10px] sm:text-xs px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase">
                     {product.condition || 'Excellent'}
                 </div>
 
                 {/* Sold Badge */}
                 {product.status === 'Sold' && (
                     <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
-                        <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-[0.15em] shadow-lg">Sold Out</span>
+                        <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-widest shadow-lg">Sold Out</span>
                     </div>
                 )}
 
                 {/* Verified Badge */}
                 {product.isVerified && (
-                    <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[7px] sm:text-[10px] px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-[0.06em] sm:tracking-[0.1em] uppercase flex items-center gap-0.5 sm:gap-1">
+                    <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[9px] sm:text-[10px] px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase flex items-center gap-0.5 sm:gap-1">
                         <ShieldCheck size={7} className="sm:w-[10px] sm:h-[10px]" />
                         <span className="inline">Verified</span>
                     </div>
@@ -171,30 +172,33 @@ const ArchiveProductCard = ({ product }) => {
             </Link>
 
             <div className="p-3 sm:p-5 flex flex-col flex-grow">
-                <div className="flex items-center gap-0.5 sm:gap-2 mb-1 sm:mb-2">
-                    <span className="text-[8px] sm:text-[11px] text-heritage-bronze/80 uppercase tracking-[0.08em] sm:tracking-[0.12em] truncate">{product.category}</span>
+                <div className="flex items-center gap-0.5 sm:gap-2 mb-0.5 sm:mb-1">
+                    <span className="text-[10px] sm:text-xs text-heritage-bronze/80 uppercase tracking-widest truncate">{product.category}</span>
                 </div>
+                {product.seller?.name && (
+                    <p className="text-[10px] sm:text-xs text-heritage-charcoal/50 truncate mb-0.5 sm:mb-1">by {product.seller.name}</p>
+                )}
                 <Link to={`/product/${product.id}`} className="block hover:text-heritage-bronze transition-colors">
-                    <h3 className="font-serif text-[9.5px] sm:text-base text-heritage-charcoal leading-tight sm:leading-snug line-clamp-2">{title}</h3>
+                    <h3 className="font-serif text-sm sm:text-base md:text-lg text-heritage-charcoal leading-tight sm:leading-snug line-clamp-2">{title}</h3>
                 </Link>
-                <p className="text-heritage-gold-muted font-sans text-xs sm:text-base font-semibold mt-1.5 sm:mt-2">₹{product.price?.toLocaleString()}</p>
+                <p className="text-heritage-gold-muted font-sans text-xs sm:text-base lg:text-lg font-semibold mt-1.5 sm:mt-2">₹{product.price?.toLocaleString()}</p>
 
                 {/* Add to Cart / Sold Button */}
                 {product.status === 'Sold' ? (
-                    <div className="w-full py-1.5 sm:py-2.5 text-[9px] sm:text-xs uppercase tracking-[0.08em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-2 bg-gray-100 text-gray-400 cursor-default">
-                        <XCircle size={10} className="sm:w-[14px] sm:h-[14px]" />
+                    <div className="w-full py-1 sm:py-1.5 text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-1.5 bg-gray-100 text-gray-400 cursor-default mt-1.5 sm:mt-2">
+                        <XCircle size={8} className="sm:w-[10px] sm:h-[10px]" />
                         Sold Out
                     </div>
                 ) : (
                     <button
                         onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
                         disabled={addToCartMutation.isPending || cartFeedback}
-                                                    className={`w-full py-1.5 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.08em] sm:tracking-[0.12em] transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 active:scale-[0.97] ${cartFeedback || inCart
+                                                    className={`w-full py-1 sm:py-1.5 text-[9px] sm:text-[10px] uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 active:scale-[0.97] mt-1.5 sm:mt-2 ${cartFeedback || inCart
                                                             ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                                                             : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
                                                             }`}
                                                     >
-                                                        {cartFeedback ? <Check size={10} className="sm:w-[12px] sm:h-[12px]" /> : <ShoppingBag size={10} className="sm:w-[12px] sm:h-[12px]" />}
+                                                        {cartFeedback ? <Check size={8} className="sm:w-[10px] sm:h-[10px]" /> : <ShoppingBag size={8} className="sm:w-[10px] sm:h-[10px]" />}
                         {addToCartMutation.isPending ? 'Adding...' : cartFeedback ? 'Added' : inCart ? 'In Cart →' : 'Add to Cart'}
                     </button>
                 )}
@@ -203,27 +207,46 @@ const ArchiveProductCard = ({ product }) => {
     );
 };
 
+const CONDITION_OPTIONS = ['Excellent', 'Good', 'Fair', 'Like New'];
+
 const Category = () => {
-    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState('Timepieces');
     const [searchQuery, setSearchQuery] = useState('');
+    const [condition, setCondition] = useState('');
     const [page, setPage] = useState(1);
-    const { data, isLoading } = useProducts(selectedCategory, searchQuery, page, 20);
+    const { data, isLoading } = useProducts(selectedCategory, searchQuery, page, 20, null, condition);
     const [allProducts, setAllProducts] = useState([]);
+    const showToast = useToast();
+    const { data: categoryCounts } = useCategoryCounts();
 
     const products = data?.products || [];
     const total = data?.total || 0;
     const totalPages = data?.totalPages || 1;
+    const activeCategory = CATEGORIES.find(c => c.name === selectedCategory);
+    const ActiveCategoryIcon = activeCategory?.icon;
+
+    useEffect(() => {
+        if (categoryCounts && selectedCategory) {
+            const count = categoryCounts[selectedCategory] ?? 0;
+            if (count === 0) {
+                const firstWithItems = CATEGORIES.find(c => (categoryCounts[c.name] ?? 0) > 0);
+                setSelectedCategory(firstWithItems?.name || null);
+            }
+        }
+    }, [categoryCounts]);
 
     const prevCategory = useRef(selectedCategory);
     const prevSearch = useRef(searchQuery);
+    const prevCondition = useRef(condition);
     useEffect(() => {
-        if (prevCategory.current !== selectedCategory || prevSearch.current !== searchQuery) {
+        if (prevCategory.current !== selectedCategory || prevSearch.current !== searchQuery || prevCondition.current !== condition) {
             setPage(1);
             setAllProducts([]);
             prevCategory.current = selectedCategory;
             prevSearch.current = searchQuery;
+            prevCondition.current = condition;
         }
-    }, [selectedCategory, searchQuery]);
+    }, [selectedCategory, searchQuery, condition]);
 
     useEffect(() => {
         if (products.length > 0) {
@@ -245,6 +268,11 @@ const Category = () => {
     const productsRef = useRef(null);
 
     const handleCategoryClick = (categoryName) => {
+        const count = categoryCounts?.[categoryName] ?? 0;
+        if (count === 0) {
+            showToast(`${categoryName} collection coming soon — new pieces are being authenticated.`);
+            return;
+        }
         const isSelected = selectedCategory === categoryName;
         setSelectedCategory(isSelected ? null : categoryName);
 
@@ -264,40 +292,47 @@ const Category = () => {
                 canonical="/category"
             />
             {/* Category Icons Navigation - Polished with shadow and border */}
-            <section className="py-8 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
+            <section className="py-4 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
                 <div className="container mx-auto max-w-5xl">
                     <div className="flex justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory md:snap-none -mx-6 md:mx-0 px-6 md:px-0">
                         {CATEGORIES.map((category) => {
                             const IconComponent = category.icon;
                             const isSelected = selectedCategory === category.name;
+                            const count = categoryCounts?.[category.name] ?? 0;
+                            const isEmpty = count === 0;
                             return (
                                 <button
                                     key={category.id}
                                     onClick={() => handleCategoryClick(category.name)}
-                                    className="group flex flex-col items-center text-center snap-start shrink-0 w-[72px] md:w-auto"
-                                    title={category.tagline}
+                                    className={`group flex flex-col items-center text-center snap-start shrink-0 w-[72px] md:w-auto transition-opacity duration-300 ${isEmpty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    title={isEmpty ? `${category.name} — coming soon` : category.tagline}
                                 >
                                     <div className={`w-12 h-12 md:w-20 md:h-20 rounded-full border-2 md:border-2 flex items-center justify-center transition-all duration-300 mb-2 md:mb-3 ${isSelected
-                                        ? 'border-heritage-gold-muted bg-heritage-cream shadow-heritage-hover'
+                                        ? 'border-heritage-gold-muted bg-luxury-gold/10 shadow-heritage-hover'
                                         : 'border-heritage-beige bg-heritage-cream/50 hover:border-heritage-bronze hover:shadow-heritage group-hover:bg-heritage-cream'
-                                        }`}>
+                                        } ${isEmpty ? 'hover:border-heritage-beige hover:shadow-none group-hover:bg-heritage-cream/50' : ''}`}>
                                         <IconComponent
                                             size={20}
                                             strokeWidth={1.2}
                                             className={`md:w-7 md:h-7 transition-colors duration-300 ${isSelected
-                                                ? 'text-heritage-gold-muted'
+                                                ? 'text-luxury-gold'
                                                 : 'text-heritage-bronze/60 group-hover:text-heritage-bronze'
                                                 }`}
                                         />
                                     </div>
-                                    <span className={`text-[10px] md:text-xs tracking-[0.08em] md:tracking-[0.1em] uppercase font-sans transition-colors duration-300 leading-tight ${isSelected
-                                        ? 'text-heritage-charcoal font-medium'
-                                        : 'text-heritage-charcoal/60 group-hover:text-heritage-charcoal'
-                                        }`}>
-                                        {category.name}
-                                    </span>
-                                    <span className="hidden md:block text-[8px] text-heritage-bronze/50 uppercase tracking-[0.15em] mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        {category.tagline}
+                                    <div className="relative">
+                                        <span className={`text-[10px] md:text-xs tracking-widest uppercase font-sans transition-colors duration-300 leading-tight ${isSelected
+                                            ? 'text-heritage-charcoal font-semibold'
+                                            : 'text-heritage-charcoal/60 group-hover:text-heritage-charcoal'
+                                            }`}>
+                                            {category.name}
+                                        </span>
+                                        {isSelected && (
+                                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 md:w-6 h-0.5 bg-luxury-gold rounded-full" />
+                                        )}
+                                    </div>
+                                    <span className="hidden md:block text-[8px] text-heritage-bronze/50 uppercase tracking-[0.15em] mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        {isEmpty ? 'Coming Soon' : category.tagline}
                                     </span>
                                 </button>
                             );
@@ -311,31 +346,48 @@ const Category = () => {
             <section ref={productsRef} className="py-8 md:py-20 px-3 sm:px-4 lg:px-6 bg-white">
                 <div className="w-full max-w-7xl mx-auto">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 md:mb-10 gap-2 sm:gap-3 md:gap-4 px-0 sm:px-0">
-                        <div className="flex items-center gap-2 md:gap-3 min-w-0 w-full sm:w-auto">
-                            <h2 className="text-base sm:text-2xl md:text-3xl font-serif text-heritage-charcoal font-normal tracking-wide truncate">
-                                {selectedCategory || 'All Listings'}
-                            </h2>
-                            <span className="text-heritage-bronze/60 text-[11px] md:text-sm font-sans shrink-0">
-                                {total}
-                            </span>
-                            {selectedCategory && (
-                                <button
-                                    onClick={() => setSelectedCategory(null)}
-                                    className="text-[10px] md:text-xs text-heritage-charcoal/60 uppercase tracking-[0.1em] md:tracking-[0.15em] hover:text-heritage-charcoal transition-colors border-b border-heritage-charcoal/30 pb-0.5 shrink-0"
-                                >
-                                    All
-                                </button>
-                            )}
+                        <div className="flex flex-col min-w-0 w-full sm:w-auto">
+                            <div className="flex items-center gap-2 md:gap-3">
+                                {selectedCategory ? (
+                                    <div className="flex items-center gap-2 md:gap-3">
+                                        {ActiveCategoryIcon && <ActiveCategoryIcon size={22} strokeWidth={1.2} className="text-luxury-gold shrink-0 md:w-7 md:h-7" />}
+                                        <div>
+                                            <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal font-normal tracking-wide truncate">
+                                                {selectedCategory}
+                                            </h2>
+                                            {activeCategory && (
+                                                <p className="text-[10px] sm:text-xs text-heritage-bronze/70 uppercase tracking-[0.2em] mt-0.5 font-sans">{activeCategory.tagline}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal font-normal tracking-wide truncate">
+                                        All Listings
+                                    </h2>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="w-full sm:w-56 md:w-64 shrink-0">
-                            <input
-                                type="text"
-                                placeholder="Search listings..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-3 py-2 md:px-4 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
-                            />
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <select
+                                value={condition}
+                                onChange={(e) => setCondition(e.target.value)}
+                                className="w-28 sm:w-32 shrink-0 px-2.5 py-2 md:px-3 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal focus:outline-none focus:border-heritage-bronze transition-colors appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394826e%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_8px_center] bg-no-repeat pr-7"
+                            >
+                                <option value="">All</option>
+                                {CONDITION_OPTIONS.map((opt) => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                            </select>
+                            <div className="flex-1 sm:w-40 md:w-48">
+                                <input
+                                    type="text"
+                                    placeholder="Search listings..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full px-3 py-2 md:px-4 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -430,8 +482,8 @@ const Category = () => {
                     ) : (
                         <div className="text-center py-16 md:py-24 bg-heritage-cream border border-heritage-beige">
                             <Gem size={32} strokeWidth={1} className="md:w-12 md:h-12 mx-auto text-heritage-bronze/30 mb-3 md:mb-4" />
-                            <p className="text-heritage-charcoal/60 font-serif text-sm md:text-lg">No items found in this collection.</p>
-                            <p className="text-heritage-bronze/50 font-sans text-xs md:text-sm mt-1 md:mt-2">Check back soon for new additions.</p>
+                            <p className="text-heritage-charcoal/60 font-serif text-sm sm:text-base lg:text-lg">No items found in this collection.</p>
+                            <p className="text-heritage-bronze/50 font-sans text-xs sm:text-sm mt-1 md:mt-2">Check back soon for new additions.</p>
                         </div>
                     )}
                 </div>
