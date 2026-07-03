@@ -7,15 +7,45 @@ function buildApp(mockPrisma) {
   fastify.decorate('authenticate', async (req, reply) => {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return reply.status(401).send({ error: 'No token provided' });
-    if (token === 'banned') return reply.status(403).send({ error: 'Your account has been banned' });
+    if (token === 'banned')
+      return reply.status(403).send({ error: 'Your account has been banned' });
     req.user = { sub: 'sb-123' };
-    const dbUser = token === 'admin' ? { id: 'admin-id', role: 'admin', kycStatus: 'verified', vendor: { id: 'v1', type: 'SINGLE', status: 'APPROVED', maxListings: 5 } }
-      : token === 'curator' ? { id: 'curator-id', role: 'curator', kycStatus: 'verified', vendor: null }
-      : token === 'vendor' ? { id: 'vendor-id', role: 'user', kycStatus: 'verified', vendor: { id: 'v2', type: 'SINGLE', status: 'APPROVED', maxListings: 5 } }
-      : token === 'bulk-vendor' ? { id: 'bulk-vendor-id', role: 'user', kycStatus: 'verified', vendor: { id: 'v3', type: 'BULK', status: 'APPROVED', maxListings: 999999 } }
-      : token === 'no-kyc' ? { id: 'user-id', role: 'user', kycStatus: 'none', vendor: null }
-      : token === 'other-user' ? { id: 'other-id', role: 'user', kycStatus: 'verified', vendor: null }
-      : null;
+    const dbUser =
+      token === 'admin'
+        ? {
+            id: 'admin-id',
+            role: 'admin',
+            kycStatus: 'verified',
+            vendor: { id: 'v1', type: 'SINGLE', status: 'APPROVED', maxListings: 5 },
+          }
+        : token === 'curator'
+          ? { id: 'curator-id', role: 'curator', kycStatus: 'verified', vendor: null }
+          : token === 'vendor'
+            ? {
+                id: 'vendor-id',
+                role: 'user',
+                kycStatus: 'verified',
+                vendor: { id: 'v2', type: 'SINGLE', status: 'APPROVED', maxListings: 5 },
+              }
+            : token === 'bulk-vendor'
+              ? {
+                  id: 'bulk-vendor-id',
+                  role: 'user',
+                  kycStatus: 'verified',
+                  vendor: { id: 'v3', type: 'BULK', status: 'APPROVED', maxListings: 999999 },
+                }
+              : token === 'bulk-suspended'
+                ? {
+                    id: 'bulk-susp-id',
+                    role: 'user',
+                    kycStatus: 'verified',
+                    vendor: { id: 'v4', type: 'BULK', status: 'SUSPENDED', maxListings: 999999 },
+                  }
+                : token === 'no-kyc'
+                  ? { id: 'user-id', role: 'user', kycStatus: 'none', vendor: null }
+                  : token === 'other-user'
+                    ? { id: 'other-id', role: 'user', kycStatus: 'verified', vendor: null }
+                    : null;
     if (dbUser && dbUser.banned) return reply.status(403).send({ error: 'banned' });
     req.dbUser = dbUser;
     if (!dbUser && token !== 'no-db') return reply.status(401).send({ error: 'not found' });
@@ -74,7 +104,9 @@ describe('products routes', () => {
 
   describe('GET /', () => {
     it('returns products list with pagination', async () => {
-      mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1', title: 'Test', seller: { name: 'Seller' } }]);
+      mockPrisma.product.findMany.mockResolvedValue([
+        { id: 'p1', title: 'Test', seller: { name: 'Seller' } },
+      ]);
       mockPrisma.product.count.mockResolvedValue(1);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
@@ -107,8 +139,22 @@ describe('products routes', () => {
 
     it('sorts public catalog by commissionPercent DESC then createdAt DESC', async () => {
       mockPrisma.product.findMany.mockResolvedValue([
-        { id: 'p2', title: 'High Comm', price: 100, commissionPercent: 25, seller: { name: 'S' }, status: 'Approved' },
-        { id: 'p1', title: 'Low Comm', price: 100, commissionPercent: 10, seller: { name: 'S' }, status: 'Approved' },
+        {
+          id: 'p2',
+          title: 'High Comm',
+          price: 100,
+          commissionPercent: 25,
+          seller: { name: 'S' },
+          status: 'Approved',
+        },
+        {
+          id: 'p1',
+          title: 'Low Comm',
+          price: 100,
+          commissionPercent: 10,
+          seller: { name: 'S' },
+          status: 'Approved',
+        },
       ]);
       mockPrisma.product.count.mockResolvedValue(2);
       const app = buildApp(mockPrisma);
@@ -132,7 +178,11 @@ describe('products routes', () => {
 
   describe('GET /:id', () => {
     it('returns product by id', async () => {
-      mockPrisma.product.findFirst.mockResolvedValue({ id: 'p1', title: 'Test', seller: { name: 'S' } });
+      mockPrisma.product.findFirst.mockResolvedValue({
+        id: 'p1',
+        title: 'Test',
+        seller: { name: 'S' },
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
@@ -152,24 +202,53 @@ describe('products routes', () => {
   });
 
   describe('POST /', () => {
-    const validProduct = { title: 'Watch', category: 'Timepieces', description: 'Desc', condition: 'Mint', price: 1000, image: 'https://img.com/1.jpg', sellerId: 'vendor-id' };
+    const validProduct = {
+      title: 'Watch',
+      category: 'Timepieces',
+      description: 'Desc',
+      condition: 'Mint',
+      price: 1000,
+      image: 'https://img.com/1.jpg',
+      sellerId: 'vendor-id',
+    };
 
     it('creates a product', async () => {
-      mockPrisma.product.create.mockResolvedValue({ id: 'new-p', ...validProduct, images: [], keywords: [] });
+      mockPrisma.product.create.mockResolvedValue({
+        id: 'new-p',
+        ...validProduct,
+        images: [],
+        keywords: [],
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: validProduct, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: validProduct,
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(201);
     });
 
     it('creates a product with custom commissionPercent', async () => {
       mockPrisma.product.count.mockResolvedValue(0);
-      mockPrisma.product.create.mockResolvedValue({ id: 'new-p', ...validProduct, commissionPercent: 20, images: [], keywords: [] });
+      mockPrisma.product.create.mockResolvedValue({
+        id: 'new-p',
+        ...validProduct,
+        commissionPercent: 20,
+        images: [],
+        keywords: [],
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: { ...validProduct, commissionPercent: 20 }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: { ...validProduct, commissionPercent: 20 },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(201);
     });
 
@@ -185,7 +264,12 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: { ...validProduct, sellerId: 'wrong-id' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: { ...validProduct, sellerId: 'wrong-id' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
@@ -193,7 +277,12 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: { ...validProduct, sellerId: 'user-id' }, headers: { authorization: 'Bearer no-kyc' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: { ...validProduct, sellerId: 'user-id' },
+        headers: { authorization: 'Bearer no-kyc' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
@@ -202,19 +291,33 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: validProduct, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: validProduct,
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(422);
     });
   });
 
   describe('PUT /:id', () => {
     it('updates a product as owner', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sellerId: 'vendor-id', status: 'Pending' });
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Pending',
+      });
       mockPrisma.product.update.mockResolvedValue({ id: 'p1', title: 'Updated' });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PUT', url: '/p1', payload: { title: 'Updated' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -223,35 +326,91 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PUT', url: '/nonexistent', payload: { title: 'Updated' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/nonexistent',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(404);
     });
 
-    it('returns 422 when product is sold', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sellerId: 'vendor-id', status: 'Sold' });
+    it('returns 403 when the owner is not KYC-verified', async () => {
+      // 'no-kyc' token: id 'user-id', kycStatus 'none' — owns the product but unverified
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'user-id',
+        status: 'Pending',
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PUT', url: '/p1', payload: { title: 'Updated' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer no-kyc' },
+      });
+      expect(res.statusCode).toBe(403);
+      expect(mockPrisma.product.update).not.toHaveBeenCalled();
+    });
+
+    it('returns 422 when product is sold', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Sold',
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(422);
     });
 
     it('returns 403 when not owner and not admin', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sellerId: 'other-id', status: 'Pending' });
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'other-id',
+        status: 'Pending',
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PUT', url: '/p1', payload: { title: 'Updated' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
     it('updates commissionPercent on an owned product', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sellerId: 'vendor-id', status: 'Approved' });
-      mockPrisma.product.update.mockResolvedValue({ id: 'p1', title: 'Updated', commissionPercent: 20 });
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Approved',
+      });
+      mockPrisma.product.update.mockResolvedValue({
+        id: 'p1',
+        title: 'Updated',
+        commissionPercent: 20,
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PUT', url: '/p1', payload: { commissionPercent: 20 }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: { commissionPercent: 20 },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
@@ -263,7 +422,11 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'DELETE', url: '/p1', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/p1',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(204);
     });
 
@@ -272,7 +435,11 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'DELETE', url: '/nope', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/nope',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(404);
     });
 
@@ -281,7 +448,11 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'DELETE', url: '/p1', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/p1',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(403);
     });
   });
@@ -292,7 +463,23 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/bulk', payload: { products: [{ title: 'Watch', category: 'Timepieces', description: 'Desc', condition: 'Mint', price: 100, image: 'https://img.com/1.jpg' }] }, headers: { authorization: 'Bearer bulk-vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/bulk',
+        payload: {
+          products: [
+            {
+              title: 'Watch',
+              category: 'Timepieces',
+              description: 'Desc',
+              condition: 'Mint',
+              price: 100,
+              image: 'https://img.com/1.jpg',
+            },
+          ],
+        },
+        headers: { authorization: 'Bearer bulk-vendor' },
+      });
       expect(res.statusCode).toBe(200);
       expect(res.json().created).toBe(1);
     });
@@ -301,7 +488,12 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/bulk', payload: { products: [] }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/bulk',
+        payload: { products: [] },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(400);
     });
 
@@ -309,7 +501,21 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/bulk', payload: { products: Array(101).fill({ title: 'a', category: 'Timepieces', description: 'd', condition: 'c', price: 1, image: 'https://img.com/1.jpg' }) }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/bulk',
+        payload: {
+          products: Array(101).fill({
+            title: 'a',
+            category: 'Timepieces',
+            description: 'd',
+            condition: 'c',
+            price: 1,
+            image: 'https://img.com/1.jpg',
+          }),
+        },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(422);
     });
 
@@ -317,19 +523,69 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/bulk', payload: { products: [{ title: 'Watch', category: 'Timepieces', description: 'Desc', condition: 'Mint', price: 100, image: 'https://img.com/1.jpg' }] }, headers: { authorization: 'Bearer no-kyc' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/bulk',
+        payload: {
+          products: [
+            {
+              title: 'Watch',
+              category: 'Timepieces',
+              description: 'Desc',
+              condition: 'Mint',
+              price: 100,
+              image: 'https://img.com/1.jpg',
+            },
+          ],
+        },
+        headers: { authorization: 'Bearer no-kyc' },
+      });
       expect(res.statusCode).toBe(403);
+    });
+
+    it('returns 403 when the bulk vendor is SUSPENDED', async () => {
+      mockPrisma.product.create.mockResolvedValue({ id: 'new' });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/bulk',
+        payload: {
+          products: [
+            {
+              title: 'Watch',
+              category: 'Timepieces',
+              description: 'Desc',
+              condition: 'Mint',
+              price: 100,
+              image: 'https://img.com/1.jpg',
+            },
+          ],
+        },
+        headers: { authorization: 'Bearer bulk-suspended' },
+      });
+      expect(res.statusCode).toBe(403);
+      expect(mockPrisma.product.create).not.toHaveBeenCalled();
     });
   });
 
   describe('PATCH /:id/sold', () => {
     it('marks product as sold', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sellerId: 'vendor-id', status: 'Approved' });
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Approved',
+      });
       mockPrisma.product.update.mockResolvedValue({ id: 'p1', status: 'Sold' });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/p1/sold', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -338,26 +594,64 @@ describe('products routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/nope/sold', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/nope/sold',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(404);
     });
 
     it('returns 403 when not the seller', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sellerId: 'other-id', status: 'Approved' });
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'other-id',
+        status: 'Approved',
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/p1/sold', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
     it('returns 422 when already sold', async () => {
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', sellerId: 'vendor-id', status: 'Sold' });
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Sold',
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/p1/sold', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(422);
+    });
+
+    it('returns 422 when the product is not yet Approved (cannot self-publish via sold)', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Pending',
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(mockPrisma.product.update).not.toHaveBeenCalled();
     });
   });
 });

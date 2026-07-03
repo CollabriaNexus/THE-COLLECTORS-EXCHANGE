@@ -1,349 +1,416 @@
 import { ProductSchema, ProductIdParam } from '../schemas/product.js';
-import { z } from 'zod';
 
 /**
  * Product Routes
  * @param {import('fastify').FastifyInstance} fastify
  */
 export default async function productRoutes(fastify) {
-    const { prisma } = fastify;
+  const { prisma } = fastify;
 
-    // Debug: test Prisma connection
-    fastify.get('/debug/prisma', async (request, reply) => {
+  // Debug: test Prisma connection
+  fastify.get('/debug/prisma', async (request, reply) => {
+    try {
+      const result = await prisma.$queryRaw`SELECT 1 as ok`;
+      const count = await prisma.product.count();
+      return { connected: true, productCount: count, queryResult: result };
+    } catch (err) {
+      return reply.status(500).send({ connected: false, error: err.message, stack: err.stack });
+    }
+  });
+
+  // Get all products (Public catalog)
+  fastify.get('/', async (request, reply) => {
+    const { category, search, condition, sellerId, page, limit, listingCategory } = request.query;
+
+    const where = {};
+
+    // Public catalog: show Approved and Sold products
+    // UNLESS querying own seller listings
+    if (sellerId) {
+      where.sellerId = sellerId;
+      const token = request.headers.authorization?.split(' ')[1];
+      let isOwner = false;
+      if (token) {
         try {
-            const result = await prisma.$queryRaw`SELECT 1 as ok`;
-            const count = await prisma.product.count();
-            return { connected: true, productCount: count, queryResult: result };
-        } catch (err) {
-            return reply.status(500).send({ connected: false, error: err.message, stack: err.stack });
+          await fastify.authenticate(request, reply);
+          if (reply.sent) return;
+          if (request.dbUser && request.dbUser.id === sellerId) {
+            isOwner = true;
+          }
+        } catch {
+          // Suppress and treat as guest
         }
+      }
+
+      if (!isOwner) {
+        where.status = { in: ['Approved', 'Sold'] };
+      }
+    } else {
+      where.status = { in: ['Approved', 'Sold'] };
+    }
+
+    if (category && category !== 'all') {
+      where.category = { equals: category, mode: 'insensitive' };
+    }
+
+    if (listingCategory) {
+      where.listingCategory = listingCategory;
+    }
+
+    if (condition) {
+      where.condition = { equals: condition, mode: 'insensitive' };
+    }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { keywords: { has: search } },
+      ];
+    }
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
+
+    try {
+      // Higher commissionPercent = boosted visibility in catalog
+      const orderBy = sellerId
+        ? { createdAt: 'desc' }
+        : [{ commissionPercent: 'desc' }, { createdAt: 'desc' }];
+
+      const [products, total] = await Promise.all([
+        prisma.product.findMany({
+          where,
+          orderBy,
+          include: { seller: { select: { name: true, type: true, role: true } } },
+          skip: (pageNum - 1) * limitNum,
+          take: limitNum,
+        }),
+        prisma.product.count({ where }),
+      ]);
+      return {
+        products,
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      };
+    } catch (dbError) {
+      request.log.error(
+        { prismaError: dbError.message, stack: dbError.stack },
+        'Product query failed',
+      );
+      return reply.status(500).send({ error: dbError.message });
+    }
+  });
+
+  // Get product counts per category
+  fastify.get('/category-counts', async (request, reply) => {
+    try {
+      const counts = await prisma.product.groupBy({
+        by: ['category'],
+        where: { status: { in: ['Approved', 'Sold'] } },
+        _count: { id: true },
+      });
+      const result = {};
+      counts.forEach((c) => {
+        result[c.category] = c._count.id;
+      });
+      return result;
+    } catch (dbError) {
+      request.log.error({ prismaError: dbError.message }, 'Category counts query failed');
+      return reply.status(500).send({ error: dbError.message });
+    }
+  });
+
+  // Get product by ID
+  fastify.get('/:id', async (request, reply) => {
+    const { id } = ProductIdParam.parse(request.params);
+    const product = await prisma.product.findFirst({
+      where: { id, status: { in: ['Approved', 'Sold'] } },
+      include: {
+        seller: {
+          select: {
+            name: true,
+            type: true,
+            role: true,
+            // Seller trust signal for the storefront (avg star rating + count)
+            vendor: { select: { rating: true, ratingCount: true } },
+          },
+        },
+      },
     });
 
-    // Get all products (Public catalog)
-    fastify.get('/', async (request, reply) => {
-        const { category, search, condition, sellerId, page, limit, listingCategory } = request.query;
+    if (!product) {
+      return reply.status(404).send({ error: 'Product not found' });
+    }
 
-        const where = {};
+    return product;
+  });
 
-        // Public catalog: show Approved and Sold products
-        // UNLESS querying own seller listings
-        if (sellerId) {
-            where.sellerId = sellerId;
-            const token = request.headers.authorization?.split(' ')[1];
-            let isOwner = false;
-            if (token) {
-                try {
-                    await fastify.authenticate(request, reply);
-                    if (reply.sent) return;
-                    if (request.dbUser && request.dbUser.id === sellerId) {
-                        isOwner = true;
-                    }
-                } catch (e) {
-                    // Suppress and treat as guest
-                }
-            }
+  // Add new product
+  fastify.post('/', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+    const productData = ProductSchema.parse(request.body);
+    const dbUser = request.dbUser;
 
-            if (!isOwner) {
-                where.status = { in: ['Approved', 'Sold'] };
-            }
-        } else {
-            where.status = { in: ['Approved', 'Sold'] };
-        }
+    if (!dbUser) {
+      return reply.status(401).send({ error: 'User profile not synchronized' });
+    }
 
-        if (category && category !== 'all') {
-            where.category = { equals: category, mode: 'insensitive' };
-        }
+    // Verify sellerId matches logged-in user CUID
+    if (productData.sellerId !== dbUser.id) {
+      return reply.status(403).send({ error: 'Seller ID mismatch' });
+    }
 
-        if (listingCategory) {
-            where.listingCategory = listingCategory;
-        }
+    // Verify KYC status
+    if (dbUser.kycStatus !== 'verified') {
+      return reply
+        .status(403)
+        .send({ error: 'Seller KYC verification is required to list products.' });
+    }
 
-        if (condition) {
-            where.condition = { equals: condition, mode: 'insensitive' };
-        }
+    // Fetch or create vendor profile
+    let vendor = dbUser.vendor;
+    if (!vendor) {
+      vendor = await prisma.vendor.create({
+        data: {
+          userId: dbUser.id,
+          type: dbUser.type === 'company' ? 'BULK' : 'SINGLE',
+          status: 'APPROVED',
+          maxListings: dbUser.type === 'company' ? 999999 : 5,
+        },
+      });
+    }
 
-        if (search) {
-            where.OR = [
-                { title: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } },
-            ];
-        }
+    if (vendor.status !== 'APPROVED') {
+      return reply.status(403).send({ error: `Vendor account status: ${vendor.status}` });
+    }
 
-        const pageNum = parseInt(page, 10) || 1;
-        const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
+    // Check active listing count for SINGLE type vendor
+    if (vendor.type === 'SINGLE') {
+      const activeCount = await prisma.product.count({
+        where: {
+          sellerId: dbUser.id,
+          status: { in: ['Pending', 'In_Review', 'Approved'] },
+        },
+      });
 
-        try {
-            // Higher commissionPercent = boosted visibility in catalog
-            const orderBy = sellerId
-                ? { createdAt: 'desc' }
-                : [{ commissionPercent: 'desc' }, { createdAt: 'desc' }];
-
-            const [products, total] = await Promise.all([
-                prisma.product.findMany({
-                    where,
-                    orderBy,
-                    include: { seller: { select: { name: true, type: true, role: true } } },
-                    skip: (pageNum - 1) * limitNum,
-                    take: limitNum,
-                }),
-                prisma.product.count({ where }),
-            ]);
-            return { products, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) };
-        } catch (dbError) {
-            request.log.error({ prismaError: dbError.message, stack: dbError.stack }, 'Product query failed');
-            return reply.status(500).send({ error: dbError.message });
-        }
-    });
-
-    // Get product counts per category
-    fastify.get('/category-counts', async (request, reply) => {
-        try {
-            const counts = await prisma.product.groupBy({
-                by: ['category'],
-                where: { status: { in: ['Approved', 'Sold'] } },
-                _count: { id: true },
-            });
-            const result = {};
-            counts.forEach(c => { result[c.category] = c._count.id; });
-            return result;
-        } catch (dbError) {
-            request.log.error({ prismaError: dbError.message }, 'Category counts query failed');
-            return reply.status(500).send({ error: dbError.message });
-        }
-    });
-
-    // Get product by ID
-    fastify.get('/:id', async (request, reply) => {
-        const { id } = ProductIdParam.parse(request.params);
-        const product = await prisma.product.findFirst({
-            where: { id, status: { in: ['Approved', 'Sold'] } },
-            include: { seller: { select: { name: true, type: true, role: true } } }
+      if (activeCount >= vendor.maxListings) {
+        return reply.status(422).send({
+          error: `Listing limit reached. Single sellers can have at most ${vendor.maxListings} active products.`,
         });
+      }
+    }
 
-        if (!product) {
-            return reply.status(404).send({ error: 'Product not found' });
-        }
+    const newProduct = await prisma.product.create({
+      data: {
+        ...productData,
+        images: productData.images || [],
+        keywords: productData.keywords || [],
+        commissionPercent: productData.commissionPercent ?? 10,
+        authenticityStatus: 'Pending',
+        status: 'Pending',
+        isPublished: false,
+        isVerified: false, // trust badge — set by admin at approval only, never by seller input
+      },
+    });
+    return reply.status(201).send(newProduct);
+  });
 
-        return product;
+  // Update product
+  fastify.put('/:id', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+    const { id } = ProductIdParam.parse(request.params);
+    const productData = ProductSchema.partial().parse(request.body);
+    const dbUser = request.dbUser;
+
+    if (!dbUser) {
+      return reply.status(401).send({ error: 'User profile not synchronized' });
+    }
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
     });
 
-    // Add new product
-    fastify.post('/', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const productData = ProductSchema.parse(request.body);
-        const dbUser = request.dbUser;
+    if (!existingProduct) {
+      return reply.status(404).send({ error: 'Product not found' });
+    }
 
-        if (!dbUser) {
-            return reply.status(401).send({ error: 'User profile not synchronized' });
-        }
+    // Prevent modifying a sold product
+    if (existingProduct.status === 'Sold') {
+      return reply.status(422).send({ error: 'Cannot modify a sold product' });
+    }
 
-        // Verify sellerId matches logged-in user CUID
-        if (productData.sellerId !== dbUser.id) {
-            return reply.status(403).send({ error: 'Seller ID mismatch' });
-        }
+    // Ensure user is the owner or an admin
+    if (
+      existingProduct.sellerId !== dbUser.id &&
+      dbUser.role !== 'admin' &&
+      dbUser.role !== 'curator'
+    ) {
+      return reply.status(403).send({ error: 'Not authorized to update this product' });
+    }
 
-        // Verify KYC status
-        if (dbUser.kycStatus !== 'verified') {
-            return reply.status(403).send({ error: 'Seller KYC verification is required to list products.' });
-        }
+    // A seller must still hold KYC verification to edit their listings (an edit
+    // re-enters the review pipeline). Admins/curators are exempt.
+    if (dbUser.role !== 'admin' && dbUser.role !== 'curator' && dbUser.kycStatus !== 'verified') {
+      return reply
+        .status(403)
+        .send({ error: 'Seller KYC verification is required to edit listings.' });
+    }
 
-        // Fetch or create vendor profile
-        let vendor = dbUser.vendor;
-        if (!vendor) {
-            vendor = await prisma.vendor.create({
-                data: {
-                    userId: dbUser.id,
-                    type: dbUser.type === 'company' ? 'BULK' : 'SINGLE',
-                    status: 'APPROVED',
-                    maxListings: dbUser.type === 'company' ? 999999 : 5,
-                }
-            });
-        }
+    // If updated by seller, reset approval status back to Pending
+    const { sellerId: _sellerId, ...safeData } = productData;
+    const updateData = { ...safeData };
+    if (dbUser.role !== 'admin' && dbUser.role !== 'curator') {
+      updateData.status = 'Pending';
+      updateData.isPublished = false;
+      updateData.authenticityStatus = 'Pending';
+      updateData.isVerified = false; // edited listing must be re-verified; drop the trust badge
+    }
 
-        if (vendor.status !== 'APPROVED') {
-            return reply.status(403).send({ error: `Vendor account status: ${vendor.status}` });
-        }
-
-        // Check active listing count for SINGLE type vendor
-        if (vendor.type === 'SINGLE') {
-            const activeCount = await prisma.product.count({
-                where: {
-                    sellerId: dbUser.id,
-                    status: { in: ['Pending', 'In_Review', 'Approved'] },
-                }
-            });
-
-            if (activeCount >= vendor.maxListings) {
-                return reply.status(422).send({
-                    error: `Listing limit reached. Single sellers can have at most ${vendor.maxListings} active products.`
-                });
-            }
-        }
-
-        const newProduct = await prisma.product.create({
-            data: {
-                ...productData,
-                images: productData.images || [],
-                keywords: productData.keywords || [],
-                commissionPercent: productData.commissionPercent ?? 10,
-                authenticityStatus: 'Pending',
-                status: 'Pending',
-                isPublished: false,
-            },
-        });
-        return reply.status(201).send(newProduct);
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: updateData,
     });
 
-    // Update product
-    fastify.put('/:id', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { id } = ProductIdParam.parse(request.params);
-        const productData = ProductSchema.partial().parse(request.body);
-        const dbUser = request.dbUser;
+    return updatedProduct;
+  });
 
-        if (!dbUser) {
-            return reply.status(401).send({ error: 'User profile not synchronized' });
-        }
+  // Delete product
+  fastify.delete('/:id', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+    const { id } = ProductIdParam.parse(request.params);
+    const dbUser = request.dbUser;
 
-        const existingProduct = await prisma.product.findUnique({
-            where: { id }
-        });
+    if (!dbUser) {
+      return reply.status(401).send({ error: 'User profile not synchronized' });
+    }
 
-        if (!existingProduct) {
-            return reply.status(404).send({ error: 'Product not found' });
-        }
-
-        // Prevent modifying a sold product
-        if (existingProduct.status === 'Sold') {
-            return reply.status(422).send({ error: 'Cannot modify a sold product' });
-        }
-
-        // Ensure user is the owner or an admin
-        if (existingProduct.sellerId !== dbUser.id && dbUser.role !== 'admin' && dbUser.role !== 'curator') {
-            return reply.status(403).send({ error: 'Not authorized to update this product' });
-        }
-
-        // If updated by seller, reset approval status back to Pending
-        const { sellerId, ...safeData } = productData;
-        const updateData = { ...safeData };
-        if (dbUser.role !== 'admin' && dbUser.role !== 'curator') {
-            updateData.status = 'Pending';
-            updateData.isPublished = false;
-            updateData.authenticityStatus = 'Pending';
-        }
-
-        const updatedProduct = await prisma.product.update({
-            where: { id },
-            data: updateData
-        });
-
-        return updatedProduct;
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
     });
 
-    // Delete product
-    fastify.delete('/:id', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { id } = ProductIdParam.parse(request.params);
-        const dbUser = request.dbUser;
+    if (!existingProduct) {
+      return reply.status(404).send({ error: 'Product not found' });
+    }
 
-        if (!dbUser) {
-            return reply.status(401).send({ error: 'User profile not synchronized' });
-        }
+    // Ensure user is the owner or an admin
+    if (existingProduct.sellerId !== dbUser.id && dbUser.role !== 'admin') {
+      return reply.status(403).send({ error: 'Not authorized to delete this product' });
+    }
 
-        const existingProduct = await prisma.product.findUnique({
-            where: { id }
-        });
-
-        if (!existingProduct) {
-            return reply.status(404).send({ error: 'Product not found' });
-        }
-
-        // Ensure user is the owner or an admin
-        if (existingProduct.sellerId !== dbUser.id && dbUser.role !== 'admin') {
-            return reply.status(403).send({ error: 'Not authorized to delete this product' });
-        }
-
-        await prisma.product.delete({
-            where: { id }
-        });
-
-        return reply.status(204).send();
+    await prisma.product.delete({
+      where: { id },
     });
 
-    // Bulk create products (for BULK vendors)
-    fastify.post('/bulk', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { products } = request.body;
-        const dbUser = request.dbUser;
+    return reply.status(204).send();
+  });
 
-        if (!dbUser) {
-            return reply.status(401).send({ error: 'User profile not synchronized' });
-        }
+  // Bulk create products (for BULK vendors)
+  fastify.post('/bulk', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+    const { products } = request.body;
+    const dbUser = request.dbUser;
 
-        if (!Array.isArray(products) || products.length === 0) {
-            return reply.status(400).send({ error: 'Products array is required and must not be empty.' });
-        }
+    if (!dbUser) {
+      return reply.status(401).send({ error: 'User profile not synchronized' });
+    }
 
-        if (products.length > 100) {
-            return reply.status(422).send({ error: 'Batch limit exceeded. Maximum 100 products per bulk request.' });
-        }
+    if (!Array.isArray(products) || products.length === 0) {
+      return reply.status(400).send({ error: 'Products array is required and must not be empty.' });
+    }
 
-        if (dbUser.kycStatus !== 'verified') {
-            return reply.status(403).send({ error: 'Seller KYC verification is required.' });
-        }
+    if (products.length > 100) {
+      return reply
+        .status(422)
+        .send({ error: 'Batch limit exceeded. Maximum 100 products per bulk request.' });
+    }
 
-        let vendor = dbUser.vendor || await prisma.vendor.create({
-            data: {
-                userId: dbUser.id,
-                type: 'BULK',
-                status: 'APPROVED',
-                maxListings: 999999,
-            }
+    if (dbUser.kycStatus !== 'verified') {
+      return reply.status(403).send({ error: 'Seller KYC verification is required.' });
+    }
+
+    let vendor =
+      dbUser.vendor ||
+      (await prisma.vendor.create({
+        data: {
+          userId: dbUser.id,
+          type: 'BULK',
+          status: 'APPROVED',
+          maxListings: 999999,
+        },
+      }));
+
+    if (vendor.type !== 'BULK') {
+      return reply.status(403).send({ error: 'Bulk upload is only available for BULK vendors.' });
+    }
+
+    // Same vendor-status gate the single-create path enforces — a SUSPENDED /
+    // REJECTED / PENDING vendor must not be able to publish via the bulk path.
+    if (vendor.status !== 'APPROVED') {
+      return reply.status(403).send({ error: `Vendor account status: ${vendor.status}` });
+    }
+
+    const created = [];
+    const errors = [];
+
+    for (let i = 0; i < products.length; i++) {
+      const item = products[i];
+      try {
+        const parsed = ProductSchema.parse({
+          ...item,
+          sellerId: dbUser.id,
+          price: parseFloat(item.price),
+          commissionPercent: item.commissionPercent ? parseInt(item.commissionPercent, 10) : 10,
+          keywords: item.keywords
+            ? typeof item.keywords === 'string'
+              ? item.keywords
+                  .split(',')
+                  .map((k) => k.trim())
+                  .filter(Boolean)
+              : item.keywords
+            : [],
+          images: item.images || (item.image ? [item.image] : []),
         });
+        const product = await prisma.product.create({
+          data: {
+            ...parsed,
+            images: parsed.images || [],
+            keywords: parsed.keywords || [],
+            commissionPercent: parsed.commissionPercent ?? 10,
+            authenticityStatus: 'Pending',
+            status: 'Pending',
+            isPublished: false,
+            isVerified: false, // trust badge — admin-only, never seller-set
+          },
+        });
+        created.push(product);
+      } catch (err) {
+        errors.push({
+          row: i + 1,
+          title: item.title || '(no title)',
+          error: err.message || 'Validation failed',
+        });
+      }
+    }
 
-        if (vendor.type !== 'BULK') {
-            return reply.status(403).send({ error: 'Bulk upload is only available for BULK vendors.' });
-        }
+    return { created: created.length, errors, products: created };
+  });
 
-        const created = [];
-        const errors = [];
-
-        for (let i = 0; i < products.length; i++) {
-            const item = products[i];
-            try {
-                const parsed = ProductSchema.parse({
-                    ...item,
-                    sellerId: dbUser.id,
-                    price: parseFloat(item.price),
-                    commissionPercent: item.commissionPercent ? parseInt(item.commissionPercent, 10) : 10,
-                    keywords: item.keywords ? (typeof item.keywords === 'string' ? item.keywords.split(',').map(k => k.trim()).filter(Boolean) : item.keywords) : [],
-                    images: item.images || (item.image ? [item.image] : []),
-                });
-                const product = await prisma.product.create({
-                    data: {
-                        ...parsed,
-                        images: parsed.images || [],
-                        keywords: parsed.keywords || [],
-                        commissionPercent: parsed.commissionPercent ?? 10,
-                        authenticityStatus: 'Pending',
-                        status: 'Pending',
-                        isPublished: false,
-                    },
-                });
-                created.push(product);
-            } catch (err) {
-                errors.push({ row: i + 1, title: item.title || '(no title)', error: err.message || 'Validation failed' });
-            }
-        }
-
-        return { created: created.length, errors, products: created };
-    });
-
-    // Mark product as sold
-    fastify.patch('/:id/sold', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-        const { id } = ProductIdParam.parse(request.params);
-        const dbUser = request.dbUser;
-        const existing = await prisma.product.findUnique({ where: { id } });
-        if (!existing) return reply.status(404).send({ error: 'Product not found' });
-        if (existing.sellerId !== dbUser.id) return reply.status(403).send({ error: 'Not your product' });
-        if (existing.status === 'Sold') return reply.status(422).send({ error: 'Product is already sold' });
-        const updated = await prisma.product.update({ where: { id }, data: { status: 'Sold' } });
-        return updated;
-    });
+  // Mark product as sold
+  fastify.patch('/:id/sold', { preValidation: [fastify.authenticate] }, async (request, reply) => {
+    const { id } = ProductIdParam.parse(request.params);
+    const dbUser = request.dbUser;
+    const existing = await prisma.product.findUnique({ where: { id } });
+    if (!existing) return reply.status(404).send({ error: 'Product not found' });
+    if (existing.sellerId !== dbUser.id)
+      return reply.status(403).send({ error: 'Not your product' });
+    if (existing.status === 'Sold')
+      return reply.status(422).send({ error: 'Product is already sold' });
+    // Only an approved (publicly listed) product can be marked sold. Otherwise a
+    // seller could mark a Pending/Rejected item "Sold" to (a) surface an unreviewed
+    // product in the public catalog and (b) free up a listing slot to bypass limits.
+    if (existing.status !== 'Approved') {
+      return reply.status(422).send({ error: 'Only approved listings can be marked as sold' });
+    }
+    const updated = await prisma.product.update({ where: { id }, data: { status: 'Sold' } });
+    return updated;
+  });
 }

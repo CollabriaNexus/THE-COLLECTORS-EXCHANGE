@@ -21,27 +21,37 @@ describe('wishlist routes', () => {
     mockPrisma = {
       user: { findUnique: vi.fn() },
       product: { findUnique: vi.fn() },
-      wishlistItem: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn() },
+      wishlistItem: { findMany: vi.fn(), upsert: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
     };
   });
 
   describe('GET /:userId', () => {
     it('returns wishlist items', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', supabaseId: 'sb-123' });
-      mockPrisma.wishlistItem.findMany.mockResolvedValue([{ id: 'w1', product: { title: 'Test' } }]);
+      mockPrisma.wishlistItem.findMany.mockResolvedValue([
+        { id: 'w1', product: { title: 'Test' } },
+      ]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/wishlist.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/user-id', headers: { authorization: 'Bearer token' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/user-id',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
-    it('returns 403 when accessing another user\'s wishlist', async () => {
+    it("returns 403 when accessing another user's wishlist", async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'other-id', supabaseId: 'sb-other' });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/wishlist.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/other-id', headers: { authorization: 'Bearer token' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/other-id',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(403);
     });
   });
@@ -50,11 +60,20 @@ describe('wishlist routes', () => {
     it('adds item to wishlist', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', supabaseId: 'sb-123' });
       mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', status: 'Approved' });
-      mockPrisma.wishlistItem.upsert.mockResolvedValue({ id: 'w1', userId: 'user-id', productId: 'p1' });
+      mockPrisma.wishlistItem.upsert.mockResolvedValue({
+        id: 'w1',
+        userId: 'user-id',
+        productId: 'p1',
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/wishlist.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: { userId: 'user-id', productId: 'p1' }, headers: { authorization: 'Bearer token' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: { userId: 'user-id', productId: 'p1' },
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(201);
     });
 
@@ -64,7 +83,12 @@ describe('wishlist routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/wishlist.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: { userId: 'user-id', productId: 'p1' }, headers: { authorization: 'Bearer token' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: { userId: 'user-id', productId: 'p1' },
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(404);
     });
 
@@ -74,7 +98,12 @@ describe('wishlist routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/wishlist.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: { userId: 'user-id', productId: 'p1' }, headers: { authorization: 'Bearer token' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: { userId: 'user-id', productId: 'p1' },
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(422);
     });
   });
@@ -82,11 +111,34 @@ describe('wishlist routes', () => {
   describe('DELETE /', () => {
     it('removes item from wishlist', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', supabaseId: 'sb-123' });
-      mockPrisma.wishlistItem.delete.mockResolvedValue({});
+      mockPrisma.wishlistItem.deleteMany.mockResolvedValue({ count: 1 });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/wishlist.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'DELETE', url: '/', payload: { userId: 'user-id', productId: 'p1' }, headers: { authorization: 'Bearer token' } });
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/',
+        payload: { userId: 'user-id', productId: 'p1' },
+        headers: { authorization: 'Bearer token' },
+      });
+      expect(res.statusCode).toBe(204);
+      expect(mockPrisma.wishlistItem.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user-id', productId: 'p1' },
+      });
+    });
+
+    it('is idempotent — removing an already-gone item still returns 204', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', supabaseId: 'sb-123' });
+      mockPrisma.wishlistItem.deleteMany.mockResolvedValue({ count: 0 });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/wishlist.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/',
+        payload: { userId: 'user-id', productId: 'gone' },
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(204);
     });
   });
