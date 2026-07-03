@@ -44,3 +44,9 @@ tests/playwright-report/
 tests/.auth/
 tests/.env.test
 
+
+# Claude Code MCP config (may contain project refs)
+.mcp.json
+
+# Admin dashboard env (reads parent .env; only public client keys)
+admin/.env
