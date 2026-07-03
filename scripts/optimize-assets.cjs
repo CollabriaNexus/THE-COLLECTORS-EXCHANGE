@@ -28,6 +28,33 @@ async function convertToWebP() {
   }
 }
 
+// Large marketing images that are rendered big but shipped at one resolution.
+// We emit width variants as WebP into public/img so pages can use srcset/sizes
+// and phones download a small file instead of the full desktop image.
+const RESPONSIVE_SOURCES = [
+  { src: 'About_US.jpg', name: 'about-us' },
+  { src: 'verification_authenticity.png', name: 'verification' },
+  { src: 'artisan2.png', name: 'artisan' },
+  { src: 'collectors_study.png', name: 'collectors-study' },
+];
+const RESPONSIVE_WIDTHS = [480, 800, 1200, 1600];
+
+async function generateResponsiveVariants() {
+  const OUT = path.join(PUBLIC_DIR, 'img');
+  if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
+  for (const { src, name } of RESPONSIVE_SOURCES) {
+    const inputPath = path.join(ASSETS_DIR, src);
+    if (!fs.existsSync(inputPath)) { console.warn(`  skip (missing): ${src}`); continue; }
+    const meta = await sharp(inputPath).metadata();
+    for (const w of RESPONSIVE_WIDTHS) {
+      if (meta.width && w > meta.width) continue; // never upscale
+      const outPath = path.join(OUT, `${name}-${w}.webp`);
+      await sharp(inputPath).resize({ width: w }).webp({ quality: 78 }).toFile(outPath);
+      console.log(`  ${name}-${w}.webp — ${(fs.statSync(outPath).size / 1024).toFixed(1)}KB`);
+    }
+  }
+}
+
 async function createOGImage() {
   const width = 1200;
   const height = 630;
@@ -67,6 +94,8 @@ async function createOGImage() {
 async function main() {
   console.log('=== Converting PNGs to WebP ===');
   await convertToWebP();
+  console.log('\n=== Generating responsive width variants (public/img) ===');
+  await generateResponsiveVariants();
   console.log('\n=== Creating OG Image ===');
   await createOGImage();
   console.log('\nDone!');

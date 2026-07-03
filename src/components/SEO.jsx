@@ -2,8 +2,10 @@ import { Helmet } from 'react-helmet-async';
 
 const SITE_NAME = 'The Collectors Exchange';
 const SITE_URL = 'https://thecollectorsexchange.in';
-const DEFAULT_DESC = 'India\'s curated marketplace for verified pre-owned collectibles, antiques, and limited-edition pieces. Every item authenticated. Trusted sellers. Secure transactions.';
+const DEFAULT_DESC =
+  "India's curated marketplace for authenticated vintage watches, watch collections, and rare pre-owned collectibles. Mid-range to rare timepieces — every piece expert-verified. Trusted sellers, secure transactions.";
 const DEFAULT_IMG = '/og-image.png';
+const TWITTER_HANDLE = '@TCE_store';
 
 const SEO = ({
   title,
@@ -15,7 +17,9 @@ const SEO = ({
   noindex = false,
   structuredData,
 }) => {
-  const pageTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Luxury Pre-Owned & Rare Collectibles`;
+  const pageTitle = title
+    ? `${title} — ${SITE_NAME}`
+    : `Vintage Watches & Rare Collectibles — ${SITE_NAME}`;
   const pageDesc = description || DEFAULT_DESC;
   const pageImage = image || DEFAULT_IMG;
 
@@ -28,7 +32,12 @@ const SEO = ({
       {canonical && <link rel="canonical" href={`${SITE_URL}${canonical}`} />}
 
       {noindex && <meta name="robots" content="noindex, nofollow" />}
-      {!noindex && <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />}
+      {!noindex && (
+        <meta
+          name="robots"
+          content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+        />
+      )}
 
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:title" content={pageTitle} />
@@ -41,6 +50,8 @@ const SEO = ({
       <meta property="og:locale" content="en_IN" />
 
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content={TWITTER_HANDLE} />
+      <meta name="twitter:creator" content={TWITTER_HANDLE} />
       <meta name="twitter:title" content={pageTitle} />
       <meta name="twitter:description" content={pageDesc} />
       <meta name="twitter:image" content={pageImage} />
@@ -48,9 +59,7 @@ const SEO = ({
       {publishedTime && <meta property="article:published_time" content={publishedTime} />}
 
       {structuredData && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       )}
     </Helmet>
   );
@@ -114,7 +123,7 @@ export const ProductSchema = ({ product }) => {
     '@type': 'Product',
     name: product.title,
     description: product.description?.replace(/<[^>]*>/g, '')?.substring(0, 200),
-    image: product.images?.length > 0 ? product.images : (product.image ? [product.image] : []),
+    image: product.images?.length > 0 ? product.images : product.image ? [product.image] : [],
     sku: product.id?.toString(),
     brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
     category: product.category,
@@ -122,13 +131,17 @@ export const ProductSchema = ({ product }) => {
       '@type': 'Offer',
       price: product.price?.toString(),
       priceCurrency: 'INR',
-      availability: product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+      availability:
+        product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
       url: `${SITE_URL}/product/${product.id}`,
       priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     },
-    itemCondition: product.condition === 'New' ? 'https://schema.org/NewCondition'
-      : product.condition === 'Mint' ? 'https://schema.org/MintCondition'
-      : 'https://schema.org/UsedCondition',
+    itemCondition:
+      product.condition === 'New'
+        ? 'https://schema.org/NewCondition'
+        : product.condition === 'Mint'
+          ? 'https://schema.org/MintCondition'
+          : 'https://schema.org/UsedCondition',
     ...(product.isVerified && {
       award: 'Verified Authentic by The Collectors Exchange',
     }),

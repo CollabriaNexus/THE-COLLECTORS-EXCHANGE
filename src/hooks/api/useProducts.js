@@ -10,120 +10,131 @@ import apiClient from './apiClient';
  * @param {string} listingCategory
  * @param {string} condition
  */
-export const useProducts = (category, search, page = 1, pageSize = 12, listingCategory, condition) => {
-    return useQuery({
-        queryKey: ['products', category, search, page, pageSize, listingCategory, condition],
-        queryFn: async () => {
-            const params = new URLSearchParams();
-            if (category && category !== 'all') params.append('category', category);
-            if (search) params.append('search', search);
-            if (listingCategory) params.append('listingCategory', listingCategory);
-            if (condition) params.append('condition', condition);
-            params.append('page', page);
-            params.append('limit', pageSize);
-            const { data } = await apiClient.get(`/products?${params.toString()}`);
-            return data;
-        },
-        placeholderData: (prev) => prev,
-    });
+export const useProducts = (
+  category,
+  search,
+  page = 1,
+  pageSize = 12,
+  listingCategory,
+  condition,
+) => {
+  return useQuery({
+    queryKey: ['products', category, search, page, pageSize, listingCategory, condition],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (category && category !== 'all') params.append('category', category);
+      if (search) params.append('search', search);
+      if (listingCategory) params.append('listingCategory', listingCategory);
+      if (condition) params.append('condition', condition);
+      params.append('page', page);
+      params.append('limit', pageSize);
+      const { data } = await apiClient.get(`/products?${params.toString()}`);
+      return data;
+    },
+    placeholderData: (prev) => prev,
+  });
 };
 
 /**
  * Hook to fetch a single product by ID
- * @param {string} id 
+ * @param {string} id
  */
 export const useProduct = (id) => {
-    return useQuery({
-        queryKey: ['products', id],
-        queryFn: async () => {
-            const { data } = await apiClient.get(`/products/${id}`);
-            return data;
-        },
-        enabled: !!id,
-    });
+  return useQuery({
+    queryKey: ['products', id],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/products/${id}`);
+      return data;
+    },
+    enabled: !!id,
+  });
 };
 
 /**
  * Hook to add a new product
  */
 export const useAddProduct = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (productData) => {
-            const { data } = await apiClient.post('/products', productData);
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['products'] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (productData) => {
+      const { data } = await apiClient.post('/products', productData);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      // "My Listings" reads from the user profile query, and the SINGLE-vendor
+      // listing-limit counter lives on the vendor profile — refresh both so a
+      // newly added listing appears immediately.
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['vendor'] });
+    },
+  });
 };
 
 /**
  * Hook to update an existing product
  */
 export const useUpdateProduct = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async ({ id, productData }) => {
-            const { data } = await apiClient.put(`/products/${id}`, productData);
-            return data;
-        },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['products'] });
-            queryClient.invalidateQueries({ queryKey: ['products', variables.id] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, productData }) => {
+      const { data } = await apiClient.put(`/products/${id}`, productData);
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['products', variables.id] });
+    },
+  });
 };
 
 /**
  * Hook to delete a product
  */
 export const useDeleteProduct = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (id) => {
-            const { data } = await apiClient.delete(`/products/${id}`);
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['products'] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { data } = await apiClient.delete(`/products/${id}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
 };
 
 /**
  * Hook to bulk create products (for BULK vendors)
  */
 export const useAddBulkProducts = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (products) => {
-            const { data } = await apiClient.post('/products/bulk', { products });
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['products'] });
-            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (products) => {
+      const { data } = await apiClient.post('/products/bulk', { products });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+    },
+  });
 };
 
 /**
  * Hook to mark a product as sold
  */
 export const useMarkAsSold = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (id) => {
-            const { data } = await apiClient.patch(`/products/${id}/sold`);
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['products'] });
-            queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-            queryClient.invalidateQueries({ queryKey: ['vendor', 'stats'] });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { data } = await apiClient.patch(`/products/${id}/sold`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['vendor', 'stats'] });
+    },
+  });
 };
-
