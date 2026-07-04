@@ -26,6 +26,7 @@ import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import { Reveal, Parallax, Magnetic, Tilt } from '../components/Motion';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -200,54 +201,64 @@ const ProductDetail = () => {
               </div>
             )}
             {/* Main Image */}
-            <div className="relative flex-1 min-h-[300px] sm:min-h-[400px] max-h-[500px] sm:max-h-[600px] bg-gray-50 overflow-hidden shadow-sm border border-gray-100 group">
-              {images.length > 0 ? (
-                <>
-                  {/* Desktop zoom version */}
-                  <div
-                    className="w-full h-full hidden lg:block"
-                    onMouseMove={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const x = ((e.clientX - rect.left) / rect.width) * 100;
-                      const y = ((e.clientY - rect.top) / rect.height) * 100;
-                      e.currentTarget.querySelector('img').style.transformOrigin = `${x}% ${y}%`;
-                    }}
-                  >
-                    <img
-                      width="800"
-                      height="600"
-                      src={images[activeImageIndex]}
-                      alt={product.title}
-                      className="w-full h-full object-contain p-2 sm:p-6 md:p-8 transition-transform duration-300 ease-out lg:group-hover:scale-150"
-                    />
-                  </div>
-                  {/* Mobile fallback */}
-                  <img
-                    width="800"
-                    height="600"
-                    src={images[activeImageIndex]}
-                    alt={product.title}
-                    className="w-full h-full object-contain p-2 sm:p-6 md:p-8 block lg:hidden"
-                  />
-                </>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-300">
-                  <ImageOff size={48} strokeWidth={1} />
+            <Reveal
+              direction="left"
+              blur
+              distance={90}
+              className="relative flex-1 min-h-[300px] sm:min-h-[400px] max-h-[500px] sm:max-h-[600px]"
+            >
+              <Parallax speed={0.1} className="h-full">
+                <div className="relative h-full bg-gray-50 overflow-hidden shadow-sm border border-gray-100 group">
+                  {images.length > 0 ? (
+                    <>
+                      {/* Desktop zoom version */}
+                      <div
+                        className="w-full h-full hidden lg:block"
+                        onMouseMove={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = ((e.clientX - rect.left) / rect.width) * 100;
+                          const y = ((e.clientY - rect.top) / rect.height) * 100;
+                          e.currentTarget.querySelector('img').style.transformOrigin =
+                            `${x}% ${y}%`;
+                        }}
+                      >
+                        <img
+                          width="800"
+                          height="600"
+                          src={images[activeImageIndex]}
+                          alt={product.title}
+                          className="w-full h-full object-contain p-2 sm:p-6 md:p-8 transition-transform duration-300 ease-out lg:group-hover:scale-150"
+                        />
+                      </div>
+                      {/* Mobile fallback */}
+                      <img
+                        width="800"
+                        height="600"
+                        src={images[activeImageIndex]}
+                        alt={product.title}
+                        className="w-full h-full object-contain p-2 sm:p-6 md:p-8 block lg:hidden"
+                      />
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <ImageOff size={48} strokeWidth={1} />
+                    </div>
+                  )}
+                  {product.isVerified && (
+                    <div className="absolute top-2 sm:top-6 left-2 sm:left-6 bg-white/90 backdrop-blur-sm border border-gray-200 px-2 sm:px-4 py-1 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-sm">
+                      <ShieldCheck size={12} className="sm:w-4 sm:h-4 text-green-700" />
+                      <span className="text-[9px] sm:text-xs font-bold uppercase tracking-widest text-gray-800">
+                        Verified Authentic
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {product.isVerified && (
-                <div className="absolute top-2 sm:top-6 left-2 sm:left-6 bg-white/90 backdrop-blur-sm border border-gray-200 px-2 sm:px-4 py-1 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-sm">
-                  <ShieldCheck size={12} className="sm:w-4 sm:h-4 text-green-700" />
-                  <span className="text-[9px] sm:text-xs font-bold uppercase tracking-widest text-gray-800">
-                    Verified Authentic
-                  </span>
-                </div>
-              )}
-            </div>
+              </Parallax>
+            </Reveal>
           </div>
 
           {/* Right: Product Info */}
-          <div className="w-full lg:w-2/5 order-2">
+          <Reveal direction="right" className="w-full lg:w-2/5 order-2">
             <div className="mb-4 sm:mb-8">
               <div className="flex items-center flex-wrap gap-1.5 sm:gap-3 mb-2 sm:mb-4">
                 <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-heritage-cream text-heritage-bronze text-[9px] sm:text-xs font-bold uppercase tracking-widest">
@@ -327,13 +338,15 @@ const ProductDetail = () => {
                   Sold Out
                 </div>
               ) : !currentUser ? (
-                <Link
-                  to="/account"
-                  className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg"
-                >
-                  <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
-                  Sign In to Acquire
-                </Link>
+                <Magnetic className="flex-1 flex">
+                  <Link
+                    to="/account"
+                    className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg"
+                  >
+                    <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
+                    Sign In to Acquire
+                  </Link>
+                </Magnetic>
               ) : inCart ? (
                 <Link
                   to="/cart"
@@ -343,24 +356,26 @@ const ProductDetail = () => {
                   View in Cart
                 </Link>
               ) : (
-                <button
-                  onClick={handleAddToCart}
-                  disabled={addToCartMutation.isPending}
-                  className={`flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 ${
-                    cartFeedback
-                      ? 'bg-green-50 text-green-700 cursor-default'
-                      : 'bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg'
-                  }`}
-                >
-                  {addToCartMutation.isPending ? (
-                    <Loader2 size={14} className="animate-spin sm:w-[18px] sm:h-[18px]" />
-                  ) : cartFeedback ? (
-                    <Check size={14} className="sm:w-[18px] sm:h-[18px]" />
-                  ) : (
-                    <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
-                  )}
-                  {cartFeedback ? 'Added!' : 'Acquire Now'}
-                </button>
+                <Magnetic className="flex-1 flex">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={addToCartMutation.isPending}
+                    className={`flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 ${
+                      cartFeedback
+                        ? 'bg-green-50 text-green-700 cursor-default'
+                        : 'bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg'
+                    }`}
+                  >
+                    {addToCartMutation.isPending ? (
+                      <Loader2 size={14} className="animate-spin sm:w-[18px] sm:h-[18px]" />
+                    ) : cartFeedback ? (
+                      <Check size={14} className="sm:w-[18px] sm:h-[18px]" />
+                    ) : (
+                      <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
+                    )}
+                    {cartFeedback ? 'Added!' : 'Acquire Now'}
+                  </button>
+                </Magnetic>
               )}
               <button
                 onClick={handleWishlistToggle}
@@ -431,7 +446,7 @@ const ProductDetail = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
 
@@ -574,55 +589,58 @@ const SuggestedProducts = ({ category, currentId }) => {
                   </div>
                 </div>
               ))
-            : products.map((product) => {
+            : products.map((product, i) => {
                 const title = product.title || product.name;
                 return (
-                  <Link
-                    key={product.id}
-                    to={`/product/${product.id}`}
-                    className="bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500"
-                  >
-                    <div className="relative aspect-square bg-heritage-beige overflow-hidden">
-                      {product.image ? (
-                        <img
-                          loading="lazy"
-                          width="400"
-                          height="400"
-                          src={product.image}
-                          alt={title}
-                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/30 bg-heritage-cream">
-                          <Gem size={32} strokeWidth={1} />
-                        </div>
-                      )}
-                      {product.status === 'Sold' && (
-                        <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
-                          <span className="bg-white/90 text-heritage-charcoal text-[10px] font-bold px-4 py-1.5 uppercase tracking-[0.15em] shadow-lg">
-                            Sold Out
-                          </span>
-                        </div>
-                      )}
-                      <div className="absolute bottom-3 left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 font-sans tracking-[0.12em] uppercase flex items-center gap-1.5">
-                        <Award size={12} strokeWidth={1.5} />
-                        <span>{product.condition || 'Excellent'}</span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3
-                        className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal leading-snug line-clamp-1"
-                        title={title}
+                  <Reveal key={product.id} delay={i * 120} className="h-full">
+                    <Tilt className="h-full">
+                      <Link
+                        to={`/product/${product.id}`}
+                        className="block h-full bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500"
                       >
-                        {title}
-                      </h3>
-                      <p
-                        className={`font-sans text-sm font-medium mt-1.5 ${product.status === 'Sold' ? 'text-gray-400 line-through' : 'text-heritage-gold-muted'}`}
-                      >
-                        ₹{product.price?.toLocaleString()}
-                      </p>
-                    </div>
-                  </Link>
+                        <div className="relative aspect-square bg-heritage-beige overflow-hidden">
+                          {product.image ? (
+                            <img
+                              loading="lazy"
+                              width="400"
+                              height="400"
+                              src={product.image}
+                              alt={title}
+                              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/30 bg-heritage-cream">
+                              <Gem size={32} strokeWidth={1} />
+                            </div>
+                          )}
+                          {product.status === 'Sold' && (
+                            <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
+                              <span className="bg-white/90 text-heritage-charcoal text-[10px] font-bold px-4 py-1.5 uppercase tracking-[0.15em] shadow-lg">
+                                Sold Out
+                              </span>
+                            </div>
+                          )}
+                          <div className="absolute bottom-3 left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 font-sans tracking-[0.12em] uppercase flex items-center gap-1.5">
+                            <Award size={12} strokeWidth={1.5} />
+                            <span>{product.condition || 'Excellent'}</span>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <h3
+                            className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal leading-snug line-clamp-1"
+                            title={title}
+                          >
+                            {title}
+                          </h3>
+                          <p
+                            className={`font-sans text-sm font-medium mt-1.5 ${product.status === 'Sold' ? 'text-gray-400 line-through' : 'text-heritage-gold-muted'}`}
+                          >
+                            ₹{product.price?.toLocaleString()}
+                          </p>
+                        </div>
+                      </Link>
+                    </Tilt>
+                  </Reveal>
                 );
               })}
         </div>

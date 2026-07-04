@@ -1,5 +1,6 @@
 import React from 'react';
 import SEO from '../components/SEO';
+import { Reveal } from '../components/Motion';
 
 const FoundersNote = () => {
   return (
@@ -10,7 +11,10 @@ const FoundersNote = () => {
         canonical="/founders-note"
       />
       {/* Header section for the note */}
-      <section className="py-16 sm:py-24 px-6 bg-white border-b border-heritage-bronze/10">
+      <Reveal
+        as="section"
+        className="py-16 sm:py-24 px-6 bg-white border-b border-heritage-bronze/10"
+      >
         <div className="container mx-auto max-w-4xl text-center">
           <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-6 block">
             Founder’s message
@@ -21,11 +25,11 @@ const FoundersNote = () => {
           </h1>
           <div className="w-24 h-0.5 bg-luxury-gold/30 mx-auto"></div>
         </div>
-      </section>
+      </Reveal>
 
       <div className="container mx-auto max-w-4xl px-6 py-16 sm:py-20">
         {/* Founder's Message */}
-        <section className="mb-12 sm:mb-20 text-center md:text-left">
+        <Reveal as="section" direction="left" className="mb-12 sm:mb-20 text-center md:text-left">
           <h2 className="text-4xl md:text-5xl font-serif mb-12">A Message from Our Founder</h2>
 
           <div className="space-y-6 text-lg md:text-xl font-light leading-relaxed text-gray-800 font-serif">
@@ -47,10 +51,15 @@ const FoundersNote = () => {
               alive forever.' That is my vision, and that is my promise to you."
             </p>
           </div>
-        </section>
+        </Reveal>
 
         {/* The Story: The Heartbeat of Heritage */}
-        <section className="mb-12 sm:mb-20 pt-12 sm:pt-16 border-t border-gray-100">
+        <Reveal
+          as="section"
+          direction="up"
+          delay={80}
+          className="mb-12 sm:mb-20 pt-12 sm:pt-16 border-t border-gray-100"
+        >
           <h2 className="text-3xl md:text-4xl font-serif mb-12">
             The Story: The Heartbeat of Heritage
           </h2>
@@ -100,7 +109,7 @@ const FoundersNote = () => {
             </p>
             <p className="text-2xl font-serif text-luxury-gold">Welcome to the Exchange.</p>
           </div>
-        </section>
+        </Reveal>
       </div>
     </div>
   );

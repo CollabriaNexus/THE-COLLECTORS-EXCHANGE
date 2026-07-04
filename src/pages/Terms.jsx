@@ -1,5 +1,6 @@
 import React from 'react';
 import SEO from '../components/SEO';
+import { Reveal } from '../components/Motion';
 
 const Terms = () => {
   return (
@@ -10,26 +11,26 @@ const Terms = () => {
         canonical="/terms"
       />
       {/* Header */}
-      <div className="mb-12 border-b border-gray-200 pb-8">
+      <Reveal className="mb-12 border-b border-gray-200 pb-8">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-4">
           THE COLLECTORS EXCHANGE: CUSTODIANSHIP AGREEMENT
         </h1>
         <p className="text-gray-500 font-sans">Last Updated: April 2026</p>
         <div className="w-20 h-1 bg-luxury-gold mt-6"></div>
-      </div>
+      </Reveal>
 
       {/* Introduction */}
-      <div className="mb-10 font-sans text-gray-700 leading-relaxed">
+      <Reveal className="mb-10 font-sans text-gray-700 leading-relaxed">
         <p className="mb-4 italic text-lg font-serif text-black">
           Welcome to The Collectors Exchange. By acquiring an article from our collection, you are
           entering into a relationship built on the "Truth of Heritage."
         </p>
         <p>This document outlines our mutual responsibilities to the history we preserve.</p>
-      </div>
+      </Reveal>
 
       {/* Sections */}
       <div className="space-y-10 font-sans text-gray-800">
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             1. The Authenticity Pledge (The "Doctor vs. Cobbler" Rule)
           </h2>
@@ -49,9 +50,9 @@ const Terms = () => {
             provide a full recovery of the purchase price. We do not sell "luxury labels"; we sell
             "historic truths."
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             2. Condition of Heritage Articles
           </h2>
@@ -71,9 +72,9 @@ const Terms = () => {
             time of sale, they are vintage machines. They require the care of a custodian, not the
             rough handling of a consumer.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             3. The Stewardship & Annual Health Check
           </h2>
@@ -91,9 +92,9 @@ const Terms = () => {
             maintenance. While we may offer cleaning or servicing for a fee, the Annual Health Check
             is a commitment to the item's longevity, not a lifetime free repair warranty.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             4. Ethical Sourcing & The "Street" Mandate
           </h2>
@@ -110,9 +111,9 @@ const Terms = () => {
             Upon full payment, the legal title and "Custodianship" of the article pass to you. You
             are now the protector of that piece of Indian history.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             5. Transfer of Custodianship (Returns & Exchanges)
           </h2>
@@ -130,9 +131,9 @@ const Terms = () => {
             For online acquisitions, the Custodian has 48 hours from delivery to report any
             discrepancies between the article received and the "Truth" described on our platform.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             6. The Custodian's Responsibility
           </h2>
@@ -163,9 +164,9 @@ const Terms = () => {
               </span>
             </li>
           </ul>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             7. Limitations of Modern Technology
           </h2>
@@ -175,20 +176,20 @@ const Terms = () => {
             your screen settings or for the "digital noise" of the internet. The "Truth" of the
             article is found in its physical form, not its digital image.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">8. Governing Law</h2>
           <p className="text-gray-700">
             This Exchange is rooted in Indian values and is governed by the laws of the Republic of
             India. Any disputes will be settled with the integrity our ancestors taught us, through
             mediation, or under the jurisdiction of the courts in Bangalore, Karnataka.
           </p>
-        </section>
+        </Reveal>
       </div>
 
       {/* Founder's Closing Note */}
-      <div className="mt-12 sm:mt-16 p-6 sm:p-8 bg-heritage-cream border border-luxury-gold/20 rounded-sm">
+      <Reveal className="mt-12 sm:mt-16 p-6 sm:p-8 bg-heritage-cream border border-luxury-gold/20 rounded-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest text-luxury-gold mb-4">
           Founder's Closing Note
         </h3>
@@ -197,7 +198,7 @@ const Terms = () => {
           the buyer remain honest to the history we are holding in our hands. If you seek a startup
           bubble, look elsewhere. If you seek the Truth, welcome to the Exchange."
         </p>
-      </div>
+      </Reveal>
     </div>
   );
 };

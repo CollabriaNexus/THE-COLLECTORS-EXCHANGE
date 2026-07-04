@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import SEO, { FAQSchema } from '../components/SEO';
+import { Reveal, Stagger, Magnetic } from '../components/Motion';
 
 const FAQ_ITEMS = [
   {
@@ -127,7 +128,7 @@ const FAQ = () => {
       />
       <FAQSchema items={faqItems} />
       <div className="container mx-auto py-12 sm:py-20 px-6 max-w-3xl">
-        <div className="text-center mb-12">
+        <Reveal className="text-center mb-12" blur>
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-4">
             Frequently Asked Questions
           </h1>
@@ -145,15 +146,15 @@ const FAQ = () => {
               className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 focus:outline-none focus:border-luxury-gold"
             />
           </div>
-        </div>
+        </Reveal>
 
         <div className="space-y-8">
           {filtered.map((category, catIdx) => (
-            <div key={category.category}>
+            <Reveal key={category.category} as="div">
               <h2 className="text-xl sm:text-2xl font-serif mb-4 text-heritage-charcoal border-b border-gray-200 pb-3">
                 {category.category}
               </h2>
-              <div className="space-y-2">
+              <Stagger className="space-y-2" step={70} distance={28}>
                 {category.questions.map((item, qIdx) => {
                   const key = `${catIdx}-${qIdx}`;
                   const isOpen = openItems[key];
@@ -178,21 +179,23 @@ const FAQ = () => {
                     </div>
                   );
                 })}
-              </div>
-            </div>
+              </Stagger>
+            </Reveal>
           ))}
         </div>
 
-        <div className="mt-16 text-center bg-white p-10 border border-gray-100 shadow-sm">
+        <Reveal className="mt-16 text-center bg-white p-10 border border-gray-100 shadow-sm">
           <h2 className="text-xl sm:text-2xl font-serif mb-4">Still have questions?</h2>
           <p className="text-gray-500 mb-6">We're here to help you.</p>
-          <a
-            href="/contact"
-            className="inline-block bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
-          >
-            Contact Us
-          </a>
-        </div>
+          <Magnetic>
+            <a
+              href="/contact"
+              className="inline-block bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+            >
+              Contact Us
+            </a>
+          </Magnetic>
+        </Reveal>
       </div>
     </div>
   );

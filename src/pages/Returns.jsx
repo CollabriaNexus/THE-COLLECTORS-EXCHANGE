@@ -1,5 +1,6 @@
 import React from 'react';
 import SEO from '../components/SEO';
+import { Reveal } from '../components/Motion';
 
 const Returns = () => {
   return (
@@ -9,16 +10,16 @@ const Returns = () => {
         description="Learn about The Collectors Exchange returns, refunds, and shipping policy. 48-hour return window, free domestic shipping, and authenticity guarantee."
         canonical="/returns"
       />
-      <div className="mb-12 border-b border-gray-200 pb-8">
+      <Reveal className="mb-12 border-b border-gray-200 pb-8">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-4">
           RETURNS, REFUNDS & SHIPPING POLICY
         </h1>
         <p className="text-gray-500 font-sans">Last Updated: May 2026</p>
         <div className="w-20 h-1 bg-luxury-gold mt-6"></div>
-      </div>
+      </Reveal>
 
       <div className="space-y-10 font-sans text-gray-800">
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             1. Authenticity Guarantee & Returns
           </h2>
@@ -53,9 +54,9 @@ const Returns = () => {
               <span>The item must be returned in the same condition it was delivered.</span>
             </li>
           </ul>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             2. Inspection Period & Condition Discrepancies
           </h2>
@@ -104,9 +105,9 @@ const Returns = () => {
             Note: Normal wear, patina, and character marks consistent with the item's age and
             described condition are not considered discrepancies.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             3. Change of Mind / Buyer's Remorse
           </h2>
@@ -116,9 +117,9 @@ const Returns = () => {
             encourage buyers to review all details, images, and descriptions carefully before
             completing a purchase.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             4. Shipping & Delivery
           </h2>
@@ -178,9 +179,9 @@ const Returns = () => {
               </div>
             </li>
           </ul>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             5. Damaged or Lost in Transit
           </h2>
@@ -219,9 +220,9 @@ const Returns = () => {
               </span>
             </li>
           </ul>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             6. Refund Processing
           </h2>
@@ -255,9 +256,9 @@ const Returns = () => {
               <span>Payment gateway charges (if any) are non-refundable.</span>
             </li>
           </ul>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">7. Exclusions</h2>
           <ul className="space-y-2 text-gray-700 mb-3">
             <li className="flex items-start gap-3">
@@ -282,10 +283,10 @@ const Returns = () => {
               <span>Items returned without prior authorization will not be accepted.</span>
             </li>
           </ul>
-        </section>
+        </Reveal>
       </div>
 
-      <div className="mt-12 sm:mt-16 p-6 sm:p-8 bg-heritage-cream border border-luxury-gold/20 rounded-sm">
+      <Reveal className="mt-12 sm:mt-16 p-6 sm:p-8 bg-heritage-cream border border-luxury-gold/20 rounded-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest text-luxury-gold mb-4">
           Need Help?
         </h3>
@@ -301,7 +302,7 @@ const Returns = () => {
           . We are here to ensure your experience with The Collectors Exchange is one of trust and
           satisfaction.
         </p>
-      </div>
+      </Reveal>
     </div>
   );
 };

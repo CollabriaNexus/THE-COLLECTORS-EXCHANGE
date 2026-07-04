@@ -15,6 +15,7 @@ import {
   Quote,
 } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { Reveal, Parallax, Tilt, Magnetic } from '../components/Motion';
 
 function BlogPost() {
   const { slug } = useParams();
@@ -140,15 +141,19 @@ function BlogPost() {
       {/* Hero */}
       {post.coverImage ? (
         <section className="relative h-[40vh] sm:h-[50vh] lg:h-[60vh] min-h-[300px] overflow-hidden">
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
+          <Reveal direction="scale" className="absolute inset-0">
+            <Parallax speed={0.12} className="w-full h-full">
+              <img
+                src={post.coverImage}
+                alt={post.title}
+                fetchPriority="high"
+                className="w-full h-full object-cover scale-110"
+              />
+            </Parallax>
+          </Reveal>
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 lg:p-16">
-            <div className="container mx-auto max-w-4xl">
+            <Reveal className="container mx-auto max-w-4xl">
               <Link
                 to="/archive"
                 className="inline-flex items-center gap-2 text-white/60 hover:text-luxury-gold text-xs uppercase tracking-widest transition-colors mb-4 sm:mb-6"
@@ -168,7 +173,7 @@ function BlogPost() {
               <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-serif text-white leading-tight max-w-3xl">
                 {post.title}
               </h1>
-            </div>
+            </Reveal>
           </div>
         </section>
       ) : (
@@ -180,7 +185,7 @@ function BlogPost() {
               backgroundSize: '32px 32px',
             }}
           ></div>
-          <div className="container mx-auto max-w-4xl relative z-10">
+          <Reveal className="container mx-auto max-w-4xl relative z-10">
             <Link
               to="/archive"
               className="inline-flex items-center gap-2 text-white/60 hover:text-luxury-gold text-xs uppercase tracking-widest transition-colors mb-8"
@@ -200,7 +205,7 @@ function BlogPost() {
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif text-white leading-tight max-w-3xl">
               {post.title}
             </h1>
-          </div>
+          </Reveal>
         </section>
       )}
 
@@ -289,8 +294,9 @@ function BlogPost() {
 
           {/* Content */}
           <main className="flex-1 min-w-0 py-10 sm:py-16">
-            <article
-              className="prose prose-sm sm:prose-lg max-w-none
+            <Reveal>
+              <article
+                className="prose prose-sm sm:prose-lg max-w-none
                                 prose-headings:font-serif prose-headings:text-heritage-charcoal prose-headings:tracking-tight
                                 prose-h2:text-2xl sm:prose-h2:text-4xl prose-h2:mt-0 prose-h2:mb-6 sm:prose-h2:mb-8 prose-h2:pb-3 prose-h2:border-b prose-h2:border-gray-100
                                 prose-h3:text-xl sm:prose-h3:text-2xl prose-h3:mt-8 sm:prose-h3:mt-10 prose-h3:mb-3 sm:prose-h3:mb-4
@@ -302,11 +308,12 @@ function BlogPost() {
                                 prose-img:rounded-sm prose-img:shadow-md prose-img:my-8
                                 prose-code:bg-gray-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
                                 prose-pre:bg-heritage-charcoal prose-pre:text-gray-100 prose-pre:rounded-sm"
-              dangerouslySetInnerHTML={{ __html: processContent.html }}
-            />
+                dangerouslySetInnerHTML={{ __html: processContent.html }}
+              />
+            </Reveal>
 
             {/* Author Bio */}
-            <div className="mt-12 sm:mt-16 pt-8 border-t border-gray-100">
+            <Reveal direction="up" className="mt-12 sm:mt-16 pt-8 border-t border-gray-100">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-full bg-heritage-charcoal flex items-center justify-center flex-shrink-0">
                   <BookOpen size={18} className="text-luxury-gold" />
@@ -322,7 +329,7 @@ function BlogPost() {
                   </p>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </main>
         </div>
       </div>
@@ -331,48 +338,51 @@ function BlogPost() {
       {related.length > 0 && (
         <section className="py-16 sm:py-20 px-6 bg-heritage-cream/50 mt-4">
           <div className="container mx-auto max-w-6xl">
-            <div className="flex items-center gap-3 mb-10">
+            <Reveal as="div" className="flex items-center gap-3 mb-10">
               <div className="h-px w-8 bg-luxury-gold/30" />
               <h2 className="text-sm uppercase tracking-[0.2em] font-bold text-heritage-charcoal">
                 Related Articles
               </h2>
               <div className="h-px flex-1 bg-gray-200" />
-            </div>
+            </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {related.map((r) => (
-                <Link
-                  key={r.id}
-                  to={`/archive/${r.slug}`}
-                  className="group bg-white rounded-sm border border-gray-100 hover:border-luxury-gold/30 hover:shadow-md transition-all duration-500 overflow-hidden"
-                >
-                  {r.coverImage ? (
-                    <div className="relative h-40 overflow-hidden">
-                      <img
-                        src={r.coverImage}
-                        alt={r.title}
-                        width="800"
-                        height="450"
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-40 bg-gradient-to-br from-heritage-cream to-gray-50 flex items-center justify-center">
-                      <BookOpen size={32} className="text-gray-200" />
-                    </div>
-                  )}
-                  <div className="p-5">
-                    <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-luxury-gold bg-luxury-gold/5 px-2 py-0.5 rounded-full">
-                      {r.category}
-                    </span>
-                    <h3 className="font-serif font-bold text-heritage-charcoal group-hover:text-luxury-gold transition-colors mt-2 mb-2 line-clamp-2">
-                      {r.title}
-                    </h3>
-                    <span className="text-xs text-gray-400 flex items-center gap-1">
-                      <Clock size={10} /> {r.readingTime} min read
-                    </span>
-                  </div>
-                </Link>
+              {related.map((r, i) => (
+                <Reveal key={r.id} delay={i * 130} className="h-full">
+                  <Tilt className="h-full">
+                    <Link
+                      to={`/archive/${r.slug}`}
+                      className="group block h-full bg-white rounded-sm border border-gray-100 hover:border-luxury-gold/30 hover:shadow-md transition-all duration-500 overflow-hidden"
+                    >
+                      {r.coverImage ? (
+                        <div className="relative h-40 overflow-hidden">
+                          <img
+                            src={r.coverImage}
+                            alt={r.title}
+                            width="800"
+                            height="450"
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-40 bg-gradient-to-br from-heritage-cream to-gray-50 flex items-center justify-center">
+                          <BookOpen size={32} className="text-gray-200" />
+                        </div>
+                      )}
+                      <div className="p-5">
+                        <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-luxury-gold bg-luxury-gold/5 px-2 py-0.5 rounded-full">
+                          {r.category}
+                        </span>
+                        <h3 className="font-serif font-bold text-heritage-charcoal group-hover:text-luxury-gold transition-colors mt-2 mb-2 line-clamp-2">
+                          {r.title}
+                        </h3>
+                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                          <Clock size={10} /> {r.readingTime} min read
+                        </span>
+                      </div>
+                    </Link>
+                  </Tilt>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -381,19 +391,21 @@ function BlogPost() {
 
       {/* CTA */}
       <section className="py-16 px-6 text-center bg-white">
-        <div className="container mx-auto max-w-lg">
+        <Reveal className="container mx-auto max-w-lg">
           <BookOpen size={24} className="mx-auto text-luxury-gold/40 mb-4" strokeWidth={1} />
           <h3 className="font-serif text-2xl text-heritage-charcoal mb-3">Discover more stories</h3>
           <p className="text-gray-500 text-sm mb-6">
             Browse the full archive for more insights into the world of collecting.
           </p>
-          <Link
-            to="/archive"
-            className="inline-flex items-center gap-2 bg-black text-white px-8 py-3.5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
-          >
-            Browse The Archive <ArrowRight size={14} />
-          </Link>
-        </div>
+          <Magnetic>
+            <Link
+              to="/archive"
+              className="inline-flex items-center gap-2 bg-black text-white px-8 py-3.5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+            >
+              Browse The Archive <ArrowRight size={14} />
+            </Link>
+          </Magnetic>
+        </Reveal>
       </section>
     </div>
   );

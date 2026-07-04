@@ -32,6 +32,7 @@ import {
   useVendorTopProducts,
   useVendorPayouts,
 } from '../hooks/api/useVendor';
+import { Reveal, Stagger, Tilt, CountUp } from '../components/Motion';
 
 const PERIODS = [
   { value: '7d', label: '7 Days' },
@@ -78,7 +79,11 @@ function StatCard({ title, value, icon: Icon, color, prefix, loading, error, onR
             <Skeleton className="h-6 sm:h-8 w-16 sm:w-24 mt-1" />
           ) : (
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-heritage-charcoal">
-              {`${prefix || ''}${value ?? 0}`}
+              {typeof value === 'number' ? (
+                <CountUp end={value} prefix={prefix || ''} />
+              ) : (
+                `${prefix || ''}${value ?? 0}`
+              )}
             </p>
           )}
         </div>
@@ -219,7 +224,7 @@ export default function VendorDashboard() {
 
       <div className="container mx-auto py-6 px-3 sm:py-12 sm:px-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 sm:mb-8">
+        <Reveal className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 sm:mb-8">
           <div>
             <h1 className="text-2xl sm:text-4xl font-serif mb-2">Vendor Dashboard</h1>
             <p className="text-gray-500 font-light">
@@ -235,7 +240,7 @@ export default function VendorDashboard() {
           <div className="mt-4 md:mt-0">
             <PeriodSelector value={period} onChange={setPeriod} />
           </div>
-        </div>
+        </Reveal>
 
         {overviewError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
@@ -253,324 +258,340 @@ export default function VendorDashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-          <StatCard
-            title="Order Count"
-            value={overview?.orderCount}
-            icon={ShoppingBag}
-            color="bg-blue-500"
-            loading={isLoading}
-            error={overviewError}
-            onRetry={refetchOverview}
-          />
-          <StatCard
-            title="Items Sold"
-            value={overview?.saleCount}
-            icon={Package}
-            color="bg-green-500"
-            loading={isLoading}
-            error={overviewError}
-            onRetry={refetchOverview}
-          />
-          <StatCard
-            title="Total Revenue"
-            value={overview?.totalRevenue?.toLocaleString()}
-            icon={TrendingUp}
-            color="bg-purple-500"
-            prefix="₹"
-            loading={isLoading}
-            error={overviewError}
-            onRetry={refetchOverview}
-          />
-          <StatCard
-            title="Pending Payout"
-            value={overview?.pendingPayout?.toLocaleString()}
-            icon={DollarSign}
-            color="bg-amber-500"
-            prefix="₹"
-            loading={isLoading}
-            error={overviewError}
-            onRetry={refetchOverview}
-          />
-        </div>
+        <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <Tilt>
+            <StatCard
+              title="Order Count"
+              value={overview?.orderCount}
+              icon={ShoppingBag}
+              color="bg-blue-500"
+              loading={isLoading}
+              error={overviewError}
+              onRetry={refetchOverview}
+            />
+          </Tilt>
+          <Tilt>
+            <StatCard
+              title="Items Sold"
+              value={overview?.saleCount}
+              icon={Package}
+              color="bg-green-500"
+              loading={isLoading}
+              error={overviewError}
+              onRetry={refetchOverview}
+            />
+          </Tilt>
+          <Tilt>
+            <StatCard
+              title="Total Revenue"
+              value={overview?.totalRevenue?.toLocaleString()}
+              icon={TrendingUp}
+              color="bg-purple-500"
+              prefix="₹"
+              loading={isLoading}
+              error={overviewError}
+              onRetry={refetchOverview}
+            />
+          </Tilt>
+          <Tilt>
+            <StatCard
+              title="Pending Payout"
+              value={overview?.pendingPayout?.toLocaleString()}
+              icon={DollarSign}
+              color="bg-amber-500"
+              prefix="₹"
+              loading={isLoading}
+              error={overviewError}
+              onRetry={refetchOverview}
+            />
+          </Tilt>
+        </Stagger>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8 mb-6 sm:mb-8">
           {/* Sales Graph */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
-              Sales Trend
-            </h3>
-            <p className="text-xs text-gray-500 mb-6">Daily revenue over the selected period</p>
-            {salesGraphLoading ? (
-              <div className="flex items-center justify-center h-48 sm:h-64">
-                <Loader2 className="animate-spin text-luxury-gold" size={24} />
-              </div>
-            ) : salesGraph && salesGraph.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={salesGraph}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(d) => {
-                      const parts = d.split('-');
-                      return `${parts[2]}/${parts[1]}`;
-                    }}
-                  />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v}`} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Line
-                    type="monotone"
-                    dataKey="sales"
-                    name="Sales"
-                    stroke="#D4AF37"
-                    strokeWidth={2}
-                    dot={{ r: 3, fill: '#D4AF37' }}
-                    activeDot={{ r: 5 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="orders"
-                    name="Orders"
-                    stroke="#2563EB"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-48 sm:h-64 text-gray-400">
-                <p className="font-serif text-sm sm:text-lg">No sales data yet for this period</p>
-              </div>
-            )}
-          </div>
+          <Reveal className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
+                Sales Trend
+              </h3>
+              <p className="text-xs text-gray-500 mb-6">Daily revenue over the selected period</p>
+              {salesGraphLoading ? (
+                <div className="flex items-center justify-center h-48 sm:h-64">
+                  <Loader2 className="animate-spin text-luxury-gold" size={24} />
+                </div>
+              ) : salesGraph && salesGraph.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={salesGraph}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(d) => {
+                        const parts = d.split('-');
+                        return `${parts[2]}/${parts[1]}`;
+                      }}
+                    />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v}`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line
+                      type="monotone"
+                      dataKey="sales"
+                      name="Sales"
+                      stroke="#D4AF37"
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: '#D4AF37' }}
+                      activeDot={{ r: 5 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="orders"
+                      name="Orders"
+                      stroke="#2563EB"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-48 sm:h-64 text-gray-400">
+                  <p className="font-serif text-sm sm:text-lg">No sales data yet for this period</p>
+                </div>
+              )}
+            </div>
+          </Reveal>
 
           {/* Customer Interest Funnel */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
-              Customer Interest
-            </h3>
-            <p className="text-xs text-gray-500 mb-6">From discovery to purchase</p>
-            <div className="space-y-3 sm:space-y-6">
-              <FunnelBar
-                label="Product Views"
-                value={interest?.totalViews || 0}
-                maxValue={interest?.totalViews || 1}
-                color="bg-blue-400"
-                loading={interestLoading}
-              />
-              <FunnelBar
-                label="Added to Cart"
-                value={interest?.cartAdds || 0}
-                maxValue={interest?.totalViews || 1}
-                color="bg-amber-400"
-                loading={interestLoading}
-              />
-              <FunnelBar
-                label="Checkout Starts"
-                value={interest?.checkoutStarts || 0}
-                maxValue={interest?.totalViews || 1}
-                color="bg-green-400"
-                loading={interestLoading}
-              />
-              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
-                {interestLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-gray-500">Conversion Rate</span>
-                      <span className="font-bold text-heritage-charcoal">
-                        {interest?.totalViews > 0
-                          ? `${((interest.checkoutStarts / interest.totalViews) * 100).toFixed(1)}%`
-                          : '0%'}
-                      </span>
+          <Reveal delay={120}>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
+                Customer Interest
+              </h3>
+              <p className="text-xs text-gray-500 mb-6">From discovery to purchase</p>
+              <div className="space-y-3 sm:space-y-6">
+                <FunnelBar
+                  label="Product Views"
+                  value={interest?.totalViews || 0}
+                  maxValue={interest?.totalViews || 1}
+                  color="bg-blue-400"
+                  loading={interestLoading}
+                />
+                <FunnelBar
+                  label="Added to Cart"
+                  value={interest?.cartAdds || 0}
+                  maxValue={interest?.totalViews || 1}
+                  color="bg-amber-400"
+                  loading={interestLoading}
+                />
+                <FunnelBar
+                  label="Checkout Starts"
+                  value={interest?.checkoutStarts || 0}
+                  maxValue={interest?.totalViews || 1}
+                  color="bg-green-400"
+                  loading={interestLoading}
+                />
+                <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+                  {interestLoading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
                     </div>
-                    <div className="flex justify-between text-xs sm:text-sm mt-1 sm:mt-2">
-                      <span className="text-gray-500">Unique Viewers</span>
-                      <span className="font-bold text-heritage-charcoal">
-                        {interest?.uniqueViewers || 0}
-                      </span>
-                    </div>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-xs sm:text-sm">
+                        <span className="text-gray-500">Conversion Rate</span>
+                        <span className="font-bold text-heritage-charcoal">
+                          {interest?.totalViews > 0
+                            ? `${((interest.checkoutStarts / interest.totalViews) * 100).toFixed(1)}%`
+                            : '0%'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs sm:text-sm mt-1 sm:mt-2">
+                        <span className="text-gray-500">Unique Viewers</span>
+                        <span className="font-bold text-heritage-charcoal">
+                          {interest?.uniqueViewers || 0}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
           {/* Top Products */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
-              Top Products
-            </h3>
-            <p className="text-xs text-gray-500 mb-6">Best sellers in this period</p>
-            {topProductsLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded"
-                  >
-                    <Skeleton className="w-4 sm:w-6 h-4" />
-                    <Skeleton className="w-8 sm:w-10 h-8 sm:h-10 rounded" />
-                    <div className="flex-grow">
-                      <Skeleton className="h-3 sm:h-4 w-20 sm:w-32" />
-                      <Skeleton className="h-2 sm:h-3 w-14 sm:w-20 mt-1" />
-                    </div>
-                    <Skeleton className="h-3 sm:h-4 w-12 sm:w-16" />
-                  </div>
-                ))}
-              </div>
-            ) : topProducts && topProducts.length > 0 ? (
-              <div className="space-y-4">
-                {topProducts.slice(0, 5).map((product, i) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded"
-                  >
-                    <span className="text-[10px] sm:text-xs font-bold text-gray-400 w-4 sm:w-6">
-                      {i + 1}
-                    </span>
-                    <img
-                      src={
-                        product.image ||
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23e5e7eb'/%3E%3C/svg%3E"
-                      }
-                      alt={product.title}
-                      width="40"
-                      height="40"
-                      loading="lazy"
-                      className="w-8 sm:w-10 h-8 sm:h-10 object-cover rounded bg-gray-200 shrink-0"
-                    />
-                    <div className="flex-grow min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-heritage-charcoal truncate">
-                        {product.title}
-                      </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">
-                        {product.quantitySold} sold
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs sm:text-sm font-bold text-heritage-charcoal">
-                        ₹{product.totalRevenue?.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-32 sm:h-48 text-gray-400">
-                <p className="font-serif text-sm sm:text-lg">No products sold yet</p>
-              </div>
-            )}
-          </div>
-
-          {/* Payout Dashboard */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal">
-                Payouts
+          <Reveal>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
+                Top Products
               </h3>
-              <CreditCard size={20} className="text-gray-400" />
-            </div>
-            <p className="text-xs text-gray-500 mb-4">Your payout history</p>
-
-            <div className="flex gap-1.5 sm:gap-2 mb-4 sm:mb-6 flex-wrap">
-              {['', 'PENDING', 'PAID', 'FAILED'].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    setPayoutFilter(s === payoutFilter ? '' : s);
-                    setPayoutPage(1);
-                  }}
-                  className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded transition-colors ${payoutFilter === s ? 'bg-heritage-charcoal text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                >
-                  {s || 'All'}
-                </button>
-              ))}
-            </div>
-
-            {payoutsLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded"
-                  >
-                    <div>
-                      <Skeleton className="h-3 sm:h-4 w-16 sm:w-24" />
-                      <Skeleton className="h-2 sm:h-3 w-20 sm:w-32 mt-1" />
-                    </div>
-                    <Skeleton className="h-4 sm:h-5 w-12 sm:w-16 rounded-full" />
-                  </div>
-                ))}
-              </div>
-            ) : payoutsData?.payouts && payoutsData.payouts.length > 0 ? (
-              <>
-                <div className="space-y-2 sm:space-y-3">
-                  {payoutsData.payouts.map((payout) => (
+              <p className="text-xs text-gray-500 mb-6">Best sellers in this period</p>
+              {topProductsLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
                     <div
-                      key={payout.id}
-                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded"
+                      key={i}
+                      className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded"
                     >
-                      <div className="min-w-0 mr-2">
-                        <p className="text-xs sm:text-sm font-medium text-heritage-charcoal">
-                          ₹{payout.amount?.toLocaleString()}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-gray-500 truncate">
-                          {new Date(payout.periodStart).toLocaleDateString()} —{' '}
-                          {new Date(payout.periodEnd).toLocaleDateString()}
-                        </p>
+                      <Skeleton className="w-4 sm:w-6 h-4" />
+                      <Skeleton className="w-8 sm:w-10 h-8 sm:h-10 rounded" />
+                      <div className="flex-grow">
+                        <Skeleton className="h-3 sm:h-4 w-20 sm:w-32" />
+                        <Skeleton className="h-2 sm:h-3 w-14 sm:w-20 mt-1" />
                       </div>
-                      <span
-                        className={`shrink-0 px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full ${
-                          payout.status === 'PAID'
-                            ? 'bg-green-100 text-green-700'
-                            : payout.status === 'PROCESSING'
-                              ? 'bg-blue-100 text-blue-700'
-                              : payout.status === 'FAILED'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-amber-100 text-amber-700'
-                        }`}
-                      >
-                        {payout.status}
-                      </span>
+                      <Skeleton className="h-3 sm:h-4 w-12 sm:w-16" />
                     </div>
                   ))}
                 </div>
-                {payoutsData.pagination?.pages > 1 && (
-                  <div className="flex items-center justify-between mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
-                    <button
-                      disabled={payoutPage <= 1}
-                      onClick={() => setPayoutPage((p) => p - 1)}
-                      className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded ${payoutPage <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+              ) : topProducts && topProducts.length > 0 ? (
+                <div className="space-y-4">
+                  {topProducts.slice(0, 5).map((product, i) => (
+                    <div
+                      key={product.id}
+                      className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded"
                     >
-                      Previous
-                    </button>
-                    <span className="text-[10px] sm:text-xs text-gray-500">
-                      Page {payoutsData.pagination.page} of {payoutsData.pagination.pages}
-                    </span>
-                    <button
-                      disabled={payoutPage >= payoutsData.pagination.pages}
-                      onClick={() => setPayoutPage((p) => p + 1)}
-                      className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded ${payoutPage >= payoutsData.pagination.pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-24 sm:h-32 text-gray-400">
-                <p className="font-serif text-sm sm:text-lg">No payouts yet</p>
+                      <span className="text-[10px] sm:text-xs font-bold text-gray-400 w-4 sm:w-6">
+                        {i + 1}
+                      </span>
+                      <img
+                        src={
+                          product.image ||
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23e5e7eb'/%3E%3C/svg%3E"
+                        }
+                        alt={product.title}
+                        width="40"
+                        height="40"
+                        loading="lazy"
+                        className="w-8 sm:w-10 h-8 sm:h-10 object-cover rounded bg-gray-200 shrink-0"
+                      />
+                      <div className="flex-grow min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-heritage-charcoal truncate">
+                          {product.title}
+                        </p>
+                        <p className="text-[10px] sm:text-xs text-gray-500">
+                          {product.quantitySold} sold
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs sm:text-sm font-bold text-heritage-charcoal">
+                          ₹{product.totalRevenue?.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-32 sm:h-48 text-gray-400">
+                  <p className="font-serif text-sm sm:text-lg">No products sold yet</p>
+                </div>
+              )}
+            </div>
+          </Reveal>
+
+          {/* Payout Dashboard */}
+          <Reveal delay={120}>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal">
+                  Payouts
+                </h3>
+                <CreditCard size={20} className="text-gray-400" />
               </div>
-            )}
-          </div>
+              <p className="text-xs text-gray-500 mb-4">Your payout history</p>
+
+              <div className="flex gap-1.5 sm:gap-2 mb-4 sm:mb-6 flex-wrap">
+                {['', 'PENDING', 'PAID', 'FAILED'].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setPayoutFilter(s === payoutFilter ? '' : s);
+                      setPayoutPage(1);
+                    }}
+                    className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded transition-colors ${payoutFilter === s ? 'bg-heritage-charcoal text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  >
+                    {s || 'All'}
+                  </button>
+                ))}
+              </div>
+
+              {payoutsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded"
+                    >
+                      <div>
+                        <Skeleton className="h-3 sm:h-4 w-16 sm:w-24" />
+                        <Skeleton className="h-2 sm:h-3 w-20 sm:w-32 mt-1" />
+                      </div>
+                      <Skeleton className="h-4 sm:h-5 w-12 sm:w-16 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : payoutsData?.payouts && payoutsData.payouts.length > 0 ? (
+                <>
+                  <div className="space-y-2 sm:space-y-3">
+                    {payoutsData.payouts.map((payout) => (
+                      <div
+                        key={payout.id}
+                        className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded"
+                      >
+                        <div className="min-w-0 mr-2">
+                          <p className="text-xs sm:text-sm font-medium text-heritage-charcoal">
+                            ₹{payout.amount?.toLocaleString()}
+                          </p>
+                          <p className="text-[10px] sm:text-xs text-gray-500 truncate">
+                            {new Date(payout.periodStart).toLocaleDateString()} —{' '}
+                            {new Date(payout.periodEnd).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span
+                          className={`shrink-0 px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full ${
+                            payout.status === 'PAID'
+                              ? 'bg-green-100 text-green-700'
+                              : payout.status === 'PROCESSING'
+                                ? 'bg-blue-100 text-blue-700'
+                                : payout.status === 'FAILED'
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-amber-100 text-amber-700'
+                          }`}
+                        >
+                          {payout.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {payoutsData.pagination?.pages > 1 && (
+                    <div className="flex items-center justify-between mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
+                      <button
+                        disabled={payoutPage <= 1}
+                        onClick={() => setPayoutPage((p) => p - 1)}
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded ${payoutPage <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                      >
+                        Previous
+                      </button>
+                      <span className="text-[10px] sm:text-xs text-gray-500">
+                        Page {payoutsData.pagination.page} of {payoutsData.pagination.pages}
+                      </span>
+                      <button
+                        disabled={payoutPage >= payoutsData.pagination.pages}
+                        onClick={() => setPayoutPage((p) => p + 1)}
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded ${payoutPage >= payoutsData.pagination.pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-24 sm:h-32 text-gray-400">
+                  <p className="font-serif text-sm sm:text-lg">No payouts yet</p>
+                </div>
+              )}
+            </div>
+          </Reveal>
         </div>
       </div>
     </div>

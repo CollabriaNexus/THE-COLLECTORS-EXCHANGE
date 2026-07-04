@@ -49,6 +49,7 @@ import { useSubmitTestimonial } from '../hooks/api/useTestimonials';
 import PhoneVerification from '../components/account/PhoneVerification';
 import NotificationsPanel from '../components/account/NotificationsPanel';
 import DocUploadField from '../components/account/DocUploadField';
+import { Reveal, CountUp } from '../components/Motion';
 
 const CATEGORIES = [
   'Timepieces',
@@ -268,8 +269,10 @@ const Account = () => {
       } = await supabase.auth.getSession();
       const storedUser = getUser();
       if (storedUser) setLocalUserState(storedUser);
+      // Await the sync so we don't flip to "checked" (and briefly render the login
+      // screen) while a valid session's user is still being resolved.
       if (session) {
-        handleAuthChange(session);
+        await handleAuthChange(session);
       }
       setSessionChecked(true);
     };
@@ -743,14 +746,19 @@ const Account = () => {
           canonical="/account"
           noindex
         />
-        <div className="text-center mb-12">
+        <Reveal as="div" direction="up" className="text-center mb-12">
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-4">Welcome Back</h1>
           <p className="text-gray-500 font-light">
             Sign in to The Collectors' Exchange secure portal.
           </p>
-        </div>
+        </Reveal>
 
-        <div className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-6">
+        <Reveal
+          as="div"
+          direction="up"
+          delay={140}
+          className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-6"
+        >
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -759,7 +767,7 @@ const Account = () => {
             <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
             Continue with Google
           </button>
-        </div>
+        </Reveal>
 
         {/* Company Registration Popup */}
         {showCompanyPopup && (
@@ -1854,7 +1862,7 @@ const Account = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                   <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
                     <p className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal">
-                      {userProducts.length}
+                      <CountUp end={userProducts.length} />
                     </p>
                     <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">
                       Total Listings
@@ -1862,7 +1870,7 @@ const Account = () => {
                   </div>
                   <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
                     <p className="text-lg sm:text-2xl font-serif font-bold text-green-700">
-                      {userProducts.filter((p) => p.status === 'Approved').length}
+                      <CountUp end={userProducts.filter((p) => p.status === 'Approved').length} />
                     </p>
                     <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">
                       Live / Published
@@ -1870,10 +1878,12 @@ const Account = () => {
                   </div>
                   <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
                     <p className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal">
-                      {
-                        userProducts.filter((p) => p.status !== 'Approved' && p.status !== 'Sold')
-                          .length
-                      }
+                      <CountUp
+                        end={
+                          userProducts.filter((p) => p.status !== 'Approved' && p.status !== 'Sold')
+                            .length
+                        }
+                      />
                     </p>
                     <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">
                       In Review
@@ -1881,9 +1891,11 @@ const Account = () => {
                   </div>
                   <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
                     <p className="text-lg sm:text-2xl font-serif font-bold text-luxury-gold">
-                      {vendorStats
-                        ? `₹${(vendorStats.totalSales || 0).toLocaleString('en-IN')}`
-                        : '₹0'}
+                      {vendorStats ? (
+                        <CountUp end={vendorStats.totalSales || 0} prefix="₹" />
+                      ) : (
+                        '₹0'
+                      )}
                     </p>
                     <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">
                       Total Sales
@@ -1892,7 +1904,7 @@ const Account = () => {
                   {vendorStats?.netEarnings !== undefined && (
                     <div className="bg-green-50 p-3 sm:p-4 border border-green-100">
                       <p className="text-lg sm:text-2xl font-serif font-bold text-green-700">
-                        ₹{vendorStats.netEarnings.toLocaleString('en-IN')}
+                        <CountUp end={vendorStats.netEarnings} prefix="₹" />
                       </p>
                       <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">
                         Net Earnings
@@ -1903,7 +1915,7 @@ const Account = () => {
                     vendorStats.totalPlatformFees > 0 && (
                       <div className="bg-amber-50 p-3 sm:p-4 border border-amber-100">
                         <p className="text-lg sm:text-2xl font-serif font-bold text-amber-700">
-                          ₹{vendorStats.totalPlatformFees.toLocaleString('en-IN')}
+                          <CountUp end={vendorStats.totalPlatformFees} prefix="₹" />
                         </p>
                         <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">
                           Platform Contribution
@@ -2606,7 +2618,11 @@ const Account = () => {
           noindex
         />
         <div className="container mx-auto py-20 px-6 max-w-xl">
-          <div className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-6">
+          <Reveal
+            as="div"
+            direction="up"
+            className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-6"
+          >
             <div className="text-center mb-4">
               <h1 className="text-3xl font-serif mb-3">Set Your Password</h1>
               <p className="text-gray-500 font-light">
@@ -2649,7 +2665,7 @@ const Account = () => {
                 Set Password
               </button>
             </form>
-          </div>
+          </Reveal>
         </div>
       </div>
     );
@@ -2795,7 +2811,11 @@ const Account = () => {
           </div>
 
           {/* Main Content */}
-          <div className="w-full lg:w-3/4">{renderContent()}</div>
+          <div className="w-full lg:w-3/4">
+            <Reveal key={activeTab} as="div" direction="up">
+              {renderContent()}
+            </Reveal>
+          </div>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, MessageSquare, Clock, Send, Loader2, CheckCircle } from 'lucide-react';
 import SEO from '../components/SEO';
 import apiClient from '../hooks/api/apiClient';
+import { Reveal, Magnetic, Tilt } from '../components/Motion';
 
 const cards = [
   {
@@ -84,32 +85,38 @@ const Contact = () => {
         canonical="/contact"
       />
       <div className="w-full container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-24">
-        <div className="text-center mb-10 sm:mb-14 md:mb-16">
+        <Reveal className="text-center mb-10 sm:mb-14 md:mb-16" blur>
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-3 sm:mb-4">Contact Us</h1>
           <p className="text-gray-500 text-sm sm:text-base font-light max-w-2xl mx-auto px-2">
             Have a question or need assistance? We're here to help.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 max-w-5xl mx-auto">
           {cards.map((card, i) => {
             const Icon = card.icon;
             return (
-              <div
-                key={i}
-                className="bg-white rounded-lg p-6 sm:p-8 text-center shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 flex flex-col items-center justify-center min-h-[180px] sm:min-h-[220px]"
-              >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-luxury-gold/10 flex items-center justify-center mb-4 sm:mb-5 shrink-0">
-                  <Icon size={22} className="text-luxury-gold sm:w-7 sm:h-7" />
-                </div>
-                <h3 className="font-serif text-base sm:text-lg font-medium mb-2">{card.title}</h3>
-                <div className="max-w-full">{card.content}</div>
-              </div>
+              <Reveal key={i} delay={i * 130} className="h-full">
+                <Tilt className="h-full">
+                  <div className="h-full bg-white rounded-lg p-6 sm:p-8 text-center shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 flex flex-col items-center justify-center min-h-[180px] sm:min-h-[220px]">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-luxury-gold/10 flex items-center justify-center mb-4 sm:mb-5 shrink-0">
+                      <Icon size={22} className="text-luxury-gold sm:w-7 sm:h-7" />
+                    </div>
+                    <h3 className="font-serif text-base sm:text-lg font-medium mb-2">
+                      {card.title}
+                    </h3>
+                    <div className="max-w-full">{card.content}</div>
+                  </div>
+                </Tilt>
+              </Reveal>
             );
           })}
         </div>
 
-        <div className="bg-white rounded-lg p-6 sm:p-8 md:p-12 shadow-sm border border-gray-100 max-w-3xl mx-auto">
+        <Reveal
+          direction="up"
+          className="bg-white rounded-lg p-6 sm:p-8 md:p-12 shadow-sm border border-gray-100 max-w-3xl mx-auto"
+        >
           <h2 className="text-lg sm:text-2xl font-serif mb-6 sm:mb-8 text-center">
             Send us a message
           </h2>
@@ -164,16 +171,18 @@ const Contact = () => {
                 className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors leading-relaxed rounded text-sm sm:text-base"
               />
             </div>
-            <button
-              type="submit"
-              disabled={sending}
-              className="bg-black text-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center justify-center gap-2 w-full sm:w-auto sm:mx-auto rounded"
-            >
-              {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-              Send Message
-            </button>
+            <Magnetic className="block w-full sm:w-auto sm:mx-auto">
+              <button
+                type="submit"
+                disabled={sending}
+                className="bg-black text-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center justify-center gap-2 w-full sm:w-auto sm:mx-auto rounded"
+              >
+                {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                Send Message
+              </button>
+            </Magnetic>
           </form>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

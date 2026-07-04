@@ -7,6 +7,7 @@ import { useCreateOrder, useVerifyPayment, useValidateCoupon } from '../hooks/ap
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
+import { Reveal, Magnetic } from '../components/Motion';
 
 const Checkout = () => {
   const currentUser = getUser();
@@ -389,196 +390,205 @@ const Checkout = () => {
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           {/* Shipping Form */}
           <div className="w-full lg:w-3/5 space-y-6">
-            <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8">
-              <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">
-                Shipping Details
-              </h2>
+            <Reveal as="div" direction="left">
+              <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8">
+                <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">
+                  Shipping Details
+                </h2>
 
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="recipientName"
-                    className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
-                  >
-                    Recipient Name
-                  </label>
-                  <input
-                    id="recipientName"
-                    type="text"
-                    value={form.recipientName}
-                    onChange={(e) => setForm({ ...form, recipientName: e.target.value })}
-                    placeholder="Full name"
-                    className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.recipientName ? 'border-red-400' : 'border-gray-200'}`}
-                  />
-                  {errors.recipientName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.recipientName}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="shippingAddress"
-                    className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
-                  >
-                    Street Address
-                  </label>
-                  <input
-                    id="shippingAddress"
-                    type="text"
-                    value={form.shippingAddress}
-                    onChange={(e) => setForm({ ...form, shippingAddress: e.target.value })}
-                    placeholder="House / Flat No., Street, Area"
-                    className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.shippingAddress ? 'border-red-400' : 'border-gray-200'}`}
-                  />
-                  {errors.shippingAddress && (
-                    <p className="text-red-500 text-xs mt-1">{errors.shippingAddress}</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <label
-                      htmlFor="city"
+                      htmlFor="recipientName"
                       className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
                     >
-                      City
+                      Recipient Name
                     </label>
                     <input
-                      id="city"
+                      id="recipientName"
                       type="text"
-                      value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value })}
-                      placeholder="Mumbai"
-                      className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.city ? 'border-red-400' : 'border-gray-200'}`}
+                      value={form.recipientName}
+                      onChange={(e) => setForm({ ...form, recipientName: e.target.value })}
+                      placeholder="Full name"
+                      className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.recipientName ? 'border-red-400' : 'border-gray-200'}`}
                     />
-                    {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="state"
-                      className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
-                    >
-                      State
-                    </label>
-                    <input
-                      id="state"
-                      type="text"
-                      value={form.state}
-                      onChange={(e) => setForm({ ...form, state: e.target.value })}
-                      placeholder="Maharashtra"
-                      className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.state ? 'border-red-400' : 'border-gray-200'}`}
-                    />
-                    {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label
-                      htmlFor="zipCode"
-                      className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
-                    >
-                      PIN Code
-                    </label>
-                    <input
-                      id="zipCode"
-                      type="text"
-                      value={form.zipCode}
-                      onChange={(e) => setForm({ ...form, zipCode: e.target.value })}
-                      placeholder="400001"
-                      className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.zipCode ? 'border-red-400' : 'border-gray-200'}`}
-                    />
-                    {errors.zipCode && (
-                      <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>
+                    {errors.recipientName && (
+                      <p className="text-red-500 text-xs mt-1">{errors.recipientName}</p>
                     )}
                   </div>
+
                   <div>
                     <label
-                      htmlFor="country"
+                      htmlFor="shippingAddress"
                       className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
                     >
-                      Country
+                      Street Address
                     </label>
                     <input
-                      id="country"
+                      id="shippingAddress"
                       type="text"
-                      value={form.country}
-                      onChange={(e) => setForm({ ...form, country: e.target.value })}
-                      placeholder="India"
-                      className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.country ? 'border-red-400' : 'border-gray-200'}`}
+                      value={form.shippingAddress}
+                      onChange={(e) => setForm({ ...form, shippingAddress: e.target.value })}
+                      placeholder="House / Flat No., Street, Area"
+                      className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.shippingAddress ? 'border-red-400' : 'border-gray-200'}`}
                     />
-                    {errors.country && (
-                      <p className="text-red-500 text-xs mt-1">{errors.country}</p>
+                    {errors.shippingAddress && (
+                      <p className="text-red-500 text-xs mt-1">{errors.shippingAddress}</p>
                     )}
                   </div>
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
-                    >
-                      Phone
-                    </label>
-                    <input
-                      id="phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="9876543210"
-                      className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.phone ? 'border-red-400' : 'border-gray-200'}`}
-                    />
-                    {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        htmlFor="city"
+                        className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
+                      >
+                        City
+                      </label>
+                      <input
+                        id="city"
+                        type="text"
+                        value={form.city}
+                        onChange={(e) => setForm({ ...form, city: e.target.value })}
+                        placeholder="Mumbai"
+                        className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.city ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="state"
+                        className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
+                      >
+                        State
+                      </label>
+                      <input
+                        id="state"
+                        type="text"
+                        value={form.state}
+                        onChange={(e) => setForm({ ...form, state: e.target.value })}
+                        placeholder="Maharashtra"
+                        className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.state ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label
+                        htmlFor="zipCode"
+                        className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
+                      >
+                        PIN Code
+                      </label>
+                      <input
+                        id="zipCode"
+                        type="text"
+                        value={form.zipCode}
+                        onChange={(e) => setForm({ ...form, zipCode: e.target.value })}
+                        placeholder="400001"
+                        className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.zipCode ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.zipCode && (
+                        <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="country"
+                        className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
+                      >
+                        Country
+                      </label>
+                      <input
+                        id="country"
+                        type="text"
+                        value={form.country}
+                        onChange={(e) => setForm({ ...form, country: e.target.value })}
+                        placeholder="India"
+                        className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.country ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.country && (
+                        <p className="text-red-500 text-xs mt-1">{errors.country}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="phone"
+                        className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
+                      >
+                        Phone
+                      </label>
+                      <input
+                        id="phone"
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        placeholder="9876543210"
+                        className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.phone ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Reveal>
 
             {/* Payment Method */}
-            <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8">
-              <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">
-                Payment Method
-              </h2>
-              <div className="space-y-3">
-                <label
-                  className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'online' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="online"
-                    checked={paymentMethod === 'online'}
-                    onChange={() => setPaymentMethod('online')}
-                    className="w-4 h-4 text-luxury-gold focus:ring-luxury-gold"
-                  />
-                  <div>
-                    <p className="font-medium text-heritage-charcoal">Online Payment</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      UPI, Credit/Debit Card, Net Banking via Razorpay
-                    </p>
-                  </div>
-                </label>
-                <label
-                  className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'cod' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="cod"
-                    checked={paymentMethod === 'cod'}
-                    onChange={() => setPaymentMethod('cod')}
-                    className="w-4 h-4 text-luxury-gold focus:ring-luxury-gold"
-                  />
-                  <div>
-                    <p className="font-medium text-heritage-charcoal">Cash on Delivery</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Pay when your order arrives at your doorstep
-                    </p>
-                  </div>
-                </label>
+            <Reveal as="div" direction="left" delay={120}>
+              <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8">
+                <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">
+                  Payment Method
+                </h2>
+                <div className="space-y-3">
+                  <label
+                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'online' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="online"
+                      checked={paymentMethod === 'online'}
+                      onChange={() => setPaymentMethod('online')}
+                      className="w-4 h-4 text-luxury-gold focus:ring-luxury-gold"
+                    />
+                    <div>
+                      <p className="font-medium text-heritage-charcoal">Online Payment</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        UPI, Credit/Debit Card, Net Banking via Razorpay
+                      </p>
+                    </div>
+                  </label>
+                  <label
+                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'cod' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                      className="w-4 h-4 text-luxury-gold focus:ring-luxury-gold"
+                    />
+                    <div>
+                      <p className="font-medium text-heritage-charcoal">Cash on Delivery</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Pay when your order arrives at your doorstep
+                      </p>
+                    </div>
+                  </label>
+                </div>
               </div>
-            </div>
+            </Reveal>
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Reveal
+              as="div"
+              direction="up"
+              delay={220}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+            >
               {[
                 { icon: ShieldCheck, label: 'Secure Payment', sub: 'Online & COD available' },
                 { icon: ShieldCheck, label: 'Authenticity', sub: 'Expert verified' },
@@ -592,11 +602,11 @@ const Checkout = () => {
                   <p className="text-xs text-gray-400 mt-1">{sub}</p>
                 </div>
               ))}
-            </div>
+            </Reveal>
           </div>
 
           {/* Order Summary */}
-          <div className="w-full lg:w-2/5">
+          <Reveal as="div" direction="right" className="w-full lg:w-2/5">
             <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8 lg:sticky lg:top-24">
               <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">
                 Order Summary
@@ -739,30 +749,32 @@ const Checkout = () => {
                   Payment gateway failed to load. Please disable ad blockers and refresh.
                 </p>
               )}
-              <button
-                type="submit"
-                disabled={createOrderMutation.isPending || verifyPaymentMutation.isPending}
-                className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-3 disabled:opacity-60"
-              >
-                {createOrderMutation.isPending || verifyPaymentMutation.isPending ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Processing...
-                  </>
-                ) : paymentMethod === 'cod' ? (
-                  <>
-                    <ShieldCheck size={18} />
-                    Place Order (Cash on Delivery)
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck size={18} />
-                    Place Order & Pay
-                  </>
-                )}
-              </button>
+              <Magnetic className="block w-full">
+                <button
+                  type="submit"
+                  disabled={createOrderMutation.isPending || verifyPaymentMutation.isPending}
+                  className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-3 disabled:opacity-60"
+                >
+                  {createOrderMutation.isPending || verifyPaymentMutation.isPending ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Processing...
+                    </>
+                  ) : paymentMethod === 'cod' ? (
+                    <>
+                      <ShieldCheck size={18} />
+                      Place Order (Cash on Delivery)
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck size={18} />
+                      Place Order & Pay
+                    </>
+                  )}
+                </button>
+              </Magnetic>
             </div>
-          </div>
+          </Reveal>
         </div>
       </form>
     </div>

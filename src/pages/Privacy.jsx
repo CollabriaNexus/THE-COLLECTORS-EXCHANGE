@@ -1,5 +1,6 @@
 import React from 'react';
 import SEO from '../components/SEO';
+import { Reveal } from '../components/Motion';
 
 const Privacy = () => {
   return (
@@ -10,28 +11,28 @@ const Privacy = () => {
         canonical="/privacy"
       />
       {/* Header */}
-      <div className="mb-12 border-b border-gray-200 pb-8">
+      <Reveal className="mb-12 border-b border-gray-200 pb-8">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-4">
           THE COLLECTORS EXCHANGE: PRIVACY & DISCRETION POLICY
         </h1>
         <p className="text-gray-500 font-sans italic">The Custodian's Data Protection</p>
         <p className="text-gray-500 font-sans">Last Updated: April 2026</p>
         <div className="w-20 h-1 bg-luxury-gold mt-6"></div>
-      </div>
+      </Reveal>
 
       {/* Introduction */}
-      <div className="mb-10 font-sans text-gray-700 leading-relaxed">
+      <Reveal className="mb-10 font-sans text-gray-700 leading-relaxed">
         <p className="text-lg font-serif text-black italic">
           At The Collectors Exchange, we believe that privacy is a cornerstone of trust. We are not
           a data-driven "innovation" company; we are a heritage-driven business. We do not "mine"
           your life for insights; we only collect what is necessary to ensure the "Truth" of our
           exchange.
         </p>
-      </div>
+      </Reveal>
 
       {/* Sections */}
       <div className="space-y-10 font-sans text-gray-800">
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             1. Our Stance on Data (The Anti-Startup Rule)
           </h2>
@@ -41,9 +42,9 @@ const Privacy = () => {
             aggregators. Doing so would be "cheap" behavior that contradicts our ancestral business
             values.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             2. What We Collect (The Custodian Identity)
           </h2>
@@ -91,9 +92,9 @@ const Privacy = () => {
               </div>
             </li>
           </ul>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             3. The "Registry of History" & Annual Health Checks
           </h2>
@@ -111,9 +112,9 @@ const Privacy = () => {
             information on the provenance of your antique, we need to know how to find you. You are
             the custodian; we are the record-keepers.
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             4. Digital Discretion (Cookies & Tracking)
           </h2>
@@ -131,9 +132,9 @@ const Privacy = () => {
             store your credit card numbers or bank credentials. That is a responsibility we leave to
             the financial "doctors."
           </p>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             5. Third-Party "Necessities"
           </h2>
@@ -161,9 +162,9 @@ const Privacy = () => {
               </span>
             </li>
           </ul>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             6. Your Rights (The "Handshake" Agreement)
           </h2>
@@ -199,9 +200,9 @@ const Privacy = () => {
               </div>
             </li>
           </ul>
-        </section>
+        </Reveal>
 
-        <section>
+        <Reveal as="section" delay={60} distance={40}>
           <h2 className="text-2xl font-serif font-semibold mb-4 text-black">
             7. Security (The Vault)
           </h2>
@@ -210,11 +211,11 @@ const Privacy = () => {
             timepiece. Our digital "vaults" are monitored and encrypted to prevent unauthorized
             access by those who do not value heritage as we do.
           </p>
-        </section>
+        </Reveal>
       </div>
 
       {/* Founder's Closing Note */}
-      <div className="mt-12 sm:mt-16 p-6 sm:p-8 bg-heritage-cream border border-luxury-gold/20 rounded-sm">
+      <Reveal className="mt-12 sm:mt-16 p-6 sm:p-8 bg-heritage-cream border border-luxury-gold/20 rounded-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest text-luxury-gold mb-4">
           Founder's Closing Note
         </h3>
@@ -226,7 +227,7 @@ const Privacy = () => {
         <p className="font-serif text-lg text-heritage-charcoal mt-4">
           Welcome to the Exchange. Your secrets are safe with us.
         </p>
-      </div>
+      </Reveal>
     </div>
   );
 };

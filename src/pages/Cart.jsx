@@ -7,6 +7,7 @@ import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import { Reveal, Magnetic } from '../components/Motion';
 
 const Cart = () => {
   const user = getUser();
@@ -63,7 +64,7 @@ const Cart = () => {
       {cartItems.length > 0 ? (
         <div className="flex flex-col lg:flex-row gap-8 sm:gap-12">
           {/* Cart Items */}
-          <div className="w-full lg:w-2/3">
+          <Reveal as="div" direction="up" className="w-full lg:w-2/3">
             <div className="bg-white shadow-sm border border-gray-100">
               {cartItems.map((item) => (
                 <div
@@ -106,10 +107,10 @@ const Cart = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
 
           {/* Checkout Summary */}
-          <div className="w-full lg:w-1/3">
+          <Reveal as="div" direction="up" delay={120} className="w-full lg:w-1/3">
             <div className="bg-white p-6 sm:p-8 shadow-sm border border-gray-100 lg:sticky lg:top-24">
               <h3 className="text-lg sm:text-xl lg:text-2xl font-serif mb-4 sm:mb-6">
                 Order Summary
@@ -128,19 +129,21 @@ const Cart = () => {
                 <span>Total</span>
                 <span>₹{total.toLocaleString()}</span>
               </div>
-              <button
-                onClick={() => navigate('/checkout')}
-                className="w-full bg-black text-white py-3 sm:py-4 font-sans text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
-              >
-                Proceed to Checkout
-              </button>
+              <Magnetic className="block w-full">
+                <button
+                  onClick={() => navigate('/checkout')}
+                  className="w-full bg-black text-white py-3 sm:py-4 font-sans text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+                >
+                  Proceed to Checkout
+                </button>
+              </Magnetic>
               <div className="mt-4 text-center">
                 <p className="text-xs text-gray-400">
                   Secure checkout with online payment or Cash on Delivery.
                 </p>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       ) : (
         <div className="text-center py-12 sm:py-16">
@@ -156,7 +159,7 @@ const Cart = () => {
             Explore The Exchange
           </Link>
           {featuredProducts.length > 0 && (
-            <div className="max-w-5xl mx-auto">
+            <Reveal as="div" direction="up" className="max-w-5xl mx-auto">
               <div className="flex items-center justify-center gap-4 mb-6 sm:mb-8">
                 <div className="h-px w-8 bg-luxury-gold/40" />
                 <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">
@@ -213,7 +216,7 @@ const Cart = () => {
                 View All{' '}
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
-            </div>
+            </Reveal>
           )}
         </div>
       )}

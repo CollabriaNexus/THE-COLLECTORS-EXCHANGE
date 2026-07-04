@@ -24,6 +24,7 @@ import { useCart, useAddToCart } from '../hooks/api/useCart';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import Bullet from '../components/Bullet';
+import { Reveal, Stagger, Tilt } from '../components/Motion';
 
 const CATEGORIES = [
   {
@@ -237,24 +238,24 @@ const ArchiveProductCard = ({ product }) => {
 
         {/* Add to Cart / Sold Button */}
         {product.status === 'Sold' ? (
-          <div className="w-full py-2 sm:py-1.5 text-[10px] uppercase tracking-[0.12em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-1.5 bg-gray-100 text-gray-400 cursor-default mt-1.5 sm:mt-2">
-            <XCircle size={11} className="sm:w-[10px] sm:h-[10px]" />
+          <div className="w-full py-2 sm:py-2.5 md:py-3 text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.12em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-2 bg-gray-100 text-gray-400 cursor-default mt-1.5 sm:mt-2">
+            <XCircle size={11} className="sm:w-4 sm:h-4" />
             Sold Out
           </div>
         ) : (
           <button
             onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
             disabled={addToCartMutation.isPending || cartFeedback}
-            className={`w-full py-2 sm:py-1.5 text-[10px] uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 active:scale-[0.97] mt-1.5 sm:mt-2 ${
+            className={`w-full py-2 sm:py-2.5 md:py-3 text-[10px] sm:text-xs md:text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 active:scale-[0.97] mt-1.5 sm:mt-2 ${
               cartFeedback || inCart
                 ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                 : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
             }`}
           >
             {cartFeedback ? (
-              <Check size={11} className="sm:w-[10px] sm:h-[10px]" />
+              <Check size={11} className="sm:w-4 sm:h-4" />
             ) : (
-              <ShoppingBag size={11} className="sm:w-[10px] sm:h-[10px]" />
+              <ShoppingBag size={11} className="sm:w-4 sm:h-4" />
             )}
             {addToCartMutation.isPending
               ? 'Adding...'
@@ -343,7 +344,11 @@ const Category = () => {
       {/* Category Icons Navigation - Polished with shadow and border */}
       <section className="py-4 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
         <div className="container mx-auto max-w-5xl">
-          <div className="flex justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory md:snap-none -mx-6 md:mx-0 px-6 md:px-0">
+          <Stagger
+            step={80}
+            className="flex justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory md:snap-none -mx-6 md:mx-0 px-6 md:px-0"
+            childClassName="snap-start shrink-0"
+          >
             {CATEGORIES.map((category) => {
               const IconComponent = category.icon;
               const isSelected = selectedCategory === category.name;
@@ -393,7 +398,7 @@ const Category = () => {
                 </button>
               );
             })}
-          </div>
+          </Stagger>
         </div>
       </section>
 
@@ -401,7 +406,7 @@ const Category = () => {
       <section ref={productsRef} className="py-8 md:py-20 px-3 sm:px-4 lg:px-6 bg-white">
         <div className="w-full max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 md:mb-10 gap-2 sm:gap-3 md:gap-4 px-0 sm:px-0">
-            <div className="flex flex-col min-w-0 w-full sm:w-auto">
+            <Reveal className="flex flex-col min-w-0 w-full sm:w-auto">
               <div className="flex items-center gap-2 md:gap-3">
                 {selectedCategory ? (
                   <div className="flex items-center gap-2 md:gap-3">
@@ -429,7 +434,7 @@ const Category = () => {
                   </h2>
                 )}
               </div>
-            </div>
+            </Reveal>
 
             <div className="flex gap-2 w-full sm:w-auto">
               <select
@@ -483,8 +488,12 @@ const Category = () => {
                 });
                 return (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                    {sorted.map((product) => (
-                      <ArchiveProductCard key={product.id} product={product} />
+                    {sorted.map((product, i) => (
+                      <Reveal key={product.id} delay={i * 120} className="h-full">
+                        <Tilt className="h-full">
+                          <ArchiveProductCard product={product} />
+                        </Tilt>
+                      </Reveal>
                     ))}
                   </div>
                 );

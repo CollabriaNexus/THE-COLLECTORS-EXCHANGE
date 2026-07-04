@@ -4,6 +4,7 @@ import SEO from '../components/SEO';
 import { History, ShieldCheck, Landmark, Compass, Users, Sparkles, Heart } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import { Link } from 'react-router-dom';
+import { Reveal, Stagger, Parallax, Tilt, Magnetic } from '../components/Motion';
 
 const About = () => {
   return (
@@ -30,26 +31,38 @@ const About = () => {
         <div className="relative z-10 container mx-auto px-4 sm:px-6 py-16 sm:py-24 flex flex-col items-center justify-center gap-8 sm:gap-12 text-center">
           {/* Center: Text Content */}
           <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-3 sm:gap-4 mb-4 sm:mb-8 justify-center">
+            <Reveal className="inline-flex items-center gap-3 sm:gap-4 mb-4 sm:mb-8 justify-center">
               <span className="text-[9px] sm:text-xs uppercase tracking-[0.3em] sm:tracking-[0.4em] text-luxury-gold font-bold">
                 Authorized & Premium
               </span>
-            </div>
+            </Reveal>
 
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-8xl font-serif mb-4 sm:mb-8 tracking-tighter leading-none text-white drop-shadow-lg">
+            <Reveal
+              as="h1"
+              blur
+              delay={120}
+              className="text-3xl sm:text-5xl md:text-6xl lg:text-8xl font-serif mb-4 sm:mb-8 tracking-tighter leading-none text-white drop-shadow-lg"
+            >
               From the Streets of <br />
               <span className="italic font-light text-white/90">India</span>{' '}
               <span className="text-luxury-gold font-normal">to Your Collection</span>
-            </h1>
+            </Reveal>
 
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/80 font-light mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
+            <Reveal
+              as="p"
+              delay={260}
+              className="text-sm sm:text-base md:text-lg lg:text-xl text-white/80 font-light mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed"
+            >
               We go where others don't. Sourcing the most unique, valuable, and historical finds
               from every corner of Indian pawn shops, street markets, and beyond. Whether you're a
               seasoned collector or a history enthusiast, we provide global access to a selection
               you won't find anywhere else.
-            </p>
+            </Reveal>
 
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
+            <Reveal
+              delay={380}
+              className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center"
+            >
               <Link
                 to="/category"
                 className="px-6 sm:px-10 py-3 sm:py-4 bg-white text-heritage-charcoal text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold shadow-heritage hover:bg-luxury-gold hover:text-white transition-all duration-300 rounded-sm w-full sm:w-auto text-center"
@@ -62,7 +75,7 @@ const About = () => {
               >
                 View Auctions
               </Link>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -70,7 +83,7 @@ const About = () => {
       {/* Why We Do It & Mission */}
       <section className="py-16 sm:py-24 px-6 container mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 item-start">
-          <div className="space-y-8 sm:space-y-12">
+          <Reveal direction="left" blur className="space-y-8 sm:space-y-12">
             <div className="relative pl-4 sm:pl-8 border-l-2 border-luxury-gold/30">
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-heritage-charcoal/80 font-serif italic">
                 "We believe that every collector deserves more than just an object; they deserve a
@@ -94,9 +107,9 @@ const About = () => {
                 matters: keeping history close to your heart.
               </p>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="flex flex-col h-full">
+          <Reveal direction="right" blur className="flex flex-col h-full">
             <div className="h-full p-6 sm:p-10 bg-heritage-beige/30 border border-heritage-bronze/10 rounded-sm hover:border-heritage-bronze/30 transition-all duration-500 hover:shadow-heritage group">
               <History
                 className="text-luxury-gold mb-6 sm:mb-8 group-hover:scale-110 transition-transform duration-500"
@@ -123,7 +136,7 @@ const About = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -137,7 +150,7 @@ const About = () => {
           }}
         ></div>
         <div className="container mx-auto px-6 relative z-10">
-          <div className="text-center mb-12 sm:mb-20">
+          <Reveal className="text-center mb-12 sm:mb-20">
             <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 block">
               Core Values
             </span>
@@ -145,9 +158,9 @@ const About = () => {
               Our Belief
             </h2>
             <div className="w-24 h-0.5 bg-luxury-gold/40 mx-auto"></div>
-          </div>
+          </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-0 border border-heritage-bronze/10 bg-heritage-cream shadow-sm">
+          <Stagger className="grid md:grid-cols-3 gap-0 border border-heritage-bronze/10 bg-heritage-cream shadow-sm">
             <div className="p-6 sm:p-10 lg:p-14 border-b md:border-b-0 md:border-r border-heritage-bronze/10 text-center group hover:bg-white transition-all duration-500">
               <Compass
                 className="mx-auto mb-4 sm:mb-8 text-heritage-charcoal/40 group-hover:text-luxury-gold transition-colors duration-300 w-6 h-6 sm:w-8 sm:h-8"
@@ -176,7 +189,7 @@ const About = () => {
                 a legacy"
               </p>
             </div>
-          </div>
+          </Stagger>
         </div>
       </section>
 
@@ -184,26 +197,30 @@ const About = () => {
       <section className="py-16 sm:py-24 lg:py-32 bg-heritage-cream relative overflow-hidden border-y border-heritage-gold-muted/10">
         <div className="container mx-auto px-6 relative z-10 text-center">
           <div className="max-w-5xl mx-auto">
-            <div className="flex items-center justify-center gap-6 mb-10">
+            <Reveal className="flex items-center justify-center gap-6 mb-10">
               <div className="h-px w-16 bg-luxury-gold/30"></div>
               <span className="text-luxury-gold tracking-[0.4em] font-sans text-xs font-bold uppercase">
                 Archive Vision
               </span>
               <div className="h-px w-16 bg-luxury-gold/30"></div>
-            </div>
+            </Reveal>
 
-            <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal font-normal leading-tight tracking-tight text-center mb-8 sm:mb-12">
+            <Reveal
+              as="h2"
+              delay={100}
+              className="text-xl sm:text-3xl lg:text-4xl font-serif text-heritage-charcoal font-normal leading-tight tracking-tight text-center mb-8 sm:mb-12"
+            >
               The <span className="italic text-luxury-gold font-light">Legacy</span> Statement
-            </h2>
+            </Reveal>
 
-            <div className="relative py-4 mb-12 sm:mb-16">
+            <Reveal blur delay={180} className="relative py-4 mb-12 sm:mb-16">
               <p className="text-xl sm:text-2xl md:text-4xl font-serif italic text-heritage-bronze/80 leading-relaxed max-w-4xl mx-auto">
                 "To become the definitive global archive where the world's most meaningful history
                 is preserved, verified, and exchanged for generations to come."
               </p>
-            </div>
+            </Reveal>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-8 md:gap-16">
+            <Reveal className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-8 md:gap-16">
               <div className="flex items-center gap-3 justify-center">
                 <Bullet className="text-luxury-gold" />
                 <span className="text-xs uppercase tracking-[0.3em] text-heritage-charcoal/60 font-sans font-bold">
@@ -221,7 +238,7 @@ const About = () => {
                   uncertainty of local markets.
                 </p>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -231,7 +248,7 @@ const About = () => {
         <div className="max-w-5xl mx-auto space-y-32">
           {/* Verification */}
           <div className="flex flex-col md:flex-row gap-20 items-center">
-            <div className="md:w-1/2">
+            <Reveal direction="left" blur className="md:w-1/2">
               <div className="text-xs uppercase tracking-[0.4em] text-luxury-gold font-bold mb-4 sm:mb-6">
                 Authentication
               </div>
@@ -253,33 +270,35 @@ const About = () => {
                   over clutter, and provenance over popularity. We reject "misbranding."
                 </p>
               </div>
-            </div>
-            <div className="md:w-1/2 relative">
+            </Reveal>
+            <Reveal direction="right" distance={90} blur className="md:w-1/2 relative">
               <div className="absolute inset-0 bg-luxury-gold/5 blur-3xl transform rotate-3"></div>
-              <div className="h-[400px] md:h-[500px] p-2 bg-white border border-heritage-bronze/10 shadow-2xl relative z-10">
-                <img
-                  src="/img/verification-800.webp"
-                  srcSet="/img/verification-480.webp 480w, /img/verification-800.webp 800w"
-                  sizes="(max-width: 768px) 100vw, 500px"
-                  alt="Expert examining a vintage pocket watch for authenticity"
-                  loading="lazy"
-                  className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-1000"
-                />
-              </div>
+              <Parallax speed={0.1}>
+                <div className="h-[400px] md:h-[500px] p-2 bg-white border border-heritage-bronze/10 shadow-2xl relative z-10">
+                  <img
+                    src="/img/verification-800.webp"
+                    srcSet="/img/verification-480.webp 480w, /img/verification-800.webp 800w"
+                    sizes="(max-width: 768px) 100vw, 500px"
+                    alt="Expert examining a vintage pocket watch for authenticity"
+                    loading="lazy"
+                    className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-1000"
+                  />
+                </div>
+              </Parallax>
               <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-luxury-gold/10 rounded-full blur-2xl"></div>
-            </div>
+            </Reveal>
           </div>
 
           {/* Collectors Segment */}
           <div className="space-y-20">
-            <div className="text-center">
+            <Reveal className="text-center">
               <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif mb-4 sm:mb-6 text-heritage-charcoal">
                 Built for Collectors
               </h2>
               <p className="text-sm sm:text-base md:text-lg text-heritage-brown/70 max-w-2xl mx-auto leading-relaxed italic">
                 "The courage to collect is the courage to remember."
               </p>
-            </div>
+            </Reveal>
 
             <div className="grid md:grid-cols-3 gap-8">
               {[
@@ -296,17 +315,18 @@ const About = () => {
                   desc: 'Discovering the joy of meaningful ownership and history.',
                 },
               ].map((item, i) => (
-                <div
-                  key={i}
-                  className="p-10 bg-white border border-heritage-bronze/10 hover:border-luxury-gold/40 transition-all duration-300 text-center shadow-sm hover:shadow-heritage group"
-                >
-                  <h3 className="font-serif text-xl mb-4 text-heritage-charcoal group-hover:text-luxury-gold transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-heritage-brown/70 font-light leading-relaxed tracking-wide">
-                    {item.desc}
-                  </p>
-                </div>
+                <Reveal key={i} delay={i * 130}>
+                  <Tilt>
+                    <div className="p-10 bg-white border border-heritage-bronze/10 hover:border-luxury-gold/40 transition-all duration-300 text-center shadow-sm hover:shadow-heritage group">
+                      <h3 className="font-serif text-xl mb-4 text-heritage-charcoal group-hover:text-luxury-gold transition-colors">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-heritage-brown/70 font-light leading-relaxed tracking-wide">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </Tilt>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -316,7 +336,7 @@ const About = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl"></div>
 
-            <div className="relative z-10">
+            <Reveal className="relative z-10">
               <ShieldCheck
                 className="mx-auto mb-6 sm:mb-8 text-luxury-gold w-12 h-12 sm:w-16 sm:h-16"
                 strokeWidth={1}
@@ -348,10 +368,10 @@ const About = () => {
                   </span>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
 
-          <div className="space-y-6 sm:space-y-8">
+          <Reveal className="space-y-6 sm:space-y-8">
             <div className="space-y-3 sm:space-y-4">
               <span className="text-luxury-gold font-serif text-2xl sm:text-3xl md:text-4xl block">
                 01.
@@ -368,10 +388,10 @@ const About = () => {
                 transparency is the default, not the exception.
               </p>
             </div>
-          </div>
+          </Reveal>
 
           <div className="grid md:grid-cols-2 gap-20 items-center">
-            <div className="space-y-6 sm:space-y-8 order-2 md:order-1">
+            <Reveal direction="left" blur className="space-y-6 sm:space-y-8 order-2 md:order-1">
               <div className="space-y-3 sm:space-y-4">
                 <span className="text-luxury-gold font-serif text-2xl sm:text-3xl md:text-4xl block">
                   02.
@@ -390,17 +410,21 @@ const About = () => {
                   history travels safely from the streets of India to the world.
                 </p>
               </div>
-            </div>
-            <div className="aspect-square bg-white border border-heritage-bronze/10 p-2 shadow-heritage order-1 md:order-2 overflow-hidden">
-              <img
-                src="/img/artisan-800.webp"
-                srcSet="/img/artisan-480.webp 480w, /img/artisan-800.webp 800w"
-                sizes="(max-width: 768px) 100vw, 500px"
-                alt="Vintage market vendor with antique wares"
-                loading="lazy"
-                className="w-full h-full object-cover grayscale-[0.5]"
-              />
-            </div>
+            </Reveal>
+            <Reveal direction="right" distance={90} blur className="order-1 md:order-2">
+              <Parallax speed={0.1}>
+                <div className="aspect-square bg-white border border-heritage-bronze/10 p-2 shadow-heritage overflow-hidden">
+                  <img
+                    src="/img/artisan-800.webp"
+                    srcSet="/img/artisan-480.webp 480w, /img/artisan-800.webp 800w"
+                    sizes="(max-width: 768px) 100vw, 500px"
+                    alt="Vintage market vendor with antique wares"
+                    loading="lazy"
+                    className="w-full h-full object-cover grayscale-[0.5]"
+                  />
+                </div>
+              </Parallax>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -408,11 +432,20 @@ const About = () => {
       {/* The Story Section */}
       <section className="py-16 sm:py-24 bg-heritage-charcoal text-white relative">
         <div className="container mx-auto px-6 max-w-4xl text-center">
-          <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 sm:mb-6 block">
+          <Reveal
+            as="span"
+            className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 sm:mb-6 block"
+          >
             The Story
-          </span>
-          <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif mb-8 sm:mb-12">The Journey</h2>
-          <div className="space-y-6 sm:space-y-8 text-sm sm:text-base md:text-lg lg:text-xl text-white/70 font-light leading-relaxed font-serif italic max-w-3xl mx-auto">
+          </Reveal>
+          <Reveal
+            as="h2"
+            delay={100}
+            className="text-xl sm:text-3xl lg:text-4xl font-serif mb-8 sm:mb-12"
+          >
+            The Journey
+          </Reveal>
+          <Stagger className="space-y-6 sm:space-y-8 text-sm sm:text-base md:text-lg lg:text-xl text-white/70 font-light leading-relaxed font-serif italic max-w-3xl mx-auto">
             <p>
               What started as a personal passion for historical finds has grown into a dedicated
               platform for collectors worldwide. We’ve spent years building relationships with local
@@ -423,7 +456,7 @@ const About = () => {
               Our journey is defined by the incredible items we’ve discovered and the stories they
               carry.
             </p>
-          </div>
+          </Stagger>
         </div>
       </section>
 
@@ -431,7 +464,7 @@ const About = () => {
       <section className="py-16 sm:py-24 lg:py-32 px-6 bg-white">
         <div className="container mx-auto max-w-5xl">
           <div className="grid md:grid-cols-2 gap-12 sm:gap-16 items-start">
-            <div className="space-y-8 sm:space-y-12">
+            <Reveal direction="left" blur className="space-y-8 sm:space-y-12">
               <div className="space-y-3 sm:space-y-4">
                 <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase block">
                   Founder's message
@@ -464,19 +497,21 @@ const About = () => {
                   </p>
                 </div>
               </div>
-            </div>
-            <div className="pt-20">
-              <div className="aspect-[3/4] bg-heritage-charcoal overflow-hidden p-2 shadow-2xl">
-                <img
-                  src="/img/collectors-study-800.webp"
-                  srcSet="/img/collectors-study-480.webp 480w, /img/collectors-study-800.webp 800w"
-                  sizes="(max-width: 768px) 100vw, 400px"
-                  alt="A collector's study"
-                  loading="lazy"
-                  className="w-full h-full object-cover contrast-[1.1] grayscale"
-                />
-              </div>
-            </div>
+            </Reveal>
+            <Reveal direction="right" distance={90} blur className="pt-20">
+              <Parallax speed={0.1}>
+                <div className="aspect-[3/4] bg-heritage-charcoal overflow-hidden p-2 shadow-2xl">
+                  <img
+                    src="/img/collectors-study-800.webp"
+                    srcSet="/img/collectors-study-480.webp 480w, /img/collectors-study-800.webp 800w"
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    alt="A collector's study"
+                    loading="lazy"
+                    className="w-full h-full object-cover contrast-[1.1] grayscale"
+                  />
+                </div>
+              </Parallax>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -484,12 +519,16 @@ const About = () => {
       {/* Final CTA */}
       <section className="py-24 bg-white border-t border-heritage-bronze/10">
         <div className="container mx-auto px-6 text-center">
-          <Link
-            to="/category"
-            className="inline-block px-12 py-5 bg-heritage-charcoal text-white text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-luxury-gold transition-all duration-500 rounded-sm"
-          >
-            EXPLORE THE REGISTRY
-          </Link>
+          <Reveal>
+            <Magnetic>
+              <Link
+                to="/category"
+                className="block px-12 py-5 bg-heritage-charcoal text-white text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-luxury-gold transition-all duration-500 rounded-sm"
+              >
+                EXPLORE THE REGISTRY
+              </Link>
+            </Magnetic>
+          </Reveal>
         </div>
       </section>
     </div>

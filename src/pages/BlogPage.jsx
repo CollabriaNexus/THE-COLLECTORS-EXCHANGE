@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { usePublishedBlogs } from '../hooks/api/useBlog';
 import { BookOpen, Clock, User, Search, Loader2, ArrowRight, Tag } from 'lucide-react';
+import { Reveal, Tilt } from '../components/Motion';
 
 const scrollHideCss = `
     .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -22,7 +23,7 @@ const CATEGORIES = [
 const BlogCard = ({ post }) => (
   <Link
     to={`/archive/${post.slug}`}
-    className="group bg-white rounded-sm border border-gray-100 hover:border-luxury-gold/30 hover:shadow-lg transition-all duration-500 overflow-hidden flex flex-col"
+    className="group bg-white rounded-sm border border-gray-100 hover:border-luxury-gold/30 hover:shadow-lg transition-all duration-500 overflow-hidden flex flex-col h-full"
   >
     {post.coverImage ? (
       <div className="relative h-40 sm:h-56 overflow-hidden">
@@ -119,18 +120,24 @@ function BlogPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-heritage-charcoal via-heritage-charcoal/70 to-heritage-charcoal/60" />
         </div>
         <div className="container mx-auto max-w-4xl relative z-10 text-center">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="h-px w-8 sm:w-12 bg-luxury-gold/50"></div>
-            <BookOpen size={16} className="text-luxury-gold/70 sm:w-5 sm:h-5" strokeWidth={1} />
-            <div className="h-px w-8 sm:w-12 bg-luxury-gold/50"></div>
-          </div>
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-white leading-tight mb-4 tracking-tight">
-            The Archive
-          </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-white/60 font-light max-w-2xl mx-auto leading-relaxed">
-            Stories behind the artifacts. Curated insights on horology, gemology, collecting, and
-            the art of preservation.
-          </p>
+          <Reveal delay={100}>
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="h-px w-8 sm:w-12 bg-luxury-gold/50"></div>
+              <BookOpen size={16} className="text-luxury-gold/70 sm:w-5 sm:h-5" strokeWidth={1} />
+              <div className="h-px w-8 sm:w-12 bg-luxury-gold/50"></div>
+            </div>
+          </Reveal>
+          <Reveal delay={200} blur distance={90}>
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-white leading-tight mb-4 tracking-tight">
+              The Archive
+            </h1>
+          </Reveal>
+          <Reveal delay={400}>
+            <p className="text-sm sm:text-base lg:text-lg text-white/60 font-light max-w-2xl mx-auto leading-relaxed">
+              Stories behind the artifacts. Curated insights on horology, gemology, collecting, and
+              the art of preservation.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -211,51 +218,52 @@ function BlogPage() {
                     <div className="h-px flex-1 bg-gray-100" />
                   </div>
                   {featured.slice(0, 1).map((post) => (
-                    <Link
-                      key={post.id}
-                      to={`/archive/${post.slug}`}
-                      className="group block bg-gradient-to-r from-heritage-charcoal to-[#2a2520] rounded-sm overflow-hidden"
-                    >
-                      <div className="grid md:grid-cols-2 min-h-[260px] sm:min-h-[300px]">
-                        {post.coverImage ? (
-                          <div className="relative h-48 sm:h-64 md:h-auto overflow-hidden">
-                            <img
-                              src={post.coverImage}
-                              alt={post.title}
-                              width="800"
-                              height="450"
-                              loading="lazy"
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                            />
-                          </div>
-                        ) : (
-                          <div className="h-48 sm:h-64 md:h-auto bg-heritage-brown/30 flex items-center justify-center">
-                            <BookOpen size={40} className="text-white/20 sm:w-16 sm:h-16" />
-                          </div>
-                        )}
-                        <div className="p-6 sm:p-12 flex flex-col justify-center">
-                          <span className="text-[10px] uppercase tracking-widest font-bold text-luxury-gold mb-3">
-                            {post.category}
-                          </span>
-                          <h3 className="text-xl sm:text-3xl font-serif text-white leading-tight mb-4 group-hover:text-luxury-gold transition-colors">
-                            {post.title}
-                          </h3>
-                          <p className="text-white/60 text-sm leading-relaxed mb-6 line-clamp-3">
-                            {post.excerpt}
-                          </p>
-                          <div className="flex items-center gap-3 text-xs text-white/40">
-                            <span className="flex items-center gap-1">
-                              <User size={12} /> {post.author}
+                    <Reveal key={post.id} direction="scale">
+                      <Link
+                        to={`/archive/${post.slug}`}
+                        className="group block bg-gradient-to-r from-heritage-charcoal to-[#2a2520] rounded-sm overflow-hidden"
+                      >
+                        <div className="grid md:grid-cols-2 min-h-[260px] sm:min-h-[300px]">
+                          {post.coverImage ? (
+                            <div className="relative h-48 sm:h-64 md:h-auto overflow-hidden">
+                              <img
+                                src={post.coverImage}
+                                alt={post.title}
+                                width="800"
+                                height="450"
+                                loading="lazy"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-48 sm:h-64 md:h-auto bg-heritage-brown/30 flex items-center justify-center">
+                              <BookOpen size={40} className="text-white/20 sm:w-16 sm:h-16" />
+                            </div>
+                          )}
+                          <div className="p-6 sm:p-12 flex flex-col justify-center">
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-luxury-gold mb-3">
+                              {post.category}
                             </span>
-                            {post.readingTime && (
+                            <h3 className="text-xl sm:text-3xl font-serif text-white leading-tight mb-4 group-hover:text-luxury-gold transition-colors">
+                              {post.title}
+                            </h3>
+                            <p className="text-white/60 text-sm leading-relaxed mb-6 line-clamp-3">
+                              {post.excerpt}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-white/40">
                               <span className="flex items-center gap-1">
-                                <Clock size={12} /> {post.readingTime} min read
+                                <User size={12} /> {post.author}
                               </span>
-                            )}
+                              {post.readingTime && (
+                                <span className="flex items-center gap-1">
+                                  <Clock size={12} /> {post.readingTime} min read
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    </Reveal>
                   ))}
                 </div>
               )}
@@ -273,8 +281,12 @@ function BlogPage() {
                     </div>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                    {regular.map((post) => (
-                      <BlogCard key={post.id} post={post} />
+                    {regular.map((post, i) => (
+                      <Reveal key={post.id} delay={i * 130} className="h-full">
+                        <Tilt className="h-full">
+                          <BlogCard post={post} />
+                        </Tilt>
+                      </Reveal>
                     ))}
                   </div>
                 </>

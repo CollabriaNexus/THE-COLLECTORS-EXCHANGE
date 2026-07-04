@@ -19,6 +19,7 @@ import {
   Facebook,
   Linkedin,
   Mail,
+  ChevronDown,
 } from 'lucide-react';
 import Bullet from '../components/Bullet';
 import heroVideoWebm from '../assets/hero_section.webm';
@@ -30,19 +31,7 @@ import { useTestimonials } from '../hooks/api/useTestimonials';
 import { useCart, useAddToCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
 import { useToast } from '../components/Toast';
-import { useInView } from '../hooks/useInView';
-
-const Reveal = ({ children, className = '' }) => {
-  const [ref, inView] = useInView();
-  return (
-    <div
-      ref={ref}
-      className={`transition-all duration-700 ease-out ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}
-    >
-      {children}
-    </div>
-  );
-};
+import { Reveal, Stagger, Parallax, Magnetic, Tilt, Marquee } from '../components/Motion';
 
 const FeaturedProductCard = ({ product }) => {
   const user = getUser();
@@ -288,63 +277,109 @@ const Home = () => {
         </video>
         <div className="absolute inset-0 bg-black/40"></div>
 
-        <div className="container mx-auto max-w-4xl relative z-10">
-          <h5 className="text-luxury-gold tracking-[0.2em] font-sans text-[10px] sm:text-sm font-semibold uppercase mb-3 sm:mb-4">
-            Authorized & Premium
-          </h5>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif text-white font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg">
+        <Parallax speed={0.18} className="container mx-auto max-w-4xl relative z-10">
+          <Reveal delay={150}>
+            <h5 className="text-luxury-gold tracking-[0.2em] font-sans text-[10px] sm:text-sm font-semibold uppercase mb-3 sm:mb-4">
+              Authorized & Premium
+            </h5>
+          </Reveal>
+          <h1
+            className="animate-heritage-clip text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif text-white font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg"
+            style={{ animationDelay: '0.3s' }}
+          >
             A Marketplace for Authentic{' '}
-            <span className="italic text-luxury-gold">Vintage Watches</span> & Rare Collectibles
+            <span className="italic text-luxury-gold animate-gold-shimmer">Vintage Watches</span> &
+            Rare Collectibles
           </h1>
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 font-sans font-light mb-4 sm:mb-10 max-w-2xl mx-auto">
-            Verified. Original. Limited. Discover a curated world of rare finds and verified
-            sellers.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-            <Link
-              to="/category"
-              className="bg-luxury-gold text-black px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white transition-colors duration-300"
-            >
-              EXPLORE THE EXCHANGE
-            </Link>
-            <Link
-              to="/auction"
-              className="bg-transparent text-white border border-white px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors duration-300"
-            >
-              VIEW AUCTIONS
-            </Link>
-          </div>
+          <Reveal delay={650}>
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 font-sans font-light mb-4 sm:mb-10 max-w-2xl mx-auto">
+              Verified. Original. Limited. Discover a curated world of rare finds and verified
+              sellers.
+            </p>
+          </Reveal>
+          <Reveal delay={800}>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+              <Magnetic>
+                <Link
+                  to="/category"
+                  className="block bg-luxury-gold text-black px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white transition-colors duration-300"
+                >
+                  EXPLORE THE EXCHANGE
+                </Link>
+              </Magnetic>
+              <Magnetic>
+                <Link
+                  to="/auction"
+                  className="block bg-transparent text-white border border-white px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors duration-300"
+                >
+                  VIEW AUCTIONS
+                </Link>
+              </Magnetic>
+            </div>
+          </Reveal>
+        </Parallax>
+
+        <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center gap-2 text-white/60">
+          <span className="text-[10px] uppercase tracking-[0.3em]">Scroll</span>
+          <ChevronDown size={18} className="animate-scroll-cue" />
         </div>
       </section>
+
+      {/* Trust ticker */}
+      <div className="bg-heritage-charcoal text-white/70 py-3.5 sm:py-4 text-[10px] sm:text-xs uppercase tracking-[0.3em] font-medium border-y border-luxury-gold/10">
+        <Marquee
+          items={[
+            'Authenticated',
+            'Verified Provenance',
+            'Rare & Collectible',
+            'Curated by Experts',
+            'Heritage Timepieces',
+            'Trusted Sellers',
+          ]}
+          duration={30}
+        />
+      </div>
 
       {/* Marketplace Overview */}
       <section className="py-12 sm:py-16 lg:py-20 px-6 bg-secondary-bg">
         <div className="container mx-auto max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 text-center">
-            <div className="p-6 sm:p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-              <Archive className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
-              <h3 className="text-xl sm:text-2xl font-serif mb-4">Curated Collection</h3>
-              <p className="text-sm sm:text-base text-gray-600 font-sans font-light">
-                From vintage artifacts to limited edition luxury goods, every item is hand-picked
-                for its uniqueness.
-              </p>
-            </div>
-            <div className="p-6 sm:p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-              <ShieldCheck className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
-              <h3 className="text-xl sm:text-2xl font-serif mb-4">Authenticity Verified</h3>
-              <p className="text-gray-600 font-sans font-light text-sm sm:text-base">
-                We verify products with brands and experts to ensure 100% originality. No replicas,
-                no fakes.
-              </p>
-            </div>
-            <div className="p-6 sm:p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 sm:col-span-2 lg:col-span-1">
-              <UserCheck className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
-              <h3 className="text-xl sm:text-2xl font-serif mb-4">Trusted Sellers</h3>
-              <p className="text-sm sm:text-base text-gray-600 font-sans font-light">
-                Sellers are strictly vetted with mandatory KYC and compliance checks before they can
-                list.
-              </p>
-            </div>
+            <Reveal direction="up" delay={0} className="h-full">
+              <Tilt className="h-full">
+                <div className="h-full p-6 sm:p-8 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+                  <Archive className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
+                  <h3 className="text-xl sm:text-2xl font-serif mb-4">Curated Collection</h3>
+                  <p className="text-sm sm:text-base text-gray-600 font-sans font-light">
+                    From vintage artifacts to limited edition luxury goods, every item is
+                    hand-picked for its uniqueness.
+                  </p>
+                </div>
+              </Tilt>
+            </Reveal>
+            <Reveal direction="up" delay={140} className="h-full">
+              <Tilt className="h-full">
+                <div className="h-full p-6 sm:p-8 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+                  <ShieldCheck className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
+                  <h3 className="text-xl sm:text-2xl font-serif mb-4">Authenticity Verified</h3>
+                  <p className="text-gray-600 font-sans font-light text-sm sm:text-base">
+                    We verify products with brands and experts to ensure 100% originality. No
+                    replicas, no fakes.
+                  </p>
+                </div>
+              </Tilt>
+            </Reveal>
+            <Reveal direction="up" delay={280} className="h-full sm:col-span-2 lg:col-span-1">
+              <Tilt className="h-full">
+                <div className="h-full p-6 sm:p-8 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+                  <UserCheck className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
+                  <h3 className="text-xl sm:text-2xl font-serif mb-4">Trusted Sellers</h3>
+                  <p className="text-sm sm:text-base text-gray-600 font-sans font-light">
+                    Sellers are strictly vetted with mandatory KYC and compliance checks before they
+                    can list.
+                  </p>
+                </div>
+              </Tilt>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -441,7 +476,12 @@ const Home = () => {
       <section className="py-16 sm:py-24 lg:py-32 px-6 bg-white overflow-hidden">
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col lg:flex-row items-center gap-12 sm:gap-16 lg:gap-24">
-            <div className="lg:w-1/2 space-y-6 sm:space-y-10 relative">
+            <Reveal
+              direction="left"
+              distance={90}
+              blur
+              className="lg:w-1/2 space-y-6 sm:space-y-10 relative"
+            >
               <h2 className="text-3xl sm:text-4xl font-serif text-heritage-charcoal leading-[1.1] tracking-tighter uppercase relative z-10">
                 The Truth Of <br />
                 <span className="text-luxury-gold">Heritage</span>
@@ -465,21 +505,23 @@ const Home = () => {
                   </li>
                 ))}
               </ul>
-            </div>
-            <div className="lg:w-1/2 relative">
-              <div className="relative z-10 p-2 bg-white border border-heritage-bronze/10 shadow-2xl overflow-hidden group">
-                <img
-                  loading="lazy"
-                  width="600"
-                  height="600"
-                  src={verificationAuthenticity}
-                  alt="Heritage Verification"
-                  className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-tr from-heritage-charcoal/5 to-transparent"></div>
-              </div>
+            </Reveal>
+            <Reveal direction="right" distance={90} blur className="lg:w-1/2 relative">
+              <Parallax speed={0.14}>
+                <div className="relative z-10 p-2 bg-white border border-heritage-bronze/10 shadow-2xl overflow-hidden group">
+                  <img
+                    loading="lazy"
+                    width="600"
+                    height="600"
+                    src={verificationAuthenticity}
+                    alt="Heritage Verification"
+                    className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-heritage-charcoal/5 to-transparent"></div>
+                </div>
+              </Parallax>
               <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-luxury-gold/10 rounded-full blur-3xl -z-0"></div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
