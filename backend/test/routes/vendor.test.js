@@ -8,8 +8,10 @@ function buildApp(mockPrisma) {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return reply.status(401).send({ error: 'No token provided' });
     req.user = { sub: 'sb-123' };
-    req.dbUser = token === 'admin' ? { id: 'admin-id', role: 'admin' }
-      : { id: 'vendor-user-id', role: 'user' };
+    req.dbUser =
+      token === 'admin'
+        ? { id: 'admin-id', role: 'admin' }
+        : { id: 'vendor-user-id', role: 'user' };
   });
   return fastify;
 }
@@ -23,7 +25,7 @@ describe('vendor routes', () => {
       vendor: { findUnique: vi.fn(), update: vi.fn() },
       product: { count: vi.fn(), findMany: vi.fn() },
       orderItem: { findMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
-      order: { findMany: vi.fn(), update: vi.fn() },
+      order: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
       payout: { findMany: vi.fn(), count: vi.fn(), aggregate: vi.fn() },
       productView: { count: vi.fn(), groupBy: vi.fn() },
       cartEvent: { count: vi.fn() },
@@ -35,12 +37,20 @@ describe('vendor routes', () => {
 
   describe('GET /profile', () => {
     it('returns vendor profile', async () => {
-      mockPrisma.vendor.findUnique.mockResolvedValue({ id: 'v1', type: 'SINGLE', status: 'APPROVED' });
+      mockPrisma.vendor.findUnique.mockResolvedValue({
+        id: 'v1',
+        type: 'SINGLE',
+        status: 'APPROVED',
+      });
       mockPrisma.product.count.mockResolvedValue(3);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/profile', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/profile',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
       expect(res.json().activeCount).toBe(3);
     });
@@ -48,10 +58,17 @@ describe('vendor routes', () => {
     it('returns 401 without dbUser', async () => {
       const fastify2 = Fastify();
       fastify2.decorate('prisma', mockPrisma);
-      fastify2.decorate('authenticate', async (req, reply) => { req.user = { sub: '' }; req.dbUser = null; });
+      fastify2.decorate('authenticate', async (req, reply) => {
+        req.user = { sub: '' };
+        req.dbUser = null;
+      });
       await fastify2.register((await import('../../routes/vendor.js')).default);
       await fastify2.ready();
-      const res = await fastify2.inject({ method: 'GET', url: '/profile', headers: { authorization: 'Bearer token' } });
+      const res = await fastify2.inject({
+        method: 'GET',
+        url: '/profile',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(401);
     });
 
@@ -60,7 +77,11 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/profile', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/profile',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
@@ -69,11 +90,17 @@ describe('vendor routes', () => {
     it('returns vendor stats', async () => {
       mockPrisma.vendor.findUnique.mockResolvedValue({ id: 'v1' });
       mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1' }]);
-      mockPrisma.orderItem.findMany.mockResolvedValue([{ price: 100, quantity: 2, orderId: 'o1', platformFee: 20 }]);
+      mockPrisma.orderItem.findMany.mockResolvedValue([
+        { price: 100, quantity: 2, orderId: 'o1', platformFee: 20 },
+      ]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/stats', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/stats',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
       expect(res.json().totalSales).toBe(200);
     });
@@ -88,7 +115,11 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/stats', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/stats',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
       expect(res.json().totalSales).toBe(300);
       expect(res.json().totalPlatformFees).toBe(70);
@@ -100,7 +131,11 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/stats', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/stats',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
@@ -115,7 +150,11 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/analytics/overview', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/analytics/overview',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -125,15 +164,33 @@ describe('vendor routes', () => {
         .mockResolvedValueOnce([{ id: 'p1' }, { id: 'p2' }])
         .mockResolvedValue([]);
       mockPrisma.orderItem.findMany.mockResolvedValue([
-        { price: 100, quantity: 2, orderId: 'o1', platformFee: 20, createdAt: new Date(), order: { paymentStatus: 'Paid', status: 'Delivered' } },
-        { price: 50, quantity: 1, orderId: 'o2', platformFee: 5, createdAt: new Date(), order: { paymentStatus: 'Pending', status: 'Processing' } },
+        {
+          price: 100,
+          quantity: 2,
+          orderId: 'o1',
+          platformFee: 20,
+          createdAt: new Date(),
+          order: { paymentStatus: 'Paid', status: 'Delivered' },
+        },
+        {
+          price: 50,
+          quantity: 1,
+          orderId: 'o2',
+          platformFee: 5,
+          createdAt: new Date(),
+          order: { paymentStatus: 'Pending', status: 'Processing' },
+        },
       ]);
       mockPrisma.payout.aggregate.mockResolvedValue({ _sum: { amount: 0 } });
       mockPrisma.product.count.mockResolvedValue(2);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/analytics/overview', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/analytics/overview',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
       expect(res.json().totalRevenue).toBe(250);
       expect(res.json().totalPlatformFees).toBe(25);
@@ -151,21 +208,35 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/analytics/interest', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/analytics/interest',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
 
   describe('GET /analytics/sales-graph', () => {
     it('returns sales graph data', async () => {
-      mockPrisma.product.findMany
-        .mockResolvedValueOnce([{ id: 'p1' }])
-        .mockResolvedValue([]);
-      mockPrisma.orderItem.findMany.mockResolvedValue([{ price: 100, quantity: 1, orderId: 'o1', createdAt: new Date('2024-01-15'), order: { status: 'Delivered' } }]);
+      mockPrisma.product.findMany.mockResolvedValueOnce([{ id: 'p1' }]).mockResolvedValue([]);
+      mockPrisma.orderItem.findMany.mockResolvedValue([
+        {
+          price: 100,
+          quantity: 1,
+          orderId: 'o1',
+          createdAt: new Date('2024-01-15'),
+          order: { status: 'Delivered' },
+        },
+      ]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/analytics/sales-graph', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/analytics/sales-graph',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
@@ -173,11 +244,23 @@ describe('vendor routes', () => {
   describe('GET /analytics/top-products', () => {
     it('returns top products', async () => {
       mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1' }]);
-      mockPrisma.orderItem.findMany.mockResolvedValue([{ productId: 'p1', price: 100, quantity: 1, orderId: 'o1', product: { id: 'p1', title: 'Test', image: 'img.jpg', price: 100 } }]);
+      mockPrisma.orderItem.findMany.mockResolvedValue([
+        {
+          productId: 'p1',
+          price: 100,
+          quantity: 1,
+          orderId: 'o1',
+          product: { id: 'p1', title: 'Test', image: 'img.jpg', price: 100 },
+        },
+      ]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/analytics/top-products', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/analytics/top-products',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
@@ -190,7 +273,11 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/payouts', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/payouts',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
@@ -202,7 +289,12 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/pickup-address', payload: { pickupAddress: 'New Addr' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/pickup-address',
+        payload: { pickupAddress: 'New Addr' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -211,7 +303,12 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/pickup-address', payload: { pickupAddress: 'New' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/pickup-address',
+        payload: { pickupAddress: 'New' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
@@ -235,7 +332,12 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/rate', payload: { vendorId: 'v1', rating: 5 }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/rate',
+        payload: { vendorId: 'v1', rating: 5 },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -243,7 +345,12 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/rate', payload: {}, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/rate',
+        payload: {},
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(400);
     });
 
@@ -254,7 +361,12 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/rate', payload: { vendorId: 'v1', rating: 5 }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/rate',
+        payload: { vendorId: 'v1', rating: 5 },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(403);
     });
   });
@@ -262,26 +374,70 @@ describe('vendor routes', () => {
   describe('GET /orders', () => {
     it('returns vendor orders', async () => {
       mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1' }]);
-      mockPrisma.orderItem.findMany.mockResolvedValue([{ id: 'oi1', order: { user: { name: 'Buyer' } }, product: { id: 'p1', title: 'Test', image: 'img.jpg', price: 100 } }]);
+      mockPrisma.orderItem.findMany.mockResolvedValue([
+        {
+          id: 'oi1',
+          order: { user: { name: 'Buyer' } },
+          product: { id: 'p1', title: 'Test', image: 'img.jpg', price: 100 },
+        },
+      ]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/orders', headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/orders',
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
 
   describe('PATCH /orders/:orderItemId/ship', () => {
     it('marks order item as shipped', async () => {
-      mockPrisma.orderItem.findUnique.mockResolvedValue({ id: 'oi1', product: { sellerId: 'vendor-user-id' }, order: { id: 'o1', items: [] }, status: 'Pending' });
+      mockPrisma.orderItem.findUnique.mockResolvedValue({
+        id: 'oi1',
+        product: { sellerId: 'vendor-user-id' },
+        order: { id: 'o1', status: 'Processing', items: [] },
+        status: 'Pending',
+      });
       mockPrisma.orderItem.update.mockResolvedValue({ id: 'oi1', status: 'Shipped' });
       mockPrisma.orderItem.findMany.mockResolvedValue([{ status: 'Shipped' }]);
+      mockPrisma.order.findUnique.mockResolvedValue({ status: 'Processing' });
       mockPrisma.order.update.mockResolvedValue({});
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/orders/oi1/ship', payload: { trackingID: 'TRK123' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/orders/oi1/ship',
+        payload: { trackingID: 'TRK123' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(200);
+      expect(mockPrisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'Shipped' } }),
+      );
+    });
+
+    it('refuses to ship an item on a cancelled order', async () => {
+      mockPrisma.orderItem.findUnique.mockResolvedValue({
+        id: 'oi1',
+        product: { sellerId: 'vendor-user-id' },
+        order: { id: 'o1', status: 'Cancelled', items: [] },
+        status: 'Pending',
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/vendor.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/orders/oi1/ship',
+        payload: { trackingID: 'TRK123' },
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(mockPrisma.orderItem.update).not.toHaveBeenCalled();
     });
 
     it('returns 404 when order item not found', async () => {
@@ -289,16 +445,31 @@ describe('vendor routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/orders/oi1/ship', payload: { trackingID: 'TRK123' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/orders/oi1/ship',
+        payload: { trackingID: 'TRK123' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(404);
     });
 
-    it('returns 403 when not vendor\'s product', async () => {
-      mockPrisma.orderItem.findUnique.mockResolvedValue({ id: 'oi1', product: { sellerId: 'other-user' }, order: { items: [] }, status: 'Pending' });
+    it("returns 403 when not vendor's product", async () => {
+      mockPrisma.orderItem.findUnique.mockResolvedValue({
+        id: 'oi1',
+        product: { sellerId: 'other-user' },
+        order: { items: [] },
+        status: 'Pending',
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/orders/oi1/ship', payload: { trackingID: 'TRK123' }, headers: { authorization: 'Bearer vendor' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/orders/oi1/ship',
+        payload: { trackingID: 'TRK123' },
+        headers: { authorization: 'Bearer vendor' },
+      });
       expect(res.statusCode).toBe(403);
     });
   });

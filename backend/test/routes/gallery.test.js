@@ -8,8 +8,11 @@ function buildApp(mockPrisma) {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return reply.status(401).send({ error: 'No token provided' });
     req.user = { sub: 'sb-123' };
-    req.dbUser = token === 'admin' ? { id: 'admin-id', role: 'admin' }
-      : { id: 'user-id', role: 'user' };
+    req.dbUser =
+      token === 'admin' ? { id: 'admin-id', role: 'admin' } : { id: 'user-id', role: 'user' };
+  });
+  fastify.decorate('requireDbUser', async (req, reply) => {
+    if (!req.dbUser) return reply.status(401).send({ error: 'User profile not synchronized' });
   });
   return fastify;
 }
@@ -62,14 +65,28 @@ describe('gallery routes', () => {
   });
 
   describe('POST /', () => {
-    const valid = { title: 'Art', teaser: 'Beautiful', description: 'Desc', origin: 'India', timePeriod: 'Mughal', institution: 'Museum', significance: 'Rare', theme: 'History' };
+    const valid = {
+      title: 'Art',
+      teaser: 'Beautiful',
+      description: 'Desc',
+      origin: 'India',
+      timePeriod: 'Mughal',
+      institution: 'Museum',
+      significance: 'Rare',
+      theme: 'History',
+    };
 
     it('creates gallery item as admin', async () => {
       mockPrisma.galleryItem.create.mockResolvedValue({ id: 'g1', ...valid, images: [] });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/gallery.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: valid, headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: valid,
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(201);
     });
 
@@ -77,7 +94,12 @@ describe('gallery routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/gallery.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/', payload: valid, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: valid,
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
@@ -97,7 +119,12 @@ describe('gallery routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/gallery.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PUT', url: '/g1', payload: { title: 'Updated' }, headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/g1',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -105,7 +132,12 @@ describe('gallery routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/gallery.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PUT', url: '/g1', payload: { title: 'Updated' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/g1',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
@@ -114,7 +146,12 @@ describe('gallery routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/gallery.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PUT', url: '/nonexistent', payload: { title: 'Updated' }, headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/nonexistent',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
@@ -126,7 +163,11 @@ describe('gallery routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/gallery.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'DELETE', url: '/g1', headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/g1',
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(204);
     });
 
@@ -134,7 +175,11 @@ describe('gallery routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/gallery.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'DELETE', url: '/g1', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/g1',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
@@ -143,7 +188,11 @@ describe('gallery routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/gallery.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'DELETE', url: '/nonexistent', headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/nonexistent',
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });

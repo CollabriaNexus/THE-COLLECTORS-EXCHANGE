@@ -1,13 +1,21 @@
 import { describe, it, expect } from 'vitest';
-import { CreateOrderItemSchema, CreateOrderSchema, VerifyPaymentSchema } from '../../schemas/checkout.js';
+import {
+  CreateOrderItemSchema,
+  CreateOrderSchema,
+  VerifyPaymentSchema,
+} from '../../schemas/checkout.js';
 
 describe('CreateOrderItemSchema', () => {
   it('passes with valid data', () => {
     expect(() => CreateOrderItemSchema.parse({ productId: 'prod-1' })).not.toThrow();
   });
 
-  it('passes with quantity', () => {
-    expect(() => CreateOrderItemSchema.parse({ productId: 'prod-1', quantity: 2 })).not.toThrow();
+  it('passes with quantity of 1', () => {
+    expect(() => CreateOrderItemSchema.parse({ productId: 'prod-1', quantity: 1 })).not.toThrow();
+  });
+
+  it('rejects quantity greater than 1 (items are one-of-a-kind)', () => {
+    expect(() => CreateOrderItemSchema.parse({ productId: 'prod-1', quantity: 2 })).toThrow();
   });
 
   it('fails without productId', () => {
@@ -47,7 +55,7 @@ describe('CreateOrderSchema', () => {
   });
 
   it('fails without shippingAddress', () => {
-    const { shippingAddress, ...rest } = valid;
+    const { shippingAddress: _omit, ...rest } = valid;
     expect(() => CreateOrderSchema.parse(rest)).toThrow();
   });
 
@@ -56,17 +64,17 @@ describe('CreateOrderSchema', () => {
   });
 
   it('fails without city', () => {
-    const { city, ...rest } = valid;
+    const { city: _omit, ...rest } = valid;
     expect(() => CreateOrderSchema.parse(rest)).toThrow();
   });
 
   it('fails without state', () => {
-    const { state, ...rest } = valid;
+    const { state: _omit, ...rest } = valid;
     expect(() => CreateOrderSchema.parse(rest)).toThrow();
   });
 
   it('fails without zipCode', () => {
-    const { zipCode, ...rest } = valid;
+    const { zipCode: _omit, ...rest } = valid;
     expect(() => CreateOrderSchema.parse(rest)).toThrow();
   });
 
@@ -79,7 +87,7 @@ describe('CreateOrderSchema', () => {
   });
 
   it('fails without items', () => {
-    const { items, ...rest } = valid;
+    const { items: _omit, ...rest } = valid;
     expect(() => CreateOrderSchema.parse(rest)).toThrow();
   });
 });
@@ -90,7 +98,14 @@ describe('VerifyPaymentSchema', () => {
   });
 
   it('passes with all fields', () => {
-    expect(() => VerifyPaymentSchema.parse({ orderId: 'order-1', razorpayOrderId: 'rp_order_1', razorpayPaymentId: 'pay_1', razorpaySignature: 'sig_1' })).not.toThrow();
+    expect(() =>
+      VerifyPaymentSchema.parse({
+        orderId: 'order-1',
+        razorpayOrderId: 'rp_order_1',
+        razorpayPaymentId: 'pay_1',
+        razorpaySignature: 'sig_1',
+      }),
+    ).not.toThrow();
   });
 
   it('fails without orderId', () => {

@@ -10,6 +10,9 @@ function buildApp(mockPrisma) {
     req.user = { sub: 'sb-123' };
     req.dbUser = { id: 'user-id', role: 'user' };
   });
+  fastify.decorate('requireDbUser', async (req, reply) => {
+    if (!req.dbUser) return reply.status(401).send({ error: 'User profile not synchronized' });
+  });
   return fastify;
 }
 
@@ -36,7 +39,7 @@ describe('auction routes', () => {
       const tx = {
         auction: {
           findUnique: vi.fn().mockResolvedValue({ id: 'a1', currentBid: 100, startingBid: 50 }),
-          update: vi.fn(),
+          updateMany: vi.fn().mockResolvedValue({ count: 1 }),
         },
         auctionBid: {
           create: vi.fn().mockResolvedValue({ id: 'b1', amount: 150, user: { name: 'Bidder' } }),
@@ -48,7 +51,9 @@ describe('auction routes', () => {
 
   describe('GET /', () => {
     it('returns all auctions', async () => {
-      mockPrisma.auction.findMany.mockResolvedValue([{ id: 'a1', product: {}, _count: { bids: 0 } }]);
+      mockPrisma.auction.findMany.mockResolvedValue([
+        { id: 'a1', product: {}, _count: { bids: 0 } },
+      ]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/auction.js')).default);
       await app.ready();
@@ -88,12 +93,24 @@ describe('auction routes', () => {
 
   describe('POST /:id/bid', () => {
     it('places a bid successfully', async () => {
-      mockPrisma.auction.findUnique.mockResolvedValue({ id: 'a1', status: 'ACTIVE', startDate: new Date('2020-01-01'), endDate: new Date('2099-12-31'), currentBid: 100, startingBid: 50 });
+      mockPrisma.auction.findUnique.mockResolvedValue({
+        id: 'a1',
+        status: 'ACTIVE',
+        startDate: new Date('2020-01-01'),
+        endDate: new Date('2099-12-31'),
+        currentBid: 100,
+        startingBid: 50,
+      });
       setupBidTransaction();
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/auction.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/a1/bid', payload: { amount: 150 }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/a1/bid',
+        payload: { amount: 150 },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
       expect(res.json().amount).toBe(150);
     });
@@ -103,42 +120,52 @@ describe('auction routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/auction.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/nonexistent/bid', payload: { amount: 150 }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/nonexistent/bid',
+        payload: { amount: 150 },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(404);
     });
 
-    it('returns 400 when auction not active', async () => {
-      mockPrisma.auction.findUnique.mockResolvedValue({ id: 'a1', status: 'ENDED' });
+    it('rejects a seller bidding on their own auction', async () => {
+      mockPrisma.auction.findUnique.mockResolvedValue({
+        id: 'a1',
+        status: 'ACTIVE',
+        startDate: new Date('2020-01-01'),
+        endDate: new Date('2099-12-31'),
+        currentBid: 100,
+        startingBid: 50,
+        product: { sellerId: 'user-id' },
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/auction.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/a1/bid', payload: { amount: 150 }, headers: { authorization: 'Bearer user' } });
-      expect(res.statusCode).toBe(400);
+      const res = await app.inject({
+        method: 'POST',
+        url: '/a1/bid',
+        payload: { amount: 150 },
+        headers: { authorization: 'Bearer user' },
+      });
+      expect(res.statusCode).toBe(422);
     });
 
-    it('returns 400 when auction has ended', async () => {
-      mockPrisma.auction.findUnique.mockResolvedValue({ id: 'a1', status: 'ACTIVE', startDate: new Date('2020-01-01'), endDate: new Date('2020-06-01') });
-      const app = buildApp(mockPrisma);
-      await app.register((await import('../../routes/auction.js')).default);
-      await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/a1/bid', payload: { amount: 150 }, headers: { authorization: 'Bearer user' } });
-      expect(res.statusCode).toBe(400);
-    });
-
-    it('returns 400 when auction has not started', async () => {
-      mockPrisma.auction.findUnique.mockResolvedValue({ id: 'a1', status: 'ACTIVE', startDate: new Date('2099-01-01'), endDate: new Date('2099-12-31') });
-      const app = buildApp(mockPrisma);
-      await app.register((await import('../../routes/auction.js')).default);
-      await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/a1/bid', payload: { amount: 150 }, headers: { authorization: 'Bearer user' } });
-      expect(res.statusCode).toBe(400);
-    });
-
-    it('returns 400 when bid too low', async () => {
-      mockPrisma.auction.findUnique.mockResolvedValue({ id: 'a1', status: 'ACTIVE', startDate: new Date('2020-01-01'), endDate: new Date('2099-12-31'), currentBid: 100, startingBid: 50 });
+    it('rejects a bid that lost the atomic claim (concurrent higher bid)', async () => {
+      mockPrisma.auction.findUnique.mockResolvedValue({
+        id: 'a1',
+        status: 'ACTIVE',
+        startDate: new Date('2020-01-01'),
+        endDate: new Date('2099-12-31'),
+        currentBid: 100,
+        startingBid: 50,
+      });
       mockPrisma.$transaction.mockImplementation(async (cb) => {
         const tx = {
-          auction: { findUnique: vi.fn().mockResolvedValue({ id: 'a1', currentBid: 100, startingBid: 50 }) },
+          auction: {
+            findUnique: vi.fn().mockResolvedValue({ id: 'a1', currentBid: 100, startingBid: 50 }),
+            updateMany: vi.fn().mockResolvedValue({ count: 0 }), // another bid moved currentBid
+          },
           auctionBid: { create: vi.fn() },
         };
         return cb(tx);
@@ -146,7 +173,94 @@ describe('auction routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/auction.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/a1/bid', payload: { amount: 50 }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/a1/bid',
+        payload: { amount: 150 },
+        headers: { authorization: 'Bearer user' },
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('returns 400 when auction not active', async () => {
+      mockPrisma.auction.findUnique.mockResolvedValue({ id: 'a1', status: 'ENDED' });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/auction.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/a1/bid',
+        payload: { amount: 150 },
+        headers: { authorization: 'Bearer user' },
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('returns 400 when auction has ended', async () => {
+      mockPrisma.auction.findUnique.mockResolvedValue({
+        id: 'a1',
+        status: 'ACTIVE',
+        startDate: new Date('2020-01-01'),
+        endDate: new Date('2020-06-01'),
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/auction.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/a1/bid',
+        payload: { amount: 150 },
+        headers: { authorization: 'Bearer user' },
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('returns 400 when auction has not started', async () => {
+      mockPrisma.auction.findUnique.mockResolvedValue({
+        id: 'a1',
+        status: 'ACTIVE',
+        startDate: new Date('2099-01-01'),
+        endDate: new Date('2099-12-31'),
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/auction.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/a1/bid',
+        payload: { amount: 150 },
+        headers: { authorization: 'Bearer user' },
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('returns 400 when bid too low', async () => {
+      mockPrisma.auction.findUnique.mockResolvedValue({
+        id: 'a1',
+        status: 'ACTIVE',
+        startDate: new Date('2020-01-01'),
+        endDate: new Date('2099-12-31'),
+        currentBid: 100,
+        startingBid: 50,
+      });
+      mockPrisma.$transaction.mockImplementation(async (cb) => {
+        const tx = {
+          auction: {
+            findUnique: vi.fn().mockResolvedValue({ id: 'a1', currentBid: 100, startingBid: 50 }),
+          },
+          auctionBid: { create: vi.fn() },
+        };
+        return cb(tx);
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/auction.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/a1/bid',
+        payload: { amount: 50 },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(400);
     });
   });

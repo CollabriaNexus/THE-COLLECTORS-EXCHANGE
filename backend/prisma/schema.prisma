@@ -369,10 +369,13 @@ model OrderItem {
   platformFee       Float          @default(0)
   status            OrderItemStatus @default(Pending)
   trackingID        String?
+  paidOut           Boolean        @default(false)
+  payoutId          String?
   createdAt         DateTime       @default(now())
 
   @@index([orderId])
   @@index([productId])
+  @@index([paidOut])
 }
 
 model Vendor {
