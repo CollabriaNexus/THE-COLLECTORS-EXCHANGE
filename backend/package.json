@@ -10,11 +10,15 @@
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "deploy": "serverless deploy --stage production",
+    "deploy:dev": "serverless deploy --stage dev",
+    "remove": "serverless remove --stage production",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "seed:upload-agreement": "node scripts/upload-agreement-pdf.js"
   },
   "dependencies": {
+    "@fastify/aws-lambda": "^4.1.0",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^13.0.2",
     "@fastify/rate-limit": "^10.3.0",
@@ -29,8 +33,12 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "esbuild": "^0.28.1",
     "nodemon": "^3.1.9",
     "prisma": "^6.2.1",
+    "serverless": "^3.40.0",
+    "serverless-esbuild": "^1.57.2",
+    "serverless-prune-plugin": "^2.0.1",
     "vitest": "^3.2.6"
   }
 }

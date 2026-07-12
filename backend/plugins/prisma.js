@@ -3,19 +3,29 @@ import { PrismaClient } from '@prisma/client';
 
 /**
  * Prisma Plugin for Fastify
+ * In Lambda, we reuse the PrismaClient across warm invocations.
+ * In standalone mode, we disconnect on server close.
  * @param {import('fastify').FastifyInstance} fastify
  * @param {Object} options
  */
 async function prismaPlugin(fastify, options) {
-    const prisma = new PrismaClient();
+  const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
-    await prisma.$connect();
+  // Reuse existing client in Lambda (module-level caching)
+  if (!globalThis.__prisma) {
+    globalThis.__prisma = new PrismaClient();
+  }
+  const prisma = globalThis.__prisma;
 
-    fastify.decorate('prisma', prisma);
+  await prisma.$connect();
 
+  fastify.decorate('prisma', prisma);
+
+  if (!isLambda) {
     fastify.addHook('onClose', async (fastify) => {
-        await fastify.prisma.$disconnect();
+      await fastify.prisma.$disconnect();
     });
+  }
 }
 
 export default fp(prismaPlugin);

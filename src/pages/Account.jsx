@@ -2368,7 +2368,7 @@ const Account = () => {
               ) : (
                 <div className="text-center py-16 bg-gray-50 border border-gray-100 border-dashed">
                   <Package size={48} className="mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 font-serif text-lg">Your portfolio is empty.</p>
+                  <p className="text-gray-500 font-serif text-lg">Your listings are empty.</p>
                   <p className="text-gray-400 text-sm mt-1">List items to see them appear here.</p>
                   {user.kycStatus !== 'verified' && (
                     <button
@@ -2711,7 +2711,7 @@ const Account = () => {
           onClick={() => setActiveTab('listings')}
           className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'listings' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
         >
-          Portfolio
+          Listings
         </button>
         <button
           onClick={() => setActiveTab('orders')}
@@ -2778,7 +2778,7 @@ const Account = () => {
                   onClick={() => setActiveTab('listings')}
                   className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'listings' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
-                  <Package size={18} /> Portfolio
+                  <Package size={18} /> Listings
                 </button>
                 <button
                   onClick={() => setActiveTab('orders')}

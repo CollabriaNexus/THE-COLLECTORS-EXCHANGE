@@ -1,0 +1,78 @@
+service: tce-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  architecture: arm64
+  region: ${opt:region, 'ap-south-1'}
+  profile: thecollectorsexchange
+  memorySize: 1024
+  timeout: 29
+  environment:
+    NODE_ENV: production
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    DATABASE_URL: ${ssm:/thecollectorsexchange/DATABASE_URL}
+    SUPABASE_URL: ${ssm:/thecollectorsexchange/SUPABASE_URL}
+    SUPABASE_ANON_KEY: ${ssm:/thecollectorsexchange/SUPABASE_ANON_KEY}
+    SUPABASE_SERVICE_ROLE_KEY: ${ssm:/thecollectorsexchange/SUPABASE_SERVICE_ROLE_KEY}
+    FRONTEND_URL: ${ssm:/thecollectorsexchange/FRONTEND_URL, 'https://thecollectorsexchange.in'}
+    RAZORPAY_KEY_ID: ${ssm:/thecollectorsexchange/RAZORPAY_KEY_ID}
+    RAZORPAY_KEY_SECRET: ${ssm:/thecollectorsexchange/RAZORPAY_KEY_SECRET}
+    TRACKING_URL: ${ssm:/thecollectorsexchange/TRACKING_URL}
+  apiGateway:
+    binaryMediaTypes:
+      - 'application/pdf'
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: 'arn:aws:logs:*:*:*'
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource: 'arn:aws:ssm:ap-south-1:903783977495:parameter/thecollectorsexchange/*'
+
+package:
+  individually: false
+  patterns:
+    - 'node_modules/.prisma/**'
+    - 'node_modules/@prisma/client/**'
+    - '!node_modules/.prisma/client/query_engine-windows.dll.node'
+
+functions:
+  api:
+    handler: handler.lambdaHandler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+      - httpApi:
+          path: /
+          method: ANY
+
+plugins:
+  - serverless-esbuild
+  - serverless-prune-plugin
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node20
+    platform: node
+    format: cjs
+    external:
+      - '@prisma/client'
+      - '.prisma'
+      - '@prisma/runtime'
+      - '@aws-sdk/*'
+  prune:
+    automatic: true
+    number: 3
