@@ -307,14 +307,6 @@ const Home = () => {
                   EXPLORE THE EXCHANGE
                 </Link>
               </Magnetic>
-              <Magnetic>
-                <Link
-                  to="/auction"
-                  className="block bg-transparent text-white border border-white px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors duration-300"
-                >
-                  VIEW AUCTIONS
-                </Link>
-              </Magnetic>
             </div>
           </Reveal>
         </Parallax>

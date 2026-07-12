@@ -69,12 +69,6 @@ const About = () => {
               >
                 Explore The Exchange
               </Link>
-              <Link
-                to="/auction"
-                className="px-6 sm:px-10 py-3 sm:py-4 bg-transparent border border-white/30 text-white text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold hover:bg-white hover:text-heritage-charcoal transition-all duration-300 rounded-sm w-full sm:w-auto text-center"
-              >
-                View Auctions
-              </Link>
             </Reveal>
           </div>
         </div>

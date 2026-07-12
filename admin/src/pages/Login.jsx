@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { LogIn, LoaderCircle } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { setUser, setAuthToken, getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
@@ -9,12 +9,14 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   // Check for existing session or OAuth callback
   useEffect(() => {
     const checkSession = async () => {
+      setChecking(true);
       try {
         const existingUser = getUser();
         if (existingUser && existingUser.role === 'admin') {
@@ -75,6 +77,8 @@ function Login() {
         }
       } catch (err) {
         console.error('Session check error:', err);
+      } finally {
+        setChecking(false);
       }
     };
 
@@ -176,6 +180,21 @@ function Login() {
       setLoading(false);
     }
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-heritage-charcoal via-heritage-dark to-heritage-brown flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="bg-white/5 backdrop-blur-sm rounded-lg p-8 shadow-heritage">
+            <LoaderCircle className="w-10 h-10 text-luxury-gold animate-spin mx-auto mb-4" />
+            <p className="text-heritage-beige text-sm tracking-wider uppercase">
+              Verifying session...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-heritage-charcoal via-heritage-dark to-heritage-brown flex items-center justify-center p-4">
