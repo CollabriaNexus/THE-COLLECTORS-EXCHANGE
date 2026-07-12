@@ -525,6 +525,43 @@ const ProductDetail = () => {
             </div>
           </div>
 
+          {/* Specifications Table */}
+          {(() => {
+            let specs = [];
+            if (Array.isArray(product.specs)) {
+              specs = product.specs;
+            } else if (typeof product.specs === 'string') {
+              try {
+                specs = JSON.parse(product.specs);
+              } catch {
+                specs = [];
+              }
+            }
+            if (specs.length === 0) return null;
+            return (
+              <div>
+                <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-6">
+                  Specifications
+                </h3>
+                <div className="border border-gray-100">
+                  {specs.map((spec, index) => (
+                    <div
+                      key={index}
+                      className={`flex text-sm sm:text-base ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
+                    >
+                      <span className="w-2/5 sm:w-1/3 px-3 sm:px-5 py-2.5 sm:py-3.5 font-medium text-heritage-charcoal border-r border-gray-100">
+                        {spec.key}
+                      </span>
+                      <span className="flex-1 px-3 sm:px-5 py-2.5 sm:py-3.5 text-gray-600">
+                        {spec.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Trust Indicators */}
           {product.isVerified && (
             <div className="bg-heritage-cream border border-luxury-gold/20 p-3 sm:p-6">

@@ -16,19 +16,20 @@ All use JavaScript (JSX), not TypeScript.
 
 ## Key Domain Language
 
-| Term | Meaning |
-|------|---------|
-| **Product** | A listed item for sale; has status (DRAFT, PENDING, IN_REVIEW, VERIFIED, REJECTED, SOLD) |
-| **Vendor** | A user with KYC approval who can list products; has type (SINGLE/COMPANY) with different listing limits |
-| **KYC** | Know-Your-Customer verification; required before becoming a vendor; involves Aadhaar, PAN, GST docs |
-| **Order** | A purchase; goes through PROCESSING -> SHIPPED -> DELIVERED; uses Razorpay for payments and Delhivery for shipping |
-| **Auction** | Time-limited bidding on an item; has status (UPCOMING/LIVE/PAST) |
-| **Gallery** | Museum-style curated collection of archival items with provenance metadata |
-| **Payout** | Funds transfer from platform to vendor; tracks status and audit trail |
+| Term        | Meaning                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Product** | A listed item for sale; has status (DRAFT, PENDING, IN_REVIEW, VERIFIED, REJECTED, SOLD)                           |
+| **Vendor**  | A user with KYC approval who can list products; has type (SINGLE/COMPANY) with different listing limits            |
+| **KYC**     | Know-Your-Customer verification; required before becoming a vendor; involves Aadhaar, PAN, GST docs                |
+| **Order**   | A purchase; goes through PROCESSING -> SHIPPED -> DELIVERED; uses Razorpay for payments and Delhivery for shipping |
+| **Auction** | Time-limited bidding on an item; has status (UPCOMING/LIVE/PAST)                                                   |
+| **Gallery** | Museum-style curated collection of archival items with provenance metadata                                         |
+| **Payout**  | Funds transfer from platform to vendor; tracks status and audit trail                                              |
 
 ## Architecture Rules
 
 ### Frontend
+
 - **Styling**: Tailwind CSS only. Use custom colors (`luxury-gold`, `heritage` palette) and fonts (`Playfair Display` for headings, `Inter` for body).
 - **Icons**: `lucide-react` only.
 - **Routing**: React Router v7 with `BrowserRouter`.
@@ -36,6 +37,7 @@ All use JavaScript (JSX), not TypeScript.
 - **Design**: "Luxury Minimalist" — sharp borders, `tracking-widest` on uppercase labels, `transition-all duration-300`, primary buttons are black with gold hover.
 
 ### Backend
+
 - **Language**: JavaScript ESM (`import/export`).
 - **Framework**: Fastify 5 with Zod for request validation.
 - **Database**: Prisma ORM — schema-first approach. Always run `npx prisma generate` after schema changes.
@@ -43,11 +45,43 @@ All use JavaScript (JSX), not TypeScript.
 - **Payments**: Razorpay — payment verification in `backend/routes/checkout.js`.
 - **Structure**: Routes in `backend/routes/`, schemas in `backend/schemas/`, services in `backend/services/`.
 
+### Deployment
+
+| Service             | Platform                 | URL                                                       | Deploy Command                                                                                   |
+| ------------------- | ------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Backend**         | AWS Lambda (API Gateway) | `https://07u78lzel7.execute-api.ap-south-1.amazonaws.com` | `cd backend && npx serverless deploy`                                                            |
+| **User Frontend**   | Cloudflare Pages         | `https://tce-user.pages.dev`                              | `npm run build && wrangler pages deploy dist --project-name tce-user --branch=main`              |
+| **Admin Dashboard** | Cloudflare Pages         | `https://tce-admin.pages.dev`                             | `cd admin && npm run build && wrangler pages deploy dist --project-name tce-admin --branch=main` |
+
+**IMPORTANT**: Never use `npx serverless deploy --force` — it recreates the API Gateway and changes the URL. Always use `npx serverless deploy` (updates existing stack, keeps URL stable).
+
+### AWS Configuration
+
+- **Account**: `thecollectorsexchange` (ID: `903783977495`, Region: `ap-south-1`)
+- **CLI Profile**: `thecollectorsexchange`
+- **SSM Parameters**: `/thecollectorsexchange/*` prefix (JWT_SECRET, SUPABASE_URL, SUPABASE_ANON_KEY, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, etc.)
+- **Lambda**: `serverless-esbuild` for bundling, `serverless-prune-plugin`, CJS format, architecture `arm64`, Node.js 20.x
+- **Binary targets**: Prisma must include `linux-arm64-openssl-3.0.x` for Lambda ARM64
+
+### Database (Supabase)
+
+- **Project ref**: `rvamybeqoyznlgzglqqx`
+- **Region**: `ap-southeast-1` (Singapore) — NOT `ap-south-1`
+- **Direct URL** (IPv6-only, DO NOT USE from Lambda or local Windows):
+  `postgresql://postgres.rvamybeqoyznlgzglqqx:LnhCxyKQWqvFN4j9@db.rvamybeqoyznlgzglqqx.supabase.co:5432/postgres`
+- **Pooler URL** (USE THIS for everything):
+  `postgresql://postgres.rvamybeqoyznlgzglqqx:LnhCxyKQWqvFN4j9@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1`
+- **Cloudflare Pages env vars** (set via Wrangler): `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
 ### Integration Workflow
+
 1. Update `schema.prisma` -> `npx prisma generate`
 2. Create Fastify route in `backend/routes/`
 3. Create TanStack Query hook in `src/hooks/api/`
 4. Wire into UI component
+5. Apply Supabase migration: `supabase_apply_migration` tool
+6. Deploy Lambda: `cd backend && npx serverless deploy`
+7. Deploy frontends: `npm run build && wrangler pages deploy dist --project-name tce-user --branch=main` (same for admin)
 
 ## Coding Standards
 
@@ -72,6 +106,9 @@ All use JavaScript (JSX), not TypeScript.
 - `.editorconfig` — Cross-editor formatting settings
 - `.prettierrc` — Prettier formatting configuration
 - `docs/adr/` — Architecture Decision Records
+- `backend/handler.js` — Lambda entry point (Fastify adapter)
+- `backend/serverless.yml` — Lambda deploy config (esbuild, SSM, IAM)
+- `backend/prisma/schema.prisma` — Prisma schema (includes `specs` JSON field on Product)
 
 ## Quick Reference
 
@@ -84,6 +121,7 @@ npm run test:unit    — Vitest unit/integration tests (all 3 areas via scripts/
 npm run test:e2e     — Playwright E2E tests
 cd backend && npm run dev   — Backend API (port 3000)
 cd admin && npm run dev     — Admin dashboard (port 5174)
+cd backend && npx serverless deploy   — Deploy Lambda (NEVER use --force)
 ```
 
 ## Pre-commit Hooks

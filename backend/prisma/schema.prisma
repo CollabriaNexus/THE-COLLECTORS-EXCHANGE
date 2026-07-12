@@ -185,6 +185,7 @@ model Product {
   isVerified         Boolean          @default(false)
   authenticityStatus AuthenticityStatus @default(Pending)
   commissionPercent  Float            @default(10)
+  specs              Json             @default("[]")
 
   status             ProductStatus    @default(Pending)
   isPublished        Boolean          @default(false)

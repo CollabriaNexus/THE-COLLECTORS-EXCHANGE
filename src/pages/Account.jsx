@@ -90,6 +90,7 @@ const Account = () => {
     price: '',
     imageUrls: [''],
     keywords: '',
+    specs: [{ key: '', value: '' }],
     commissionPercent: 10,
   });
   const descRef = useRef(null);
@@ -535,6 +536,7 @@ const Account = () => {
         images: validImages,
         image: validImages[0],
         keywords: keywordsArray,
+        specs: productForm.specs.filter((s) => s.key.trim() !== '' && s.value.trim() !== ''),
         commissionPercent: productForm.commissionPercent,
       });
 
@@ -546,6 +548,7 @@ const Account = () => {
         price: '',
         imageUrls: [''],
         keywords: '',
+        specs: [{ key: '', value: '' }],
         commissionPercent: 10,
       });
       showToast('Product listed successfully! Your item is now live in The Exchange.', 'success');
@@ -1723,6 +1726,77 @@ const Account = () => {
                         {imageUploading && (
                           <span className="text-luxury-gold font-medium">Uploading...</span>
                         )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Specifications / Key-Value Pairs */}
+                  <div className="bg-gray-50 p-4 sm:p-6 border border-gray-100 rounded-sm">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-600">
+                        Specifications
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setProductForm({
+                            ...productForm,
+                            specs: [...productForm.specs, { key: '', value: '' }],
+                          })
+                        }
+                        className="flex items-center gap-1 text-xs text-luxury-gold font-semibold hover:underline"
+                      >
+                        <Plus size={14} /> Add Field
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {productForm.specs.map((spec, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Key (e.g., Movement Model)"
+                            value={spec.key}
+                            onChange={(e) => {
+                              const newSpecs = [...productForm.specs];
+                              newSpecs[index] = { ...newSpecs[index], key: e.target.value };
+                              setProductForm({ ...productForm, specs: newSpecs });
+                            }}
+                            className="flex-1 p-2 sm:p-3 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Value (e.g., 6R5J)"
+                            value={spec.value}
+                            onChange={(e) => {
+                              const newSpecs = [...productForm.specs];
+                              newSpecs[index] = { ...newSpecs[index], value: e.target.value };
+                              setProductForm({ ...productForm, specs: newSpecs });
+                            }}
+                            className="flex-1 p-2 sm:p-3 border border-gray-200 focus:outline-none focus:border-luxury-gold text-sm"
+                          />
+                          {productForm.specs.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSpecs = productForm.specs.filter((_, i) => i !== index);
+                                setProductForm({ ...productForm, specs: newSpecs });
+                              }}
+                              className="text-gray-400 hover:text-red-500 p-2"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-2 sm:mt-3 flex items-start gap-2 text-[10px] sm:text-xs text-gray-400 bg-white p-2 sm:p-3 border border-gray-100">
+                      <Info size={12} className="mt-0.5 flex-shrink-0 hidden sm:block" />
+                      <Info size={14} className="mt-0.5 flex-shrink-0 sm:hidden" />
+                      <p>
+                        Add technical or descriptive specifications (e.g., Movement Model, Case
+                        Material, Year of Manufacture). Leave empty to skip.
                       </p>
                     </div>
                   </div>

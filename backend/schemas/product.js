@@ -1,38 +1,51 @@
 import { z } from 'zod';
 
-export const CATEGORIES = ['Timepieces', 'Accessories', 'Collectibles', 'Antiques', 'Toys & Pop Culture', 'Jewelry'];
+export const CATEGORIES = [
+  'Timepieces',
+  'Accessories',
+  'Collectibles',
+  'Antiques',
+  'Toys & Pop Culture',
+  'Jewelry',
+];
+
+const SpecItemSchema = z.object({
+  key: z.string().min(1),
+  value: z.string().min(1),
+});
 
 export const ProductSchema = z.object({
-    id: z.string().optional(),
-    title: z.string().min(1),
-    category: z.enum(CATEGORIES),
-    description: z.string().min(1),
-    condition: z.string().min(1),
-    price: z.number().positive(),
-    image: z.string().url(),
-    images: z.array(z.string().url()).optional(),
-    keywords: z.array(z.string()).optional(),
-    isVerified: z.boolean().optional(),
-    authenticityStatus: z.string().optional(),
-    commissionPercent: z.number().min(10).max(25).optional().default(10),
-    sellerId: z.string(),
+  id: z.string().optional(),
+  title: z.string().min(1),
+  category: z.enum(CATEGORIES),
+  description: z.string().min(1),
+  condition: z.string().min(1),
+  price: z.number().positive(),
+  image: z.string().url(),
+  images: z.array(z.string().url()).optional(),
+  keywords: z.array(z.string()).optional(),
+  specs: z.array(SpecItemSchema).optional().default([]),
+  isVerified: z.boolean().optional(),
+  authenticityStatus: z.string().optional(),
+  commissionPercent: z.number().min(10).max(25).optional().default(10),
+  sellerId: z.string(),
 });
 
 export const ProductIdParam = z.object({
-    id: z.string(),
+  id: z.string(),
 });
 
 export const AdminProductUpdateSchema = z.object({
-    brand: z.string().optional(),
-    listingCategory: z.string().optional(),
-    category: z.enum(CATEGORIES).optional(),
-    title: z.string().min(1).optional(),
-    description: z.string().min(1).optional(),
-    price: z.number().positive().optional(),
-    condition: z.string().min(1).optional(),
-    image: z.string().optional(),
-    images: z.array(z.string()).optional(),
-    keywords: z.array(z.string()).optional(),
-    commissionPercent: z.number().min(10).max(25).optional(),
+  brand: z.string().optional(),
+  listingCategory: z.string().optional(),
+  category: z.enum(CATEGORIES).optional(),
+  title: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  price: z.number().positive().optional(),
+  condition: z.string().min(1).optional(),
+  image: z.string().optional(),
+  images: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).optional(),
+  specs: z.array(SpecItemSchema).optional(),
+  commissionPercent: z.number().min(10).max(25).optional(),
 });
-
