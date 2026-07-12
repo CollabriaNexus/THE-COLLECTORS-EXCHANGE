@@ -27,65 +27,70 @@ import couponRoutes from './routes/coupon.js';
 
 dotenv.config();
 
-
-
 const SUPABASE_URL = process.env.SUPABASE_URL;
 if (!SUPABASE_URL) {
-    console.error('Missing SUPABASE_URL environment variable');
-    process.exit(1);
+  console.error('Missing SUPABASE_URL environment variable');
+  process.exit(1);
 }
 
 const fastify = Fastify({
-    logger: true,
+  logger: true,
 });
 
 // Register Security & Utility Plugins
 fastify.register(helmet, {
-    contentSecurityPolicy: false, // Disables CSP if serving static files, customize as needed
+  contentSecurityPolicy: false, // Disables CSP if serving static files, customize as needed
 });
 fastify.register(rateLimit, {
-    max: 100,
-    timeWindow: '1 minute',
+  max: 100,
+  timeWindow: '1 minute',
 });
 fastify.register(cors, {
-    origin: [
-        process.env.FRONTEND_URL || 'http://localhost:5173',
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:5176',
-        'https://thecollectorsexchange.in',
-        'https://tce-admin.pages.dev',
-    ].filter(Boolean),
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    credentials: true,
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5176',
+    'https://thecollectorsexchange.in',
+    'https://tce-admin.pages.dev',
+  ].filter(Boolean),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  credentials: true,
 });
 
 // Zod Error Handler
 fastify.setErrorHandler((error, request, reply) => {
-    if (error instanceof ZodError) {
-        return reply.status(400).send({
-            error: 'Validation Error',
-            message: 'Request validation failed',
-            issues: error.issues,
-        });
-    }
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        request.log.error({ prismaCode: error.code, prismaMeta: error.meta }, 'Prisma known request error');
-        return reply.status(409).send({ error: 'Database Error', message: 'A database error occurred. Please try again.' });
-    }
-
-    if (error instanceof Prisma.PrismaClientValidationError) {
-        request.log.error({ prismaMessage: error.message }, 'Prisma validation error');
-        return reply.status(400).send({ error: 'Database Validation Error', message: 'Invalid data provided.' });
-    }
-
-    // Default handler for other errors
-    request.log.error({ err: error.message, stack: error.stack }, 'Unhandled error');
-    reply.status(error.statusCode || 500).send({
-        error: error.name || 'Internal Server Error',
-        message: error.message || 'An unexpected error occurred',
+  if (error instanceof ZodError) {
+    return reply.status(400).send({
+      error: 'Validation Error',
+      message: 'Request validation failed',
+      issues: error.issues,
     });
+  }
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    request.log.error(
+      { prismaCode: error.code, prismaMeta: error.meta },
+      'Prisma known request error',
+    );
+    return reply
+      .status(409)
+      .send({ error: 'Database Error', message: 'A database error occurred. Please try again.' });
+  }
+
+  if (error instanceof Prisma.PrismaClientValidationError) {
+    request.log.error({ prismaMessage: error.message }, 'Prisma validation error');
+    return reply
+      .status(400)
+      .send({ error: 'Database Validation Error', message: 'Invalid data provided.' });
+  }
+
+  // Default handler for other errors
+  request.log.error({ err: error.message, stack: error.stack }, 'Unhandled error');
+  reply.status(error.statusCode || 500).send({
+    error: error.name || 'Internal Server Error',
+    message: error.message || 'An unexpected error occurred',
+  });
 });
 
 // Core Dependencies & Auth Plugins
@@ -111,23 +116,25 @@ fastify.register(blogAiRoutes, { prefix: '/api/blog/ai' });
 fastify.register(googleMerchantRoutes, { prefix: '/api' });
 fastify.register(couponRoutes, { prefix: '/api' });
 
-
 fastify.get('/health', async (request, reply) => {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+  return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-/**
- * Start the server
- */
-const start = async () => {
-    try {
-        const port = process.env.PORT || 3000;
-        await fastify.listen({ port, host: '0.0.0.0' });
-        fastify.log.info(`Server listening on port ${port}`);
-    } catch (err) {
-        fastify.log.error(err);
-        process.exit(1);
-    }
-};
+// Export for Lambda adapter; start() runs only in standalone mode (local dev / Render)
+const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
-start();
+if (!isLambda) {
+  const start = async () => {
+    try {
+      const port = process.env.PORT || 3000;
+      await fastify.listen({ port, host: '0.0.0.0' });
+      fastify.log.info(`Server listening on port ${port}`);
+    } catch (err) {
+      fastify.log.error(err);
+      process.exit(1);
+    }
+  };
+  start();
+}
+
+export default fastify;

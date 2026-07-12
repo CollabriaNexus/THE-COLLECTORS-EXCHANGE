@@ -19,6 +19,34 @@ const Terms = () => {
         <div className="w-20 h-1 bg-luxury-gold mt-6"></div>
       </Reveal>
 
+      {/* Business Information - PayU Compliance */}
+      <Reveal className="mb-10 p-6 bg-gray-50 border border-gray-200 rounded-sm">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-luxury-gold mb-4">
+          Business Information
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
+          <div>
+            <p className="font-medium text-black">Legal Name (Proprietor):</p>
+            <p>Shaik Mohammed Faraz</p>
+          </div>
+          <div>
+            <p className="font-medium text-black">Phone:</p>
+            <p>+91 63627 71355</p>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="font-medium text-black">Operating Address:</p>
+            <p>
+              No 51/2, 2nd Main Road, New Guruppanapalya, Bangalore South, PO: Dharmaram College,
+              DIST: Bengaluru, Karnataka - 560029
+            </p>
+          </div>
+          <div>
+            <p className="font-medium text-black">Email:</p>
+            <p>support@thecollectorsexchange.in</p>
+          </div>
+        </div>
+      </Reveal>
+
       {/* Introduction */}
       <Reveal className="mb-10 font-sans text-gray-700 leading-relaxed">
         <p className="mb-4 italic text-lg font-serif text-black">
