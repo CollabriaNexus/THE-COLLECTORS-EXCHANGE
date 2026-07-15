@@ -347,6 +347,8 @@ model Order {
   paymentOrderId  String?
   paymentSignature String?
 
+  isManual        Boolean       @default(false)
+
   items           OrderItem[]
   couponUsages    CouponUsage[]
   createdAt       DateTime      @default(now())

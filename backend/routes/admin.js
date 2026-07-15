@@ -5,6 +5,7 @@ import {
   KYCRejectionSchema,
   CreatePayoutSchema,
   UpdatePayoutStatusSchema,
+  ManualOrderSchema,
 } from '../schemas/admin.js';
 import { CATEGORIES, AdminProductUpdateSchema } from '../schemas/product.js';
 
@@ -583,6 +584,9 @@ export default async function adminRoutes(fastify) {
               name: true,
             },
           },
+          orderItems: {
+            select: { id: true, orderId: true },
+          },
         },
       });
 
@@ -839,6 +843,7 @@ export default async function adminRoutes(fastify) {
     if (search) {
       where.OR = [
         { id: { contains: search, mode: 'insensitive' } },
+        { displayId: { contains: search, mode: 'insensitive' } },
         { user: { name: { contains: search, mode: 'insensitive' } } },
         { user: { email: { contains: search, mode: 'insensitive' } } },
       ];
@@ -887,6 +892,164 @@ export default async function adminRoutes(fastify) {
       }
 
       return order;
+    },
+  );
+
+  // Create manual order (cash/walk-in sale or backfill sold product)
+  fastify.post(
+    '/orders/manual',
+    { preValidation: [fastify.authenticateSuperAdmin] },
+    async (request, reply) => {
+      const body = ManualOrderSchema.parse(request.body);
+      const {
+        productId,
+        sellingPrice,
+        buyerName,
+        buyerPhone,
+        buyerEmail,
+        shippingAddress,
+        city,
+        state,
+        zipCode,
+        paymentMethod,
+        soldAt,
+      } = body;
+
+      // Find or create buyer user by phone
+      let buyerUser = await prisma.user.findFirst({
+        where: {
+          OR: [{ phone: buyerPhone }, ...(buyerEmail ? [{ email: buyerEmail }] : [])],
+        },
+      });
+
+      if (!buyerUser) {
+        buyerUser = await prisma.user.create({
+          data: {
+            name: buyerName,
+            phone: buyerPhone,
+            email: buyerEmail || `walkin-${Date.now()}@tce.local`,
+            role: 'user',
+          },
+        });
+      }
+
+      // Validate product exists and is in correct state
+      const product = await prisma.product.findUnique({
+        where: { id: productId },
+      });
+
+      if (!product) {
+        return reply.status(404).send({ error: 'Product not found' });
+      }
+
+      // Allow: Approved products (normal punch) OR Sold products without order items (backfill)
+      if (product.status !== 'Approved' && product.status !== 'Sold') {
+        return reply.status(422).send({
+          error: `Product must be Approved or Sold to create a manual order. Current status: ${product.status}`,
+        });
+      }
+
+      // If already Sold, check it doesn't already have order items
+      if (product.status === 'Sold') {
+        const existingItems = await prisma.orderItem.findFirst({
+          where: { productId: product.id },
+        });
+        if (existingItems) {
+          return reply.status(422).send({
+            error: 'This product already has an associated order. Cannot create a duplicate.',
+          });
+        }
+      }
+
+      const commPct = product.commissionPercent ?? 10;
+      const platformFee = Math.round(((sellingPrice * commPct) / 100) * 100) / 100;
+
+      const order = await prisma.$transaction(async (tx) => {
+        // Generate sequential display ID (HOR00001, HOR00002, ...)
+        const lastOrder = await tx.order.findFirst({
+          orderBy: { displayId: 'desc' },
+          select: { displayId: true },
+        });
+        let nextSeq = 1;
+        if (lastOrder?.displayId) {
+          const num = parseInt(lastOrder.displayId.replace('HOR', ''), 10);
+          if (!isNaN(num)) nextSeq = num + 1;
+        }
+        const displayId = 'HOR' + String(nextSeq).padStart(5, '0');
+
+        // Create the order
+        const newOrder = await tx.order.create({
+          data: {
+            userId: buyerUser.id,
+            displayId,
+            status: 'Delivered',
+            totalAmount: sellingPrice,
+            shippingAddress,
+            city,
+            state,
+            zipCode,
+            phone: buyerPhone,
+            paymentStatus: 'Paid',
+            paymentMethod: paymentMethod === 'cash' ? 'cod' : paymentMethod,
+            isManual: true,
+            items: {
+              create: [
+                {
+                  productId: product.id,
+                  quantity: 1,
+                  price: sellingPrice,
+                  commissionPercent: commPct,
+                  platformFee,
+                },
+              ],
+            },
+          },
+          include: { items: true },
+        });
+
+        // Mark product as Sold if it was Approved
+        if (product.status === 'Approved') {
+          await tx.product.update({
+            where: { id: productId },
+            data: { status: 'Sold', isPublished: false },
+          });
+        }
+
+        // Remove from all carts and wishlists
+        await tx.cartItem.deleteMany({ where: { productId } });
+        await tx.wishlistItem.deleteMany({ where: { productId } });
+
+        // Create notification for buyer
+        await tx.notification.create({
+          data: {
+            userId: buyerUser.id,
+            title: 'Order Confirmed',
+            message: `Your order #${displayId} has been confirmed and delivered. Thank you for your purchase.`,
+          },
+        });
+
+        return newOrder;
+      });
+
+      // Audit log
+      request.log.info(
+        {
+          orderId: order.id,
+          displayId: order.displayId,
+          productId,
+          adminId: request.user.id,
+          paymentMethod,
+          sellingPrice,
+          soldAt: soldAt || new Date().toISOString(),
+        },
+        'Manual order created by admin',
+      );
+
+      return {
+        success: true,
+        order,
+        message: `Order ${order.displayId} created successfully`,
+      };
     },
   );
 

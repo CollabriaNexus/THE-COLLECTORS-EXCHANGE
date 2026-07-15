@@ -28,9 +28,11 @@ import {
   useBrands,
   useMarkProductAsSold,
 } from '../hooks/api/useProducts';
+import { useCreateManualOrder } from '../hooks/api/useOrders';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
+import ManualOrderModal from '../components/ManualOrderModal';
 import { useConfirm } from '../components/ConfirmDialog';
 import { useProductCoupon, useGenerateCoupon, useDeleteCoupon } from '../hooks/api/useCoupons';
 
@@ -50,6 +52,8 @@ function ProductDetail() {
   const [brandInputMode, setBrandInputMode] = useState(false);
   const [customBrand, setCustomBrand] = useState('');
   const [isEditingCategory, setIsEditingCategory] = useState(false);
+  const [showManualOrderModal, setShowManualOrderModal] = useState(false);
+  const [isBackfill, setIsBackfill] = useState(false);
 
   const { data: product, isLoading } = useProductDetail(id);
   const { data: brands = [] } = useBrands();
@@ -60,6 +64,7 @@ function ProductDetail() {
   const deleteMutation = useDeleteProduct();
   const updateProductMutation = useUpdateProduct();
   const markAsSoldMutation = useMarkProductAsSold();
+  const createManualOrderMutation = useCreateManualOrder();
   const confirm = useConfirm();
 
   const { data: coupon, isLoading: couponLoading } = useProductCoupon(id);
@@ -79,6 +84,28 @@ function ProductDetail() {
     } catch (err) {
       setError(err.message || 'Failed to mark as sold');
     }
+  };
+
+  const handleManualOrder = async (orderData) => {
+    setError('');
+    try {
+      await createManualOrderMutation.mutateAsync(orderData);
+      setSuccess(isBackfill ? 'Order record created successfully!' : 'Order punched successfully!');
+      setShowManualOrderModal(false);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to create order');
+    }
+  };
+
+  const openPunchOrder = () => {
+    setIsBackfill(false);
+    setShowManualOrderModal(true);
+  };
+
+  const openBackfill = () => {
+    setIsBackfill(true);
+    setShowManualOrderModal(true);
   };
 
   const handleReview = async () => {
@@ -553,6 +580,24 @@ function ProductDetail() {
                       ? 'Already Sold'
                       : 'Mark as Sold'}
                 </button>
+                {product.status === 'Approved' && (
+                  <button
+                    onClick={openPunchOrder}
+                    className="w-full flex items-center justify-center gap-2 bg-luxury-gold/10 text-luxury-gold py-3 rounded-md font-medium hover:bg-luxury-gold/20 transition-colors"
+                  >
+                    <BadgeIndianRupee size={18} />
+                    Punch Order (Cash/Walk-in)
+                  </button>
+                )}
+                {product.status === 'Sold' && !product.orderItems?.length && (
+                  <button
+                    onClick={openBackfill}
+                    className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-700 py-3 rounded-md font-medium hover:bg-blue-100 transition-colors"
+                  >
+                    <BadgeIndianRupee size={18} />
+                    Create Order Record
+                  </button>
+                )}
                 <button
                   onClick={() => setShowDeleteModal(true)}
                   className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-700 py-3 rounded-md font-medium hover:bg-red-100 transition-colors"
@@ -1092,6 +1137,16 @@ function ProductDetail() {
           </div>
         </div>
       </Modal>
+
+      {/* Manual Order Modal */}
+      <ManualOrderModal
+        isOpen={showManualOrderModal}
+        onClose={() => setShowManualOrderModal(false)}
+        product={product}
+        isBackfill={isBackfill}
+        onSubmit={handleManualOrder}
+        isPending={createManualOrderMutation.isPending}
+      />
     </div>
   );
 }
