@@ -7,9 +7,11 @@ import Table from '../components/ui/Table';
 import StatusBadge from '../components/ui/StatusBadge';
 import ManualOrderModal from '../components/ManualOrderModal';
 import apiClient from '../hooks/api/apiClient';
+import { getUser } from '../utils/storage';
 
 function Products() {
   const navigate = useNavigate();
+  const isSuperAdmin = getUser()?.role === 'admin';
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,7 +70,12 @@ function Products() {
       setPunchModalProduct(null);
       setTimeout(() => setPunchSuccess(''), 3000);
     } catch (err) {
-      setPunchError(err.message || 'Failed to create order');
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to create order';
+      setPunchError(msg);
     }
   };
 
@@ -125,7 +132,7 @@ function Products() {
       label: 'Actions',
       render: (id, row) => (
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {row.status === 'Approved' && (
+          {isSuperAdmin && row.status === 'Approved' && (
             <button
               type="button"
               onClick={() => setPunchModalProduct(row)}
@@ -262,6 +269,7 @@ function Products() {
 
       {/* Manual Order Modal */}
       <ManualOrderModal
+        key={punchModalProduct?.id || 'closed'}
         isOpen={!!punchModalProduct}
         onClose={() => {
           setPunchModalProduct(null);

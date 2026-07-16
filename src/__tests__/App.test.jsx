@@ -44,15 +44,11 @@ describe('App', () => {
     expect(screen.getByText(/loading the archive/i)).toBeInTheDocument();
   });
 
-  it('redirects unknown routes to home', async () => {
+  it('renders 404 page for unknown routes', async () => {
     window.history.pushState({}, '', '/nonexistent');
     render(<App />);
-    await vi.waitFor(
-      () => {
-        expect(window.location.pathname).toBe('/');
-      },
-      { timeout: 5000 },
-    );
+    const notFound = await screen.findByText('404', {}, { timeout: 5000 });
+    expect(notFound).toBeInTheDocument();
   });
 
   it('renders home page at root with header', async () => {

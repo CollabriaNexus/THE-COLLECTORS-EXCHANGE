@@ -76,7 +76,7 @@ const About = () => {
 
       {/* Why We Do It & Mission */}
       <section className="py-16 sm:py-24 px-6 container mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 item-start">
+        <div className="grid lg:grid-cols-2 gap-12 sm:gap-16">
           <Reveal direction="left" blur className="space-y-8 sm:space-y-12">
             <div className="relative pl-4 sm:pl-8 border-l-2 border-luxury-gold/30">
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-heritage-charcoal/80 font-serif italic">
@@ -384,8 +384,8 @@ const About = () => {
             </div>
           </Reveal>
 
-          <div className="grid md:grid-cols-2 gap-20 items-center">
-            <Reveal direction="left" blur className="space-y-6 sm:space-y-8 order-2 md:order-1">
+          <div className="grid md:grid-cols-2 gap-20 items-start">
+            <Reveal direction="left" blur className="space-y-6 sm:space-y-8">
               <div className="space-y-3 sm:space-y-4">
                 <span className="text-luxury-gold font-serif text-2xl sm:text-3xl md:text-4xl block">
                   02.
@@ -405,7 +405,7 @@ const About = () => {
                 </p>
               </div>
             </Reveal>
-            <Reveal direction="right" distance={90} blur className="order-1 md:order-2">
+            <Reveal direction="right" distance={90} blur>
               <Parallax speed={0.1}>
                 <div className="aspect-square bg-white border border-heritage-bronze/10 p-2 shadow-heritage overflow-hidden">
                   <img
@@ -484,7 +484,7 @@ const About = () => {
                 </div>
                 <div className="mt-12">
                   <p className="text-lg sm:text-2xl font-serif text-heritage-charcoal mb-1">
-                    Shaik Faraz
+                    Shaik Mohammed Faraz
                   </p>
                   <p className="text-xs uppercase tracking-[0.2em] text-luxury-gold font-bold">
                     Founder, The Collectors Exchange
