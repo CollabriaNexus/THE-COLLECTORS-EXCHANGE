@@ -6,11 +6,32 @@ import {
   VerifyPaymentSchema,
   ValidateCouponSchema,
 } from '../schemas/checkout.js';
+import {
+  applyDiscountToItems,
+  orderTotalFromItems,
+  platformFeeFromItems,
+  toPaise,
+} from '../lib/money.js';
+import { claimCouponUse, OrderError } from '../lib/coupon.js';
 
-class OrderError extends Error {
-  constructor(statusCode, message) {
-    super(message);
-    this.statusCode = statusCode;
+/**
+ * Last line of defence for the money invariant:
+ *
+ *     sum(item payouts) + sum(platformFee) == Order.totalAmount
+ *
+ * Payout is `price - platformFee` per unit, so this reduces to
+ * `sum(price * qty) == totalAmount` (the fee term cancels — see lib/money.js).
+ * Checked in paise. If it ever trips, the order is refused rather than written:
+ * a failed checkout is recoverable, an order that quietly disburses more than it
+ * collected is not.
+ */
+function assertOrderReconciles(totalAmount, items) {
+  const itemsPaise = items.reduce((sum, i) => sum + toPaise(i.price) * i.quantity, 0);
+  if (itemsPaise !== toPaise(totalAmount)) {
+    throw new OrderError(
+      500,
+      'Order failed an internal consistency check and was not created. Please try again.',
+    );
   }
 }
 
@@ -179,9 +200,7 @@ export default async function checkoutRoutes(fastify) {
 
           // Validate & apply coupon inside the transaction so an invalid coupon
           // rolls back the order (no orphaned Pending order) and the discount is
-          // computed against eligible items only. Usage is recorded later, on
-          // successful payment (verify-payment), so an abandoned checkout never
-          // consumes a limited-use coupon.
+          // computed against eligible items only.
           let couponData = {};
           if (couponCode) {
             const coupon = await tx.coupon.findUnique({ where: { code: couponCode } });
@@ -194,30 +213,14 @@ export default async function checkoutRoutes(fastify) {
             if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
               throw new OrderError(422, 'Coupon has expired');
             }
-            if (coupon.maxUses > 0) {
-              const usageCount = await tx.couponUsage.count({ where: { couponId: coupon.id } });
-              if (usageCount >= coupon.maxUses) {
-                throw new OrderError(422, 'Coupon usage limit reached');
-              }
-            }
-            if (coupon.maxUsesPerUser > 0) {
-              const userUsageCount = await tx.couponUsage.count({
-                where: { couponId: coupon.id, userId: dbUser.id },
-              });
-              if (userUsageCount >= coupon.maxUsesPerUser) {
-                throw new OrderError(
-                  422,
-                  'You have already used this coupon the maximum number of times',
-                );
-              }
-            }
+
+            await claimCouponUse(tx, coupon, dbUser.id);
 
             // Discount applies only to items the coupon is scoped to
+            const isEligible = (oi) => !coupon.productId || oi.productId === coupon.productId;
             let eligibleTotal = 0;
             for (const oi of orderItemsData) {
-              if (!coupon.productId || oi.productId === coupon.productId) {
-                eligibleTotal += oi.price * oi.quantity;
-              }
+              if (isEligible(oi)) eligibleTotal += oi.price * oi.quantity;
             }
             if (eligibleTotal === 0) {
               throw new OrderError(422, 'Coupon does not apply to any items in your cart');
@@ -231,7 +234,21 @@ export default async function checkoutRoutes(fastify) {
 
             discountPercent = coupon.discountPercent;
             discountAmount = Math.round(((eligibleTotal * discountPercent) / 100) * 100) / 100;
-            const couponFinalAmount = Math.max(0, totalAmount - discountAmount);
+
+            // Push the discount down into the item rows. Writing it only onto
+            // Order.totalAmount (what this used to do) made it invisible to the
+            // payout, which reads price/platformFee off the ITEM — the platform
+            // then collected the discounted total but disbursed against the full
+            // undiscounted price, losing the discount on every couponed sale.
+            const discounted = applyDiscountToItems(orderItemsData, discountAmount, isEligible);
+            orderItemsData.splice(0, orderItemsData.length, ...discounted);
+            totalPlatformFee = platformFeeFromItems(orderItemsData);
+
+            // The items are now the single source of truth for what the buyer
+            // owes, so derive the total from them rather than re-deriving it.
+            const couponFinalAmount = orderTotalFromItems(orderItemsData);
+            assertOrderReconciles(couponFinalAmount, orderItemsData);
+
             couponData = {
               couponId: coupon.id,
               discountPercent,
@@ -293,10 +310,15 @@ export default async function checkoutRoutes(fastify) {
         throw err;
       }
 
-      // Coupon (if any) was validated and applied atomically inside the transaction
-      // above. Usage is recorded on successful payment (verify-payment), not here,
-      // so an abandoned checkout never consumes a limited-use coupon.
-      const finalAmount = Math.max(0, totalAmount - discountAmount);
+      // Coupon (if any) was validated, limit-checked and applied atomically inside
+      // the transaction above; the order now holds the coupon's use. The
+      // CouponUsage audit row is still written on successful payment.
+      //
+      // Derive the amount the gateway is asked for from the item rows — the same
+      // source the order total and the payouts come from — so the buyer can never
+      // be charged something the ledger doesn't reconcile to.
+      const finalAmount = orderTotalFromItems(orderItemsData);
+      assertOrderReconciles(finalAmount, orderItemsData);
 
       // Initialize Razorpay Order (skip for COD)
       const razorpay = getRazorpayInstance();

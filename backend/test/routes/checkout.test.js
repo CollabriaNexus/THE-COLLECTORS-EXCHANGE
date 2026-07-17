@@ -208,7 +208,12 @@ describe('checkout routes', () => {
             }),
           },
           couponUsage: { count: vi.fn().mockResolvedValue(0), create: couponUsageCreate },
-          order: { findFirst: vi.fn().mockResolvedValue(null), create: orderCreate },
+          order: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: orderCreate,
+            count: vi.fn().mockResolvedValue(0),
+          },
+          $queryRaw: vi.fn().mockResolvedValue([{ id: 'c1' }]),
         };
         return cb(tx);
       });
@@ -229,7 +234,9 @@ describe('checkout routes', () => {
       // 10% of the eligible product (1000) only — NOT 10% of the full 1500 cart
       expect(res.json().discountAmount).toBe(100);
       expect(res.json().amount).toBe(1400);
-      // Usage must not be recorded until payment succeeds
+      // The CouponUsage audit row is still only written on successful payment.
+      // (The coupon's usage LIMIT is reserved by the Order itself — see the
+      // usage-limit tests below.)
       expect(couponUsageCreate).not.toHaveBeenCalled();
       // Order persisted the discounted total
       expect(orderCreate).toHaveBeenCalledWith(
@@ -242,6 +249,14 @@ describe('checkout routes', () => {
           }),
         }),
       );
+      // The discount must land on the ELIGIBLE item row, not just the order total:
+      // p1 100 -> price 900, and its fee absorbs the whole 100 (10% of 1000 = 100
+      // fee, minus the 100 discount = 0). p2 is untouched.
+      const createdItems = orderCreate.mock.calls[0][0].data.items.create;
+      expect(createdItems).toEqual([
+        expect.objectContaining({ productId: 'p1', price: 900, platformFee: 0 }),
+        expect.objectContaining({ productId: 'p2', price: 500, platformFee: 50 }),
+      ]);
     });
 
     it('rejects a coupon whose minimum purchase is not met and rolls back the order', async () => {
@@ -364,6 +379,364 @@ describe('checkout routes', () => {
         headers: { authorization: 'Bearer buyer' },
       });
       expect(res.statusCode).toBe(400);
+    });
+  });
+
+  // ===========================================================================
+  // Coupon discounts must be visible to the vendor payout.
+  //
+  // The payout run (admin.js /payouts/auto-create) pays
+  // `(item.price - item.platformFee) * quantity` — it reads the ITEM, never the
+  // order. A discount recorded only on Order.totalAmount is therefore invisible
+  // to it: the platform collects the discounted total but disburses against the
+  // full price, and loses the difference on every couponed sale.
+  //
+  // INVARIANT: sum(item payouts) + sum(platformFee) === Order.totalAmount, exactly.
+  // ===========================================================================
+  describe('POST /create-order — coupon payout reconciliation', () => {
+    const validBody = {
+      shippingAddress: '123 St',
+      city: 'Mum',
+      state: 'MH',
+      zipCode: '400001',
+      phone: '9876543210',
+      items: [{ productId: 'p1' }],
+    };
+
+    // Mirrors admin.js:/payouts/auto-create and vendor.js exactly.
+    const payoutOf = (items) =>
+      items.reduce((s, i) => s + (i.price - i.platformFee) * i.quantity, 0);
+    const feesOf = (items) => items.reduce((s, i) => s + i.platformFee * i.quantity, 0);
+
+    // Drives a create-order with one product and one all-products coupon.
+    const runCheckout = async ({ price, commissionPercent, discountPercent }) => {
+      const orderCreate = vi.fn().mockImplementation(async ({ data }) => ({
+        id: 'order-1',
+        displayId: 'HOR00001',
+        items: [],
+        ...data,
+      }));
+      mockPrisma.cartItem.findMany.mockResolvedValue([{ productId: 'p1', product: { id: 'p1' } }]);
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb({
+          product: {
+            findUnique: vi.fn().mockResolvedValue({
+              id: 'p1',
+              title: 'A',
+              price,
+              commissionPercent,
+              sellerId: 'seller-id',
+              status: 'Approved',
+            }),
+          },
+          coupon: {
+            findUnique: vi.fn().mockResolvedValue({
+              id: 'c1',
+              code: 'SAVE',
+              discountPercent,
+              productId: null,
+              minPurchase: 0,
+              maxUses: 0,
+              maxUsesPerUser: 0,
+              isActive: true,
+              expiresAt: null,
+            }),
+          },
+          couponUsage: { count: vi.fn().mockResolvedValue(0), create: vi.fn() },
+          order: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: orderCreate,
+            count: vi.fn().mockResolvedValue(0),
+          },
+          $queryRaw: vi.fn().mockResolvedValue([{ id: 'c1' }]),
+        }),
+      );
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/checkout.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/create-order',
+        payload: { ...validBody, couponCode: 'SAVE' },
+        headers: { authorization: 'Bearer buyer' },
+      });
+      return { res, written: orderCreate.mock.calls[0]?.[0]?.data };
+    };
+
+    it('does not disburse more than it collected (the reported 20%-coupon leak)', async () => {
+      // product 10,000, commission 10% -> fee 1,000. 20% coupon -> buyer pays 8,000.
+      // Before the fix: item.price stayed 10,000, payout = 10,000 - 1,000 = 9,000
+      // against 8,000 collected => 1,000 lost on every such sale.
+      const { res, written } = await runCheckout({
+        price: 10000,
+        commissionPercent: 10,
+        discountPercent: 20,
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json().amount).toBe(8000); // what the buyer is charged
+      expect(written.totalAmount).toBe(8000);
+
+      const items = written.items.create;
+      expect(items[0].price).toBe(8000); // the discount reached the item row
+      expect(items[0].platformFee).toBe(-1000); // the platform funded its own promo
+
+      expect(payoutOf(items)).toBe(9000); // vendor still gets their agreed payout
+      expect(payoutOf(items) + feesOf(items)).toBe(written.totalAmount); // reconciles
+    });
+
+    it('reconciles at discountPercent 100, where the buyer pays nothing', async () => {
+      // schemas/coupon.js permits discountPercent: 100. Buyer pays 0; the vendor
+      // is still owed 9,000 and the platform pays all of it out of pocket.
+      const { res, written } = await runCheckout({
+        price: 10000,
+        commissionPercent: 10,
+        discountPercent: 100,
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json().amount).toBe(0);
+      expect(written.totalAmount).toBe(0);
+
+      const items = written.items.create;
+      expect(payoutOf(items)).toBe(9000);
+      expect(feesOf(items)).toBe(-9000);
+      expect(payoutOf(items) + feesOf(items)).toBe(0); // === totalAmount
+    });
+
+    it('reconciles exactly on a fractional discount (no paise created or destroyed)', async () => {
+      // 10,001 @ 33% = 3300.33 — a discount that does not land on a round rupee.
+      const { res, written } = await runCheckout({
+        price: 10001,
+        commissionPercent: 10,
+        discountPercent: 33,
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(written.discountAmount).toBe(3300.33);
+      expect(written.totalAmount).toBe(6700.67); // 10001 - 3300.33, to the paise
+      expect(res.json().amount).toBe(6700.67); // and that is what the gateway is asked for
+
+      const items = written.items.create;
+      // Compared in paise: the invariant is exact, not approximate.
+      const paise = (r) => Math.round(r * 100);
+      expect(paise(payoutOf(items)) + paise(feesOf(items))).toBe(paise(written.totalAmount));
+      expect(payoutOf(items)).toBe(9000.9); // 10001 - 1000.10, untouched by the coupon
+    });
+  });
+
+  // ===========================================================================
+  // Coupon usage limits must actually be enforceable.
+  //
+  // create-order used to count CouponUsage rows — but that row is not written
+  // until verify-payment, so every concurrent checkout read 0 and a maxUses:1
+  // coupon could be attached to N orders and then all N verified.
+  // ===========================================================================
+  describe('POST /create-order — coupon usage limits', () => {
+    const validBody = {
+      shippingAddress: '123 St',
+      city: 'Mum',
+      state: 'MH',
+      zipCode: '400001',
+      phone: '9876543210',
+      items: [{ productId: 'p1' }],
+    };
+
+    const coupon = (overrides = {}) => ({
+      id: 'c1',
+      code: 'ONCE',
+      discountPercent: 10,
+      productId: null,
+      minPurchase: 0,
+      maxUses: 1,
+      maxUsesPerUser: 0,
+      isActive: true,
+      expiresAt: null,
+      ...overrides,
+    });
+
+    const buildTx = ({ couponRow, orderCount, orderCreate, queryRaw }) => ({
+      product: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'p1',
+          title: 'A',
+          price: 1000,
+          sellerId: 'seller-id',
+          status: 'Approved',
+        }),
+      },
+      coupon: { findUnique: vi.fn().mockResolvedValue(couponRow) },
+      couponUsage: { count: vi.fn().mockResolvedValue(0), create: vi.fn() },
+      order: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: orderCreate,
+        count: orderCount,
+      },
+      $queryRaw: queryRaw,
+    });
+
+    const post = async () => {
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/checkout.js')).default);
+      await app.ready();
+      return app.inject({
+        method: 'POST',
+        url: '/create-order',
+        payload: { ...validBody, couponCode: 'ONCE' },
+        headers: { authorization: 'Bearer buyer' },
+      });
+    };
+
+    it('takes the coupon row lock BEFORE counting — a count-then-insert would race', async () => {
+      // Under Read Committed, two concurrent checkouts both read count=0 and both
+      // insert. The FOR UPDATE lock is the whole mechanism: it must be acquired
+      // before the count, or waiting transactions still act on a stale number.
+      const queryRaw = vi.fn().mockResolvedValue([{ id: 'c1' }]);
+      const orderCount = vi.fn().mockResolvedValue(0);
+      mockPrisma.cartItem.findMany.mockResolvedValue([{ productId: 'p1', product: { id: 'p1' } }]);
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb(
+          buildTx({
+            couponRow: coupon(),
+            orderCount,
+            orderCreate: vi.fn().mockResolvedValue({ id: 'o1', displayId: 'HOR00001', items: [] }),
+            queryRaw,
+          }),
+        ),
+      );
+
+      expect((await post()).statusCode).toBe(200);
+
+      expect(queryRaw).toHaveBeenCalledTimes(1);
+      expect(queryRaw.mock.calls[0][0].join('?')).toMatch(/FOR UPDATE/);
+      expect(queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+        orderCount.mock.invocationCallOrder[0],
+      );
+    });
+
+    it('rejects a maxUses:1 coupon once another order already holds it', async () => {
+      mockPrisma.cartItem.findMany.mockResolvedValue([{ productId: 'p1', product: { id: 'p1' } }]);
+      const orderCreate = vi.fn();
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb(
+          buildTx({
+            couponRow: coupon(),
+            orderCount: vi.fn().mockResolvedValue(1), // one order already holds it
+            orderCreate,
+            queryRaw: vi.fn().mockResolvedValue([{ id: 'c1' }]),
+          }),
+        ),
+      );
+
+      const res = await post();
+      expect(res.statusCode).toBe(422);
+      expect(res.json().error).toBe('Coupon usage limit reached');
+      expect(orderCreate).not.toHaveBeenCalled();
+    });
+
+    it('enforces maxUsesPerUser against the orders this user already holds', async () => {
+      mockPrisma.cartItem.findMany.mockResolvedValue([{ productId: 'p1', product: { id: 'p1' } }]);
+      const orderCreate = vi.fn();
+      // maxUses is unlimited, so only the per-user count runs — and this buyer
+      // already holds one order with the coupon.
+      const orderCount = vi.fn().mockResolvedValue(1);
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb(
+          buildTx({
+            couponRow: coupon({ maxUses: 0, maxUsesPerUser: 1 }),
+            orderCount,
+            orderCreate,
+            queryRaw: vi.fn().mockResolvedValue([{ id: 'c1' }]),
+          }),
+        ),
+      );
+
+      const res = await post();
+      expect(res.statusCode).toBe(422);
+      expect(res.json().error).toMatch(/already used this coupon/);
+      expect(orderCreate).not.toHaveBeenCalled();
+      // the per-user count must be scoped to the buyer, not global
+      expect(orderCount).toHaveBeenCalledTimes(1);
+      expect(orderCount.mock.calls[0][0].where).toMatchObject({ userId: 'buyer-id' });
+    });
+
+    it('THE RACE: a maxUses:1 coupon cannot be claimed by a second checkout', async () => {
+      // Replays the reported exploit against a fake DB that behaves like the real
+      // one: the coupon lock serializes the two checkouts, so the second sees the
+      // first's committed order. Under the old CouponUsage-based count this fake
+      // would return 0 both times (no usage row exists until verify-payment) and
+      // BOTH checkouts would succeed.
+      const orders = [];
+      mockPrisma.cartItem.findMany.mockResolvedValue([{ productId: 'p1', product: { id: 'p1' } }]);
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb(
+          buildTx({
+            couponRow: coupon(),
+            // Counts committed orders holding the coupon — what create-order writes.
+            orderCount: vi.fn(
+              async ({ where }) =>
+                orders.filter(
+                  (o) =>
+                    o.couponId === where.couponId && (!where.userId || o.userId === where.userId),
+                ).length,
+            ),
+            orderCreate: vi.fn(async ({ data }) => {
+              orders.push(data);
+              return { id: `o${orders.length}`, displayId: 'HOR00001', items: [], ...data };
+            }),
+            queryRaw: vi.fn().mockResolvedValue([{ id: 'c1' }]),
+          }),
+        ),
+      );
+
+      const first = await post();
+      const second = await post();
+
+      expect(first.statusCode).toBe(200);
+      expect(second.statusCode).toBe(422);
+      expect(second.json().error).toBe('Coupon usage limit reached');
+      // Exactly one order ever got the discount.
+      expect(orders.filter((o) => o.couponId === 'c1')).toHaveLength(1);
+    });
+
+    it('does not count orders that were cancelled or refunded — those release the coupon', async () => {
+      const orderCount = vi.fn().mockResolvedValue(0);
+      mockPrisma.cartItem.findMany.mockResolvedValue([{ productId: 'p1', product: { id: 'p1' } }]);
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb(
+          buildTx({
+            couponRow: coupon(),
+            orderCount,
+            orderCreate: vi.fn().mockResolvedValue({ id: 'o1', displayId: 'HOR00001', items: [] }),
+            queryRaw: vi.fn().mockResolvedValue([{ id: 'c1' }]),
+          }),
+        ),
+      );
+
+      expect((await post()).statusCode).toBe(200);
+      expect(orderCount.mock.calls[0][0].where).toMatchObject({
+        couponId: 'c1',
+        status: { not: 'Cancelled' },
+        paymentStatus: { notIn: ['Failed', 'Refunded'] },
+      });
+    });
+
+    it('skips the lock entirely for an unlimited coupon', async () => {
+      const queryRaw = vi.fn();
+      mockPrisma.cartItem.findMany.mockResolvedValue([{ productId: 'p1', product: { id: 'p1' } }]);
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb(
+          buildTx({
+            couponRow: coupon({ maxUses: 0, maxUsesPerUser: 0 }),
+            orderCount: vi.fn().mockResolvedValue(0),
+            orderCreate: vi.fn().mockResolvedValue({ id: 'o1', displayId: 'HOR00001', items: [] }),
+            queryRaw,
+          }),
+        ),
+      );
+
+      expect((await post()).statusCode).toBe(200);
+      expect(queryRaw).not.toHaveBeenCalled(); // no limit to enforce, no need to serialize
     });
   });
 

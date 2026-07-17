@@ -105,6 +105,8 @@ const FeaturedProductCard = ({ product }) => {
         </div>
       </Link>
       <div className="p-3 sm:p-5 flex flex-col flex-grow">
+        {/* Meta and title absorb the slack so price and CTA align across the rail
+            regardless of how many lines the title runs to. */}
         <div className="flex-grow">
           <span className="text-[10px] sm:text-xs text-heritage-bronze uppercase tracking-[0.15em] font-medium">
             {product.category}
@@ -122,10 +124,10 @@ const FeaturedProductCard = ({ product }) => {
               {title}
             </h3>
           </Link>
-          <p className="text-heritage-gold-muted font-serif text-xs sm:text-base lg:text-lg font-medium mt-2">
-            ₹{product.price?.toLocaleString()}
-          </p>
         </div>
+        <p className="text-heritage-gold-muted font-serif text-xs sm:text-base lg:text-lg font-medium mt-2">
+          ₹{product.price?.toLocaleString()}
+        </p>
         {product.status === 'Sold' ? (
           <div className="w-full py-1.5 sm:py-2 text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 bg-gray-100 text-gray-400 cursor-default">
             <XCircle size={11} className="sm:w-[12px] sm:h-[12px]" />
