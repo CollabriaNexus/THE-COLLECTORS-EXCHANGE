@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import SEO from '../components/SEO';
 import {
@@ -24,6 +24,8 @@ import {
   Mail,
   Upload,
   Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import CommissionSlider from '../components/account/CommissionSlider';
 import ReactMarkdown from 'react-markdown';
@@ -46,6 +48,7 @@ import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
 import { useVendorProfile, useVendorStats } from '../hooks/api/useVendor';
 import { useSubmitTestimonial } from '../hooks/api/useTestimonials';
+import { useNotifications } from '../hooks/api/useNotifications';
 import PhoneVerification from '../components/account/PhoneVerification';
 import NotificationsPanel from '../components/account/NotificationsPanel';
 import DocUploadField from '../components/account/DocUploadField';
@@ -62,8 +65,48 @@ const CATEGORIES = [
 const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
 const WhatsAppNumber = '+916362771355';
 
+// The account sections are addressable as /account?tab=<id>. Only ids listed here
+// are honoured from the URL — anything else (including the legacy, contentless
+// 'payouts' section) falls back to DEFAULT_TAB rather than rendering an empty view.
+const TAB_IDS = ['profile', 'seller', 'listings', 'orders', 'notifications'];
+const DEFAULT_TAB = 'profile';
+
 const Account = () => {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  // A recognised ?tab drives the section; anything else resolves to the default.
+  const activeTab = TAB_IDS.includes(tabParam) ? tabParam : DEFAULT_TAB;
+  // On mobile the section list is an index: a section is only drilled into once
+  // the URL explicitly names a valid one. Desktop always shows a section.
+  const sectionOpen = TAB_IDS.includes(tabParam);
+
+  const setActiveTab = useCallback(
+    (tabId) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('tab', tabId);
+          return next;
+        },
+        { replace: false },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const closeSection = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('tab');
+      return next;
+    });
+  }, [setSearchParams]);
+
+  // The global ScrollToTop only keys on pathname, so section changes (which are
+  // search-param changes) would otherwise keep the previous scroll offset.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [tabParam]);
   const [localUser, setLocalUserState] = useState(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [showPasswordSetup, setShowPasswordSetup] = useState(false);
@@ -173,6 +216,10 @@ const Account = () => {
   const markAsSoldMutation = useMarkAsSold();
   const [bulkResults, setBulkResults] = useState(null);
   const { data: myOrders = [], isLoading: ordersLoading } = useMyOrders();
+  // Shares the ['notifications'] cache with NotificationsPanel, so this is a read
+  // of the same polled query rather than a second request.
+  const { data: notifications = [] } = useNotifications(!!user);
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const showToast = useToast();
   const [editingProfile, setEditingProfile] = useState(false);
   const [editProfileForm, setEditProfileForm] = useState({ name: '', phone: '' });
@@ -321,6 +368,54 @@ const Account = () => {
   };
 
   const userProducts = user?.products || [];
+
+  // Single source of truth for the section navigation — consumed by the mobile
+  // index list, the mobile section header and the desktop sidebar alike.
+  const isVerifiedSeller = user?.kycStatus === 'verified';
+  const sections = useMemo(
+    () => [
+      {
+        id: 'profile',
+        label: 'Profile',
+        icon: User,
+        hint: 'Your name, contact details and membership',
+      },
+      {
+        id: 'seller',
+        label: isVerifiedSeller ? 'Seller Profile' : 'Seller Registration',
+        icon: Store,
+        hint: isVerifiedSeller
+          ? 'Verification status and pickup address'
+          : 'Verify your identity to start listing',
+      },
+      {
+        id: 'listings',
+        label: 'Listings',
+        icon: Package,
+        hint: userProducts.length
+          ? `${userProducts.length} item${userProducts.length === 1 ? '' : 's'} brokered`
+          : 'List an item on The Exchange',
+      },
+      {
+        id: 'orders',
+        label: 'My Orders',
+        icon: ShoppingBag,
+        hint: myOrders.length
+          ? `${myOrders.length} order${myOrders.length === 1 ? '' : 's'} placed`
+          : 'Track your purchases and shipments',
+      },
+      {
+        id: 'notifications',
+        label: 'Notifications',
+        icon: Bell,
+        hint: unreadCount ? `${unreadCount} unread` : 'Account and listing updates',
+        badge: unreadCount,
+      },
+    ],
+    [isVerifiedSeller, userProducts.length, myOrders.length, unreadCount],
+  );
+
+  const activeSection = sections.find((s) => s.id === activeTab);
 
   const handleSetPassword = async (e) => {
     e.preventDefault();
@@ -722,7 +817,9 @@ const Account = () => {
     await supabase.auth.signOut();
     clearUser();
     setLocalUserState(null);
-    setActiveTab('profile');
+    // Drop ?tab so a later sign-in lands on a clean /account (which resolves to
+    // the default section anyway) rather than resuming the last one.
+    closeSection();
   };
 
   if (!sessionChecked) {
@@ -2745,69 +2842,118 @@ const Account = () => {
     );
   }
 
-  const renderMobileTabBar = () => (
-    <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-50 bg-heritage-cream/30">
-        <div className="w-8 h-8 rounded-full bg-heritage-cream flex items-center justify-center text-heritage-bronze flex-shrink-0">
-          <User size={14} />
-        </div>
+  // Mobile only. Anchors the drilled-into section: names where you are and offers
+  // the way back to the index. Sticky so it survives the very long sections.
+  const renderMobileSectionHeader = () => (
+    <div className="lg:hidden sticky top-16 z-30 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
+      <div className="flex items-center gap-1 h-14 px-2">
+        <button
+          type="button"
+          onClick={closeSection}
+          aria-label="Back to account menu"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-heritage-charcoal transition-colors hover:bg-heritage-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold cursor-pointer"
+        >
+          <ChevronLeft size={22} aria-hidden="true" />
+        </button>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-serif font-medium truncate">{localUser.name}</p>
-          <p className="text-[10px] text-gray-400 uppercase tracking-wider truncate">
-            {localUser.type}
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold">
+            Account
+          </p>
+          <p className="truncate font-serif text-base leading-tight text-heritage-charcoal">
+            {activeSection?.label}
           </p>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-          aria-label="Sign out"
-        >
-          <LogOut size={16} />
-        </button>
       </div>
+    </div>
+  );
+
+  // Mobile only. A full-width row per section — icon, label, context and a chevron
+  // — in place of the horizontally-scrolling pills. Every section is on screen at
+  // 375px and every target clears 44px.
+  const renderMobileSectionIndex = () => (
+    <div className="lg:hidden">
+      <div className="bg-white border border-gray-100 shadow-heritage p-5 mb-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-heritage-cream flex flex-shrink-0 items-center justify-center text-heritage-bronze">
+            <User size={24} aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold mb-1">
+              {localUser.type}
+            </p>
+            <h1 className="font-serif text-xl text-heritage-charcoal truncate">{localUser.name}</h1>
+            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+          </div>
+        </div>
+      </div>
+
       <nav
-        className="flex overflow-x-auto gap-1 px-2 py-1.5 [&::-webkit-scrollbar]:hidden"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        aria-label="Account sections"
+        className="bg-white border border-gray-100 shadow-heritage divide-y divide-gray-100"
       >
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'profile' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-        >
-          Profile
-        </button>
-        <button
-          onClick={() => setActiveTab('seller')}
-          className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'seller' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-        >
-          {user?.kycStatus === 'verified' ? 'Seller' : 'Register'}
-        </button>
-        <button
-          onClick={() => setActiveTab('listings')}
-          className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'listings' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-        >
-          Listings
-        </button>
-        <button
-          onClick={() => setActiveTab('orders')}
-          className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'orders' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-        >
-          Orders
-        </button>
-        <button
-          onClick={() => setActiveTab('notifications')}
-          className={`flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap rounded-full transition-all cursor-pointer ${activeTab === 'notifications' ? 'text-luxury-gold border border-luxury-gold/30 bg-heritage-cream/70' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-        >
-          Alerts
-        </button>
+        {sections.map(({ id, label, icon: Icon, hint, badge }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setActiveTab(id)}
+            className="group flex w-full min-h-[64px] items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-heritage-cream/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-luxury-gold cursor-pointer"
+          >
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center bg-heritage-cream text-heritage-bronze transition-colors group-hover:text-luxury-gold">
+              <Icon size={18} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="font-serif text-base text-heritage-charcoal">{label}</span>
+                {badge > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-luxury-gold px-1.5 text-[10px] font-bold text-white"
+                  >
+                    {badge > 9 ? '9+' : badge}
+                  </span>
+                )}
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-gray-500">{hint}</span>
+            </span>
+            <ChevronRight
+              size={18}
+              aria-hidden="true"
+              className="flex-shrink-0 text-gray-300 transition-colors group-hover:text-luxury-gold"
+            />
+          </button>
+        ))}
         {vendorProfile?.status === 'APPROVED' && (
           <Link
             to="/vendor-dashboard"
-            className="flex-shrink-0 px-3 py-2 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider whitespace-nowrap text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all inline-flex items-center rounded-full"
+            className="group flex w-full min-h-[64px] items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-heritage-cream/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-luxury-gold"
           >
-            Dashboard
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center bg-heritage-cream text-heritage-bronze transition-colors group-hover:text-luxury-gold">
+              <BarChart3 size={18} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-serif text-base text-heritage-charcoal">
+                Vendor Dashboard
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-gray-500">
+                Sales performance and payouts
+              </span>
+            </span>
+            <ChevronRight
+              size={18}
+              aria-hidden="true"
+              className="flex-shrink-0 text-gray-300 transition-colors group-hover:text-luxury-gold"
+            />
           </Link>
         )}
       </nav>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mt-4 flex w-full min-h-[56px] items-center justify-center gap-3 border border-gray-100 bg-white px-4 text-sm font-medium uppercase tracking-widest text-red-500 shadow-heritage transition-colors hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-400 cursor-pointer"
+      >
+        <LogOut size={16} aria-hidden="true" /> Sign Out
+      </button>
     </div>
   );
 
@@ -2819,7 +2965,7 @@ const Account = () => {
         canonical="/account"
         noindex
       />
-      {renderMobileTabBar()}
+      {sectionOpen && renderMobileSectionHeader()}
       <div className="container mx-auto py-8 sm:py-12 lg:py-16 px-4 sm:px-6">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           {/* Desktop Sidebar */}
@@ -2827,65 +2973,68 @@ const Account = () => {
             <div className="bg-white shadow-sm border border-gray-100 lg:sticky lg:top-24">
               <div className="p-8 border-b border-gray-100 text-center">
                 <div className="w-20 h-20 rounded-full bg-heritage-cream mx-auto flex items-center justify-center mb-4 text-heritage-bronze">
-                  <User size={32} />
+                  <User size={32} aria-hidden="true" />
                 </div>
                 <h2 className="font-serif text-xl mb-1">{localUser.name}</h2>
                 <p className="text-xs text-gray-500 uppercase tracking-widest border px-2 py-0.5 inline-block rounded-sm border-gray-200">
                   {localUser.type}
                 </p>
               </div>
-              <nav className="p-4 space-y-1">
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <User size={18} /> Profile
-                </button>
-                <button
-                  onClick={() => setActiveTab('seller')}
-                  className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'seller' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <Store size={18} />{' '}
-                  {user?.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}
-                </button>
-                <button
-                  onClick={() => setActiveTab('listings')}
-                  className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'listings' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <Package size={18} /> Listings
-                </button>
-                <button
-                  onClick={() => setActiveTab('orders')}
-                  className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'orders' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <ShoppingBag size={18} /> My Orders
-                </button>
-                <button
-                  onClick={() => setActiveTab('notifications')}
-                  className={`flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer ${activeTab === 'notifications' ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <Bell size={18} /> Notifications
-                </button>
+              <nav aria-label="Account sections" className="p-4 space-y-1">
+                {sections.map(({ id, label, icon: Icon, badge }) => {
+                  const isActive = activeTab === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setActiveTab(id)}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`relative flex items-center gap-4 w-full p-4 text-sm font-medium transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-luxury-gold ${isActive ? 'bg-heritage-charcoal text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      {isActive && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0 top-0 bottom-0 w-0.5 bg-luxury-gold"
+                        />
+                      )}
+                      <Icon size={18} aria-hidden="true" />
+                      <span className="flex-1 text-left">{label}</span>
+                      {badge > 0 && (
+                        <span
+                          aria-hidden="true"
+                          className={`inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${isActive ? 'bg-white text-heritage-charcoal' : 'bg-luxury-gold text-white'}`}
+                        >
+                          {badge > 9 ? '9+' : badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
                 {vendorProfile?.status === 'APPROVED' && (
                   <Link
                     to="/vendor-dashboard"
-                    className="flex items-center gap-4 w-full p-4 text-sm font-medium transition-all text-gray-600 hover:bg-gray-50"
+                    className="flex items-center gap-4 w-full p-4 text-sm font-medium transition-all text-gray-600 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-luxury-gold"
                   >
-                    <BarChart3 size={18} /> Vendor Dashboard
+                    <BarChart3 size={18} aria-hidden="true" /> Vendor Dashboard
                   </Link>
                 )}
                 <button
+                  type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-4 w-full p-4 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors mt-8 border-t border-gray-100 cursor-pointer"
+                  className="flex items-center gap-4 w-full p-4 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors mt-8 border-t border-gray-100 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-400"
                 >
-                  <LogOut size={18} /> Sign Out
+                  <LogOut size={18} aria-hidden="true" /> Sign Out
                 </button>
               </nav>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="w-full lg:w-3/4">
+          {/* Mobile section index — replaced by the section itself once one is open */}
+          {!sectionOpen && renderMobileSectionIndex()}
+
+          {/* Main Content — always rendered on desktop; on mobile only once a
+              section has been opened, so the index reads as a screen of its own. */}
+          <div className={`w-full lg:w-3/4 ${sectionOpen ? '' : 'hidden lg:block'}`}>
             <Reveal key={activeTab} as="div" direction="up">
               {renderContent()}
             </Reveal>
