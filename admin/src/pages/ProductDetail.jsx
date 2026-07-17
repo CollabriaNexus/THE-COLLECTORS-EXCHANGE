@@ -35,10 +35,12 @@ import Modal from '../components/ui/Modal';
 import ManualOrderModal from '../components/ManualOrderModal';
 import { useConfirm } from '../components/ConfirmDialog';
 import { useProductCoupon, useGenerateCoupon, useDeleteCoupon } from '../hooks/api/useCoupons';
+import { getUser } from '../utils/storage';
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isSuperAdmin = getUser()?.role === 'admin';
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -94,7 +96,12 @@ function ProductDetail() {
       setShowManualOrderModal(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to create order');
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to create order';
+      setError(msg);
     }
   };
 
@@ -580,7 +587,7 @@ function ProductDetail() {
                       ? 'Already Sold'
                       : 'Mark as Sold'}
                 </button>
-                {product.status === 'Approved' && (
+                {isSuperAdmin && product.status === 'Approved' && (
                   <button
                     onClick={openPunchOrder}
                     className="w-full flex items-center justify-center gap-2 bg-luxury-gold/10 text-luxury-gold py-3 rounded-md font-medium hover:bg-luxury-gold/20 transition-colors"
@@ -589,7 +596,7 @@ function ProductDetail() {
                     Punch Order (Cash/Walk-in)
                   </button>
                 )}
-                {product.status === 'Sold' && !product.orderItems?.length && (
+                {isSuperAdmin && product.status === 'Sold' && !product.orderItems?.length && (
                   <button
                     onClick={openBackfill}
                     className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-700 py-3 rounded-md font-medium hover:bg-blue-100 transition-colors"
@@ -1140,6 +1147,7 @@ function ProductDetail() {
 
       {/* Manual Order Modal */}
       <ManualOrderModal
+        key={showManualOrderModal ? `${product.id}-${isBackfill}` : 'closed'}
         isOpen={showManualOrderModal}
         onClose={() => setShowManualOrderModal(false)}
         product={product}

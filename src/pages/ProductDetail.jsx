@@ -33,6 +33,7 @@ const ProductDetail = () => {
   const { data: product, isLoading } = useProduct(id);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [cartFeedback, setCartFeedback] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const currentUser = getUser();
   const showToast = useToast();
@@ -47,6 +48,19 @@ const ProductDetail = () => {
   const inWishlist = wishlistItems.some((item) => item.productId === product?.id);
 
   const cartFeedbackTimer = useRef(null);
+  const shareCopiedTimer = useRef(null);
+
+  const handleShare = () => {
+    if (navigator.share) {
+      // A user cancelling the native share sheet rejects the promise — ignore it.
+      navigator.share({ title: product.title, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setShareCopied(true);
+      clearTimeout(shareCopiedTimer.current);
+      shareCopiedTimer.current = setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
 
   const handleAddToCart = async () => {
     if (!product || !currentUser) return;
@@ -71,7 +85,10 @@ const ProductDetail = () => {
   };
 
   useEffect(() => {
-    return () => clearTimeout(cartFeedbackTimer.current);
+    return () => {
+      clearTimeout(cartFeedbackTimer.current);
+      clearTimeout(shareCopiedTimer.current);
+    };
   }, []);
 
   const handleWishlistToggle = async () => {
@@ -395,6 +412,18 @@ const ProductDetail = () => {
                   className="sm:w-5 sm:h-5"
                   fill={inWishlist ? 'currentColor' : 'none'}
                 />
+              </button>
+              <button
+                onClick={handleShare}
+                title={shareCopied ? 'Link copied' : 'Share this item'}
+                aria-label={shareCopied ? 'Link copied' : 'Share this item'}
+                className="px-3 sm:px-6 border border-gray-200 hover:border-heritage-charcoal text-gray-500 hover:text-heritage-charcoal transition-colors"
+              >
+                {shareCopied ? (
+                  <Check size={16} className="sm:w-5 sm:h-5 text-green-600" />
+                ) : (
+                  <Share2 size={16} className="sm:w-5 sm:h-5" />
+                )}
               </button>
             </div>
 

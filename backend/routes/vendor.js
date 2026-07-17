@@ -1,3 +1,11 @@
+import {
+  orderTotalFromItems,
+  payoutFromItems,
+  platformFeeFromItems,
+  toRupees,
+  toPaise,
+} from '../lib/money.js';
+
 /**
  * Vendor Routes
  * @param {import('fastify').FastifyInstance} fastify
@@ -69,16 +77,28 @@ export default async function vendorRoutes(fastify) {
       include: { order: true },
     });
 
-    // Calculate statistics
-    const totalSales = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const totalPlatformFees = orderItems.reduce((acc, item) => acc + (item.platformFee || 0), 0);
+    // Calculate statistics.
+    //
+    // netEarnings MUST be the same arithmetic the payout run uses
+    // (admin.js `/payouts/auto-create`: sum((price - platformFee) * quantity)),
+    // or the seller is quoted a number they will never be paid. It is computed
+    // with the shared helper rather than as `totalSales - totalPlatformFees` so
+    // the two can't drift apart again.
+    //
+    // Since item.price is the DISCOUNTED price the buyer actually paid, totalSales
+    // is real collected revenue, and platformFee already carries the platform's
+    // share of any coupon (it can be negative when the platform funded a promo —
+    // see lib/money.js). The seller's netEarnings is unaffected by coupons, which
+    // is the policy: the platform absorbs its own discounts.
+    const totalSales = orderTotalFromItems(orderItems);
+    const totalPlatformFees = platformFeeFromItems(orderItems);
     const totalItemsSold = orderItems.reduce((acc, item) => acc + item.quantity, 0);
     const uniqueOrders = new Set(orderItems.map((item) => item.orderId)).size;
 
     return {
       totalSales,
       totalPlatformFees,
-      netEarnings: totalSales - totalPlatformFees,
+      netEarnings: payoutFromItems(orderItems),
       totalItemsSold,
       uniqueOrders,
     };
@@ -153,16 +173,19 @@ export default async function vendorRoutes(fastify) {
         getOfflineSold(prisma, dbUser.id, dateFilter),
       ]);
 
-      const orderRevenue = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-      const orderPlatformFees = orderItems.reduce((acc, item) => acc + (item.platformFee || 0), 0);
+      // Same rule as /stats: every figure comes off the item rows, and netEarnings
+      // is the payout formula itself — never `revenue - fees`.
+      const orderRevenue = orderTotalFromItems(orderItems);
+      const orderPlatformFees = platformFeeFromItems(orderItems);
+      const orderNetEarnings = payoutFromItems(orderItems);
       const orderItemsSold = orderItems.reduce((acc, item) => acc + item.quantity, 0);
       const uniqueOrders = new Set(orderItems.map((item) => item.orderId)).size;
 
       const paidItems = orderItems.filter((item) => item.order.paymentStatus === 'Paid');
-      const paidRevenue = paidItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-      const paidPlatformFees = paidItems.reduce((acc, item) => acc + (item.platformFee || 0), 0);
+      const paidRevenue = orderTotalFromItems(paidItems);
+      const paidPlatformFees = platformFeeFromItems(paidItems);
 
-      const offlineRevenue = offlineSold.reduce((sum, p) => sum + p.price, 0);
+      const offlineRevenue = toRupees(offlineSold.reduce((sum, p) => sum + toPaise(p.price), 0));
       const offlineCount = offlineSold.length;
 
       const pendingPayouts = await prisma.payout.aggregate({
@@ -178,10 +201,10 @@ export default async function vendorRoutes(fastify) {
       return {
         orderCount: uniqueOrders + offlineCount,
         saleCount: orderItemsSold + offlineCount,
-        totalRevenue: orderRevenue + offlineRevenue,
+        totalRevenue: toRupees(toPaise(orderRevenue) + toPaise(offlineRevenue)),
         totalPlatformFees: orderPlatformFees,
-        netEarnings: orderRevenue - orderPlatformFees,
-        paidRevenue: paidRevenue + offlineRevenue,
+        netEarnings: orderNetEarnings,
+        paidRevenue: toRupees(toPaise(paidRevenue) + toPaise(offlineRevenue)),
         paidPlatformFees,
         pendingPayout: pendingPayouts._sum.amount || 0,
         totalListings,

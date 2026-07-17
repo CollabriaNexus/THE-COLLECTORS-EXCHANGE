@@ -36,5 +36,10 @@ export const ManualOrderSchema = z.object({
   zipCode: z.string().min(1, 'Zip code is required'),
   paymentMethod: z.enum(['cash', 'card', 'upi', 'bank_transfer']).default('cash'),
   notes: z.string().optional(),
-  soldAt: z.string().optional(),
+  // Accepts both ISO strings and the `datetime-local` format the admin UI emits
+  // (e.g. "2026-07-16T10:30"), which z.string().datetime() would reject.
+  soldAt: z
+    .string()
+    .refine((v) => !isNaN(Date.parse(v)), 'Invalid sale date')
+    .optional(),
 });

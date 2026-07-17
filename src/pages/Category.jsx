@@ -214,24 +214,28 @@ const ArchiveProductCard = ({ product }) => {
       </Link>
 
       <div className="p-3 sm:p-5 flex flex-col flex-grow">
-        <div className="flex items-center gap-0.5 sm:gap-2 mb-0.5 sm:mb-1">
-          <span className="text-[10px] sm:text-xs text-heritage-bronze/80 uppercase tracking-widest truncate">
-            {product.category}
-          </span>
+        {/* Meta and title absorb the slack so price and CTA align across the grid
+            regardless of how many lines the title runs to. */}
+        <div className="flex-grow">
+          <div className="flex items-center gap-0.5 sm:gap-2 mb-0.5 sm:mb-1">
+            <span className="text-[10px] sm:text-xs text-heritage-bronze/80 uppercase tracking-widest truncate">
+              {product.category}
+            </span>
+          </div>
+          {product.seller?.name && (
+            <p className="text-[10px] sm:text-xs text-heritage-charcoal/50 truncate mb-0.5 sm:mb-1">
+              by {product.seller.name}
+            </p>
+          )}
+          <Link
+            to={`/product/${product.id}`}
+            className="block hover:text-heritage-bronze transition-colors"
+          >
+            <h3 className="font-serif text-sm sm:text-base md:text-lg text-heritage-charcoal leading-tight sm:leading-snug line-clamp-2">
+              {title}
+            </h3>
+          </Link>
         </div>
-        {product.seller?.name && (
-          <p className="text-[10px] sm:text-xs text-heritage-charcoal/50 truncate mb-0.5 sm:mb-1">
-            by {product.seller.name}
-          </p>
-        )}
-        <Link
-          to={`/product/${product.id}`}
-          className="block hover:text-heritage-bronze transition-colors"
-        >
-          <h3 className="font-serif text-sm sm:text-base md:text-lg text-heritage-charcoal leading-tight sm:leading-snug line-clamp-2">
-            {title}
-          </h3>
-        </Link>
         <p className="text-heritage-gold-muted font-sans text-xs sm:text-base lg:text-lg font-semibold mt-1.5 sm:mt-2">
           ₹{product.price?.toLocaleString()}
         </p>

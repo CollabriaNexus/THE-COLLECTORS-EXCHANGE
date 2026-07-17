@@ -12,7 +12,14 @@ export const CreateOrderSchema = z.object({
   state: z.string().min(1, 'State is required'),
   zipCode: z.string().min(1, 'ZIP code is required'),
   phone: z.string().min(10, 'Phone must be at least 10 characters'),
-  items: z.array(CreateOrderItemSchema).min(1, 'At least one item is required'),
+  // Every listing is one-of-a-kind, so the same productId can never appear twice
+  // in one order — repeating it would bill the same watch more than once.
+  items: z
+    .array(CreateOrderItemSchema)
+    .min(1, 'At least one item is required')
+    .refine((items) => new Set(items.map((i) => i.productId)).size === items.length, {
+      message: 'Duplicate items are not allowed',
+    }),
   paymentMethod: z.enum(['online', 'cod']).default('online'),
   couponCode: z.string().optional(),
 });

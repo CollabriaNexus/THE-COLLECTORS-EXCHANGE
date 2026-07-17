@@ -9,6 +9,13 @@ import {
 } from '../schemas/admin.js';
 import { CATEGORIES, AdminProductUpdateSchema } from '../schemas/product.js';
 
+class ManualOrderError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
 /**
  * Admin Routes
  * @param {import('fastify').FastifyInstance} fastify
@@ -913,6 +920,7 @@ export default async function adminRoutes(fastify) {
         zipCode,
         paymentMethod,
         soldAt,
+        notes,
       } = body;
 
       // Find or create buyer user by phone
@@ -961,86 +969,117 @@ export default async function adminRoutes(fastify) {
         }
       }
 
+      const isBackfill = product.status === 'Sold';
       const commPct = product.commissionPercent ?? 10;
       const platformFee = Math.round(((sellingPrice * commPct) / 100) * 100) / 100;
 
-      const order = await prisma.$transaction(async (tx) => {
-        // Generate sequential display ID (HOR00001, HOR00002, ...)
-        const lastOrder = await tx.order.findFirst({
-          orderBy: { displayId: 'desc' },
-          select: { displayId: true },
-        });
-        let nextSeq = 1;
-        if (lastOrder?.displayId) {
-          const num = parseInt(lastOrder.displayId.replace('HOR', ''), 10);
-          if (!isNaN(num)) nextSeq = num + 1;
-        }
-        const displayId = 'HOR' + String(nextSeq).padStart(5, '0');
+      let order;
+      try {
+        order = await prisma.$transaction(async (tx) => {
+          // Atomically claim the product BEFORE writing the order, mirroring the
+          // checkout path. The guarded updateMany only flips Approved -> Sold; a count
+          // of 0 means another punch (or a paid checkout) claimed it since we read it,
+          // so this one-of-a-kind item can never be sold twice.
+          if (!isBackfill) {
+            const claim = await tx.product.updateMany({
+              where: { id: productId, status: 'Approved' },
+              data: { status: 'Sold' },
+            });
+            if (claim.count !== 1) {
+              throw new ManualOrderError(
+                422,
+                'This product was just sold by another order. Refresh and try again.',
+              );
+            }
+          } else {
+            // Backfill path has no status transition to guard on, so re-check inside the
+            // transaction that nothing attached an order while we were validating.
+            const existingItem = await tx.orderItem.findFirst({ where: { productId } });
+            if (existingItem) {
+              throw new ManualOrderError(
+                422,
+                'This product already has an associated order. Cannot create a duplicate.',
+              );
+            }
+          }
 
-        // Create the order
-        const newOrder = await tx.order.create({
-          data: {
-            userId: buyerUser.id,
-            displayId,
-            status: 'Delivered',
-            totalAmount: sellingPrice,
-            shippingAddress,
-            city,
-            state,
-            zipCode,
-            phone: buyerPhone,
-            paymentStatus: 'Paid',
-            paymentMethod: paymentMethod === 'cash' ? 'cod' : paymentMethod,
-            isManual: true,
-            items: {
-              create: [
-                {
-                  productId: product.id,
-                  quantity: 1,
-                  price: sellingPrice,
-                  commissionPercent: commPct,
-                  platformFee,
-                },
-              ],
-            },
-          },
-          include: { items: true },
-        });
-
-        // Mark product as Sold if it was Approved
-        if (product.status === 'Approved') {
-          await tx.product.update({
-            where: { id: productId },
-            data: { status: 'Sold', isPublished: false },
+          // Generate sequential display ID (HOR00001, HOR00002, ...)
+          const lastOrder = await tx.order.findFirst({
+            orderBy: { displayId: 'desc' },
+            select: { displayId: true },
           });
-        }
+          let nextSeq = 1;
+          if (lastOrder?.displayId) {
+            const num = parseInt(lastOrder.displayId.replace('HOR', ''), 10);
+            if (!isNaN(num)) nextSeq = num + 1;
+          }
+          const displayId = 'HOR' + String(nextSeq).padStart(5, '0');
 
-        // Remove from all carts and wishlists
-        await tx.cartItem.deleteMany({ where: { productId } });
-        await tx.wishlistItem.deleteMany({ where: { productId } });
+          // Create the order. Backfilled sales carry their real sale date so revenue
+          // reporting lands in the period the sale actually happened.
+          const newOrder = await tx.order.create({
+            data: {
+              userId: buyerUser.id,
+              displayId,
+              status: 'Delivered',
+              totalAmount: sellingPrice,
+              shippingAddress,
+              city,
+              state,
+              zipCode,
+              phone: buyerPhone,
+              paymentStatus: 'Paid',
+              paymentMethod: paymentMethod === 'cash' ? 'cod' : paymentMethod,
+              isManual: true,
+              ...(soldAt ? { createdAt: new Date(soldAt) } : {}),
+              items: {
+                create: [
+                  {
+                    productId: product.id,
+                    quantity: 1,
+                    price: sellingPrice,
+                    commissionPercent: commPct,
+                    platformFee,
+                  },
+                ],
+              },
+            },
+            include: { items: true },
+          });
 
-        // Create notification for buyer
-        await tx.notification.create({
-          data: {
-            userId: buyerUser.id,
-            title: 'Order Confirmed',
-            message: `Your order #${displayId} has been confirmed and delivered. Thank you for your purchase.`,
-          },
+          // Remove from all carts and wishlists
+          await tx.cartItem.deleteMany({ where: { productId } });
+          await tx.wishlistItem.deleteMany({ where: { productId } });
+
+          // Create notification for buyer
+          await tx.notification.create({
+            data: {
+              userId: buyerUser.id,
+              title: 'Order Confirmed',
+              message: `Your order #${displayId} has been confirmed and delivered. Thank you for your purchase.`,
+            },
+          });
+
+          return newOrder;
         });
+      } catch (err) {
+        if (err instanceof ManualOrderError) {
+          return reply.status(err.statusCode).send({ error: err.message });
+        }
+        throw err;
+      }
 
-        return newOrder;
-      });
-
-      // Audit log
+      // Audit log. `notes` has no column on Order, so it is only recorded here.
       request.log.info(
         {
           orderId: order.id,
           displayId: order.displayId,
           productId,
-          adminId: request.user.id,
+          adminId: request.dbUser.id,
           paymentMethod,
           sellingPrice,
-          soldAt: soldAt || new Date().toISOString(),
+          soldAt: order.createdAt.toISOString(),
+          notes: notes || undefined,
         },
         'Manual order created by admin',
       );

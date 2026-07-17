@@ -193,8 +193,16 @@ describe('vendor routes', () => {
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().totalRevenue).toBe(250);
-      expect(res.json().totalPlatformFees).toBe(25);
-      expect(res.json().netEarnings).toBe(225);
+      // platformFee is stored PER UNIT, so it must be multiplied by quantity just
+      // like price is. This previously summed the raw column (25), which both
+      // under-reported the platform's take and made netEarnings (225) disagree
+      // with what the payout run would actually pay out.
+      expect(res.json().totalPlatformFees).toBe(45); // 20*2 + 5*1
+      // === the payout formula in admin.js: sum((price - platformFee) * quantity)
+      // = (100-20)*2 + (50-5)*1 = 205
+      expect(res.json().netEarnings).toBe(205);
+      // and the money reconciles: payouts + fees == revenue collected
+      expect(res.json().netEarnings + res.json().totalPlatformFees).toBe(res.json().totalRevenue);
     });
   });
 

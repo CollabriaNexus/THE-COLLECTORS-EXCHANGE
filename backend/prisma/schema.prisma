@@ -76,6 +76,9 @@ enum PaymentStatus {
 enum PaymentMethod {
   online
   cod
+  card
+  upi
+  bank_transfer
 }
 
 enum OrderItemStatus {
