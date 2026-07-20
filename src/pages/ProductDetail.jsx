@@ -5,7 +5,6 @@ import SEO, { ProductSchema, BreadcrumbSchema } from '../components/SEO';
 import {
   ShieldCheck,
   Heart,
-  ShoppingBag,
   ChevronRight,
   Share2,
   Info,
@@ -16,11 +15,11 @@ import {
   Award,
   ImageOff,
   XCircle,
+  MessageCircle,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useProduct, useProducts } from '../hooks/api/useProducts';
-import { useAddToCart, useCart } from '../hooks/api/useCart';
 import { useAddToWishlist, useRemoveFromWishlist, useWishlist } from '../hooks/api/useWishlist';
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
@@ -32,22 +31,17 @@ const ProductDetail = () => {
   const { id } = useParams();
   const { data: product, isLoading } = useProduct(id);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [cartFeedback, setCartFeedback] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
   const currentUser = getUser();
   const showToast = useToast();
   const confirm = useConfirm();
-  const { data: cartItems = [] } = useCart(currentUser?.id);
   const { data: wishlistItems = [] } = useWishlist(currentUser?.id);
-  const addToCartMutation = useAddToCart();
   const addToWishlistMutation = useAddToWishlist();
   const removeFromWishlistMutation = useRemoveFromWishlist();
 
-  const inCart = cartItems.some((item) => item.productId === product?.id);
   const inWishlist = wishlistItems.some((item) => item.productId === product?.id);
 
-  const cartFeedbackTimer = useRef(null);
   const shareCopiedTimer = useRef(null);
 
   const handleShare = () => {
@@ -62,31 +56,8 @@ const ProductDetail = () => {
     }
   };
 
-  const handleAddToCart = async () => {
-    if (!product || !currentUser) return;
-    try {
-      await addToCartMutation.mutateAsync({ userId: currentUser.id, productId: product.id });
-      apiClient.post('/analytics/cart', { productId: product.id, action: 'ADD' }).catch(() => {});
-      setCartFeedback(true);
-      clearTimeout(cartFeedbackTimer.current);
-      cartFeedbackTimer.current = setTimeout(() => setCartFeedback(false), 2000);
-    } catch (err) {
-      if (err?.response?.status === 401) {
-        showToast('Please sign in to add items to cart', 'error');
-      } else {
-        // Cart backend returns errors under `.error` (e.g. "Product is no longer
-        // available"); surface it instead of the generic fallback.
-        showToast(
-          err?.response?.data?.error || err?.response?.data?.message || 'Failed to add to cart',
-          'error',
-        );
-      }
-    }
-  };
-
   useEffect(() => {
     return () => {
-      clearTimeout(cartFeedbackTimer.current);
       clearTimeout(shareCopiedTimer.current);
     };
   }, []);
@@ -354,44 +325,17 @@ const ProductDetail = () => {
                   <XCircle size={14} className="sm:w-[18px] sm:h-[18px]" />
                   Sold Out
                 </div>
-              ) : !currentUser ? (
-                <Magnetic className="flex-1 flex">
-                  <Link
-                    to="/account"
-                    className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg"
-                  >
-                    <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
-                    Sign In to Acquire
-                  </Link>
-                </Magnetic>
-              ) : inCart ? (
-                <Link
-                  to="/cart"
-                  className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-gray-100 text-gray-400 hover:bg-luxury-gold hover:text-white shadow-lg"
-                >
-                  <Check size={14} className="sm:w-[18px] sm:h-[18px]" />
-                  View in Cart
-                </Link>
               ) : (
                 <Magnetic className="flex-1 flex">
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={addToCartMutation.isPending}
-                    className={`flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 ${
-                      cartFeedback
-                        ? 'bg-green-50 text-green-700 cursor-default'
-                        : 'bg-heritage-charcoal text-white hover:bg-luxury-gold shadow-lg'
-                    }`}
+                  <a
+                    href={`https://wa.me/916362771355?text=${encodeURIComponent(`Hi, I'm interested in "${product?.title}". Here's the product link: ${window.location.href}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-[#25D366] shadow-lg"
                   >
-                    {addToCartMutation.isPending ? (
-                      <Loader2 size={14} className="animate-spin sm:w-[18px] sm:h-[18px]" />
-                    ) : cartFeedback ? (
-                      <Check size={14} className="sm:w-[18px] sm:h-[18px]" />
-                    ) : (
-                      <ShoppingBag size={14} className="sm:w-[18px] sm:h-[18px]" />
-                    )}
-                    {cartFeedback ? 'Added!' : 'Acquire Now'}
-                  </button>
+                    <MessageCircle size={14} className="sm:w-[18px] sm:h-[18px]" />
+                    Inquire on WhatsApp
+                  </a>
                 </Magnetic>
               )}
               <button
