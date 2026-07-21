@@ -109,11 +109,14 @@ All use JavaScript (JSX), not TypeScript.
 - `backend/handler.js` — Lambda entry point (Fastify adapter)
 - `backend/serverless.yml` — Lambda deploy config (esbuild, SSM, IAM)
 - `backend/prisma/schema.prisma` — Prisma schema (includes `specs` JSON field on Product)
+- `functions/api/blog/sitemap.xml.js` — Cloudflare Pages Function for dynamic blog sitemap
+- `scripts/prerender-blogs.mjs` — Build-time prerender script for blog posts
 
 ## Quick Reference
 
 ```
 npm run dev          — Start user frontend (port 5173)
+npm run build        — Build + prerender blog posts (vite build && prerender-blogs.mjs)
 npm run lint         — ESLint check
 npm run format       — Prettier auto-format
 npm test             — All tests (unit + E2E)
@@ -123,6 +126,16 @@ cd backend && npm run dev   — Backend API (port 3000)
 cd admin && npm run dev     — Admin dashboard (port 5174)
 cd backend && npx serverless deploy   — Deploy Lambda (NEVER use --force)
 ```
+
+### Deploy (Cloudflare Pages)
+
+```
+npm run build && npx wrangler pages deploy dist --project-name=tce-user --branch=main
+```
+
+Build runs Vite + prerender script (generates static HTML for each blog post). Deploy uploads `dist/` to Cloudflare Pages. Cloudflare Pages Functions (`functions/`) are bundled automatically.
+
+**Blog SEO**: Each `/archive/{slug}` URL is served as prerendered HTML with correct `<title>`, `<meta description>`, OG tags, Twitter cards, and JSON-LD structured data. Dynamic sitemap at `/api/blog/sitemap.xml` is always fresh (Cloudflare Pages Function).
 
 ## Pre-commit Hooks
 

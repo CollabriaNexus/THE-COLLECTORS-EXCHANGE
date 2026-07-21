@@ -20,12 +20,14 @@ cd admin && npm run dev    # Admin dashboard (port 5174)
 ## Code Standards
 
 ### General
+
 - **Language**: JavaScript (ESM). Use `import/export`.
 - **Formatting**: Run `npm run lint` before committing. Prettier conventions apply.
 - **Validation**: Use Zod for all request validation on the backend.
 - **Documentation**: Use JSDoc for every function to define parameters and returns (backend).
 
 ### Frontend
+
 - **Styling**: Tailwind CSS only. Never write custom CSS classes.
 - **Icons**: `lucide-react` only. Never use emoji or Unicode icons.
 - **Design**: Follow the "Luxury Minimalist" aesthetic — sharp borders, `tracking-widest` on uppercase labels, `transition-all duration-300`.
@@ -33,6 +35,7 @@ cd admin && npm run dev    # Admin dashboard (port 5174)
 - **Components**: One component per file. Keep components focused and shallow.
 
 ### Backend
+
 - **Schema-first**: Always update `schema.prisma` before writing routes.
 - **Validation**: Every route must validate its inputs with a Zod schema.
 - **Error format**: All errors respond with `{ error: string }`.
@@ -47,12 +50,14 @@ Every new or modified code path MUST have corresponding tests. No test = blocked
 Every route file in `backend/routes/` must have a corresponding test file in `backend/test/routes/`. Tests use **Fastify's `app.inject()`** — real route handlers, real Zod validation, real auth decorators, real error handling. Only Prisma (database) and external services (Razorpay, Supabase) are mocked.
 
 **Gold standard pattern** (see `backend/test/routes/products.test.js`):
+
 - Build a Fastify instance with `buildApp(mockPrisma)`
 - Register the actual route module
 - Use `app.inject()` to simulate HTTP requests
 - Test success paths, auth failures, validation errors, DB errors, edge cases
 
 **Test coverage must cover:**
+
 - 200/201 success paths
 - 400 validation errors (bad input)
 - 401 unauthenticated access
@@ -66,16 +71,19 @@ Every route file in `backend/routes/` must have a corresponding test file in `ba
 #### Frontend — Tests for Non-Trivial Code
 
 **Must test (unit + integration):**
+
 - **Hooks/API** (`src/hooks/api/`, `admin/src/hooks/api/`) — Every hook that fetches or mutates data. Test success data shape, loading state (isPending), error handling. Mock at the HTTP/Axios level, not the hook level.
 - **Stateful components** — Components with internal state, user interactions, conditional rendering, or error states (e.g., ProductCard, LoginForm, NotificationsPanel). Prefer `@testing-library/react` and test behavior via screen queries, not implementation via state checks.
 - **Utility functions** (`src/utils/`) — Pure functions with edge cases.
 - **Route guards / App routing** — Auth-protected routes, redirects, 404s.
 
 **Smoke tests only (render + heading check):**
+
 - Static / informational pages (About, Privacy, Terms, FAQ, Contact)
 - These just verify the page doesn't crash on mount
 
 **Do NOT test:**
+
 - Implementation details (internal state, private methods, class names unless functional)
 - Third-party library internals
 - Tautological assertions (testing that `a + b` equals the code's own `a + b`)
@@ -83,6 +91,7 @@ Every route file in `backend/routes/` must have a corresponding test file in `ba
 #### E2E Tests (Playwright)
 
 Located in `tests/flows/`. Must test **real user flows** end-to-end:
+
 - Guest browsing flow (already done)
 - Auth → cart → checkout flow (needs expansion)
 - Seller lifecycle (product creation, KYC submission)
@@ -116,12 +125,12 @@ npm run test:e2e:headed     # visible browser
 
 #### Coverage Thresholds (Enforced)
 
-| Metric | Threshold |
-|--------|-----------|
-| Lines | 80% |
-| Functions | 80% |
-| Branches | 70% |
-| Statements | 80% |
+| Metric     | Threshold |
+| ---------- | --------- |
+| Lines      | 80%       |
+| Functions  | 80%       |
+| Branches   | 70%       |
+| Statements | 80%       |
 
 Coverage is enforced via `vitest.config.js` in each area. PRs that drop below these thresholds will fail.
 
@@ -137,6 +146,28 @@ Coverage is enforced via `vitest.config.js` in each area. PRs that drop below th
 ## Architecture Decisions
 
 Significant decisions are recorded as ADRs in `docs/adr/`. If you make a hard-to-reverse decision, add an ADR.
+
+## Build & Deploy
+
+### Frontend (Cloudflare Pages)
+
+```bash
+npm run build && npx wrangler pages deploy dist --project-name=tce-user --branch=main
+```
+
+`npm run build` runs Vite then the prerender script (`scripts/prerender-blogs.mjs`), which fetches all published blog posts from the Lambda API and generates static HTML files at `dist/archive/{slug}/index.html`. These prerendered files include full SEO meta tags, OG tags, Twitter cards, and JSON-LD structured data — served directly by Cloudflare Pages before React hydrates.
+
+Cloudflare Pages Functions (`functions/`) are bundled automatically during deploy. The dynamic blog sitemap at `/api/blog/sitemap.xml` is one such function.
+
+**After publishing a new blog post**, rebuild and redeploy to generate the prerendered HTML for the new post. The dynamic sitemap picks up new posts immediately without a rebuild.
+
+### Backend (AWS Lambda)
+
+```bash
+cd backend && npx serverless deploy
+```
+
+Never use `--force` — it recreates the API Gateway and changes the URL.
 
 ## AI Agent Usage
 

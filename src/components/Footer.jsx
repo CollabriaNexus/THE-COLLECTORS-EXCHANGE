@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import { Instagram, Facebook, Linkedin, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -33,30 +33,20 @@ const Footer = () => {
                 <p className="text-[8px] sm:text-[10px] uppercase tracking-widest text-luxury-gold mb-1.5 sm:mb-2">
                   Contact Us
                 </p>
-                <div className="space-y-2">
-                  <a
-                    href="tel:+916362771355"
-                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs sm:text-sm"
-                  >
-                    <Phone size={14} />
-                    +91 63627 71355
-                  </a>
-                  <a
-                    href="mailto:support@thecollectorsexchange.in"
-                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs sm:text-sm"
-                  >
-                    <Mail size={14} />
-                    support@thecollectorsexchange.in
-                  </a>
-                </div>
+                <a
+                  href="mailto:support@thecollectorsexchange.in"
+                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs sm:text-sm"
+                >
+                  <Mail size={14} />
+                  support@thecollectorsexchange.in
+                </a>
               </div>
               <div>
                 <p className="text-[8px] sm:text-[10px] uppercase tracking-widest text-luxury-gold mb-1.5 sm:mb-2">
                   Operating Address
                 </p>
                 <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">
-                  No 51/2, 2nd Main Road, New Guruppanapalya, Bangalore South, PO: Dharmaram
-                  College, DIST: Bengaluru, Karnataka - 560029
+                  New Guruppanapalya, Bengaluru, Karnataka - 560029
                 </p>
               </div>
             </div>

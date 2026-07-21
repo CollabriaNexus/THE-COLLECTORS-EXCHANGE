@@ -7,3 +7,4 @@ Disallow: /cart
 Disallow: /wishlist
 
 Sitemap: https://thecollectorsexchange.in/sitemap.xml
+Sitemap: https://thecollectorsexchange.in/api/blog/sitemap.xml

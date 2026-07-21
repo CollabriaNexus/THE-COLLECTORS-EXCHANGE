@@ -62,16 +62,21 @@ Before writing any code:
 | `.prettierrc`                        | Prettier config (single quotes, trailing commas, 100 width)                             | 2026-06-30 |
 | `.agent/rules/skills-engineering.md` | Matt Pocock engineering skills checklist                                                | 2026-06-30 |
 | `opencode.json`                      | Updated with agent config + skill references                                            | 2026-06-30 |
+| `functions/api/blog/sitemap.xml.js`  | Cloudflare Pages Function — dynamic XML sitemap for blog posts                          | 2026-07-21 |
+| `scripts/prerender-blogs.mjs`        | Build-time prerender script — generates static HTML for each blog post                  | 2026-07-21 |
 
 ### Files Modified
 
-| File                   | Change                                                                            | Date       |
-| ---------------------- | --------------------------------------------------------------------------------- | ---------- |
-| `.gitignore`           | Changed `.agent/*` → `.agent/*.local` and `.agent/cache/` so rules ship with repo | 2026-06-30 |
-| `README.md`            | Rewritten from default Vite template to actual project description                | 2026-06-30 |
-| `package.json`         | Added `format`, `format:check`, `test:unit`, `test:e2e` scripts                   | 2026-06-30 |
-| `backend/package.json` | Added `test`, `test:coverage` scripts                                             | 2026-06-30 |
-| `admin/package.json`   | Added `test`, `test:coverage` scripts                                             | 2026-06-30 |
+| File                        | Change                                                                                | Date       |
+| --------------------------- | ------------------------------------------------------------------------------------- | ---------- |
+| `.gitignore`                | Changed `.agent/*` → `.agent/*.local` and `.agent/cache/` so rules ship with repo     | 2026-06-30 |
+| `README.md`                 | Rewritten from default Vite template to actual project description                    | 2026-06-30 |
+| `package.json`              | Added `format`, `format:check`, `test:unit`, `test:e2e` scripts                       | 2026-06-30 |
+| `backend/package.json`      | Added `test`, `test:coverage` scripts                                                 | 2026-06-30 |
+| `admin/package.json`        | Added `test`, `test:coverage` scripts                                                 | 2026-06-30 |
+| `package.json`              | Build script now includes prerender: `vite build && node scripts/prerender-blogs.mjs` | 2026-07-21 |
+| `public/robots.txt`         | Added dynamic blog sitemap URL                                                        | 2026-07-21 |
+| `src/components/Footer.jsx` | Removed phone number, simplified address to area/city/state/zip                       | 2026-07-21 |
 
 ### ADRs Created
 
@@ -221,6 +226,34 @@ Husky runs `npx lint-staged` on every commit — auto-formats and lints staged f
 
 **Backend routes needed no changes** — the `...productData` spread in create/update/bulk already passes `specs` through since Zod handles validation and defaults.
 
+### Session 5 — 2026-07-21
+
+**Objective:** Fix blog SEO — blogs weren't ranking on Google because the site is a pure SPA (client-side rendered)
+
+**Root cause:** Crawlers received an empty `<div id="root"></div>`. All SEO meta tags (title, description, OG, JSON-LD) were injected by `react-helmet-async` only after JS loaded. Social media scrapers (WhatsApp, Twitter, Facebook) don't execute JS — they saw the generic home page meta tags. Additionally, `public/sitemap.xml` had zero blog post URLs.
+
+**What was done:**
+
+- Created `functions/api/blog/sitemap.xml.js` — Cloudflare Pages Function that generates dynamic XML sitemap from all published blog posts (always fresh, no rebuild needed)
+- Created `scripts/prerender-blogs.mjs` — build-time script that fetches all published blog posts from the Lambda API and generates static HTML files at `dist/archive/{slug}/index.html` with full SEO meta tags, OG tags, Twitter cards, JSON-LD Article + Breadcrumb schemas, and readable content
+- Updated `package.json` build script to `vite build && node scripts/prerender-blogs.mjs`
+- Updated `public/robots.txt` to reference the dynamic blog sitemap
+- Removed phone number and simplified address in `src/components/Footer.jsx`
+- Deployed to Cloudflare Pages — verified dynamic sitemap returns all 11 blog posts, prerendered pages serve correct meta tags
+
+**How prerendering works:**
+
+- Static files in `dist/archive/{slug}/index.html` take priority over the `_redirects` catch-all
+- Crawlers get prerendered HTML with all SEO tags — no JS execution needed
+- Users see the prerendered shell briefly, then React hydrates and takes over
+- New blog posts require a rebuild + deploy to appear as prerendered pages
+
+**Deploy command after publishing new posts:**
+
+```
+npm run build && npx wrangler pages deploy dist --project-name=tce-user --branch=main
+```
+
 ---
 
 ## Open Items / Pending Decisions
@@ -228,3 +261,4 @@ Husky runs `npx lint-staged` on every commit — auto-formats and lints staged f
 - [ ] E2E tests need real user flows instead of page-load smokes (see CONTRIBUTING.md)
 - [ ] Coverage thresholds defined in vitest.config.js but not active in CI
 - [ ] Consider `serverless-domain-manager` for fixed custom domain (e.g., `api.thecollectorsexchange.com`) — not urgent if `--force` is never used
+- [ ] Blog prerender requires rebuild + deploy for new posts — consider Cloudflare Pages deploy hook triggered by backend webhook on publish
