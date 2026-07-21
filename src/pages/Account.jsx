@@ -595,9 +595,12 @@ const Account = () => {
     e.preventDefault();
 
     // 1. Validate User Type Limit
-    if (user.type === 'individual' && userProducts.length >= 5) {
+    if (
+      vendorProfile?.type !== 'BULK' &&
+      userProducts.length >= (vendorProfile?.maxListings || 5)
+    ) {
       showToast(
-        'Individual sellers are limited to 5 products. Upgrade to a Company account for unlimited listings.',
+        'Listing limit reached. Upgrade to a Company account for unlimited listings.',
         'error',
       );
       return;
@@ -1944,7 +1947,7 @@ const Account = () => {
                     </p>
                   ) : (
                     <p className="text-sm text-gray-500 mt-1">
-                      {userProducts.length} of {user.type === 'company' ? '∞' : '5'} listings used
+                      {userProducts.length} of {vendorProfile?.maxListings || 5} listings used
                     </p>
                   )}
                 </div>
