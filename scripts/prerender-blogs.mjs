@@ -27,6 +27,15 @@ function stripHtml(html) {
 /*  CORE PAGE PRERENDER                                                */
 /* ------------------------------------------------------------------ */
 
+const DEFAULT_NAV = [
+  { name: 'About Us', path: '/about' },
+  { name: 'The Exchange', path: '/category' },
+  { name: 'Contact', path: '/contact' },
+  { name: 'FAQ', path: '/faq' },
+  { name: 'The Archive', path: '/archive' },
+  { name: 'Vision', path: '/vision' },
+];
+
 const CORE_PAGES = {
   '/': {
     title: 'Vintage Watches & Rare Collectibles',
@@ -35,13 +44,7 @@ const CORE_PAGES = {
     ogImage: '/og-image.png',
     schemaType: null,
     breadcrumb: null,
-    navLinks: [
-      { name: 'About Us', path: '/about' },
-      { name: 'The Exchange', path: '/category' },
-      { name: 'Contact', path: '/contact' },
-      { name: 'FAQ', path: '/faq' },
-      { name: 'The Archive', path: '/archive' },
-    ],
+    navLinks: DEFAULT_NAV,
   },
   '/about': {
     title: 'About Us',
@@ -53,6 +56,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'About Us', url: '/about' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/category': {
     title: 'The Exchange',
@@ -64,6 +68,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'The Exchange', url: '/category' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/contact': {
     title: 'Contact Us',
@@ -75,6 +80,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'Contact Us', url: '/contact' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/faq': {
     title: 'FAQ',
@@ -86,6 +92,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'FAQ', url: '/faq' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/vision': {
     title: 'Our Vision',
@@ -97,6 +104,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'Our Vision', url: '/vision' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/returns': {
     title: 'Returns & Refunds',
@@ -108,6 +116,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'Returns & Refunds', url: '/returns' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/privacy': {
     title: 'Privacy Policy',
@@ -119,6 +128,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'Privacy Policy', url: '/privacy' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/terms': {
     title: 'Terms & Conditions',
@@ -130,6 +140,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'Terms & Conditions', url: '/terms' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/founders-note': {
     title: "Founder's Note",
@@ -141,6 +152,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: "Founder's Note", url: '/founders-note' },
     ],
+    navLinks: DEFAULT_NAV,
   },
   '/seller-agreement': {
     title: 'Seller Agreement',
@@ -152,6 +164,7 @@ const CORE_PAGES = {
       { name: 'Home', url: '/' },
       { name: 'Seller Agreement', url: '/seller-agreement' },
     ],
+    navLinks: DEFAULT_NAV,
   },
 };
 
