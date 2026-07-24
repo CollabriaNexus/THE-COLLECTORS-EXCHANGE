@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
+import { CORE_PAGES } from '../config/seo-pages';
 import {
   Watch,
   Gem,
@@ -322,7 +323,7 @@ const Category = () => {
   const handleCategoryClick = (categoryName) => {
     const count = categoryCounts?.[categoryName] ?? 0;
     if (count === 0) {
-      showToast(`${categoryName} collection coming soon — new pieces are being authenticated.`);
+      showToast(`${categoryName} collection coming soon: new pieces are being authenticated.`);
       return;
     }
     const isSelected = selectedCategory === categoryName;
@@ -336,13 +337,18 @@ const Category = () => {
     }
   };
 
+  const categorySeo = CORE_PAGES['/category'];
+
   return (
     <div className="min-h-screen bg-heritage-cream">
-      <SEO
-        title="Shop Vintage Watches & Collectibles"
-        description="Browse authenticated vintage watches, watch collections, and rare pre-owned collectibles at The Collectors Exchange. Mid-range to rare timepieces, antiques, and jewellery — every piece expert-verified."
-        canonical="/category"
+      <SEO title={categorySeo.title} description={categorySeo.description} canonical="/category" />
+      <PageSchema
+        type="CollectionPage"
+        name={categorySeo.h1}
+        description={categorySeo.description}
+        path="/category"
       />
+      <BreadcrumbSchema items={categorySeo.breadcrumb} />
       {/* Accessible page-level H1 for SEO (design uses the category rail as the visual header) */}
       <h1 className="sr-only">Shop Vintage Watches, Watch Collections & Rare Collectibles</h1>
       {/* Category Icons Navigation - Polished with shadow and border */}

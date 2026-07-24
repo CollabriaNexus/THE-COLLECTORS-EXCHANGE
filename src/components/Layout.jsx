@@ -4,6 +4,7 @@ import { ArrowUp } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
 import { ScrollProgress } from './Motion';
+import { OrganizationSchema, SiteNavigationSchema } from './SEO';
 
 const Layout = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -19,6 +20,8 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-secondary-bg">
+      <OrganizationSchema />
+      <SiteNavigationSchema />
       <ScrollProgress />
       <a
         href="#main-content"

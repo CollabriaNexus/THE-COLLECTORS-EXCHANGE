@@ -1398,7 +1398,7 @@ const Account = () => {
 
                     <div className="bg-white p-6 border border-gray-200 max-h-80 overflow-y-auto text-sm text-gray-700 leading-relaxed space-y-3">
                       <p className="font-semibold text-heritage-charcoal">
-                        Seller Agreement — The Collectors Exchange
+                        Seller Agreement - The Collectors Exchange
                       </p>
                       <p>
                         By listing items on The Collectors Exchange, you agree to the following
@@ -1936,7 +1936,7 @@ const Account = () => {
                     <p className="text-sm text-gray-500 mt-1">
                       {vendorProfile.type === 'BULK' ? (
                         <span className="text-luxury-gold font-medium">
-                          Bulk Vendor — Unlimited Listings
+                          Bulk Vendor - Unlimited Listings
                         </span>
                       ) : (
                         <span>
@@ -2786,7 +2786,7 @@ const Account = () => {
     return (
       <div className="min-h-screen bg-secondary-bg">
         <SEO
-          title="Set Your Password — The Collectors Exchange"
+          title="Set Your Password - The Collectors Exchange"
           description=""
           canonical="/account"
           noindex

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, MessageSquare, Clock, Send, Loader2, CheckCircle } from 'lucide-react';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
+import { CORE_PAGES } from '../config/seo-pages';
 import apiClient from '../hooks/api/apiClient';
 import { Reveal, Magnetic, Tilt } from '../components/Motion';
 
@@ -36,6 +37,8 @@ const cards = [
   },
 ];
 
+const contactSeo = CORE_PAGES['/contact'];
+
 const Contact = () => {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
@@ -58,11 +61,14 @@ const Contact = () => {
   if (sent) {
     return (
       <div className="min-h-screen bg-secondary-bg flex items-center justify-center px-4">
-        <SEO
-          title="Contact Us"
-          description="Get in touch with The Collectors Exchange team. Email us at support@thecollectorsexchange.in for inquiries about buying, selling, or partnerships."
-          canonical="/contact"
+        <SEO title={contactSeo.title} description={contactSeo.description} canonical="/contact" />
+        <PageSchema
+          type="ContactPage"
+          name={contactSeo.h1}
+          description={contactSeo.description}
+          path="/contact"
         />
+        <BreadcrumbSchema items={contactSeo.breadcrumb} />
         <div className="text-center max-w-md mx-auto p-6 sm:p-12">
           <CheckCircle size={48} className="mx-auto text-green-500 mb-6 sm:w-16 sm:h-16" />
           <h1 className="text-2xl sm:text-3xl font-serif mb-4">Message Sent</h1>
@@ -79,11 +85,14 @@ const Contact = () => {
 
   return (
     <section className="min-h-screen bg-secondary-bg flex items-center">
-      <SEO
-        title="Contact Us"
-        description="Get in touch with The Collectors Exchange team. Email support@thecollectorsexchange.in for inquiries about buying or selling vintage watches, collections, and rare collectibles."
-        canonical="/contact"
+      <SEO title={contactSeo.title} description={contactSeo.description} canonical="/contact" />
+      <PageSchema
+        type="ContactPage"
+        name={contactSeo.h1}
+        description={contactSeo.description}
+        path="/contact"
       />
+      <BreadcrumbSchema items={contactSeo.breadcrumb} />
       <div className="w-full container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-24">
         <Reveal className="text-center mb-10 sm:mb-14 md:mb-16" blur>
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-3 sm:mb-4">Contact Us</h1>

@@ -4,6 +4,7 @@ import { ShoppingBag, User, Heart, Menu, X, Store } from 'lucide-react';
 import { getUser } from '../utils/storage';
 import { useCart } from '../hooks/api/useCart';
 import { useWishlist } from '../hooks/api/useWishlist';
+import { PRIMARY_NAV } from '../config/seo-pages';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,12 +48,7 @@ const Header = () => {
     }
   }, []);
 
-  const navItems = [
-    { name: 'About Us', path: '/about' },
-    { name: 'The Exchange', path: '/category' },
-    { name: 'The Archive', path: '/archive' },
-    { name: 'Vision', path: '/vision' },
-  ];
+  const navItems = PRIMARY_NAV;
 
   const bottomNav = [
     { name: 'Shop', path: '/category', icon: Store },

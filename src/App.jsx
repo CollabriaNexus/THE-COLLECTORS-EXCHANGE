@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -14,7 +14,6 @@ const Account = lazy(() => import('./pages/Account'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Cart = lazy(() => import('./pages/Cart'));
 const About = lazy(() => import('./pages/About'));
-const AboutUs = lazy(() => import('./pages/AboutUs'));
 const Vision = lazy(() => import('./pages/Vision'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
@@ -70,7 +69,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
-                    <Route path="about-us" element={<AboutUs />} />
+                    <Route path="about-us" element={<Navigate to="/about" replace />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/category" element={<Category />} />
                     <Route path="/vision" element={<Vision />} />

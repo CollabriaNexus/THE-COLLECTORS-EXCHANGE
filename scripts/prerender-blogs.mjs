@@ -23,6 +23,291 @@ function stripHtml(html) {
     .trim();
 }
 
+/* ------------------------------------------------------------------ */
+/*  CORE PAGE PRERENDER                                                */
+/* ------------------------------------------------------------------ */
+
+const CORE_PAGES = {
+  '/': {
+    title: 'Vintage Watches & Rare Collectibles',
+    description:
+      'Shop authenticated vintage watches, watch collections, and rare pre-owned collectibles in India. Every listing expert-verified before it reaches The Exchange.',
+    ogImage: '/og-image.png',
+    schemaType: null,
+    breadcrumb: null,
+    navLinks: [
+      { name: 'About Us', path: '/about' },
+      { name: 'The Exchange', path: '/category' },
+      { name: 'Contact', path: '/contact' },
+      { name: 'FAQ', path: '/faq' },
+      { name: 'The Archive', path: '/archive' },
+    ],
+  },
+  '/about': {
+    title: 'About Us',
+    description:
+      'Learn how The Collectors Exchange authenticates vintage watches, collectibles, and antiques across India. Expert verification, trusted sellers, and heritage preserved.',
+    ogImage: '/og-image.png',
+    schemaType: 'AboutPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'About Us', url: '/about' },
+    ],
+  },
+  '/category': {
+    title: 'The Exchange',
+    description:
+      'Browse authenticated vintage watches, timepieces, antiques, jewelry, and collectibles at The Exchange. Mid-range to rare pieces, every listing expert-verified.',
+    ogImage: '/og-image.png',
+    schemaType: 'CollectionPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'The Exchange', url: '/category' },
+    ],
+  },
+  '/contact': {
+    title: 'Contact Us',
+    description:
+      'Contact The Collectors Exchange for buying, selling, or partnership inquiries. Email support@thecollectorsexchange.in. We respond within 24 to 48 hours.',
+    ogImage: '/og-image.png',
+    schemaType: 'ContactPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'Contact Us', url: '/contact' },
+    ],
+  },
+  '/faq': {
+    title: 'FAQ',
+    description:
+      'Answers about buying, selling, shipping, payments, and account security on The Collectors Exchange. Learn how authentication, returns, and payouts work.',
+    ogImage: '/og-image.png',
+    schemaType: 'FAQPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'FAQ', url: '/faq' },
+    ],
+  },
+  '/vision': {
+    title: 'Our Vision',
+    description:
+      'The Collectors Exchange vision: a trusted global archive where heritage, authenticity, and expert verification define how collectors buy and sell.',
+    ogImage: '/og-image.png',
+    schemaType: 'AboutPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'Our Vision', url: '/vision' },
+    ],
+  },
+  '/returns': {
+    title: 'Returns & Refunds',
+    description:
+      'Return policy for The Collectors Exchange. Items may be returned within 48 hours of delivery if condition does not match the listing description.',
+    ogImage: '/og-image.png',
+    schemaType: 'WebPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'Returns & Refunds', url: '/returns' },
+    ],
+  },
+  '/privacy': {
+    title: 'Privacy Policy',
+    description:
+      'Privacy Policy for The Collectors Exchange. How we collect, use, and protect your personal data when you buy, sell, or browse our marketplace.',
+    ogImage: '/og-image.png',
+    schemaType: 'WebPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'Privacy Policy', url: '/privacy' },
+    ],
+  },
+  '/terms': {
+    title: 'Terms & Conditions',
+    description:
+      'Terms and Conditions for using The Collectors Exchange marketplace, including buyer inspection periods, seller obligations, and platform fees.',
+    ogImage: '/og-image.png',
+    schemaType: 'WebPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'Terms & Conditions', url: '/terms' },
+    ],
+  },
+  '/founders-note': {
+    title: "Founder's Note",
+    description:
+      "A personal note from the founder of The Collectors Exchange on building India's trusted marketplace for authenticated collectibles and vintage watches.",
+    ogImage: '/og-image.png',
+    schemaType: 'WebPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: "Founder's Note", url: '/founders-note' },
+    ],
+  },
+  '/seller-agreement': {
+    title: 'Seller Agreement',
+    description:
+      'Seller Agreement for listing on The Collectors Exchange. KYC requirements, listing limits, commission structure, and payout terms for vendors.',
+    ogImage: '/og-image.png',
+    schemaType: 'WebPage',
+    breadcrumb: [
+      { name: 'Home', url: '/' },
+      { name: 'Seller Agreement', url: '/seller-agreement' },
+    ],
+  },
+};
+
+function buildCorePageSchemas(page) {
+  const schemas = [];
+
+  if (page.schemaType) {
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': page.schemaType,
+      name: page.title,
+      description: page.description,
+      url: `${SITE_URL}${Object.keys(CORE_PAGES).find((k) => CORE_PAGES[k] === page)}`,
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'The Collectors Exchange',
+        url: SITE_URL,
+      },
+      publisher: {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'The Collectors Exchange',
+        url: SITE_URL,
+        logo: `${SITE_URL}/favicon.png`,
+      },
+    });
+  }
+
+  if (page.breadcrumb) {
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: page.breadcrumb.map((item, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: item.name,
+        item: item.url ? `${SITE_URL}${item.url}` : undefined,
+      })),
+    });
+  }
+
+  return schemas;
+}
+
+function buildCorePageMetaTags(path, page) {
+  const title = escapeHtml(page.title);
+  const desc = escapeHtml(page.description);
+  const image = `${SITE_URL}${page.ogImage}`;
+  const canonical = `${SITE_URL}${path}`;
+  const schemas = buildCorePageSchemas(page);
+
+  const schemaTags = schemas
+    .map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`)
+    .join('\n    ');
+
+  return `
+    <title>${title} — The Collectors Exchange</title>
+    <meta name="description" content="${desc}" />
+    <link rel="canonical" href="${canonical}" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+    <meta property="og:site_name" content="The Collectors Exchange" />
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${desc}" />
+    <meta property="og:image" content="${image}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${canonical}" />
+    <meta property="og:locale" content="en_IN" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@TCE_store" />
+    <meta name="twitter:creator" content="@TCE_store" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${desc}" />
+    <meta name="twitter:image" content="${image}" />
+
+    ${schemaTags}`;
+}
+
+function buildCorePageHtml(path, page, metaTags) {
+  const isHome = path === '/';
+  const navLinks = page.navLinks || [];
+
+  const navHtml = navLinks
+    .map(
+      (l) =>
+        `<a href="${l.path}" style="color:#1C1C1C;text-decoration:none;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;white-space:nowrap">${escapeHtml(l.name)}</a>`,
+    )
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" /></noscript>
+  ${metaTags}
+  <style>
+    body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:#fff;color:#1C1C1C;-webkit-font-smoothing:antialiased}
+    h1,h2,h3,h4,h5,h6{font-family:'Playfair Display',Georgia,serif}
+    .nav-bar{position:fixed;top:0;left:0;right:0;z-index:50;background:#fff;border-bottom:1px solid #f0f0f0;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+    .nav-brand{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:16px;letter-spacing:0.05em;color:#1C1C1C;text-decoration:none}
+    .nav-links{display:flex;gap:32px;align-items:center}
+    .spinner{width:40px;height:40px;border:2px solid #D4AF37;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:4rem auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading{text-align:center;padding:4rem 1.5rem;color:#999;font-style:italic}
+    .footer{background:#000;color:#fff;padding:48px 24px;text-align:center;margin-top:auto}
+    .footer a{color:#D4AF37;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:0.15em}
+    .skip-link{position:absolute;top:-40px;left:0;background:#000;color:#fff;padding:8px 16px;z-index:100;font-size:12px;text-transform:uppercase;letter-spacing:0.15em;text-decoration:none}
+    .skip-link:focus{top:0}
+    .min-h-screen{min-height:100vh;display:flex;flex-direction:column}
+    .flex-grow{flex:1}
+  </style>
+</head>
+<body>
+  <div class="min-h-screen">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="nav-bar" aria-label="Main navigation">
+      <a href="/" class="nav-brand">THE COLLECTORS EXCHANGE</a>
+      <div class="nav-links">
+        ${navHtml}
+      </div>
+    </nav>
+    <main id="main-content" class="flex-grow" style="padding-top:60px">
+      ${isHome ? '<div style="background:#1C1C1C;color:#fff;min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4rem 1.5rem"><div><h1 style="font-family:\'Playfair Display\',Georgia,serif;font-size:clamp(2rem,5vw,4rem);margin:0 0 1rem">Authenticated Vintage Watches & Rare Collectibles</h1><p style="color:rgba(255,255,255,.6);max-width:600px;margin:0 auto 2rem;font-size:1rem;line-height:1.7">India\'s curated marketplace for verified pre-owned collectibles, antiques, and limited-edition timepieces. Every item is authenticated before listing.</p><a href="/category" style="display:inline-block;background:#000;color:#fff;border:1px solid #D4AF37;padding:14px 32px;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;text-decoration:none;transition:background .3s">Browse The Exchange</a></div></div>' : `<div style="padding:4rem 1.5rem;text-align:center"><h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.5rem,5vw,3rem)">${escapeHtml(page.title)}</h1><p style="color:#666;max-width:600px;margin:1rem auto;line-height:1.7">${escapeHtml(page.description)}</p></div>`}
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading content...</p>
+      </div>
+    </main>
+    <footer class="footer">
+      <a href="/about">About</a> &middot;
+      <a href="/category">The Exchange</a> &middot;
+      <a href="/contact">Contact</a> &middot;
+      <a href="/faq">FAQ</a> &middot;
+      <a href="/archive">The Archive</a>
+      <p style="color:#666;font-size:11px;margin-top:16px">&copy; ${new Date().getFullYear()} The Collectors Exchange. All rights reserved.</p>
+    </footer>
+  </div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  BLOG PRERENDER (unchanged)                                         */
+/* ------------------------------------------------------------------ */
+
 function buildMetaTags(post) {
   const title = escapeHtml(post.metaTitle || post.title);
   const desc = escapeHtml(post.metaDescription || post.excerpt || '');
@@ -217,12 +502,12 @@ function buildArchiveIndexHtml() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#000000" />
   <title>The Archive — The Collectors Exchange</title>
-  <meta name="description" content="Explore The Collectors Exchange Archive — curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
+  <meta name="description" content="Explore The Collectors Exchange Archive. Curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
   <link rel="canonical" href="${SITE_URL}/archive" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <meta property="og:site_name" content="The Collectors Exchange" />
   <meta property="og:title" content="The Archive — The Collectors Exchange" />
-  <meta property="og:description" content="Explore The Collectors Exchange Archive — curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
+  <meta property="og:description" content="Explore The Collectors Exchange Archive. Curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
   <meta property="og:image" content="${SITE_URL}/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -232,8 +517,29 @@ function buildArchiveIndexHtml() {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@TCE_store" />
   <meta name="twitter:title" content="The Archive — The Collectors Exchange" />
-  <meta name="twitter:description" content="Explore The Collectors Exchange Archive — curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
+  <meta name="twitter:description" content="Explore The Collectors Exchange Archive. Curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
   <meta name="twitter:image" content="${SITE_URL}/og-image.png" />
+  <script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'The Archive',
+    description:
+      'Curated articles on horology, gemology, collecting, and the stories behind rare artifacts.',
+    url: `${SITE_URL}/archive`,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'The Collectors Exchange',
+      url: SITE_URL,
+    },
+  })}</script>
+  <script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'The Archive', item: `${SITE_URL}/archive` },
+    ],
+  })}</script>
   <style>
     body{margin:0;padding:0;font-family:'Inter',system-ui,sans-serif;background:#fff;color:#1C1C1C}
     .hero{background:#1C1C1C;padding:5rem 1.5rem;text-align:center}
@@ -258,6 +564,10 @@ function buildArchiveIndexHtml() {
 </html>`;
 }
 
+/* ------------------------------------------------------------------ */
+/*  FETCH & MAIN                                                      */
+/* ------------------------------------------------------------------ */
+
 async function fetchAllBlogs() {
   const allPosts = [];
   let page = 1;
@@ -276,20 +586,44 @@ async function fetchAllBlogs() {
 }
 
 async function main() {
-  console.log('[prerender] Fetching published blogs from API...');
+  console.log('[prerender] Starting build-time prerender...');
 
+  // --- Core marketing pages ---
+  let coreWritten = 0;
+  for (const [path, page] of Object.entries(CORE_PAGES)) {
+    const dir = resolve(DIST, path === '/' ? '.' : path.slice(1));
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    const metaTags = buildCorePageMetaTags(path, page);
+    const html = buildCorePageHtml(path, page, metaTags);
+    writeFileSync(resolve(dir, 'index.html'), html, 'utf-8');
+    coreWritten++;
+    console.log(`[prerender] Wrote ${path}/index.html`);
+  }
+  console.log(`[prerender] Prerendered ${coreWritten} core marketing pages.`);
+
+  // --- Blog posts ---
   let posts;
   try {
     posts = await fetchAllBlogs();
   } catch (err) {
     console.error('[prerender] Could not reach API at', API_URL);
-    console.error('[prerender] Skipping prerender — build output will still work as an SPA.');
+    console.error('[prerender] Skipping blog prerender. Core pages are already written.');
     console.error('[prerender] Error:', err.message);
-    process.exit(0);
+    // Still write the archive index even if API is down
+    const archiveDir = resolve(DIST, 'archive');
+    if (!existsSync(archiveDir)) {
+      mkdirSync(archiveDir, { recursive: true });
+    }
+    writeFileSync(resolve(archiveDir, 'index.html'), buildArchiveIndexHtml(), 'utf-8');
+    console.log('[prerender] Wrote /archive/index.html (fallback)');
+    console.log('[prerender] Done.');
+    return;
   }
 
   const published = posts.filter((p) => p.status === 'PUBLISHED' && p.slug);
-  console.log(`[prerender] Found ${published.length} published posts.`);
+  console.log(`[prerender] Found ${published.length} published blog posts.`);
 
   // Prerender /archive index
   const archiveDir = resolve(DIST, 'archive');

@@ -98,7 +98,7 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white">
         <Helmet>
-          <title>Product — The Collectors Exchange</title>
+          <title>Product - The Collectors Exchange</title>
         </Helmet>
         <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
         <p className="text-gray-500 font-serif text-xl italic">Retrieving Item Records...</p>
@@ -110,7 +110,7 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Helmet>
-          <title>Product — The Collectors Exchange</title>
+          <title>Product - The Collectors Exchange</title>
         </Helmet>
         <div className="text-center">
           <h2 className="text-2xl font-serif text-gray-400">Item Not Found</h2>

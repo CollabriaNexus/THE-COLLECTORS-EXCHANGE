@@ -1,11 +1,14 @@
 import { Helmet } from 'react-helmet-async';
-
-const SITE_NAME = 'The Collectors Exchange';
-const SITE_URL = 'https://thecollectorsexchange.in';
-const DEFAULT_DESC =
-  "India's curated marketplace for authenticated vintage watches, watch collections, and rare pre-owned collectibles. Mid-range to rare timepieces — every piece expert-verified. Trusted sellers, secure transactions.";
-const DEFAULT_IMG = '/og-image.png';
-const TWITTER_HANDLE = '@TCE_store';
+import {
+  SITE_NAME,
+  SITE_URL,
+  DEFAULT_DESC,
+  DEFAULT_OG_IMAGE,
+  TWITTER_HANDLE,
+  PRIMARY_NAV,
+  buildPageTitle,
+  resolveImageUrl,
+} from '../config/seo-pages';
 
 const SEO = ({
   title,
@@ -17,11 +20,15 @@ const SEO = ({
   noindex = false,
   structuredData,
 }) => {
-  const pageTitle = title
-    ? `${title} — ${SITE_NAME}`
-    : `Vintage Watches & Rare Collectibles — ${SITE_NAME}`;
+  const pageTitle = buildPageTitle(title);
   const pageDesc = description || DEFAULT_DESC;
-  const pageImage = image || DEFAULT_IMG;
+  const pageImage = resolveImageUrl(image);
+
+  const schemas = Array.isArray(structuredData)
+    ? structuredData
+    : structuredData
+      ? [structuredData]
+      : [];
 
   return (
     <Helmet>
@@ -58,60 +65,107 @@ const SEO = ({
 
       {publishedTime && <meta property="article:published_time" content={publishedTime} />}
 
-      {structuredData && (
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-      )}
+      {schemas.map((schema, index) => (
+        <script key={index} type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      ))}
     </Helmet>
   );
 };
 
-export const OrganizationSchema = () => {
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'The Collectors Exchange',
-    url: SITE_URL,
-    logo: `${SITE_URL}/favicon.png`,
-    description: DEFAULT_DESC,
-    foundingDate: '2024',
-    email: 'support@thecollectorsexchange.in',
-    sameAs: [
-      'https://www.instagram.com/the_collectors_exchange/',
-      'https://www.facebook.com/share/18mue4rLC4/',
-      'https://x.com/TCE_store',
-      'https://www.linkedin.com/company/thecollectorsexchange',
-    ],
-    address: {
-      '@type': 'PostalAddress',
-      addressCountry: 'IN',
+export const buildOrganizationSchema = () => ({
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.png`,
+  description: DEFAULT_DESC,
+  foundingDate: '2024',
+  email: 'support@thecollectorsexchange.in',
+  sameAs: [
+    'https://www.instagram.com/the_collectors_exchange/',
+    'https://www.facebook.com/share/18mue4rLC4/',
+    'https://x.com/TCE_store',
+    'https://www.linkedin.com/company/thecollectorsexchange',
+  ],
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'New Guruppanapalya',
+    addressLocality: 'Bengaluru',
+    addressRegion: 'Karnataka',
+    postalCode: '560029',
+    addressCountry: 'IN',
+  },
+});
+
+export const OrganizationSchema = () => (
+  <Helmet>
+    <script type="application/ld+json">{JSON.stringify(buildOrganizationSchema())}</script>
+  </Helmet>
+);
+
+export const buildWebSiteSchema = () => ({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: SITE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${SITE_URL}/category?search={search_term_string}`,
     },
-  };
-  return (
-    <Helmet>
-      <script type="application/ld+json">{JSON.stringify(schema)}</script>
-    </Helmet>
-  );
-};
+    'query-input': 'required name=search_term_string',
+  },
+  description: DEFAULT_DESC,
+});
 
-export const WebSiteSchema = () => {
-  const schema = {
+export const WebSiteSchema = () => (
+  <Helmet>
+    <script type="application/ld+json">{JSON.stringify(buildWebSiteSchema())}</script>
+  </Helmet>
+);
+
+export const buildSiteNavigationSchema = () =>
+  PRIMARY_NAV.map((item) => ({
     '@context': 'https://schema.org',
+    '@type': 'SiteNavigationElement',
+    name: item.name,
+    url: `${SITE_URL}${item.path}`,
+  }));
+
+export const SiteNavigationSchema = () => (
+  <Helmet>
+    {buildSiteNavigationSchema().map((schema, index) => (
+      <script key={index} type="application/ld+json">
+        {JSON.stringify(schema)}
+      </script>
+    ))}
+  </Helmet>
+);
+
+export const buildPageSchema = ({ type = 'WebPage', name, description, path }) => ({
+  '@context': 'https://schema.org',
+  '@type': type,
+  name,
+  description,
+  url: `${SITE_URL}${path}`,
+  isPartOf: {
     '@type': 'WebSite',
-    name: 'The Collectors Exchange',
+    name: SITE_NAME,
     url: SITE_URL,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${SITE_URL}/category?search={search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
-    },
-    description: DEFAULT_DESC,
-  };
+  },
+  publisher: buildOrganizationSchema(),
+});
+
+export const PageSchema = ({ type = 'WebPage', name, description, path }) => {
+  if (!path) return null;
   return (
     <Helmet>
-      <script type="application/ld+json">{JSON.stringify(schema)}</script>
+      <script type="application/ld+json">
+        {JSON.stringify(buildPageSchema({ type, name, description, path }))}
+      </script>
     </Helmet>
   );
 };
@@ -153,9 +207,9 @@ export const ProductSchema = ({ product }) => {
   );
 };
 
-export const BreadcrumbSchema = ({ items }) => {
+export const buildBreadcrumbSchema = (items) => {
   if (!items?.length) return null;
-  const schema = {
+  return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: items.map((item, i) => ({
@@ -165,6 +219,11 @@ export const BreadcrumbSchema = ({ items }) => {
       item: item.url ? `${SITE_URL}${item.url}` : undefined,
     })),
   };
+};
+
+export const BreadcrumbSchema = ({ items }) => {
+  const schema = buildBreadcrumbSchema(items);
+  if (!schema) return null;
   return (
     <Helmet>
       <script type="application/ld+json">{JSON.stringify(schema)}</script>
@@ -172,9 +231,9 @@ export const BreadcrumbSchema = ({ items }) => {
   );
 };
 
-export const FAQSchema = ({ items }) => {
+export const buildFAQSchema = (items) => {
   if (!items?.length) return null;
-  const schema = {
+  return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: items.map(({ q, a }) => ({
@@ -186,6 +245,11 @@ export const FAQSchema = ({ items }) => {
       },
     })),
   };
+};
+
+export const FAQSchema = ({ items }) => {
+  const schema = buildFAQSchema(items);
+  if (!schema) return null;
   return (
     <Helmet>
       <script type="application/ld+json">{JSON.stringify(schema)}</script>
@@ -198,12 +262,12 @@ export const ArticleSchema = ({ headline, image, datePublished, dateModified, au
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline,
-    image: image || DEFAULT_IMG,
+    image: resolveImageUrl(image),
     datePublished: datePublished || new Date().toISOString(),
     dateModified: dateModified || datePublished || new Date().toISOString(),
     author: {
       '@type': 'Person',
-      name: author || 'The Collectors Exchange',
+      name: author || SITE_NAME,
     },
     publisher: {
       '@type': 'Organization',

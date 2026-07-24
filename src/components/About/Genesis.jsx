@@ -26,10 +26,10 @@ const Genesis = () => (
         </p>
         <p className="text-sm sm:text-base md:text-lg font-light leading-relaxed">
           For many, owning a century-old timepiece or a rare philatelic treasure has long felt like
-          an unreachable dream—a complex nightmare of opaque pricing, counterfeits, and geographical
-          friction. We founded this platform to end that struggle. We navigate the intricate
-          labyrinth of vintage markets so you don't have to, delivering authenticated history
-          directly to your doorstep.
+          an unreachable dream, a complex nightmare of opaque pricing, counterfeits, and
+          geographical friction. We founded this platform to end that struggle. We navigate the
+          intricate labyrinth of vintage markets so you don't have to, delivering authenticated
+          history directly to your doorstep.
         </p>
       </Stagger>
     </div>

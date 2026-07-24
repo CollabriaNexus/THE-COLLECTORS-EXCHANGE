@@ -3,67 +3,74 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://thecollectorsexchange.in/</loc>
+    <lastmod>2026-07-24</lastmod>
     <priority>1.0</priority>
     <changefreq>daily</changefreq>
   </url>
   <url>
     <loc>https://thecollectorsexchange.in/about</loc>
-    <priority>0.8</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
-    <loc>https://thecollectorsexchange.in/about-us</loc>
+    <lastmod>2026-07-24</lastmod>
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://thecollectorsexchange.in/category</loc>
+    <lastmod>2026-07-24</lastmod>
     <priority>0.9</priority>
     <changefreq>daily</changefreq>
   </url>
   <url>
-    <loc>https://thecollectorsexchange.in/archive</loc>
-    <priority>0.7</priority>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://thecollectorsexchange.in/vision</loc>
+    <loc>https://thecollectorsexchange.in/contact</loc>
+    <lastmod>2026-07-24</lastmod>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://thecollectorsexchange.in/faq</loc>
+    <lastmod>2026-07-24</lastmod>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://thecollectorsexchange.in/vision</loc>
+    <lastmod>2026-07-24</lastmod>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://thecollectorsexchange.in/archive</loc>
+    <lastmod>2026-07-24</lastmod>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://thecollectorsexchange.in/founders-note</loc>
+    <lastmod>2026-07-24</lastmod>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://thecollectorsexchange.in/contact</loc>
-    <priority>0.6</priority>
+    <loc>https://thecollectorsexchange.in/returns</loc>
+    <lastmod>2026-07-24</lastmod>
+    <priority>0.5</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://thecollectorsexchange.in/privacy</loc>
+    <lastmod>2026-07-24</lastmod>
     <priority>0.3</priority>
     <changefreq>yearly</changefreq>
   </url>
   <url>
     <loc>https://thecollectorsexchange.in/terms</loc>
+    <lastmod>2026-07-24</lastmod>
     <priority>0.3</priority>
     <changefreq>yearly</changefreq>
   </url>
   <url>
-    <loc>https://thecollectorsexchange.in/founders-note</loc>
-    <priority>0.7</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
     <loc>https://thecollectorsexchange.in/seller-agreement</loc>
+    <lastmod>2026-07-24</lastmod>
     <priority>0.4</priority>
     <changefreq>yearly</changefreq>
-  </url>
-  <url>
-    <loc>https://thecollectorsexchange.in/returns</loc>
-    <priority>0.5</priority>
-    <changefreq>monthly</changefreq>
   </url>
 </urlset>

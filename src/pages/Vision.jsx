@@ -1,6 +1,7 @@
 import React from 'react';
 import { Landmark, ShieldCheck, History, Sparkles } from 'lucide-react';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
+import { CORE_PAGES } from '../config/seo-pages';
 import Bullet from '../components/Bullet';
 import { Reveal, Stagger, Parallax, Tilt } from '../components/Motion';
 // Section images served responsively from public/img (see scripts/optimize-assets.cjs).
@@ -22,14 +23,19 @@ const DiamondBullet = () => (
   </div>
 );
 
+const visionSeo = CORE_PAGES['/vision'];
+
 const Vision = () => {
   return (
     <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
-      <SEO
-        title="Our Vision"
-        description="Discover the vision of The Collectors Exchange — building a global archive where heritage, authenticity, and trust define the future of collectible exchange."
-        canonical="/vision"
+      <SEO title={visionSeo.title} description={visionSeo.description} canonical="/vision" />
+      <PageSchema
+        type="AboutPage"
+        name={visionSeo.h1}
+        description={visionSeo.description}
+        path="/vision"
       />
+      <BreadcrumbSchema items={visionSeo.breadcrumb} />
       {/* Vision Hero & Statement Section */}
       <section className="relative pt-32 pb-24 px-6 bg-heritage-cream">
         <div className="container mx-auto max-w-4xl text-center">

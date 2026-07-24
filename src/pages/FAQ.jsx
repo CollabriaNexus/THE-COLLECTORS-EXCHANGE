@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
-import SEO, { FAQSchema } from '../components/SEO';
+import SEO, { FAQSchema, PageSchema, BreadcrumbSchema } from '../components/SEO';
+import { CORE_PAGES } from '../config/seo-pages';
 import { Reveal, Stagger, Magnetic } from '../components/Motion';
 
 const FAQ_ITEMS = [
@@ -9,7 +10,7 @@ const FAQ_ITEMS = [
     questions: [
       {
         q: 'How do I purchase an item on The Collectors Exchange?',
-        a: "Browse The Exchange, find an item you love, add it to your cart, and proceed to checkout. You'll need to create an account and choose your preferred payment method — pay online via our secure Razorpay integration (UPI, cards, net banking) or select Cash on Delivery.",
+        a: "Browse The Exchange, find an item you love, add it to your cart, and proceed to checkout. You'll need to create an account and choose your preferred payment method: pay online via our secure Razorpay integration (UPI, cards, net banking) or select Cash on Delivery.",
       },
       {
         q: "Is there a buyer's premium or additional fee?",
@@ -25,7 +26,7 @@ const FAQ_ITEMS = [
       },
       {
         q: 'What payment methods are accepted?',
-        a: 'We offer two payment options: (1) Online Payment via Razorpay — supports UPI, credit/debit cards, net banking, and other major Indian payment methods. (2) Cash on Delivery (COD) — pay in cash when your order arrives at your doorstep.',
+        a: 'We offer two payment options: (1) Online Payment via Razorpay, which supports UPI, credit/debit cards, net banking, and other major Indian payment methods. (2) Cash on Delivery (COD), pay in cash when your order arrives at your doorstep.',
       },
     ],
   },
@@ -98,6 +99,8 @@ const FAQ_ITEMS = [
   },
 ];
 
+const faqSeo = CORE_PAGES['/faq'];
+
 const FAQ = () => {
   const [search, setSearch] = useState('');
   const [openItems, setOpenItems] = useState({});
@@ -121,11 +124,9 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-secondary-bg">
-      <SEO
-        title="FAQ"
-        description="Find answers to frequently asked questions about buying, selling, shipping, and account security on The Collectors Exchange — India's trusted marketplace for verified collectibles."
-        canonical="/faq"
-      />
+      <SEO title={faqSeo.title} description={faqSeo.description} canonical="/faq" />
+      <PageSchema type="FAQPage" name={faqSeo.h1} description={faqSeo.description} path="/faq" />
+      <BreadcrumbSchema items={faqSeo.breadcrumb} />
       <FAQSchema items={faqItems} />
       <div className="container mx-auto py-12 sm:py-20 px-6 max-w-3xl">
         <Reveal className="text-center mb-12" blur>
@@ -171,11 +172,12 @@ const FAQ = () => {
                           <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />
                         )}
                       </button>
-                      {isOpen && (
-                        <div className="px-5 pb-5 text-gray-600 leading-relaxed text-sm border-t border-gray-100 pt-4">
-                          {item.a}
-                        </div>
-                      )}
+                      <div
+                        className={`px-5 text-gray-600 leading-relaxed text-sm border-t border-gray-100 ${isOpen ? 'pb-5 pt-4' : 'h-0 overflow-hidden p-0 border-t-0'}`}
+                        aria-hidden={!isOpen}
+                      >
+                        {item.a}
+                      </div>
                     </div>
                   );
                 })}

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO, { OrganizationSchema, WebSiteSchema } from '../components/SEO';
+import { CORE_PAGES } from '../config/seo-pages';
 import {
   ShieldCheck,
   UserCheck,
@@ -252,15 +253,12 @@ const FeaturedProductsCarousel = () => {
   );
 };
 
+const homeSeo = CORE_PAGES['/'];
+
 const Home = () => {
   return (
     <div className="flex flex-col">
-      <SEO
-        description="India's premier curated marketplace for verified pre-owned collectibles, antiques, and limited-edition pieces. Every item authenticated. Trusted sellers. Secure transactions."
-        canonical="/"
-        ogType="website"
-      />
-      <OrganizationSchema />
+      <SEO title={homeSeo.title} description={homeSeo.description} canonical="/" ogType="website" />
       <WebSiteSchema />
       {/* Hero Section */}
       <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden bg-black">
@@ -593,6 +591,59 @@ const Home = () => {
       {/* Testimonials Section */}
       <TestimonialsSection />
 
+      {/* Internal Links for SEO */}
+      <section className="py-12 sm:py-16 px-6 bg-white border-t border-heritage-beige">
+        <div className="container mx-auto max-w-4xl text-center">
+          <Reveal>
+            <h2 className="text-2xl sm:text-3xl font-serif text-heritage-charcoal mb-8">
+              Learn More About Us
+            </h2>
+          </Reveal>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <Reveal delay={100}>
+              <Link
+                to="/about"
+                className="block p-6 bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
+              >
+                <h3 className="text-lg font-serif text-heritage-charcoal group-hover:text-luxury-gold transition-colors mb-2">
+                  About Us
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Discover our mission to preserve heritage through verified sourcing and expert
+                  authentication.
+                </p>
+              </Link>
+            </Reveal>
+            <Reveal delay={200}>
+              <Link
+                to="/contact"
+                className="block p-6 bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
+              >
+                <h3 className="text-lg font-serif text-heritage-charcoal group-hover:text-luxury-gold transition-colors mb-2">
+                  Contact Us
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Have questions? Reach our team for buying, selling, or partnership inquiries.
+                </p>
+              </Link>
+            </Reveal>
+            <Reveal delay={300}>
+              <Link
+                to="/faq"
+                className="block p-6 bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
+              >
+                <h3 className="text-lg font-serif text-heritage-charcoal group-hover:text-luxury-gold transition-colors mb-2">
+                  FAQ
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Find answers about buying, selling, shipping, payments, and account security.
+                </p>
+              </Link>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
       {/* Social Links - Mobile only */}
       <div className="lg:hidden py-8 px-6 bg-heritage-cream border-t border-heritage-beige">
         <div className="max-w-md mx-auto flex items-center justify-center gap-5">
@@ -703,7 +754,7 @@ const TestimonialsSection = () => {
               </span>
             ))}
           </div>
-          <p className="font-serif font-bold text-heritage-charcoal">— {t.authorName}</p>
+          <p className="font-serif font-bold text-heritage-charcoal">{t.authorName}</p>
         </div>
         {testimonials.length > 1 && (
           <div className="flex items-center justify-center gap-3 mt-6">

@@ -479,7 +479,7 @@ const Checkout = () => {
               {
                 title: 'Delivery & Inspection',
                 body: isCODOrder
-                  ? 'Domestic deliveries typically arrive within 5-10 business days — keep cash ready for the courier. You then have a 48-hour inspection period from delivery.'
+                  ? 'Domestic deliveries typically arrive within 5-10 business days, so keep cash ready for the courier. You then have a 48-hour inspection period from delivery.'
                   : 'Domestic deliveries typically arrive within 5-10 business days. You then have a 48-hour inspection period from delivery.',
               },
             ].map((step, i) => (
