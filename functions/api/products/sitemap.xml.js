@@ -3,7 +3,7 @@ const API_URL = 'https://07u78lzel7.execute-api.ap-south-1.amazonaws.com';
 
 export async function onRequest() {
   try {
-    const res = await fetch(`${API_URL}/api/products?limit=1000&status=VERIFIED`);
+    const res = await fetch(`${API_URL}/api/products?limit=1000`);
     if (!res.ok) {
       return new Response('Failed to fetch products', { status: 502 });
     }
@@ -12,7 +12,7 @@ export async function onRequest() {
     const products = data.products || data || [];
 
     const urls = products
-      .filter((p) => p.id && p.status === 'VERIFIED')
+      .filter((p) => p.id && p.isPublished)
       .map((product) => {
         const lastmod = product.updatedAt || product.createdAt;
         const lastmodDate = lastmod ? new Date(lastmod).toISOString().split('T')[0] : '';
