@@ -89,7 +89,8 @@ describe('vendor routes', () => {
   describe('GET /stats', () => {
     it('returns vendor stats', async () => {
       mockPrisma.vendor.findUnique.mockResolvedValue({ id: 'v1' });
-      mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1' }]);
+      // First call: fetch product IDs; second call: getOfflineSold (empty)
+      mockPrisma.product.findMany.mockResolvedValueOnce([{ id: 'p1' }]).mockResolvedValueOnce([]);
       mockPrisma.orderItem.findMany.mockResolvedValue([
         { price: 100, quantity: 2, orderId: 'o1', platformFee: 20 },
       ]);
@@ -107,7 +108,8 @@ describe('vendor routes', () => {
 
     it('returns totalPlatformFees and netEarnings in stats', async () => {
       mockPrisma.vendor.findUnique.mockResolvedValue({ id: 'v1' });
-      mockPrisma.product.findMany.mockResolvedValue([{ id: 'p1' }]);
+      // First call: fetch product IDs; second call: getOfflineSold (empty)
+      mockPrisma.product.findMany.mockResolvedValueOnce([{ id: 'p1' }]).mockResolvedValueOnce([]);
       mockPrisma.orderItem.findMany.mockResolvedValue([
         { price: 100, quantity: 1, orderId: 'o1', platformFee: 20 },
         { price: 200, quantity: 1, orderId: 'o2', platformFee: 50 },

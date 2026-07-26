@@ -60,9 +60,17 @@ describe('admin routes', () => {
         updateMany: vi.fn(),
         delete: vi.fn(),
         create: vi.fn(),
+        aggregate: vi.fn(),
       },
-      order: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+      order: {
+        count: vi.fn(),
+        findMany: vi.fn(),
+        findUnique: vi.fn(),
+        update: vi.fn(),
+        aggregate: vi.fn(),
+      },
       vendor: { findUnique: vi.fn(), upsert: vi.fn() },
+      contactMessage: { count: vi.fn() },
       notification: { create: vi.fn() },
       auditLog: { create: vi.fn() },
       payout: {
@@ -90,6 +98,21 @@ describe('admin routes', () => {
       mockPrisma.user.count.mockResolvedValueOnce(10).mockResolvedValueOnce(2);
       mockPrisma.product.count.mockResolvedValue(50);
       mockPrisma.order.count.mockResolvedValue(25);
+      // H1: inventory count queries
+      mockPrisma.product.count
+        .mockResolvedValueOnce(10) // totalProducts
+        .mockResolvedValueOnce(5) // soldInventoryCount
+        .mockResolvedValueOnce(2) // pendingAndInReviewCount
+        .mockResolvedValueOnce(3); // approvedCount
+      // H2: aggregate queries
+      mockPrisma.product.aggregate
+        .mockResolvedValueOnce({ _sum: { price: 50000 } }) // inventoryRevenueAll
+        .mockResolvedValueOnce({ _sum: { price: 15000 } }); // inventoryRevenueSoldProducts
+      mockPrisma.order.aggregate.mockResolvedValueOnce({ _sum: { totalAmount: 12000 } }); // onlinePaidRevenue
+      // M1: unread contact messages
+      mockPrisma.contactMessage.count.mockResolvedValue(3);
+      // H2: offline sold revenue
+      mockPrisma.$queryRaw.mockResolvedValue([{ offlineRevenue: 3000 }]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/admin.js')).default);
       await app.ready();

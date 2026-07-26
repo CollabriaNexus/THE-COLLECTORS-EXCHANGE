@@ -532,15 +532,20 @@ model CartEvent {
 }
 
 model ContactMessage {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  subject   String
-  message   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  name       String
+  email      String
+  subject    String
+  message    String
+  read       Boolean   @default(false)
+  status     String    @default("UNREAD")
+  replyText  String?
+  repliedAt  DateTime?
+  repliedBy  String?
+  createdAt  DateTime  @default(now())
 
   @@index([read])
+  @@index([status])
   @@index([createdAt])
 }
 
