@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import SEO, { ArticleSchema, BreadcrumbSchema } from '../components/SEO';
-import { useBlogBySlug, usePublishedBlogs } from '../hooks/api/useBlog';
+import { useBlogBySlug, usePublishedBlogs, useIncrementBlogView } from '../hooks/api/useBlog';
 import {
   ArrowLeft,
   Clock,
@@ -13,6 +13,7 @@ import {
   List,
   BookMarked,
   Quote,
+  Eye,
 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Reveal, Parallax, Tilt, Magnetic } from '../components/Motion';
@@ -20,9 +21,18 @@ import { Reveal, Parallax, Tilt, Magnetic } from '../components/Motion';
 function BlogPost() {
   const { slug } = useParams();
   const { data: post, isLoading } = useBlogBySlug(slug);
+  const incrementView = useIncrementBlogView();
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeHeading, setActiveHeading] = useState('');
+  const viewCountedRef = useRef(false);
+
+  useEffect(() => {
+    if (post?.slug && !viewCountedRef.current) {
+      viewCountedRef.current = true;
+      incrementView.mutate(post.slug);
+    }
+  }, [post?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handleScroll = () => {
@@ -169,6 +179,11 @@ function BlogPost() {
                     <Clock size={10} /> {post.readingTime} min read
                   </span>
                 )}
+                {(post.viewCount ?? 0) > 0 && (
+                  <span className="text-[10px] text-white/60 flex items-center gap-1 bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                    <Eye size={10} /> {post.viewCount.toLocaleString()} views
+                  </span>
+                )}
               </div>
               <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-serif text-white leading-tight max-w-3xl">
                 {post.title}
@@ -199,6 +214,11 @@ function BlogPost() {
               {post.readingTime && (
                 <span className="text-[10px] text-white/60 flex items-center gap-1 bg-black/10 px-3 py-1.5 rounded-full">
                   <Clock size={10} /> {post.readingTime} min read
+                </span>
+              )}
+              {(post.viewCount ?? 0) > 0 && (
+                <span className="text-[10px] text-white/60 flex items-center gap-1 bg-black/10 px-3 py-1.5 rounded-full">
+                  <Eye size={10} /> {post.viewCount.toLocaleString()} views
                 </span>
               )}
             </div>

@@ -75,6 +75,20 @@ export default async function blogRoutes(fastify) {
     return post;
   });
 
+  // Public: increment view count
+  fastify.patch('/:slug/view', async (request, reply) => {
+    const { slug } = request.params;
+    try {
+      await prisma.blog.update({
+        where: { slug, status: 'PUBLISHED' },
+        data: { viewCount: { increment: 1 } },
+      });
+    } catch {
+      // slug not found or not published — silently ignore
+    }
+    return { ok: true };
+  });
+
   // Admin: get all posts
   fastify.get(
     '/admin/all',

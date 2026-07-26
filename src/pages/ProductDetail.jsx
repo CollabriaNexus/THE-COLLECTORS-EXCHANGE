@@ -21,15 +21,18 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useProduct, useProducts } from '../hooks/api/useProducts';
 import { useAddToWishlist, useRemoveFromWishlist, useWishlist } from '../hooks/api/useWishlist';
+import { useProductReviews } from '../hooks/api/useReviews';
 import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
 import { Reveal, Parallax, Magnetic, Tilt } from '../components/Motion';
+import ReviewList from '../components/ReviewList';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { data: product, isLoading } = useProduct(id);
+  const { data: reviewsData } = useProductReviews(id);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [shareCopied, setShareCopied] = useState(false);
   const [selectedQty, setSelectedQty] = useState(1);
@@ -587,6 +590,16 @@ const ProductDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Reviews Section */}
+      {(reviewsData?.total ?? 0) > 0 && (
+        <div className="container mx-auto max-w-4xl px-4 sm:px-6 py-10 border-t border-gray-100">
+          <h3 className="text-lg sm:text-xl font-serif text-heritage-charcoal mb-6">
+            Customer Reviews
+          </h3>
+          <ReviewList reviews={reviewsData?.data || []} total={reviewsData?.total || 0} />
+        </div>
+      )}
 
       {/* Suggested Products */}
       <SuggestedProducts category={product.category} currentId={product.id} />

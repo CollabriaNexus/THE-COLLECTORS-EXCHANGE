@@ -53,6 +53,8 @@ import PhoneVerification from '../components/account/PhoneVerification';
 import NotificationsPanel from '../components/account/NotificationsPanel';
 import DocUploadField from '../components/account/DocUploadField';
 import LoginForm from '../components/account/LoginForm';
+import ReviewForm from '../components/ReviewForm';
+import ReviewList from '../components/ReviewList';
 import { Reveal, CountUp } from '../components/Motion';
 
 const CATEGORIES = [
@@ -209,6 +211,7 @@ const Account = () => {
   });
   const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
   const [testimonialImageUploading, setTestimonialImageUploading] = useState(false);
+  const [reviewingItem, setReviewingItem] = useState(null);
   const { mutateAsync: registerUser } = useRegisterUser();
   const kycMutation = useSubmitKyc();
   const addProductMutation = useAddProduct();
@@ -2630,8 +2633,40 @@ const Account = () => {
                             Qty: {item.quantity} &middot; ₹{item.price?.toLocaleString()}
                           </p>
                         </div>
+                        {order.status === 'Delivered' && (
+                          <button
+                            onClick={() =>
+                              setReviewingItem(
+                                reviewingItem?.orderId === order.id &&
+                                  reviewingItem?.productId === item.productId
+                                  ? null
+                                  : {
+                                      orderId: order.id,
+                                      productId: item.productId,
+                                      productName: item.product?.title,
+                                    },
+                              )
+                            }
+                            className="text-[10px] uppercase tracking-widest text-luxury-gold font-medium hover:underline shrink-0 px-3 py-1.5 border border-luxury-gold/30 hover:bg-luxury-gold/5 transition-colors"
+                          >
+                            {reviewingItem?.orderId === order.id &&
+                            reviewingItem?.productId === item.productId
+                              ? 'Cancel'
+                              : 'Write Review'}
+                          </button>
+                        )}
                       </div>
                     ))}
+                    {order.status === 'Delivered' && reviewingItem?.orderId === order.id && (
+                      <div className="mt-3">
+                        <ReviewForm
+                          orderId={reviewingItem.orderId}
+                          productId={reviewingItem.productId}
+                          productName={reviewingItem.productName}
+                          onSuccess={() => setReviewingItem(null)}
+                        />
+                      </div>
+                    )}
                     <div className="flex justify-between items-center pt-3 border-t border-gray-100 mt-3">
                       <p className="text-sm text-gray-600">
                         Total:{' '}

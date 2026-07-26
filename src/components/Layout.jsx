@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, MessageCircle } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
 import { ScrollProgress } from './Motion';
@@ -38,6 +38,15 @@ const Layout = () => {
       <div className="hidden lg:block">
         <Footer />
       </div>
+      <a
+        href="https://wa.me/916362771355?text=Hi%2C%20I%27m%20interested%20in%20The%20Collectors%20Exchange."
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        className="fixed bottom-24 lg:bottom-8 right-6 z-50 w-12 h-12 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#20BD5A] transition-all duration-300 flex items-center justify-center hover:scale-110"
+      >
+        <MessageCircle size={22} />
+      </a>
       <button
         onClick={scrollToTop}
         aria-label="Scroll to top"

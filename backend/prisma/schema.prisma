@@ -165,6 +165,7 @@ model User {
   checkoutEvents   CheckoutEvent[]
   auditLogs        AuditLog[]
   ratings          Rating[]
+  reviews          Review[]
   galleryItems     GalleryItem[]
   createdCoupons   Coupon[]
   couponUsages     CouponUsage[]
@@ -205,6 +206,7 @@ model Product {
   cartItems      CartItem[]
   wishlistItems  WishlistItem[]
   orderItems     OrderItem[]
+  reviews        Review[]
   auction        Auction?
   productViews   ProductView[]
   cartEvents     CartEvent[]
@@ -277,6 +279,7 @@ model Blog {
   metaTitle       String?
   metaDescription String?
   readingTime     Int?
+  viewCount       Int           @default(0)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -355,6 +358,7 @@ model Order {
 
   items           OrderItem[]
   couponUsages    CouponUsage[]
+  reviews         Review[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -426,6 +430,7 @@ model Vendor {
 
   payouts       Payout[]
   ratings       Rating[]
+  reviews       Review[]
 
   @@index([status])
   @@index([type])
@@ -604,5 +609,25 @@ model Rating {
   @@unique([userId, vendorId])
   @@index([userId])
   @@index([vendorId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendorId  String
+  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, orderId, productId])
+  @@index([vendorId])
+  @@index([productId])
+  @@index([orderId])
 }
 
