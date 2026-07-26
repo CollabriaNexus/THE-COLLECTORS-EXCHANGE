@@ -68,32 +68,27 @@ export default async function vendorRoutes(fastify) {
 
     const productIds = products.map((p) => p.id);
 
-    // Fetch order items matching this vendor's products
-    const orderItems = await prisma.orderItem.findMany({
-      where: {
-        productId: { in: productIds },
-        order: { status: { not: 'Cancelled' } },
-      },
-      include: { order: true },
-    });
+    // Fetch order items matching this vendor's products & offline-sold products
+    const [orderItems, offlineSold] = await Promise.all([
+      prisma.orderItem.findMany({
+        where: {
+          productId: { in: productIds },
+          order: { status: { not: 'Cancelled' } },
+        },
+        include: { order: true },
+      }),
+      getOfflineSold(prisma, dbUser.id, null),
+    ]);
 
-    // Calculate statistics.
-    //
-    // netEarnings MUST be the same arithmetic the payout run uses
-    // (admin.js `/payouts/auto-create`: sum((price - platformFee) * quantity)),
-    // or the seller is quoted a number they will never be paid. It is computed
-    // with the shared helper rather than as `totalSales - totalPlatformFees` so
-    // the two can't drift apart again.
-    //
-    // Since item.price is the DISCOUNTED price the buyer actually paid, totalSales
-    // is real collected revenue, and platformFee already carries the platform's
-    // share of any coupon (it can be negative when the platform funded a promo —
-    // see lib/money.js). The seller's netEarnings is unaffected by coupons, which
-    // is the policy: the platform absorbs its own discounts.
-    const totalSales = orderTotalFromItems(orderItems);
+    // Calculate statistics including both online order items and unrecorded offline sales
+    const offlineRevenue = toRupees(offlineSold.reduce((sum, p) => sum + toPaise(p.price), 0));
+    const offlineCount = offlineSold.length;
+
+    const orderSales = orderTotalFromItems(orderItems);
+    const totalSales = toRupees(toPaise(orderSales) + toPaise(offlineRevenue));
     const totalPlatformFees = platformFeeFromItems(orderItems);
-    const totalItemsSold = orderItems.reduce((acc, item) => acc + item.quantity, 0);
-    const uniqueOrders = new Set(orderItems.map((item) => item.orderId)).size;
+    const totalItemsSold = orderItems.reduce((acc, item) => acc + item.quantity, 0) + offlineCount;
+    const uniqueOrders = new Set(orderItems.map((item) => item.orderId)).size + offlineCount;
 
     return {
       totalSales,
@@ -101,6 +96,8 @@ export default async function vendorRoutes(fastify) {
       netEarnings: payoutFromItems(orderItems),
       totalItemsSold,
       uniqueOrders,
+      offlineSaleCount: offlineCount,
+      offlineRevenue,
     };
   });
 

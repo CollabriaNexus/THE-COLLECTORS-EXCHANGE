@@ -22,143 +22,205 @@ import Testimonials from './pages/Testimonials';
 import PhoneVerifications from './pages/PhoneVerifications';
 import BlogManager from './pages/BlogManager';
 import BlogEditor from './pages/BlogEditor';
+import ContactMessages from './pages/ContactMessages';
 import AdminLayout from './components/AdminLayout';
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
-    const user = getUser();
+  const user = getUser();
 
-    if (!user || user.role !== 'admin') {
-        return <Navigate to="/login" replace />;
-    }
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/login" replace />;
+  }
 
-    return <AdminLayout>{children}</AdminLayout>;
+  return <AdminLayout>{children}</AdminLayout>;
 };
 
 function ScrollToTop() {
-    const { pathname } = useLocation();
-    useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
-    return null;
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
 }
 
-
 function App() {
-    return (
-        <ErrorBoundary>
-        <ConfirmProvider>
+  return (
+    <ErrorBoundary>
+      <ConfirmProvider>
         <ScrollToTop />
         <Routes>
-            <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login />} />
 
-            {/* Protected Admin Routes */}
-            <Route path="/" element={
-                <ProtectedRoute>
-                    <Dashboard />
-                </ProtectedRoute>
-            } />
+          {/* Protected Admin Routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/kyc" element={
-                <ProtectedRoute>
-                    <KYCRequests />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/kyc"
+            element={
+              <ProtectedRoute>
+                <KYCRequests />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/kyc/:id" element={
-                <ProtectedRoute>
-                    <KYCDetail />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/kyc/:id"
+            element={
+              <ProtectedRoute>
+                <KYCDetail />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/users" element={
-                <ProtectedRoute>
-                    <Users />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/users/:id" element={
-                <ProtectedRoute>
-                    <UserDetail />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/users/:id"
+            element={
+              <ProtectedRoute>
+                <UserDetail />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/products" element={
-                <ProtectedRoute>
-                    <Products />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/products"
+            element={
+              <ProtectedRoute>
+                <Products />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/products/:id" element={
-                <ProtectedRoute>
-                    <ProductDetail />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/products/:id"
+            element={
+              <ProtectedRoute>
+                <ProductDetail />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/orders" element={
-                <ProtectedRoute>
-                    <Orders />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/orders/:id" element={
-                <ProtectedRoute>
-                    <OrderDetail />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/orders/:id"
+            element={
+              <ProtectedRoute>
+                <OrderDetail />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/vendors" element={
-                <ProtectedRoute>
-                    <Vendors />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/vendors"
+            element={
+              <ProtectedRoute>
+                <Vendors />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/payouts" element={
-                <ProtectedRoute>
-                    <Payouts />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/payouts"
+            element={
+              <ProtectedRoute>
+                <Payouts />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/tce-store" element={
-                <ProtectedRoute>
-                    <TCEStore />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/tce-store"
+            element={
+              <ProtectedRoute>
+                <TCEStore />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/testimonials" element={
-                <ProtectedRoute>
-                    <Testimonials />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/testimonials"
+            element={
+              <ProtectedRoute>
+                <Testimonials />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/blog" element={
-                <ProtectedRoute>
-                    <BlogManager />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/blog"
+            element={
+              <ProtectedRoute>
+                <BlogManager />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/blog/new" element={
-                <ProtectedRoute>
-                    <BlogEditor />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/blog/new"
+            element={
+              <ProtectedRoute>
+                <BlogEditor />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/blog/:id/edit" element={
-                <ProtectedRoute>
-                    <BlogEditor />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/blog/:id/edit"
+            element={
+              <ProtectedRoute>
+                <BlogEditor />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/phone-verifications" element={
-                <ProtectedRoute>
-                    <PhoneVerifications />
-                </ProtectedRoute>
-            } />
+          <Route
+            path="/phone-verifications"
+            element={
+              <ProtectedRoute>
+                <PhoneVerifications />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Redirect to dashboard by default */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="/contact-messages"
+            element={
+              <ProtectedRoute>
+                <ContactMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Redirect to dashboard by default */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        </ConfirmProvider>
-        </ErrorBoundary>
-    );
+      </ConfirmProvider>
+    </ErrorBoundary>
+  );
 }
 
 export default App;

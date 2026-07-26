@@ -8,6 +8,27 @@ const SITE_URL = 'https://thecollectorsexchange.in';
 const API_URL =
   process.env.API_URL || 'https://07u78lzel7.execute-api.ap-south-1.amazonaws.com/api';
 
+/* ------------------------------------------------------------------ */
+/*  Read Vite's built dist/index.html to extract script/style refs     */
+/* ------------------------------------------------------------------ */
+const VITE_INDEX = readFileSync(resolve(DIST, 'index.html'), 'utf-8');
+const VITE_HEAD_EXTRA =
+  VITE_INDEX.split('<head>')[1]
+    ?.split('</head>')[0]
+    ?.replace(/<title>[\s\S]*?<\/title>/gi, '')
+    ?.replace(/<meta charset="UTF-8"\s*\/>/gi, '')
+    ?.replace(/<meta name="viewport"[\s\S]*?\/>/gi, '')
+    ?.replace(/<meta name="theme-color"[\s\S]*?\/>/gi, '')
+    ?.replace(/<meta[^>]*>/gi, '')
+    ?.replace(/<link rel="canonical"[^>]*>/gi, '')
+    ?.replace(/<link rel="icon"[^>]*>/gi, '')
+    ?.trim() ?? '';
+const VITE_BODY_EXTRA =
+  VITE_INDEX.split('<body>')[1]
+    ?.split('</body>')[0]
+    ?.replace(/<div id="root">[\s\S]*?<\/div>/gi, '')
+    ?.trim() ?? '';
+
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -45,6 +66,15 @@ const CORE_PAGES = {
     schemaType: null,
     breadcrumb: null,
     navLinks: DEFAULT_NAV,
+    video: {
+      name: 'The Collectors Exchange — Authenticated Vintage Watches & Rare Collectibles',
+      description:
+        "Discover authenticated vintage watches, rare collectibles, and expert-verified antiques at The Collectors Exchange. India's trusted marketplace for heritage timepieces.",
+      thumbnail: '/og-image.png',
+      uploadDate: '2026-01-01T00:00:00+05:30',
+      contentUrl: 'https://thecollectorsexchange.in/assets/hero_section-compressed-BX0s--ub.mp4',
+      duration: 'PT30S',
+    },
   },
   '/about': {
     title: 'About Us',
@@ -193,6 +223,19 @@ function buildCorePageSchemas(page) {
     });
   }
 
+  if (page.video) {
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'VideoObject',
+      name: page.video.name,
+      description: page.video.description,
+      thumbnailUrl: `${SITE_URL}${page.video.thumbnail}`,
+      uploadDate: page.video.uploadDate,
+      contentUrl: page.video.contentUrl,
+      duration: page.video.duration,
+    });
+  }
+
   if (page.breadcrumb) {
     schemas.push({
       '@context': 'https://schema.org',
@@ -270,6 +313,7 @@ function buildCorePageHtml(path, page, metaTags) {
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" /></noscript>
   ${metaTags}
+  ${VITE_HEAD_EXTRA}
   <style>
     body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:#fff;color:#1C1C1C;-webkit-font-smoothing:antialiased}
     h1,h2,h3,h4,h5,h6{font-family:'Playfair Display',Georgia,serif}
@@ -288,6 +332,7 @@ function buildCorePageHtml(path, page, metaTags) {
   </style>
 </head>
 <body>
+  <div id="root">
   <div class="min-h-screen">
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <nav class="nav-bar" aria-label="Main navigation">
@@ -312,13 +357,55 @@ function buildCorePageHtml(path, page, metaTags) {
       <p style="color:#666;font-size:11px;margin-top:16px">&copy; ${new Date().getFullYear()} The Collectors Exchange. All rights reserved.</p>
     </footer>
   </div>
-  <script type="module" src="/src/main.jsx"></script>
+  </div>
+  ${VITE_BODY_EXTRA}
 </body>
 </html>`;
 }
 
 /* ------------------------------------------------------------------ */
-/*  BLOG PRERENDER (unchanged)                                         */
+/*  SHARED NAV / FOOTER SHELL                                          */
+/* ------------------------------------------------------------------ */
+
+const NAV_HTML = DEFAULT_NAV.map(
+  (l) =>
+    `<a href="${l.path}" style="color:#1C1C1C;text-decoration:none;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;white-space:nowrap">${escapeHtml(l.name)}</a>`,
+).join('');
+
+const SHELL_HEAD = `
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" /></noscript>
+  <style>
+    .nav-bar{position:fixed;top:0;left:0;right:0;z-index:50;background:#fff;border-bottom:1px solid #f0f0f0;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+    .nav-brand{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:16px;letter-spacing:0.05em;color:#1C1C1C;text-decoration:none}
+    .nav-links{display:flex;gap:32px;align-items:center}
+    .site-footer{background:#000;color:#fff;padding:48px 24px;text-align:center;margin-top:auto}
+    .site-footer a{color:#D4AF37;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:0.15em}
+    .skip-link{position:absolute;top:-40px;left:0;background:#000;color:#fff;padding:8px 16px;z-index:100;font-size:12px;text-transform:uppercase;letter-spacing:0.15em;text-decoration:none}
+    .skip-link:focus{top:0}
+  </style>`;
+
+const SHELL_NAV = `
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="nav-bar" aria-label="Main navigation">
+      <a href="/" class="nav-brand">THE COLLECTORS EXCHANGE</a>
+      <div class="nav-links">${NAV_HTML}</div>
+    </nav>`;
+
+const SHELL_FOOTER = `
+    <footer class="site-footer">
+      <a href="/about">About</a> &middot;
+      <a href="/category">The Exchange</a> &middot;
+      <a href="/contact">Contact</a> &middot;
+      <a href="/faq">FAQ</a> &middot;
+      <a href="/archive">The Archive</a>
+      <p style="color:#666;font-size:11px;margin-top:16px">&copy; ${new Date().getFullYear()} The Collectors Exchange. All rights reserved.</p>
+    </footer>`;
+
+/* ------------------------------------------------------------------ */
+/*  BLOG PRERENDER                                                     */
 /* ------------------------------------------------------------------ */
 
 function buildMetaTags(post) {
@@ -419,7 +506,10 @@ function buildBlogHtml(post, metaTags) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   ${metaTags}
+  ${SHELL_HEAD}
+  ${VITE_HEAD_EXTRA}
   <style>
     body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:#fff;color:#1C1C1C;-webkit-font-smoothing:antialiased}
     .blog-hero{position:relative;height:50vh;min-height:300px;overflow:hidden}
@@ -450,6 +540,10 @@ function buildBlogHtml(post, metaTags) {
   </style>
 </head>
 <body>
+  <div id="root">
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    ${SHELL_NAV}
+    <main id="main-content" style="flex:1;padding-top:60px">
   ${
     coverImage
       ? `
@@ -501,8 +595,11 @@ function buildBlogHtml(post, metaTags) {
   <div class="cta">
     <a href="/archive">Browse The Archive &rarr;</a>
   </div>
-
-  <script type="module" src="/src/main.jsx"></script>
+    </main>
+    ${SHELL_FOOTER}
+  </div>
+  </div>
+  ${VITE_BODY_EXTRA}
 </body>
 </html>`;
 }
@@ -514,6 +611,7 @@ function buildArchiveIndexHtml() {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <title>The Archive — The Collectors Exchange</title>
   <meta name="description" content="Explore The Collectors Exchange Archive. Curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
   <link rel="canonical" href="${SITE_URL}/archive" />
@@ -553,6 +651,7 @@ function buildArchiveIndexHtml() {
       { '@type': 'ListItem', position: 2, name: 'The Archive', item: `${SITE_URL}/archive` },
     ],
   })}</script>
+  ${VITE_HEAD_EXTRA}
   <style>
     body{margin:0;padding:0;font-family:'Inter',system-ui,sans-serif;background:#fff;color:#1C1C1C}
     .hero{background:#1C1C1C;padding:5rem 1.5rem;text-align:center}
@@ -564,6 +663,7 @@ function buildArchiveIndexHtml() {
   </style>
 </head>
 <body>
+  <div id="root">
   <div class="hero">
     <h1>The Archive</h1>
     <p>Stories behind the artifacts. Curated insights on horology, gemology, collecting, and the art of preservation.</p>
@@ -572,7 +672,8 @@ function buildArchiveIndexHtml() {
     <div class="spinner"></div>
     <p>Loading articles...</p>
   </div>
-  <script type="module" src="/src/main.jsx"></script>
+  </div>
+  ${VITE_BODY_EXTRA}
 </body>
 </html>`;
 }

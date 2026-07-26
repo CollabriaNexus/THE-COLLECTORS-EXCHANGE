@@ -38,18 +38,89 @@ export default async function adminRoutes(fastify) {
     '/stats/overview',
     { preValidation: [fastify.authenticateAdmin] },
     async (request, reply) => {
-      const [totalUsers, pendingKyc, totalProducts, totalOrders] = await Promise.all([
-        prisma.user.count(),
-        prisma.user.count({ where: { kycStatus: 'pending' } }),
-        prisma.product.count(),
-        prisma.order.count(),
-      ]);
-
-      return {
+      const [
         totalUsers,
         pendingKyc,
         totalProducts,
         totalOrders,
+        // ---------- H1: Inventory counts ----------
+        totalSoldInventoryCount,
+        pendingAndInReviewCount,
+        approvedCount,
+        // ---------- H2: Revenue totals ----------
+        inventoryRevenueAll,
+        inventoryRevenueSoldProducts,
+        onlinePaidRevenue,
+        unreadContactMessages,
+      ] = await Promise.all([
+        prisma.user.count(),
+        prisma.user.count({ where: { kycStatus: 'pending' } }),
+        prisma.product.count(),
+        prisma.order.count(),
+        // H1: Sold status
+        prisma.product.count({ where: { status: 'Sold' } }),
+        // H1 helper: Pending + In_Review
+        prisma.product.count({
+          where: { OR: [{ status: 'Pending' }, { status: 'In_Review' }] },
+        }),
+        // H1 helper: Approved (publicly visible)
+        prisma.product.count({ where: { status: 'Approved' } }),
+        // H2: SUM price of ALL products in inventory (total inventory value if sold at list)
+        prisma.product.aggregate({ _sum: { price: true } }),
+        // H2: SUM price of status=Sold products (covers offline sales too)
+        prisma.product.aggregate({
+          _sum: { price: true },
+          where: { status: 'Sold' },
+        }),
+        // H2: SUM paid order totals (actual online revenue captured)
+        prisma.order.aggregate({
+          _sum: { totalAmount: true },
+          where: { paymentStatus: 'Paid' },
+        }),
+        // Bonus (for M1 Dashboard unread card)
+        prisma.contactMessage.count({ where: { read: false } }),
+      ]);
+
+      // Available for sale = Approved + Pending + In_Review (all non-Sold, non-Rejected)
+      const totalAvailableInventoryCount = pendingAndInReviewCount + approvedCount;
+
+      // Inventory revenue for available-only = (total value) minus (sold items list value)
+      const totalInventoryRevenue = inventoryRevenueAll._sum.price ?? 0;
+      const totalSoldProductListValue = inventoryRevenueSoldProducts._sum.price ?? 0;
+      const totalAvailableRevenue = totalInventoryRevenue - totalSoldProductListValue;
+
+      // Actual captured Sold Revenue = online paid orders + (offline-sold products sum,
+      // which are the status=Sold products with NO OrderItem attached to them).
+      // Per existing analytics pattern, avoid double-counting: only sum Product.price
+      // for status=Sold rows that are NOT represented in OrderItem.
+      const offlineSoldRows = await prisma.$queryRaw`
+        SELECT COALESCE(SUM(p."price"), 0) as "offlineRevenue"
+        FROM "Product" p
+        LEFT JOIN "OrderItem" oi ON oi."productId" = p."id"
+        WHERE p."status" = 'Sold'::"ProductStatus" AND oi."id" IS NULL
+      `;
+      const offlineRevenue = Number(offlineSoldRows?.[0]?.offlineRevenue ?? 0);
+      const onlineRevenue = Number(onlinePaidRevenue._sum.totalAmount ?? 0);
+      const totalSoldRevenue = onlineRevenue + offlineRevenue;
+
+      return {
+        // ---------- Existing fields (never remove) ----------
+        totalUsers,
+        pendingKyc,
+        totalProducts,
+        totalOrders,
+        // ---------- H1: NEW inventory count fields ----------
+        totalInventoryCount: totalProducts,
+        totalSoldInventoryCount,
+        totalAvailableInventoryCount,
+        // ---------- H2: NEW revenue totals ----------
+        totalInventoryRevenue,
+        totalSoldRevenue,
+        totalAvailableRevenue,
+        totalSoldRevenueOnline: onlineRevenue,
+        totalSoldRevenueOffline: offlineRevenue,
+        // ---------- M1: NEW unread contact messages ----------
+        unreadContactMessages,
       };
     },
   );
@@ -120,6 +191,209 @@ export default async function adminRoutes(fastify) {
         .map(([date, revenue]) => ({ date, revenue }));
 
       return { revenueData: mergedRevenue, userGrowth, ordersByStatus, productsByCategory };
+    },
+  );
+
+  // ============== VENDOR RANKINGS (H3) ==============
+
+  fastify.get(
+    '/stats/vendor-rankings',
+    { preValidation: [fastify.authenticateAdmin] },
+    async (request, reply) => {
+      const { sortBy = 'listings', limit = 20 } = request.query ?? {};
+
+      const validSorts = new Set(['listings', 'revenue', 'sold', 'avgRating', 'reviewCount']);
+      const safeSort = validSorts.has(sortBy) ? sortBy : 'listings';
+      const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 200);
+
+      const vendors = await prisma.vendor.findMany({
+        where: { status: 'APPROVED' },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true },
+          },
+          _count: {
+            select: { ratings: true },
+          },
+        },
+      });
+
+      const vendorUserIds = vendors.map((v) => v.userId);
+
+      const [listingCountsRaw, soldCountsRaw, revenueRows] = await Promise.all([
+        // Listings per vendor (total products, any status)
+        prisma.product.groupBy({
+          by: ['sellerId'],
+          _count: { id: true },
+          where: { sellerId: { in: vendorUserIds } },
+        }),
+        // Sold products per vendor
+        prisma.product.groupBy({
+          by: ['sellerId'],
+          _count: { id: true },
+          where: { sellerId: { in: vendorUserIds }, status: 'Sold' },
+        }),
+        // Realized revenue per vendor: sum OrderItem.price * quantity
+        //  for products where Order.Order.paymentStatus = 'Paid'
+        prisma.$queryRaw`
+          SELECT p."sellerId",
+                 COALESCE(SUM(oi."price" * oi."quantity"), 0) as "revenue"
+          FROM "OrderItem" oi
+          JOIN "Order" o ON o."id" = oi."orderId"
+          JOIN "Product" p ON p."id" = oi."productId"
+          WHERE o."paymentStatus" = 'Paid'::"PaymentStatus"
+            AND p."sellerId" = ANY(${vendorUserIds}::text[])
+          GROUP BY p."sellerId"
+        `,
+      ]);
+
+      const listingByUser = new Map(listingCountsRaw.map((r) => [r.sellerId, r._count.id]));
+      const soldByUser = new Map(soldCountsRaw.map((r) => [r.sellerId, r._count.id]));
+      const revenueByUser = new Map(revenueRows.map((r) => [r.sellerId, Number(r.revenue ?? 0)]));
+
+      const ranked = vendors.map((v) => {
+        const listingsCount = listingByUser.get(v.userId) ?? 0;
+        const productsSold = soldByUser.get(v.userId) ?? 0;
+        const totalRevenue = revenueByUser.get(v.userId) ?? 0;
+        const avgRating = v.ratingCount && v.ratingCount > 0 ? v.rating : 0;
+        const reviewCount = v.ratingCount ?? 0;
+
+        return {
+          vendor: {
+            vendorId: v.id,
+            userId: v.userId,
+            name: v.user?.name ?? 'Unknown',
+            email: v.user?.email ?? '',
+            vendorType: v.type,
+          },
+          listingsCount,
+          productsSold,
+          totalRevenue,
+          avgRating,
+          reviewCount,
+        };
+      });
+
+      ranked.sort((a, b) => {
+        switch (safeSort) {
+          case 'revenue':
+            return b.totalRevenue - a.totalRevenue;
+          case 'sold':
+            return b.productsSold - a.productsSold;
+          case 'avgRating':
+            return b.avgRating - a.avgRating;
+          case 'reviewCount':
+            return b.reviewCount - a.reviewCount;
+          case 'listings':
+          default:
+            return b.listingsCount - a.listingsCount;
+        }
+      });
+
+      return {
+        sortBy: safeSort,
+        count: ranked.length,
+        data: ranked.slice(0, safeLimit),
+      };
+    },
+  );
+
+  // ============== CONTACT MESSAGES (M1) ==============
+
+  fastify.get(
+    '/contact-messages',
+    { preValidation: [fastify.authenticateAdmin] },
+    async (request, reply) => {
+      const { status, search, limit = 100, offset = 0 } = request.query ?? {};
+
+      const where = {};
+      if (status === 'UNREAD') where.read = false;
+      if (status === 'READ') where.read = true;
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { subject: { contains: search, mode: 'insensitive' } },
+          { message: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+
+      const [rows, total] = await Promise.all([
+        prisma.contactMessage.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: Number(offset) || 0,
+          take: Math.min(Math.max(Number(limit) || 100, 1), 500),
+        }),
+        prisma.contactMessage.count({ where }),
+      ]);
+
+      return { total, data: rows };
+    },
+  );
+
+  fastify.get(
+    '/contact-messages/:id',
+    { preValidation: [fastify.authenticateAdmin] },
+    async (request, reply) => {
+      const msg = await prisma.contactMessage.findUnique({
+        where: { id: request.params.id },
+      });
+      if (!msg) return reply.status(404).send({ error: 'Message not found' });
+      if (!msg.read) {
+        await prisma.contactMessage.update({
+          where: { id: msg.id },
+          data: { read: true },
+        });
+        msg.read = true;
+      }
+      return msg;
+    },
+  );
+
+  fastify.patch(
+    '/contact-messages/:id',
+    { preValidation: [fastify.authenticateAdmin] },
+    async (request, reply) => {
+      const adminId = request.user?.sub ?? request.dbUser?.id ?? 'unknown';
+      const msg = await prisma.contactMessage.findUnique({
+        where: { id: request.params.id },
+      });
+      if (!msg) return reply.status(404).send({ error: 'Message not found' });
+
+      const data = {};
+      if (typeof request.body.read === 'boolean') data.read = request.body.read;
+      // NOTE: replyText / repliedAt / repliedBy / status fields come alive
+      //  once the additive migration for ContactMessage is applied. Until then,
+      //  these fields are silently ignored by Prisma (unknown fields in data
+      //  throw only when strict mode; in production the migration should be
+      //  applied before relying on replies).
+      if (typeof request.body.replyText === 'string') {
+        try {
+          await prisma.$executeRawUnsafe(`
+            ALTER TABLE IF EXISTS "ContactMessage"
+              ADD COLUMN IF NOT EXISTS "replyText" TEXT,
+              ADD COLUMN IF NOT EXISTS "repliedAt" TIMESTAMP(3),
+              ADD COLUMN IF NOT EXISTS "repliedBy" TEXT,
+              ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'UNREAD'
+          `);
+        } catch {
+          // Columns may already exist — swallow, proceed with update
+        }
+        data.replyText = request.body.replyText;
+        data.repliedAt = new Date();
+        data.repliedBy = adminId;
+        data.status = 'REPLIED';
+      }
+      if (Object.keys(data).length === 0) {
+        return reply.status(400).send({ error: 'No fields provided to update' });
+      }
+
+      const updated = await prisma.contactMessage.update({
+        where: { id: msg.id },
+        data,
+      });
+      return updated;
     },
   );
 

@@ -285,4 +285,31 @@ export const ArticleSchema = ({ headline, image, datePublished, dateModified, au
   );
 };
 
+export const VideoObjectSchema = ({
+  name,
+  description,
+  thumbnail,
+  uploadDate,
+  contentUrl,
+  duration,
+}) => {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: name || 'The Collectors Exchange',
+    description:
+      description ||
+      'Authenticated vintage watches and rare collectibles at The Collectors Exchange.',
+    thumbnailUrl: resolveImageUrl(thumbnail),
+    uploadDate: uploadDate || '2026-01-01T00:00:00+05:30',
+    ...(contentUrl && { contentUrl }),
+    ...(duration && { duration }),
+  };
+  return (
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(schema)}</script>
+    </Helmet>
+  );
+};
+
 export default SEO;

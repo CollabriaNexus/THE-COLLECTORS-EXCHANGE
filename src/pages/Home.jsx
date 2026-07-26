@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import SEO, { OrganizationSchema, WebSiteSchema } from '../components/SEO';
+import SEO, { OrganizationSchema, WebSiteSchema, VideoObjectSchema } from '../components/SEO';
 import { CORE_PAGES } from '../config/seo-pages';
 import {
   ShieldCheck,
@@ -260,6 +260,14 @@ const Home = () => {
     <div className="flex flex-col">
       <SEO title={homeSeo.title} description={homeSeo.description} canonical="/" ogType="website" />
       <WebSiteSchema />
+      <VideoObjectSchema
+        name="The Collectors Exchange — Authenticated Vintage Watches & Rare Collectibles"
+        description="Discover authenticated vintage watches, rare collectibles, and expert-verified antiques at The Collectors Exchange. India's trusted marketplace for heritage timepieces."
+        thumbnail={heroPoster}
+        uploadDate="2026-01-01T00:00:00+05:30"
+        contentUrl={`${window.location.origin}${heroVideoMp4}`}
+        duration="PT30S"
+      />
       {/* Hero Section */}
       <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden bg-black">
         <video

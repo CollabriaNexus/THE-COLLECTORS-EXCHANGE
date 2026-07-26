@@ -262,3 +262,16 @@ npm run build && npx wrangler pages deploy dist --project-name=tce-user --branch
 - [ ] Coverage thresholds defined in vitest.config.js but not active in CI
 - [ ] Consider `serverless-domain-manager` for fixed custom domain (e.g., `api.thecollectorsexchange.com`) — not urgent if `--force` is never used
 - [ ] Blog prerender requires rebuild + deploy for new posts — consider Cloudflare Pages deploy hook triggered by backend webhook on publish
+
+### Session 6 — 2026-07-24
+
+**Objective:** Fix Order Records & Dashboard Data Integrity (platform fees, manual order backfill, vendor stats unification, order status update).
+
+**What was done:**
+
+- **platformFee Bug Fix**: Verified platformFee calculation in `backend/routes/checkout.js` and `backend/routes/admin.js`. Backfilled correct `platformFee` for existing orders HOR00006 (₹199.90) and HOR00008 (₹700.00).
+- **Stuck Order Update**: Updated order HOR00006 status from `Processing` to `Delivered`.
+- **Manual Order Backfill**: Backfilled 3 manual orders (HOR00010, HOR00011, HOR00012) for vendor Deewan Husain's sold products without order records (HMT Gandaberunda, Rado Voyager Day-Date, Westar Automatic 17 Jewels) assigned to The Collectors Exchange account (TCE Branch) as requested by user, leaving old payouts unaffected.
+- **Vendor Stats Unification**: Refactored `/vendor/stats` in `backend/routes/vendor.js` to query offline-sold products alongside online order items so `/vendor/stats` and `/vendor/analytics/overview` report consistent sales and item numbers.
+- **Revenue Chart Double-Counting Check**: Confirmed admin analytics endpoint (`/admin/stats/analytics` in `backend/routes/admin.js`) filters offline products with `orderItems: { none: {} }`, ensuring newly backfilled orders are correctly excluded from offline merge and counted under regular paid orders without double-counting.
+- **Supabase MCP Configuration**: Confirmed `.env` and Supabase credentials align with current workspace environment settings.

@@ -102,7 +102,7 @@ const Header = () => {
             >
               THE COLLECTORS EXCHANGE
             </Link>
-            <nav aria-label="Main navigation" className="flex items-center space-x-8 xl:space-x-12">
+            <nav aria-label="Main navigation" className="flex items-center space-x-5 xl:space-x-7">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
