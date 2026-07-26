@@ -61,6 +61,7 @@ describe('admin routes', () => {
         delete: vi.fn(),
         create: vi.fn(),
         aggregate: vi.fn(),
+        groupBy: vi.fn(),
       },
       order: {
         count: vi.fn(),
@@ -69,8 +70,8 @@ describe('admin routes', () => {
         update: vi.fn(),
         aggregate: vi.fn(),
       },
-      vendor: { findUnique: vi.fn(), upsert: vi.fn() },
-      contactMessage: { count: vi.fn() },
+      vendor: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn() },
+      contactMessage: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
       notification: { create: vi.fn() },
       auditLog: { create: vi.fn() },
       payout: {
@@ -1073,6 +1074,239 @@ describe('admin routes', () => {
         headers: { authorization: 'Bearer superadmin' },
       });
       expect(res.statusCode).toBe(400);
+    });
+  });
+
+  describe('GET /stats/vendor-rankings', () => {
+    it('returns vendor rankings sorted by listings', async () => {
+      mockPrisma.vendor.findMany.mockResolvedValue([
+        {
+          id: 'v1',
+          userId: 'u1',
+          type: 'SINGLE',
+          rating: 4.5,
+          ratingCount: 10,
+          user: { id: 'u1', name: 'Alice', email: 'a@test.com' },
+          _count: { ratings: 10 },
+        },
+        {
+          id: 'v2',
+          userId: 'u2',
+          type: 'COMPANY',
+          rating: 3.0,
+          ratingCount: 5,
+          user: { id: 'u2', name: 'Bob', email: 'b@test.com' },
+          _count: { ratings: 5 },
+        },
+      ]);
+      mockPrisma.product.groupBy
+        .mockResolvedValueOnce([
+          { sellerId: 'u1', _count: { id: 15 } },
+          { sellerId: 'u2', _count: { id: 8 } },
+        ]) // listings
+        .mockResolvedValueOnce([{ sellerId: 'u1', _count: { id: 5 } }]); // sold
+      mockPrisma.$queryRaw.mockResolvedValue([{ sellerId: 'u1', revenue: 50000 }]);
+
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/stats/vendor-rankings',
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      const body = res.json();
+      expect(body.sortBy).toBe('listings');
+      expect(body.count).toBe(2);
+      expect(body.data[0].vendor.name).toBe('Alice');
+      expect(body.data[0].listingsCount).toBe(15);
+    });
+
+    it('accepts sortBy=revenue', async () => {
+      mockPrisma.vendor.findMany.mockResolvedValue([
+        {
+          id: 'v1',
+          userId: 'u1',
+          type: 'SINGLE',
+          rating: 0,
+          ratingCount: 0,
+          user: { id: 'u1', name: 'A', email: 'a@t.com' },
+          _count: { ratings: 0 },
+        },
+      ]);
+      mockPrisma.product.groupBy.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+      mockPrisma.$queryRaw.mockResolvedValue([{ sellerId: 'u1', revenue: 10000 }]);
+
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/stats/vendor-rankings?sortBy=revenue',
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().sortBy).toBe('revenue');
+    });
+
+    it('returns 403 for non-admin', async () => {
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/stats/vendor-rankings',
+        headers: { authorization: 'Bearer user' },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+  });
+
+  describe('GET /contact-messages', () => {
+    it('returns contact messages with total', async () => {
+      mockPrisma.contactMessage.findMany.mockResolvedValue([
+        {
+          id: 'cm1',
+          name: 'Test',
+          email: 't@t.com',
+          subject: 'Hi',
+          message: 'Hello',
+          read: false,
+          createdAt: new Date(),
+        },
+      ]);
+      mockPrisma.contactMessage.count.mockResolvedValue(1);
+
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/contact-messages',
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().total).toBe(1);
+      expect(res.json().data).toHaveLength(1);
+    });
+
+    it('filters by UNREAD status', async () => {
+      mockPrisma.contactMessage.findMany.mockResolvedValue([]);
+      mockPrisma.contactMessage.count.mockResolvedValue(0);
+
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/contact-messages?status=UNREAD',
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.contactMessage.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ read: false }) }),
+      );
+    });
+  });
+
+  describe('GET /contact-messages/:id', () => {
+    it('returns message and marks as read', async () => {
+      mockPrisma.contactMessage.findUnique.mockResolvedValue({
+        id: 'cm1',
+        name: 'T',
+        email: 't@t.com',
+        subject: 'S',
+        message: 'M',
+        read: false,
+      });
+      mockPrisma.contactMessage.update.mockResolvedValue({});
+
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/contact-messages/cm1',
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().read).toBe(true);
+      expect(mockPrisma.contactMessage.update).toHaveBeenCalled();
+    });
+
+    it('returns 404 when not found', async () => {
+      mockPrisma.contactMessage.findUnique.mockResolvedValue(null);
+
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/contact-messages/missing',
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('PATCH /contact-messages/:id', () => {
+    it('marks message as read', async () => {
+      mockPrisma.contactMessage.findUnique.mockResolvedValue({
+        id: 'cm1',
+        read: false,
+      });
+      mockPrisma.contactMessage.update.mockResolvedValue({});
+
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/contact-messages/cm1',
+        payload: { read: true },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.contactMessage.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ read: true }) }),
+      );
+    });
+
+    it('returns 404 when not found', async () => {
+      mockPrisma.contactMessage.findUnique.mockResolvedValue(null);
+
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/contact-messages/missing',
+        payload: { read: true },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('PATCH /products/:id/sold', () => {
+    it('marks product as sold', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'u1',
+        status: 'Approved',
+        quantity: 1,
+      });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', status: 'Sold' });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/products/p1/sold',
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
     });
   });
 });

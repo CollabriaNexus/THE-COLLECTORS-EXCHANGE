@@ -394,9 +394,10 @@ export default async function productRoutes(fastify) {
     return { created: created.length, errors, products: created };
   });
 
-  // Mark product as sold
+  // Mark product as sold (supports quantity decrement for multi-quantity items)
   fastify.patch('/:id/sold', { preValidation: [fastify.authenticate] }, async (request, reply) => {
     const { id } = ProductIdParam.parse(request.params);
+    const sellQty = request.body?.quantity || 1;
     const dbUser = request.dbUser;
     const existing = await prisma.product.findUnique({ where: { id } });
     if (!existing) return reply.status(404).send({ error: 'Product not found' });
@@ -404,13 +405,24 @@ export default async function productRoutes(fastify) {
       return reply.status(403).send({ error: 'Not your product' });
     if (existing.status === 'Sold')
       return reply.status(422).send({ error: 'Product is already sold' });
-    // Only an approved (publicly listed) product can be marked sold. Otherwise a
-    // seller could mark a Pending/Rejected item "Sold" to (a) surface an unreviewed
-    // product in the public catalog and (b) free up a listing slot to bypass limits.
     if (existing.status !== 'Approved') {
       return reply.status(422).send({ error: 'Only approved listings can be marked as sold' });
     }
-    const updated = await prisma.product.update({ where: { id }, data: { status: 'Sold' } });
+    if (sellQty < 1 || sellQty > existing.quantity) {
+      return reply
+        .status(422)
+        .send({ error: `Quantity must be between 1 and ${existing.quantity}` });
+    }
+
+    const remaining = existing.quantity - sellQty;
+    if (remaining <= 0) {
+      const updated = await prisma.product.update({
+        where: { id },
+        data: { status: 'Sold', quantity: 0 },
+      });
+      return updated;
+    }
+    const updated = await prisma.product.update({ where: { id }, data: { quantity: remaining } });
     return updated;
   });
 }

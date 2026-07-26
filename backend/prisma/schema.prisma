@@ -182,6 +182,7 @@ model Product {
   description        String
   condition          String
   price              Float
+  quantity           Int              @default(1)
   image              String
   images             String[]
   keywords           String[]

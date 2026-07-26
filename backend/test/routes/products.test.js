@@ -571,13 +571,14 @@ describe('products routes', () => {
   });
 
   describe('PATCH /:id/sold', () => {
-    it('marks product as sold', async () => {
+    it('marks product as sold when qty=1 (no body)', async () => {
       mockPrisma.product.findUnique.mockResolvedValue({
         id: 'p1',
         sellerId: 'vendor-id',
         status: 'Approved',
+        quantity: 1,
       });
-      mockPrisma.product.update.mockResolvedValue({ id: 'p1', status: 'Sold' });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', status: 'Sold', quantity: 0 });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
       await app.ready();
@@ -587,6 +588,77 @@ describe('products routes', () => {
         headers: { authorization: 'Bearer vendor' },
       });
       expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.update).toHaveBeenCalledWith({
+        where: { id: 'p1' },
+        data: { status: 'Sold', quantity: 0 },
+      });
+    });
+
+    it('decrements quantity when selling qty=1 from multi-qty product', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Approved',
+        quantity: 5,
+      });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', quantity: 4 });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+        body: { quantity: 1 },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.update).toHaveBeenCalledWith({
+        where: { id: 'p1' },
+        data: { quantity: 4 },
+      });
+    });
+
+    it('marks Sold when selling entire remaining qty', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Approved',
+        quantity: 3,
+      });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', status: 'Sold', quantity: 0 });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+        body: { quantity: 3 },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.update).toHaveBeenCalledWith({
+        where: { id: 'p1' },
+        data: { status: 'Sold', quantity: 0 },
+      });
+    });
+
+    it('returns 422 when requested qty exceeds available', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Approved',
+        quantity: 2,
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+        body: { quantity: 5 },
+      });
+      expect(res.statusCode).toBe(422);
     });
 
     it('returns 404 when product not found', async () => {
@@ -607,6 +679,7 @@ describe('products routes', () => {
         id: 'p1',
         sellerId: 'other-id',
         status: 'Approved',
+        quantity: 1,
       });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
@@ -624,6 +697,7 @@ describe('products routes', () => {
         id: 'p1',
         sellerId: 'vendor-id',
         status: 'Sold',
+        quantity: 0,
       });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);
@@ -641,6 +715,7 @@ describe('products routes', () => {
         id: 'p1',
         sellerId: 'vendor-id',
         status: 'Pending',
+        quantity: 1,
       });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/products.js')).default);

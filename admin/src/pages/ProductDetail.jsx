@@ -48,6 +48,7 @@ function ProductDetail() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [editBrand, setEditBrand] = useState('');
   const [editListingCategory, setEditListingCategory] = useState('');
+  const [editQuantity, setEditQuantity] = useState(1);
   const [showEditModal, setShowEditModal] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -193,6 +194,7 @@ function ProductDetail() {
       if (finalBrand !== (product.brand || '')) fields.brand = finalBrand;
       if (editListingCategory !== product.listingCategory)
         fields.listingCategory = editListingCategory;
+      if (editQuantity !== (product.quantity ?? 1)) fields.quantity = editQuantity;
       if (Object.keys(fields).length === 0) {
         setShowEditModal(false);
         return;
@@ -239,6 +241,7 @@ function ProductDetail() {
   const handleOpenEditModal = () => {
     setEditBrand(product.brand || '');
     setEditListingCategory(product.listingCategory || 'normal');
+    setEditQuantity(product.quantity ?? 1);
     setBrandInputMode(false);
     setCustomBrand('');
     setShowEditModal(true);
@@ -357,6 +360,14 @@ function ProductDetail() {
                   Price
                 </dt>
                 <dd className="text-xl font-bold text-luxury-gold mt-1">₹{product.price}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  Qty
+                </dt>
+                <dd className="text-xl font-bold text-heritage-charcoal mt-1">
+                  {product.quantity ?? 1}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wider font-semibold text-gray-500">
@@ -1078,6 +1089,18 @@ function ProductDetail() {
               <option value="featured">Featured</option>
               <option value="most_rare">Most Rare</option>
             </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+              Quantity (units available)
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={editQuantity}
+              onChange={(e) => setEditQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
+            />
           </div>
           <div className="flex gap-3 justify-end pt-4">
             <button

@@ -102,6 +102,15 @@ function Products() {
       render: (price) => `₹${price?.toLocaleString()}`,
     },
     {
+      key: 'quantity',
+      label: 'Qty',
+      render: (qty) => (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-gray-100 text-gray-700">
+          {qty ?? 1}
+        </span>
+      ),
+    },
+    {
       key: 'seller',
       label: 'Seller',
       render: (seller) => seller?.name || seller?.email || 'Unknown',

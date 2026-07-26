@@ -32,6 +32,7 @@ const ProductDetail = () => {
   const { data: product, isLoading } = useProduct(id);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [shareCopied, setShareCopied] = useState(false);
+  const [selectedQty, setSelectedQty] = useState(1);
 
   const currentUser = getUser();
   const showToast = useToast();
@@ -318,8 +319,39 @@ const ProductDetail = () => {
               </div>
             )}
 
+            {product.status !== 'Sold' && (product.quantity ?? 1) > 0 && (
+              <div className="flex items-center gap-3 mt-4">
+                <span className="text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 font-medium">
+                  Qty
+                </span>
+                <div className="flex items-center border border-gray-200">
+                  <button
+                    onClick={() => setSelectedQty(Math.max(1, selectedQty - 1))}
+                    className="px-3 py-1.5 text-gray-500 hover:text-heritage-charcoal transition-colors"
+                  >
+                    −
+                  </button>
+                  <span className="px-4 py-1.5 text-sm font-medium min-w-[2rem] text-center">
+                    {selectedQty}
+                  </span>
+                  <button
+                    onClick={() => setSelectedQty(Math.min(product.quantity ?? 1, selectedQty + 1))}
+                    disabled={selectedQty >= (product.quantity ?? 1)}
+                    className="px-3 py-1.5 text-gray-500 hover:text-heritage-charcoal transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    +
+                  </button>
+                </div>
+                {(product.quantity ?? 1) <= 5 && (
+                  <span className="text-[10px] text-amber-600 font-medium">
+                    Only {product.quantity ?? 1} left
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Actions */}
-            <div className="flex gap-2 sm:gap-4">
+            <div className="flex gap-2 sm:gap-4 mt-3">
               {product.status === 'Sold' ? (
                 <div className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium flex items-center justify-center gap-1.5 sm:gap-3 bg-gray-100 text-gray-400 cursor-default">
                   <XCircle size={14} className="sm:w-[18px] sm:h-[18px]" />
@@ -328,7 +360,7 @@ const ProductDetail = () => {
               ) : (
                 <Magnetic className="flex-1 flex">
                   <a
-                    href={`https://wa.me/916362771355?text=${encodeURIComponent(`Hi, I'm interested in "${product?.title}". Here's the product link: ${window.location.href}`)}`}
+                    href={`https://wa.me/916362771355?text=${encodeURIComponent(`Hi, I'm interested in "${product?.title}" (Qty: ${selectedQty}). Here's the product link: ${window.location.href}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-[#25D366] shadow-lg"
