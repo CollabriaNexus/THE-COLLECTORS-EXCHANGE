@@ -34,10 +34,12 @@ function Orders() {
     {
       key: 'user',
       label: 'Customer',
-      render: (user) => (
+      render: (user, row) => (
         <div>
-          <div className="font-medium text-heritage-charcoal">{user?.name}</div>
-          <div className="text-xs text-gray-500">{user?.email}</div>
+          <div className="font-medium text-heritage-charcoal">
+            {user?.name || row.buyerName || 'Walk-in'}
+          </div>
+          <div className="text-xs text-gray-500">{user?.email || row.buyerPhone || ''}</div>
         </div>
       ),
     },

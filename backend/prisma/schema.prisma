@@ -331,8 +331,10 @@ model CouponUsage {
 model Order {
   id              String        @id @default(cuid())
   displayId       String        @unique
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  buyerName       String?
+  buyerPhone      String?
   status          OrderStatus   @default(Pending)
   totalAmount     Float
   shippingAddress String

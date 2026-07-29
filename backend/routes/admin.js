@@ -55,7 +55,7 @@ export default async function adminRoutes(fastify) {
       ] = await Promise.all([
         prisma.user.count(),
         prisma.user.count({ where: { kycStatus: 'pending' } }),
-        prisma.product.count(),
+        prisma.product.count({ where: { status: { not: 'Rejected' } } }),
         prisma.order.count(),
         // H1: Sold status
         prisma.product.count({ where: { status: 'Sold' } }),
@@ -65,8 +65,8 @@ export default async function adminRoutes(fastify) {
         }),
         // H1 helper: Approved (publicly visible)
         prisma.product.count({ where: { status: 'Approved' } }),
-        // H2: SUM price of ALL products in inventory (total inventory value if sold at list)
-        prisma.product.aggregate({ _sum: { price: true } }),
+        // H2: SUM price of non-Rejected products in inventory (total inventory value if sold at list)
+        prisma.product.aggregate({ _sum: { price: true }, where: { status: { not: 'Rejected' } } }),
         // H2: SUM price of status=Sold products (covers offline sales too)
         prisma.product.aggregate({
           _sum: { price: true },
@@ -1125,6 +1125,8 @@ export default async function adminRoutes(fastify) {
       where.OR = [
         { id: { contains: search, mode: 'insensitive' } },
         { displayId: { contains: search, mode: 'insensitive' } },
+        { buyerName: { contains: search, mode: 'insensitive' } },
+        { buyerPhone: { contains: search, mode: 'insensitive' } },
         { user: { name: { contains: search, mode: 'insensitive' } } },
         { user: { email: { contains: search, mode: 'insensitive' } } },
       ];
@@ -1197,21 +1199,12 @@ export default async function adminRoutes(fastify) {
         notes,
       } = body;
 
-      // Find or create buyer user by phone
-      let buyerUser = await prisma.user.findFirst({
-        where: {
-          OR: [{ phone: buyerPhone }, ...(buyerEmail ? [{ email: buyerEmail }] : [])],
-        },
-      });
-
-      if (!buyerUser) {
-        buyerUser = await prisma.user.create({
-          data: {
-            name: buyerName,
-            phone: buyerPhone,
-            email: buyerEmail || `walkin-${Date.now()}@tce.local`,
-            role: 'user',
-          },
+      // If buyer provided a real email, try to find an existing user account.
+      // Walk-in / cash-sale buyers do NOT get a User record created.
+      let buyerUser = null;
+      if (buyerEmail) {
+        buyerUser = await prisma.user.findFirst({
+          where: { email: buyerEmail },
         });
       }
 
@@ -1293,7 +1286,9 @@ export default async function adminRoutes(fastify) {
           // reporting lands in the period the sale actually happened.
           const newOrder = await tx.order.create({
             data: {
-              userId: buyerUser.id,
+              userId: buyerUser?.id || null,
+              buyerName,
+              buyerPhone,
               displayId,
               status: 'Delivered',
               totalAmount: sellingPrice,
@@ -1325,14 +1320,16 @@ export default async function adminRoutes(fastify) {
           await tx.cartItem.deleteMany({ where: { productId } });
           await tx.wishlistItem.deleteMany({ where: { productId } });
 
-          // Create notification for buyer
-          await tx.notification.create({
-            data: {
-              userId: buyerUser.id,
-              title: 'Order Confirmed',
-              message: `Your order #${displayId} has been confirmed and delivered. Thank you for your purchase.`,
-            },
-          });
+          // Create notification for buyer (only if they have a user account)
+          if (buyerUser) {
+            await tx.notification.create({
+              data: {
+                userId: buyerUser.id,
+                title: 'Order Confirmed',
+                message: `Your order #${displayId} has been confirmed and delivered. Thank you for your purchase.`,
+              },
+            });
+          }
 
           return newOrder;
         });

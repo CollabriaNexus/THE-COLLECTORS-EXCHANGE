@@ -46,10 +46,22 @@ function ProductDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [editBrand, setEditBrand] = useState('');
-  const [editListingCategory, setEditListingCategory] = useState('');
-  const [editQuantity, setEditQuantity] = useState(1);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    category: '',
+    description: '',
+    price: 0,
+    condition: '',
+    brand: '',
+    listingCategory: 'normal',
+    quantity: 1,
+    image: '',
+    images: [],
+    keywords: [],
+    specs: [],
+    commissionPercent: 10,
+  });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [brandInputMode, setBrandInputMode] = useState(false);
@@ -190,11 +202,28 @@ function ProductDetail() {
     setError('');
     try {
       const fields = {};
-      const finalBrand = brandInputMode ? customBrand : editBrand;
+      if (editForm.title !== (product.title || '')) fields.title = editForm.title;
+      if (editForm.category !== (product.category || '')) fields.category = editForm.category;
+      if (editForm.description !== (product.description || ''))
+        fields.description = editForm.description;
+      if (Number(editForm.price) !== Number(product.price || 0))
+        fields.price = Number(editForm.price);
+      if (editForm.condition !== (product.condition || '')) fields.condition = editForm.condition;
+      const finalBrand = brandInputMode ? customBrand : editForm.brand;
       if (finalBrand !== (product.brand || '')) fields.brand = finalBrand;
-      if (editListingCategory !== product.listingCategory)
-        fields.listingCategory = editListingCategory;
-      if (editQuantity !== (product.quantity ?? 1)) fields.quantity = editQuantity;
+      if (editForm.listingCategory !== (product.listingCategory || 'normal'))
+        fields.listingCategory = editForm.listingCategory;
+      if (Number(editForm.quantity) !== Number(product.quantity ?? 1))
+        fields.quantity = Number(editForm.quantity);
+      if (editForm.image !== (product.image || '')) fields.image = editForm.image;
+      if (JSON.stringify(editForm.images) !== JSON.stringify(product.images || []))
+        fields.images = editForm.images;
+      if (JSON.stringify(editForm.keywords) !== JSON.stringify(product.keywords || []))
+        fields.keywords = editForm.keywords;
+      if (JSON.stringify(editForm.specs) !== JSON.stringify(product.specs || []))
+        fields.specs = editForm.specs;
+      if (Number(editForm.commissionPercent) !== Number(product.commissionPercent ?? 10))
+        fields.commissionPercent = Number(editForm.commissionPercent);
       if (Object.keys(fields).length === 0) {
         setShowEditModal(false);
         return;
@@ -239,23 +268,24 @@ function ProductDetail() {
   }
 
   const handleOpenEditModal = () => {
-    setEditBrand(product.brand || '');
-    setEditListingCategory(product.listingCategory || 'normal');
-    setEditQuantity(product.quantity ?? 1);
+    setEditForm({
+      title: product.title || '',
+      category: product.category || '',
+      description: product.description || '',
+      price: product.price || 0,
+      condition: product.condition || '',
+      brand: product.brand || '',
+      listingCategory: product.listingCategory || 'normal',
+      quantity: product.quantity ?? 1,
+      image: product.image || '',
+      images: product.images || [],
+      keywords: product.keywords || [],
+      specs: product.specs || [],
+      commissionPercent: product.commissionPercent ?? 10,
+    });
     setBrandInputMode(false);
     setCustomBrand('');
     setShowEditModal(true);
-  };
-
-  const handleBrandSelect = (value) => {
-    if (value === '__custom__') {
-      setBrandInputMode(true);
-      setCustomBrand('');
-      setEditBrand('');
-    } else {
-      setBrandInputMode(false);
-      setEditBrand(value);
-    }
   };
 
   return (
@@ -393,8 +423,10 @@ function ProductDetail() {
                   {isEditingCategory ? (
                     <div className="flex gap-2">
                       <select
-                        value={editListingCategory}
-                        onChange={(e) => setEditListingCategory(e.target.value)}
+                        value={editForm.listingCategory}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, listingCategory: e.target.value }))
+                        }
                         className="px-2 py-1 border border-gray-300 rounded text-xs outline-none focus:ring-2 focus:ring-luxury-gold"
                         autoFocus
                       >
@@ -404,10 +436,10 @@ function ProductDetail() {
                       </select>
                       <button
                         onClick={async () => {
-                          if (editListingCategory !== (product.listingCategory || 'normal')) {
+                          if (editForm.listingCategory !== (product.listingCategory || 'normal')) {
                             await updateProductMutation.mutateAsync({
                               id,
-                              listingCategory: editListingCategory,
+                              listingCategory: editForm.listingCategory,
                             });
                           }
                           setIsEditingCategory(false);
@@ -418,7 +450,10 @@ function ProductDetail() {
                       </button>
                       <button
                         onClick={() => {
-                          setEditListingCategory(product.listingCategory || 'normal');
+                          setEditForm((f) => ({
+                            ...f,
+                            listingCategory: product.listingCategory || 'normal',
+                          }));
                           setIsEditingCategory(false);
                         }}
                         className="text-xs text-gray-500 hover:underline"
@@ -429,7 +464,10 @@ function ProductDetail() {
                   ) : (
                     <span
                       onClick={() => {
-                        setEditListingCategory(product.listingCategory || 'normal');
+                        setEditForm((f) => ({
+                          ...f,
+                          listingCategory: product.listingCategory || 'normal',
+                        }));
                         setIsEditingCategory(true);
                       }}
                       className={`cursor-pointer inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold ${product.listingCategory === 'most_rare' ? 'bg-purple-100 text-purple-800' : product.listingCategory === 'featured' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
@@ -580,7 +618,7 @@ function ProductDetail() {
                   onClick={handleOpenEditModal}
                   className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-700 py-3 rounded-md font-medium hover:bg-amber-100 transition-colors"
                 >
-                  Edit Brand & Category
+                  Edit Product
                 </button>
                 <button
                   onClick={handleMarkAsSold}
@@ -1012,107 +1050,328 @@ function ProductDetail() {
         </div>
       </Modal>
 
-      {/* Edit Brand & Listing Category Modal */}
+      {/* Edit Product Modal — All Fields */}
       <Modal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        title="Edit Product Settings"
+        title="Edit Product"
+        size="lg"
       >
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          {/* Title */}
           <div>
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
-              Brand
+              Title
             </label>
-            {brandInputMode ? (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customBrand}
-                  onChange={(e) => setCustomBrand(e.target.value)}
-                  placeholder="Enter brand name..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
-                  autoFocus
-                />
-                <button
-                  onClick={() => setBrandInputMode(false)}
-                  className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <select
-                  value={brands.includes(editBrand) ? editBrand : editBrand ? '__custom__' : ''}
-                  onChange={(e) => handleBrandSelect(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
-                >
-                  <option value="">No brand</option>
-                  {brands.filter(Boolean).map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
-                  <option value="__custom__">+ Add New Brand...</option>
-                </select>
-                {editBrand && !brands.includes(editBrand) && (
-                  <span className="text-xs text-amber-600 self-center">(custom)</span>
-                )}
-              </div>
-            )}
-            {brandInputMode && (
-              <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              value={editForm.title}
+              onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+            />
+          </div>
+
+          {/* Category + Condition */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                Category
+              </label>
+              <select
+                value={editForm.category}
+                onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+              >
+                {[
+                  'Timepieces',
+                  'Accessories',
+                  'Collectibles',
+                  'Antiques',
+                  'Toys & Pop Culture',
+                  'Jewelry',
+                ].map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                Condition
+              </label>
+              <input
+                type="text"
+                value={editForm.condition}
+                onChange={(e) => setEditForm((f) => ({ ...f, condition: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+              Description
+            </label>
+            <textarea
+              value={editForm.description}
+              onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none resize-none"
+            />
+          </div>
+
+          {/* Price + Quantity + Commission */}
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                Price (₹)
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={editForm.price}
+                onChange={(e) => setEditForm((f) => ({ ...f, price: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                Quantity
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={editForm.quantity}
+                onChange={(e) =>
+                  setEditForm((f) => ({
+                    ...f,
+                    quantity: Math.max(1, parseInt(e.target.value) || 1),
+                  }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                Commission (%)
+              </label>
+              <input
+                type="number"
+                min="10"
+                max="25"
+                value={editForm.commissionPercent}
+                onChange={(e) => setEditForm((f) => ({ ...f, commissionPercent: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Brand + Listing Category */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                Brand
+              </label>
+              {brandInputMode ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customBrand}
+                    onChange={(e) => setCustomBrand(e.target.value)}
+                    placeholder="Enter brand name..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => setBrandInputMode(false)}
+                    className="px-3 py-2 text-xs text-gray-500 border border-gray-300 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <select
+                    value={
+                      brands.includes(editForm.brand)
+                        ? editForm.brand
+                        : editForm.brand
+                          ? '__custom__'
+                          : ''
+                    }
+                    onChange={(e) => {
+                      if (e.target.value === '__custom__') {
+                        setBrandInputMode(true);
+                        setCustomBrand('');
+                        setEditForm((f) => ({ ...f, brand: '' }));
+                      } else {
+                        setEditForm((f) => ({ ...f, brand: e.target.value }));
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+                  >
+                    <option value="">No brand</option>
+                    {brands.filter(Boolean).map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
+                    <option value="__custom__">+ Add New Brand...</option>
+                  </select>
+                  {editForm.brand && !brands.includes(editForm.brand) && (
+                    <span className="text-xs text-amber-600 self-center">(custom)</span>
+                  )}
+                </div>
+              )}
+              {brandInputMode && (
                 <button
                   onClick={() => {
                     setBrandInputMode(false);
-                    if (customBrand.trim()) {
-                      setEditBrand(customBrand.trim());
-                    }
+                    if (customBrand.trim())
+                      setEditForm((f) => ({ ...f, brand: customBrand.trim() }));
                   }}
-                  className="flex items-center gap-1 text-xs text-luxury-gold hover:underline font-medium"
+                  className="mt-1 text-xs text-luxury-gold hover:underline font-medium"
                 >
-                  <Plus size={14} /> Add "{customBrand || 'new brand'}"
+                  + Add "{customBrand || 'new brand'}"
                 </button>
-              </div>
-            )}
+              )}
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                Listing Type
+              </label>
+              <select
+                value={editForm.listingCategory}
+                onChange={(e) => setEditForm((f) => ({ ...f, listingCategory: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+              >
+                <option value="normal">Normal</option>
+                <option value="featured">Featured</option>
+                <option value="most_rare">Most Rare</option>
+              </select>
+            </div>
           </div>
+
+          {/* Primary Image URL */}
           <div>
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
-              Listing Category
-            </label>
-            <select
-              value={editListingCategory}
-              onChange={(e) => setEditListingCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
-            >
-              <option value="normal">Normal</option>
-              <option value="featured">Featured</option>
-              <option value="most_rare">Most Rare</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
-              Quantity (units available)
+              Primary Image URL
             </label>
             <input
-              type="number"
-              min="1"
-              value={editQuantity}
-              onChange={(e) => setEditQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold outline-none"
+              type="url"
+              value={editForm.image}
+              onChange={(e) => setEditForm((f) => ({ ...f, image: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
             />
           </div>
-          <div className="flex gap-3 justify-end pt-4">
+
+          {/* Additional Images */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+              Additional Images (one URL per line)
+            </label>
+            <textarea
+              value={(editForm.images || []).join('\n')}
+              onChange={(e) =>
+                setEditForm((f) => ({
+                  ...f,
+                  images: e.target.value
+                    .split('\n')
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                }))
+              }
+              rows={3}
+              placeholder="https://example.com/img1.jpg&#10;https://example.com/img2.jpg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none resize-none font-mono"
+            />
+          </div>
+
+          {/* Keywords */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+              Keywords (one per line)
+            </label>
+            <textarea
+              value={(editForm.keywords || []).join('\n')}
+              onChange={(e) =>
+                setEditForm((f) => ({
+                  ...f,
+                  keywords: e.target.value
+                    .split('\n')
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                }))
+              }
+              rows={2}
+              placeholder="vintage&#10;watch&#10;swiss"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none resize-none font-mono"
+            />
+          </div>
+
+          {/* Specs */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+              Specifications
+            </label>
+            {(editForm.specs || []).map((spec, idx) => (
+              <div key={idx} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={spec.key}
+                  placeholder="Key"
+                  onChange={(e) => {
+                    const specs = [...editForm.specs];
+                    specs[idx] = { ...specs[idx], key: e.target.value };
+                    setEditForm((f) => ({ ...f, specs }));
+                  }}
+                  className="w-1/3 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+                />
+                <input
+                  type="text"
+                  value={spec.value}
+                  placeholder="Value"
+                  onChange={(e) => {
+                    const specs = [...editForm.specs];
+                    specs[idx] = { ...specs[idx], value: e.target.value };
+                    setEditForm((f) => ({ ...f, specs }));
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-luxury-gold outline-none"
+                />
+                <button
+                  onClick={() =>
+                    setEditForm((f) => ({ ...f, specs: f.specs.filter((_, i) => i !== idx) }))
+                  }
+                  className="px-2 text-red-400 hover:text-red-600"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() =>
+                setEditForm((f) => ({ ...f, specs: [...(f.specs || []), { key: '', value: '' }] }))
+              }
+              className="text-xs text-luxury-gold hover:underline font-medium"
+            >
+              + Add Spec
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 justify-end pt-4 border-t sticky bottom-0 bg-white">
             <button
               onClick={() => setShowEditModal(false)}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
             >
               Cancel
             </button>
             <button
               onClick={handleUpdateProduct}
               disabled={updateProductMutation.isPending}
-              className="px-6 py-2 bg-luxury-gold text-white rounded-md hover:bg-luxury-gold/90 disabled:opacity-50"
+              className="px-6 py-2 bg-luxury-gold text-white rounded-md hover:bg-luxury-gold/90 disabled:opacity-50 font-medium transition-colors"
             >
               {updateProductMutation.isPending ? 'Saving...' : 'Save Changes'}
             </button>

@@ -40,9 +40,16 @@ const createWrapper = () => {
 };
 
 const mockProduct = {
-  id: '123', title: 'Vintage Watch', status: 'Pending', isPublished: false,
-  price: 50000, category: 'Timepieces', brand: 'Rolex', condition: 'Excellent',
-  description: 'A fine watch', createdAt: '2024-01-01T00:00:00Z',
+  id: '123',
+  title: 'Vintage Watch',
+  status: 'Pending',
+  isPublished: false,
+  price: 50000,
+  category: 'Timepieces',
+  brand: 'Rolex',
+  condition: 'Excellent',
+  description: 'A fine watch',
+  createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
   image: 'http://example.com/watch.jpg',
   images: ['http://example.com/watch.jpg', 'http://example.com/watch2.jpg'],
@@ -92,7 +99,7 @@ describe('ProductDetail', () => {
       expect(screen.getByText('Start Review')).toBeInTheDocument();
       expect(screen.getByText('Approve & Publish')).toBeInTheDocument();
       expect(screen.getByText('Reject Product')).toBeInTheDocument();
-      expect(screen.getByText('Edit Brand & Category')).toBeInTheDocument();
+      expect(screen.getByText('Edit Product')).toBeInTheDocument();
       expect(screen.getByText('Mark as Sold')).toBeInTheDocument();
       expect(screen.getByText('Delete Product')).toBeInTheDocument();
     });
@@ -126,7 +133,9 @@ describe('ProductDetail', () => {
     fireEvent.change(textarea, { target: { value: 'Bad quality' } });
     fireEvent.click(screen.getByText('Confirm Rejection'));
     await waitFor(() => {
-      expect(mockPatch).toHaveBeenCalledWith('/admin/products/123/reject', { reason: 'Bad quality' });
+      expect(mockPatch).toHaveBeenCalledWith('/admin/products/123/reject', {
+        reason: 'Bad quality',
+      });
     });
   });
 
@@ -157,7 +166,7 @@ describe('ProductDetail', () => {
     mockPatch.mockResolvedValue({ data: {} });
     render(<ProductDetail />, { wrapper: createWrapper() });
     await waitFor(() => {
-      fireEvent.click(screen.getByText('Edit Brand & Category'));
+      fireEvent.click(screen.getByText('Edit Product'));
     });
     const select = screen.getByDisplayValue('Normal');
     fireEvent.change(select, { target: { value: 'featured' } });
@@ -168,7 +177,11 @@ describe('ProductDetail', () => {
   });
 
   it('displays rejection reason when product is rejected', async () => {
-    const rejectedProduct = { ...mockProduct, status: 'Rejected', rejectionReason: 'Image too blurry' };
+    const rejectedProduct = {
+      ...mockProduct,
+      status: 'Rejected',
+      rejectionReason: 'Image too blurry',
+    };
     mockGet.mockImplementation((url) => {
       if (url === '/admin/products/123') return Promise.resolve({ data: rejectedProduct });
       if (url === '/admin/brands') return Promise.resolve({ data: [] });
