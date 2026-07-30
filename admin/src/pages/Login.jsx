@@ -6,8 +6,6 @@ import { setUser, setAuthToken, getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState('');
@@ -103,60 +101,6 @@ function Login() {
     };
   }, [navigate]);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      // 1. Authenticate with Supabase
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) throw authError;
-
-      // 2. Get JWT token
-      const token = authData.session.access_token;
-      setAuthToken(token);
-
-      // 3. Fetch user data from backend to verify admin role
-      let userData;
-      try {
-        const { data } = await apiClient.get(`/users/me`);
-        userData = data;
-      } catch (meErr) {
-        if (meErr.response?.status === 404) {
-          // Auto-sync user
-          const { data } = await apiClient.post('/users/register', {
-            email,
-            name: email.split('@')[0],
-          });
-          userData = data;
-        } else {
-          throw meErr;
-        }
-      }
-
-      // 4. Verify user is admin
-      if (userData.role !== 'admin') {
-        throw new Error('Access denied. Admin privileges required.');
-      }
-
-      // 5. Store user data
-      setUser(userData);
-
-      // 6. Navigate to dashboard
-      navigate('/', { replace: true });
-    } catch (err) {
-      console.error('Login error:', err);
-      setError(err.message || 'Failed to login. Please check your credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoogleLogin = async () => {
     setError('');
     setLoading(true);
@@ -224,52 +168,6 @@ function Login() {
               {error}
             </div>
           )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-heritage-dark mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold focus:border-transparent outline-none"
-                placeholder="admin@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-heritage-dark mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold focus:border-transparent outline-none"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-luxury-gold text-white py-3 rounded-md font-medium hover:bg-luxury-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
 
           {/* Google Sign-in Button */}
           <button

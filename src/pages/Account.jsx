@@ -52,7 +52,6 @@ import { useNotifications } from '../hooks/api/useNotifications';
 import PhoneVerification from '../components/account/PhoneVerification';
 import NotificationsPanel from '../components/account/NotificationsPanel';
 import DocUploadField from '../components/account/DocUploadField';
-import LoginForm from '../components/account/LoginForm';
 import ReviewForm from '../components/ReviewForm';
 import ReviewList from '../components/ReviewList';
 import { Reveal, CountUp } from '../components/Motion';
@@ -866,16 +865,6 @@ const Account = () => {
           delay={140}
           className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-8"
         >
-          <LoginForm />
-
-          <div className="relative flex items-center py-2">
-            <div className="flex-grow border-t border-gray-200" />
-            <span className="mx-4 flex-shrink text-gray-400 uppercase tracking-[0.2em] text-xs font-bold">
-              Or
-            </span>
-            <div className="flex-grow border-t border-gray-200" />
-          </div>
-
           <button
             type="button"
             onClick={handleGoogleLogin}

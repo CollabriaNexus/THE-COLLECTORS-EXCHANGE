@@ -53,13 +53,9 @@ function BlogPost() {
   const related = (relatedData?.posts || []).filter((p) => p.slug !== slug).slice(0, 3);
 
   const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({ title: post.title, url: window.location.href });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const processContent = useMemo(() => {

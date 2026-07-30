@@ -49,15 +49,10 @@ const ProductDetail = () => {
   const shareCopiedTimer = useRef(null);
 
   const handleShare = () => {
-    if (navigator.share) {
-      // A user cancelling the native share sheet rejects the promise — ignore it.
-      navigator.share({ title: product.title, url: window.location.href }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      setShareCopied(true);
-      clearTimeout(shareCopiedTimer.current);
-      shareCopiedTimer.current = setTimeout(() => setShareCopied(false), 2000);
-    }
+    navigator.clipboard.writeText(window.location.href);
+    setShareCopied(true);
+    clearTimeout(shareCopiedTimer.current);
+    shareCopiedTimer.current = setTimeout(() => setShareCopied(false), 2000);
   };
 
   useEffect(() => {
