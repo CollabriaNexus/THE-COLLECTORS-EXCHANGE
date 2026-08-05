@@ -2431,6 +2431,18 @@ const Account = () => {
                                   </button>
                                 </div>
                               </div>
+                              {product.status === 'Sold' && (
+                                <p className="text-[10px] text-gray-500 leading-snug mt-1.5">
+                                  Marked by mistake? Contact{' '}
+                                  <a
+                                    href="mailto:support@thecollectorsexchange.in"
+                                    className="underline font-medium text-gray-600"
+                                  >
+                                    support@thecollectorsexchange.in
+                                  </a>{' '}
+                                  to restore.
+                                </p>
+                              )}
                             </div>
                           </div>
                           {/* Desktop: vertical card */}
@@ -2489,6 +2501,24 @@ const Account = () => {
                               <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">
                                 {product.description}
                               </p>
+                              {product.status === 'Sold' && (
+                                <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
+                                  <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                    Marked Sold
+                                  </p>
+                                  <p className="text-xs text-gray-600 leading-relaxed">
+                                    This listing is hidden from buyers. Marked it by mistake?
+                                    Contact{' '}
+                                    <a
+                                      href="mailto:support@thecollectorsexchange.in"
+                                      className="underline font-medium"
+                                    >
+                                      support@thecollectorsexchange.in
+                                    </a>{' '}
+                                    to restore it.
+                                  </p>
+                                </div>
+                              )}
                               {product.status === 'Rejected' && product.rejectionReason && (
                                 <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded">
                                   <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1">

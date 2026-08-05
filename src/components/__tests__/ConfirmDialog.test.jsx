@@ -69,7 +69,7 @@ describe('ConfirmDialog', () => {
     );
     fireEvent.click(screen.getByText('open confirm'));
     expect(await screen.findByText('Are you sure?')).toBeInTheDocument();
-    const backdrop = document.querySelector('.fixed.inset-0.bg-black');
+    const backdrop = document.querySelector('[role="dialog"] > div');
     fireEvent.click(backdrop);
     expect(screen.queryByText('Are you sure?')).not.toBeInTheDocument();
   });
