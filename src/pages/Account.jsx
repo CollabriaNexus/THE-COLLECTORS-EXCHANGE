@@ -752,6 +752,21 @@ const Account = () => {
   };
 
   const confirm = useConfirm();
+  const handleMarkAsSold = async (productId) => {
+    if (
+      !(await confirm(
+        'Are you sure you want to mark this item as sold? This will unpublish the listing.',
+      ))
+    )
+      return;
+    try {
+      await markAsSoldMutation.mutateAsync(productId);
+      showToast('Item marked as sold.', 'success');
+    } catch {
+      showToast('Failed to mark item as sold.', 'error');
+    }
+  };
+
   const handleDeleteProduct = async (productId) => {
     if (!(await confirm('Are you sure you want to delete this listing?'))) return;
     try {
@@ -2390,7 +2405,7 @@ const Account = () => {
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => markAsSoldMutation.mutate(product.id)}
+                                    onClick={() => handleMarkAsSold(product.id)}
                                     disabled={markAsSoldMutation.isPending}
                                     className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30"
                                     title="Mark as sold"
@@ -2510,7 +2525,7 @@ const Account = () => {
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => markAsSoldMutation.mutate(product.id)}
+                                    onClick={() => handleMarkAsSold(product.id)}
                                     disabled={markAsSoldMutation.isPending}
                                     className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30"
                                     title="Mark as sold"
