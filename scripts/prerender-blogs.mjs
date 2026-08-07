@@ -611,6 +611,51 @@ function buildBlogHtml(post, metaTags) {
 </html>`;
 }
 
+/**
+ * Cloudflare Pages serves this automatically for any request that matches
+ * neither a static asset nor a rule in _redirects — giving genuine HTTP 404s
+ * for typos, dead links and probe traffic instead of a 200 SPA shell.
+ */
+function build404Html() {
+  return `<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <title>Page Not Found — The Collectors Exchange</title>
+  <meta name="robots" content="noindex, follow" />
+  <meta name="description" content="This page could not be found. Browse authenticated vintage watches and rare collectibles at The Collectors Exchange." />
+  ${SHELL_HEAD}
+  <style>
+    body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:#0A0A0A;color:#FAF8F5;-webkit-font-smoothing:antialiased}
+    .wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 1.5rem}
+    .code{font-family:'Playfair Display',Georgia,serif;font-size:clamp(4rem,14vw,7rem);color:#D4AF37;line-height:1;margin:0}
+    .rule{width:120px;height:2px;background:linear-gradient(90deg,transparent,#D4AF37,transparent);margin:1.75rem 0}
+    h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.4rem,4vw,2.1rem);font-weight:600;margin:0 0 .9rem;color:#fff}
+    p{color:rgba(245,240,232,.62);max-width:520px;line-height:1.65;margin:0 0 2.4rem;font-size:1rem}
+    .links{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center}
+    .btn{display:inline-block;padding:15px 34px;font-size:11px;text-transform:uppercase;letter-spacing:.18em;text-decoration:none;border-radius:999px;transition:all .3s}
+    .primary{background:#D4AF37;color:#0A0A0A;font-weight:600}
+    .secondary{border:1px solid rgba(212,175,55,.45);color:#D4AF37}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="code">404</p>
+    <div class="rule"></div>
+    <h1>This record could not be located.</h1>
+    <p>The page you're looking for may have been moved, or the listing may have already found its collector.</p>
+    <div class="links">
+      <a class="btn primary" href="/category/">Browse The Exchange</a>
+      <a class="btn secondary" href="/">Return Home</a>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 function buildArchiveIndexHtml() {
   return `<!DOCTYPE html>
 <html lang="en-IN">
@@ -884,6 +929,10 @@ async function main() {
     console.log(`[prerender] Wrote ${path}/index.html`);
   }
   console.log(`[prerender] Prerendered ${coreWritten} core marketing pages.`);
+
+  // 404 page — Cloudflare Pages serves this for unmatched routes.
+  writeFileSync(resolve(DIST, '404.html'), build404Html(), 'utf-8');
+  console.log('[prerender] Wrote 404.html');
 
   // --- Blog posts ---
   let posts;

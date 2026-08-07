@@ -1,1 +1,29 @@
-/* /index.html 200
+# SPA fallbacks — scoped, NOT a global catch-all.
+#
+# Every indexable route is prerendered to a real directory at build time
+# (see scripts/prerender-blogs.mjs), so those are served as static assets.
+# Only the routes below need to fall back to the client-rendered shell.
+#
+# A global `/* /index.html 200` would make EVERY url return HTTP 200 — including
+# typos, probe traffic (/wp-sitemap.xml) and dead links — which wastes crawl
+# budget and shows up in Search Console as soft 404s. Anything not matched here
+# falls through to 404.html.
+
+# Account-gated / client-only routes (all noindex, none prerendered)
+/account      /index.html   200
+/account/*    /index.html   200
+/wishlist     /index.html   200
+/cart         /index.html   200
+/checkout     /index.html   200
+/vendor-dashboard   /index.html   200
+/vendor-dashboard/* /index.html   200
+/links        /index.html   200
+
+# Dynamic content. These ARE prerendered at build time, but new products and
+# posts can be published between deploys — falling back to the SPA means a
+# freshly added listing still resolves instead of 404ing until the next build.
+/product/*    /index.html   200
+/archive/*    /index.html   200
+
+# Legacy path kept working (App.jsx also redirects this client-side)
+/about-us     /about/       301
