@@ -28,9 +28,7 @@ export async function onRequest() {
         const lastmod = post.updatedAt || post.publishedAt || post.createdAt;
         const lastmodDate = lastmod ? new Date(lastmod).toISOString().split('T')[0] : '';
         return `  <url>
-    <loc>${SITE_URL}/archive/${post.slug}</loc>${lastmodDate ? `\n    <lastmod>${lastmodDate}</lastmod>` : ''}
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>${SITE_URL}/archive/${post.slug}/</loc>${lastmodDate ? `\n    <lastmod>${lastmodDate}</lastmod>` : ''}
   </url>`;
       })
       .join('\n');

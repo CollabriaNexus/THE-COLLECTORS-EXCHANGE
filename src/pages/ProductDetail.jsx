@@ -126,8 +126,8 @@ const ProductDetail = () => {
   const breadcrumbItems = [
     { name: 'Home', url: '/' },
     { name: 'The Exchange', url: '/category' },
-    { name: product.category },
-    { name: product.title },
+    { name: product.category, url: '/category' },
+    { name: product.title, url: `/product/${product.id}` },
   ];
 
   return (

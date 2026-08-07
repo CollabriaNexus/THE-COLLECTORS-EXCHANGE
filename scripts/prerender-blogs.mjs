@@ -29,6 +29,13 @@ const VITE_BODY_EXTRA =
     ?.replace(/<div id="root">[\s\S]*?<\/div>/gi, '')
     ?.trim() ?? '';
 
+// Cloudflare Pages 308-redirects directory-style paths without a trailing
+// slash to the slash version. Canonical/sitemap URLs must match what
+// actually serves 200, or Google flags a redirect/canonical mismatch.
+function withTrailingSlash(path) {
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -207,7 +214,7 @@ function buildCorePageSchemas(page) {
       '@type': page.schemaType,
       name: page.title,
       description: page.description,
-      url: `${SITE_URL}${Object.keys(CORE_PAGES).find((k) => CORE_PAGES[k] === page)}`,
+      url: `${SITE_URL}${withTrailingSlash(Object.keys(CORE_PAGES).find((k) => CORE_PAGES[k] === page))}`,
       isPartOf: {
         '@type': 'WebSite',
         name: 'The Collectors Exchange',
@@ -244,7 +251,7 @@ function buildCorePageSchemas(page) {
         '@type': 'ListItem',
         position: i + 1,
         name: item.name,
-        item: item.url ? `${SITE_URL}${item.url}` : undefined,
+        item: item.url ? `${SITE_URL}${withTrailingSlash(item.url)}` : undefined,
       })),
     });
   }
@@ -256,7 +263,7 @@ function buildCorePageMetaTags(path, page) {
   const title = escapeHtml(page.title);
   const desc = escapeHtml(page.description);
   const image = `${SITE_URL}${page.ogImage}`;
-  const canonical = `${SITE_URL}${path}`;
+  const canonical = `${SITE_URL}${withTrailingSlash(path)}`;
   const schemas = buildCorePageSchemas(page);
 
   const schemaTags = schemas
@@ -412,7 +419,7 @@ function buildMetaTags(post) {
   const title = escapeHtml(post.metaTitle || post.title);
   const desc = escapeHtml(post.metaDescription || post.excerpt || '');
   const image = post.coverImage || `${SITE_URL}/og-image.png`;
-  const canonical = `${SITE_URL}/archive/${post.slug}`;
+  const canonical = `${SITE_URL}/archive/${post.slug}/`;
   const published =
     post.publishedAt || post.createdAt
       ? new Date(post.publishedAt || post.createdAt).toISOString()
@@ -445,7 +452,7 @@ function buildMetaTags(post) {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: 'The Archive', item: `${SITE_URL}/archive` },
+      { '@type': 'ListItem', position: 2, name: 'The Archive', item: `${SITE_URL}/archive/` },
       {
         '@type': 'ListItem',
         position: 3,
@@ -614,7 +621,7 @@ function buildArchiveIndexHtml() {
   <link rel="icon" type="image/png" href="/favicon.png" />
   <title>The Archive — The Collectors Exchange</title>
   <meta name="description" content="Explore The Collectors Exchange Archive. Curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
-  <link rel="canonical" href="${SITE_URL}/archive" />
+  <link rel="canonical" href="${SITE_URL}/archive/" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <meta property="og:site_name" content="The Collectors Exchange" />
   <meta property="og:title" content="The Archive — The Collectors Exchange" />
@@ -623,7 +630,7 @@ function buildArchiveIndexHtml() {
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="${SITE_URL}/archive" />
+  <meta property="og:url" content="${SITE_URL}/archive/" />
   <meta property="og:locale" content="en_IN" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@TCE_store" />
@@ -636,7 +643,7 @@ function buildArchiveIndexHtml() {
     name: 'The Archive',
     description:
       'Curated articles on horology, gemology, collecting, and the stories behind rare artifacts.',
-    url: `${SITE_URL}/archive`,
+    url: `${SITE_URL}/archive/`,
     isPartOf: {
       '@type': 'WebSite',
       name: 'The Collectors Exchange',
@@ -648,7 +655,7 @@ function buildArchiveIndexHtml() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: 'The Archive', item: `${SITE_URL}/archive` },
+      { '@type': 'ListItem', position: 2, name: 'The Archive', item: `${SITE_URL}/archive/` },
     ],
   })}</script>
   ${VITE_HEAD_EXTRA}
@@ -691,7 +698,7 @@ function buildProductMetaTags(product) {
       : `Authentic ${product.category || 'collectible'} at ₹${(product.price || 0).toLocaleString('en-IN')}. Verified by The Collectors Exchange.`,
   );
   const image = product.images?.[0] || product.image || `${SITE_URL}/og-image.png`;
-  const canonical = `${SITE_URL}/product/${product.id}`;
+  const canonical = `${SITE_URL}/product/${product.id}/`;
 
   const productSchema = {
     '@context': 'https://schema.org',
@@ -736,7 +743,7 @@ function buildProductMetaTags(product) {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: 'The Exchange', item: `${SITE_URL}/category` },
+      { '@type': 'ListItem', position: 2, name: 'The Exchange', item: `${SITE_URL}/category/` },
       { '@type': 'ListItem', position: 3, name: product.title, item: canonical },
     ],
   };

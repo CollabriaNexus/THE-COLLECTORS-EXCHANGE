@@ -29,9 +29,7 @@ export async function onRequest() {
         const lastmod = product.updatedAt || product.createdAt;
         const lastmodDate = lastmod ? new Date(lastmod).toISOString().split('T')[0] : '';
         return `  <url>
-    <loc>${SITE_URL}/product/${product.id}</loc>${lastmodDate ? `\n    <lastmod>${lastmodDate}</lastmod>` : ''}
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <loc>${SITE_URL}/product/${product.id}/</loc>${lastmodDate ? `\n    <lastmod>${lastmodDate}</lastmod>` : ''}
   </url>`;
       })
       .join('\n');

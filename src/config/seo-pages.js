@@ -23,6 +23,18 @@ export function buildPageTitle(title) {
     : `Vintage Watches & Rare Collectibles${TITLE_SEP}${SITE_NAME}`;
 }
 
+/**
+ * Cloudflare Pages 308-redirects any directory-style path without a trailing
+ * slash to the slash version (e.g. /category -> /category/). Sitemap and
+ * canonical URLs must match the URL that actually serves 200, or Google
+ * flags it as a redirect/canonical mismatch. Always append the slash except
+ * for the bare root.
+ */
+export function buildCanonicalPath(path) {
+  if (!path || path === '/') return '/';
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
 export function resolveImageUrl(image) {
   if (!image) return DEFAULT_OG_IMAGE;
   if (image.startsWith('http://') || image.startsWith('https://')) return image;

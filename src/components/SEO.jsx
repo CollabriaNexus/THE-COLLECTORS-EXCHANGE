@@ -7,6 +7,7 @@ import {
   TWITTER_HANDLE,
   PRIMARY_NAV,
   buildPageTitle,
+  buildCanonicalPath,
   resolveImageUrl,
 } from '../config/seo-pages';
 
@@ -24,6 +25,7 @@ const SEO = ({
   const pageTitle = buildPageTitle(title);
   const pageDesc = description || DEFAULT_DESC;
   const pageImage = resolveImageUrl(image);
+  const canonicalUrl = canonical ? `${SITE_URL}${buildCanonicalPath(canonical)}` : null;
 
   const schemas = Array.isArray(structuredData)
     ? structuredData
@@ -38,7 +40,7 @@ const SEO = ({
       {keywords && <meta name="keywords" content={keywords} />}
       <meta name="application-name" content={SITE_NAME} />
 
-      {canonical && <link rel="canonical" href={`${SITE_URL}${canonical}`} />}
+      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
       {noindex && <meta name="robots" content="noindex, nofollow" />}
       {!noindex && (
@@ -55,7 +57,7 @@ const SEO = ({
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:type" content={ogType} />
-      <meta property="og:url" content={canonical ? `${SITE_URL}${canonical}` : SITE_URL} />
+      <meta property="og:url" content={canonicalUrl || SITE_URL} />
       <meta property="og:locale" content="en_IN" />
 
       <meta name="twitter:card" content="summary_large_image" />
@@ -116,7 +118,7 @@ export const buildWebSiteSchema = () => ({
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: `${SITE_URL}/category?search={search_term_string}`,
+      urlTemplate: `${SITE_URL}/category/?search={search_term_string}`,
     },
     'query-input': 'required name=search_term_string',
   },
@@ -134,7 +136,7 @@ export const buildSiteNavigationSchema = () =>
     '@context': 'https://schema.org',
     '@type': 'SiteNavigationElement',
     name: item.name,
-    url: `${SITE_URL}${item.path}`,
+    url: `${SITE_URL}${buildCanonicalPath(item.path)}`,
   }));
 
 export const SiteNavigationSchema = () => (
@@ -152,7 +154,7 @@ export const buildPageSchema = ({ type = 'WebPage', name, description, path }) =
   '@type': type,
   name,
   description,
-  url: `${SITE_URL}${path}`,
+  url: `${SITE_URL}${buildCanonicalPath(path)}`,
   isPartOf: {
     '@type': 'WebSite',
     name: SITE_NAME,
@@ -208,7 +210,7 @@ export const ProductSchema = ({ product, reviews }) => {
       priceCurrency: 'INR',
       availability:
         product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
-      url: `${SITE_URL}/product/${product.id}`,
+      url: `${SITE_URL}/product/${product.id}/`,
       priceValidUntil: OFFER_VALID_UNTIL,
       hasMerchantReturnPolicy: {
         '@type': 'MerchantReturnPolicy',
@@ -255,7 +257,7 @@ export const buildBreadcrumbSchema = (items) => {
       '@type': 'ListItem',
       position: i + 1,
       name: item.name,
-      item: item.url ? `${SITE_URL}${item.url}` : undefined,
+      item: item.url ? `${SITE_URL}${buildCanonicalPath(item.url)}` : undefined,
     })),
   };
 };
