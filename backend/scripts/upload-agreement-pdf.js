@@ -38,18 +38,14 @@ async function uploadPdf() {
   const filePath = resolve(__dirname, '..', 'seller-agreement.pdf');
   const fileBuffer = await readFile(filePath);
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .upload(FILE_NAME, fileBuffer, {
-      contentType: 'application/pdf',
-      upsert: true,
-    });
+  const { error } = await supabase.storage.from(BUCKET).upload(FILE_NAME, fileBuffer, {
+    contentType: 'application/pdf',
+    upsert: true,
+  });
 
   if (error) throw error;
 
-  const { data: publicUrlData } = supabase.storage
-    .from(BUCKET)
-    .getPublicUrl(FILE_NAME);
+  const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(FILE_NAME);
 
   console.log(`Uploaded successfully!`);
   console.log(`Public URL: ${publicUrlData.publicUrl}`);

@@ -12,6 +12,15 @@ import SEO, {
 
 const renderWithHelmet = (ui) => render(<HelmetProvider>{ui}</HelmetProvider>);
 
+const getJsonLd = async () => {
+  for (let i = 0; i < 20; i++) {
+    const script = document.querySelector('script[type="application/ld+json"]');
+    if (script) return script;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  return null;
+};
+
 describe('SEO', () => {
   it('sets title and meta description', () => {
     renderWithHelmet(<SEO title="Test Page" description="A test page" />);
@@ -32,9 +41,9 @@ describe('SEO', () => {
 });
 
 describe('OrganizationSchema', () => {
-  it('renders structured data script tag', () => {
+  it('renders structured data script tag', async () => {
     renderWithHelmet(<OrganizationSchema />);
-    const script = document.querySelector('script[type="application/ld+json"]');
+    const script = await getJsonLd();
     expect(script).toBeInTheDocument();
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('Organization');
@@ -42,88 +51,90 @@ describe('OrganizationSchema', () => {
 });
 
 describe('WebSiteSchema', () => {
-  it('renders WebSite schema', () => {
+  it('renders WebSite schema', async () => {
     renderWithHelmet(<WebSiteSchema />);
-    const script = document.querySelector('script[type="application/ld+json"]');
+    const script = await getJsonLd();
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('WebSite');
   });
 });
 
 describe('ProductSchema', () => {
-  it('renders Product schema with provided props', () => {
-    const props = {
-      name: 'Test Watch',
+  it('renders Product schema with provided props', async () => {
+    const product = {
+      id: 1,
+      title: 'Test Watch',
       description: 'A fine watch',
       image: 'watch.jpg',
-      sku: 'W001',
       brand: 'Rolex',
+      category: 'Watches',
+      price: 25000,
+      status: 'Verified',
+      condition: 'Mint',
     };
-    renderWithHelmet(<ProductSchema {...props} />);
-    const script = document.querySelector('script[type="application/ld+json"]');
+    renderWithHelmet(<ProductSchema product={product} />);
+    const script = await getJsonLd();
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('Product');
     expect(data.name).toBe('Test Watch');
   });
 
-  it('renders with minimal props', () => {
-    renderWithHelmet(<ProductSchema name="Minimal" />);
-    const script = document.querySelector('script[type="application/ld+json"]');
+  it('renders with minimal props', async () => {
+    renderWithHelmet(<ProductSchema product={{ id: 1, title: 'Minimal' }} />);
+    const script = await getJsonLd();
     expect(script).toBeInTheDocument();
   });
 });
 
 describe('BreadcrumbSchema', () => {
-  it('renders BreadcrumbList schema', () => {
+  it('renders BreadcrumbList schema', async () => {
     const items = [
       { name: 'Home', url: '/' },
       { name: 'Category', url: '/category' },
     ];
     renderWithHelmet(<BreadcrumbSchema items={items} />);
-    const script = document.querySelector('script[type="application/ld+json"]');
+    const script = await getJsonLd();
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('BreadcrumbList');
     expect(data.itemListElement).toHaveLength(2);
   });
 
-  it('handles empty items', () => {
+  it('handles empty items', async () => {
     renderWithHelmet(<BreadcrumbSchema items={[]} />);
-    const script = document.querySelector('script[type="application/ld+json"]');
-    const data = JSON.parse(script.textContent);
-    expect(data.itemListElement).toHaveLength(0);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(document.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
   });
 });
 
 describe('FAQSchema', () => {
-  it('renders FAQPage schema', () => {
-    const faqs = [{ question: 'Q1', answer: 'A1' }];
-    renderWithHelmet(<FAQSchema faqs={faqs} />);
-    const script = document.querySelector('script[type="application/ld+json"]');
+  it('renders FAQPage schema', async () => {
+    const items = [{ q: 'Q1', a: 'A1' }];
+    renderWithHelmet(<FAQSchema items={items} />);
+    const script = await getJsonLd();
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('FAQPage');
   });
 
-  it('handles empty faqs array', () => {
-    renderWithHelmet(<FAQSchema faqs={[]} />);
-    const script = document.querySelector('script[type="application/ld+json"]');
-    const data = JSON.parse(script.textContent);
-    expect(data.mainEntity).toHaveLength(0);
+  it('handles empty faqs array', async () => {
+    renderWithHelmet(<FAQSchema items={[]} />);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(document.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
   });
 });
 
 describe('ArticleSchema', () => {
-  it('renders Article schema', () => {
+  it('renders Article schema', async () => {
     const props = { headline: 'Test', image: 'img.jpg', datePublished: '2024-01-01' };
     renderWithHelmet(<ArticleSchema {...props} />);
-    const script = document.querySelector('script[type="application/ld+json"]');
+    const script = await getJsonLd();
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('Article');
     expect(data.headline).toBe('Test');
   });
 
-  it('renders with minimal props', () => {
+  it('renders with minimal props', async () => {
     renderWithHelmet(<ArticleSchema />);
-    const script = document.querySelector('script[type="application/ld+json"]');
+    const script = await getJsonLd();
     expect(script).toBeInTheDocument();
   });
 });

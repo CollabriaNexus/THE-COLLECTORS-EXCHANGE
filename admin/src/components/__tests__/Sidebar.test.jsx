@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Sidebar from '../Sidebar';
@@ -8,7 +8,7 @@ describe('Sidebar', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <Sidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     expect(screen.getByText('TCE ADMIN')).toBeInTheDocument();
     expect(screen.getByText('Management Portal')).toBeInTheDocument();
@@ -29,7 +29,7 @@ describe('Sidebar', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <Sidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     const dashboardLink = screen.getByText('Dashboard').closest('a');
     expect(dashboardLink.className).toContain('bg-luxury-gold');
@@ -39,7 +39,7 @@ describe('Sidebar', () => {
     render(
       <MemoryRouter initialEntries={['/products/123']}>
         <Sidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     const productsLink = screen.getByText('Products').closest('a');
     expect(productsLink.className).toContain('bg-luxury-gold');
@@ -49,7 +49,7 @@ describe('Sidebar', () => {
     render(
       <MemoryRouter initialEntries={['/users']}>
         <Sidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     const dashboardLink = screen.getByText('Dashboard').closest('a');
     expect(dashboardLink.className).not.toContain('bg-luxury-gold');
@@ -59,7 +59,7 @@ describe('Sidebar', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <Sidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     expect(screen.getByText('Dashboard').closest('a')).toHaveAttribute('href', '/');
     expect(screen.getByText('KYC Requests').closest('a')).toHaveAttribute('href', '/kyc');
@@ -71,14 +71,17 @@ describe('Sidebar', () => {
     expect(screen.getByText('Dashboard').closest('a')).toHaveAttribute('href', '/');
     expect(screen.getByText('Payouts').closest('a')).toHaveAttribute('href', '/payouts');
     expect(screen.getByText('Testimonials').closest('a')).toHaveAttribute('href', '/testimonials');
-    expect(screen.getByText('Phone Verification').closest('a')).toHaveAttribute('href', '/phone-verifications');
+    expect(screen.getByText('Phone Verification').closest('a')).toHaveAttribute(
+      'href',
+      '/phone-verifications',
+    );
   });
 
   it('shows copyright footer', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <Sidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     expect(screen.getByText('© 2026 The Collectors Exchange')).toBeInTheDocument();
   });

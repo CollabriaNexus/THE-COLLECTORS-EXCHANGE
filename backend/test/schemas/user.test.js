@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { UserSchema, UserRegistrationSchema, UserKycSchema, UpdateProfileSchema } from '../../schemas/user.js';
+import {
+  UserSchema,
+  UserRegistrationSchema,
+  UserKycSchema,
+  UpdateProfileSchema,
+} from '../../schemas/user.js';
 
 describe('UserSchema', () => {
   const validUser = {
@@ -15,12 +20,18 @@ describe('UserSchema', () => {
   });
 
   it('passes with all optional fields', () => {
-    const data = { ...validUser, id: 'abc123', name: 'John', phone: '+911234567890', kycData: { pan: 'ABCDE1234F' } };
+    const data = {
+      ...validUser,
+      id: 'abc123',
+      name: 'John',
+      phone: '+911234567890',
+      kycData: { pan: 'ABCDE1234F' },
+    };
     expect(() => UserSchema.parse(data)).not.toThrow();
   });
 
   it('fails when email is missing', () => {
-    const { email, ...rest } = validUser;
+    const { email: _email, ...rest } = validUser;
     expect(() => UserSchema.parse(rest)).toThrow();
   });
 
@@ -29,7 +40,7 @@ describe('UserSchema', () => {
   });
 
   it('fails when password is missing', () => {
-    const { password, ...rest } = validUser;
+    const { password: _password, ...rest } = validUser;
     expect(() => UserSchema.parse(rest)).toThrow();
   });
 
@@ -77,7 +88,15 @@ describe('UserRegistrationSchema', () => {
   });
 
   it('passes with all optional fields', () => {
-    expect(() => UserRegistrationSchema.parse({ ...valid, name: 'John', phone: '1234567890', type: 'company', supabaseId: 'sb-123' })).not.toThrow();
+    expect(() =>
+      UserRegistrationSchema.parse({
+        ...valid,
+        name: 'John',
+        phone: '1234567890',
+        type: 'company',
+        supabaseId: 'sb-123',
+      }),
+    ).not.toThrow();
   });
 
   it('fails without email', () => {
@@ -96,7 +115,9 @@ describe('UserRegistrationSchema', () => {
 
 describe('UserKycSchema', () => {
   it('passes with valid kycData', () => {
-    expect(() => UserKycSchema.parse({ kycData: { pan: 'ABCDE1234F', aadhaar: '123456789012' } })).not.toThrow();
+    expect(() =>
+      UserKycSchema.parse({ kycData: { pan: 'ABCDE1234F', aadhaar: '123456789012' } }),
+    ).not.toThrow();
   });
 
   it('fails without kycData', () => {

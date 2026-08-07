@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { ProductSchema, ProductIdParam, AdminProductUpdateSchema, CATEGORIES } from '../../schemas/product.js';
+import {
+  ProductSchema,
+  ProductIdParam,
+  AdminProductUpdateSchema,
+  CATEGORIES,
+} from '../../schemas/product.js';
 
 describe('CATEGORIES', () => {
   it('contains expected categories', () => {
@@ -24,7 +29,14 @@ describe('ProductSchema', () => {
   });
 
   it('passes with all optional fields', () => {
-    const data = { ...valid, id: 'prod-1', images: ['https://example.com/img2.jpg'], keywords: ['vintage', 'watch'], isVerified: true, authenticityStatus: 'Verified' };
+    const data = {
+      ...valid,
+      id: 'prod-1',
+      images: ['https://example.com/img2.jpg'],
+      keywords: ['vintage', 'watch'],
+      isVerified: true,
+      authenticityStatus: 'Verified',
+    };
     expect(() => ProductSchema.parse(data)).not.toThrow();
   });
 
@@ -33,7 +45,7 @@ describe('ProductSchema', () => {
   });
 
   it('fails with missing title', () => {
-    const { title, ...rest } = valid;
+    const { title: _title, ...rest } = valid;
     expect(() => ProductSchema.parse(rest)).toThrow();
   });
 
@@ -66,7 +78,7 @@ describe('ProductSchema', () => {
   });
 
   it('fails without sellerId', () => {
-    const { sellerId, ...rest } = valid;
+    const { sellerId: _sellerId, ...rest } = valid;
     expect(() => ProductSchema.parse(rest)).toThrow();
   });
 
@@ -136,7 +148,18 @@ describe('AdminProductUpdateSchema', () => {
   });
 
   it('passes with valid fields', () => {
-    const data = { brand: 'Rolex', category: 'Timepieces', title: 'Updated', description: 'Desc', price: 100, condition: 'Mint', image: 'https://img.jpg', images: ['https://img2.jpg'], keywords: ['luxury'], listingCategory: 'featured' };
+    const data = {
+      brand: 'Rolex',
+      category: 'Timepieces',
+      title: 'Updated',
+      description: 'Desc',
+      price: 100,
+      condition: 'Mint',
+      image: 'https://img.jpg',
+      images: ['https://img2.jpg'],
+      keywords: ['luxury'],
+      listingCategory: 'featured',
+    };
     expect(() => AdminProductUpdateSchema.parse(data)).not.toThrow();
   });
 

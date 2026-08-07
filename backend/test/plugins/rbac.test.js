@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import Fastify from 'fastify';
 
 describe('rbac plugin', () => {
@@ -50,7 +50,11 @@ describe('rbac plugin', () => {
       const fastify = Fastify();
       const rbacPlugin = (await import('../../plugins/rbac.js')).default;
       await fastify.register(rbacPlugin);
-      fastify.get('/test-perm', { preValidation: [fastify.requirePermission('products.create_own')] }, async () => ({ ok: true }));
+      fastify.get(
+        '/test-perm',
+        { preValidation: [fastify.requirePermission('products.create_own')] },
+        async () => ({ ok: true }),
+      );
       await fastify.ready();
       const res = await fastify.inject({ method: 'GET', url: '/test-perm' });
       expect(res.statusCode).toBe(401);
@@ -61,7 +65,11 @@ describe('rbac plugin', () => {
       const fastify = Fastify();
       const rbacPlugin = (await import('../../plugins/rbac.js')).default;
       await fastify.register(rbacPlugin);
-      fastify.get('/test-perm2', { preValidation: [fastify.requirePermission('products.approve')] }, async () => ({ ok: true }));
+      fastify.get(
+        '/test-perm2',
+        { preValidation: [fastify.requirePermission('products.approve')] },
+        async () => ({ ok: true }),
+      );
       await fastify.ready();
       const res = await fastify.inject({
         method: 'GET',
@@ -74,7 +82,11 @@ describe('rbac plugin', () => {
       const fastify = Fastify();
       const rbacPlugin = (await import('../../plugins/rbac.js')).default;
       await fastify.register(rbacPlugin);
-      fastify.get('/test-perm3', { preValidation: [fastify.requirePermission('products.view')] }, async () => ({ ok: true }));
+      fastify.get(
+        '/test-perm3',
+        { preValidation: [fastify.requirePermission('products.view')] },
+        async () => ({ ok: true }),
+      );
       await fastify.ready();
       const res = await fastify.inject({ method: 'GET', url: '/test-perm3' });
       expect(res.statusCode).toBe(401);

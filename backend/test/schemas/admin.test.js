@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { KYCRequestIdParam, KYCApprovalSchema, KYCRejectionSchema, CreatePayoutSchema, UpdatePayoutStatusSchema } from '../../schemas/admin.js';
+import {
+  KYCRequestIdParam,
+  KYCApprovalSchema,
+  KYCRejectionSchema,
+  CreatePayoutSchema,
+  UpdatePayoutStatusSchema,
+} from '../../schemas/admin.js';
 
 describe('KYCRequestIdParam', () => {
   it('passes with valid id', () => {
@@ -52,7 +58,7 @@ describe('CreatePayoutSchema', () => {
   });
 
   it('fails without vendorId', () => {
-    const { vendorId, ...rest } = valid;
+    const { vendorId: _vendorId, ...rest } = valid;
     expect(() => CreatePayoutSchema.parse(rest)).toThrow();
   });
 
@@ -69,12 +75,12 @@ describe('CreatePayoutSchema', () => {
   });
 
   it('fails without periodStart', () => {
-    const { periodStart, ...rest } = valid;
+    const { periodStart: _periodStart, ...rest } = valid;
     expect(() => CreatePayoutSchema.parse(rest)).toThrow();
   });
 
   it('fails without periodEnd', () => {
-    const { periodEnd, ...rest } = valid;
+    const { periodEnd: _periodEnd, ...rest } = valid;
     expect(() => CreatePayoutSchema.parse(rest)).toThrow();
   });
 });

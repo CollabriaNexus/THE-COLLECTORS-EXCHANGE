@@ -28,13 +28,8 @@ describe('useInView', () => {
     }));
 
     const { useInView } = await import('../useInView');
-    let ref;
-    function TestComponent() {
-      const [r] = useInView();
-      ref = r;
-      return null;
-    }
-    const { rerender } = renderHook(() => TestComponent());
+    const { result, rerender } = renderHook(() => useInView());
+    const ref = result.current[0];
     const div = document.createElement('div');
     ref.current = div;
     rerender();
@@ -49,13 +44,8 @@ describe('useInView', () => {
     });
 
     const { useInView } = await import('../useInView');
-    let ref;
-    function TestComponent() {
-      const [r] = useInView();
-      ref = r;
-      return null;
-    }
-    const { result, rerender } = renderHook(() => TestComponent());
+    const { result, rerender } = renderHook(() => useInView());
+    const ref = result.current[0];
     const div = document.createElement('div');
     ref.current = div;
     rerender();
@@ -73,13 +63,8 @@ describe('useInView', () => {
     });
 
     const { useInView } = await import('../useInView');
-    let ref;
-    function TestComponent() {
-      const [r] = useInView();
-      ref = r;
-      return null;
-    }
-    const { result, rerender } = renderHook(() => TestComponent());
+    const { result, rerender } = renderHook(() => useInView());
+    const ref = result.current[0];
     const div = document.createElement('div');
     ref.current = div;
     rerender();

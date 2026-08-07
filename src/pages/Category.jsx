@@ -341,7 +341,12 @@ const Category = () => {
 
   return (
     <div className="min-h-screen bg-heritage-cream">
-      <SEO title={categorySeo.title} description={categorySeo.description} canonical="/category" />
+      <SEO
+        title={categorySeo.title}
+        description={categorySeo.description}
+        keywords={categorySeo.keywords}
+        canonical="/category"
+      />
       <PageSchema
         type="CollectionPage"
         name={categorySeo.h1}

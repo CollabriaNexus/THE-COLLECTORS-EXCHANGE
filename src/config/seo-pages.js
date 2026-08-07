@@ -59,6 +59,8 @@ export const CORE_PAGES = {
     title: 'The Exchange',
     description:
       'Browse authenticated vintage watches, timepieces, antiques, jewelry, and collectibles at The Exchange. Mid-range to rare pieces, every listing expert-verified.',
+    keywords:
+      'vintage watches for men, casio vintage watches for men, vintage watch for men, rolex vintage watches for men, omega vintage watches for men, vintage watches for men india, mens vintage watches for sale, vintage mens wrist watches for sale, antique vintage watches for men, casio ad01 vintage series watch for men & women',
     schemaType: 'CollectionPage',
     h1: 'Shop The Exchange',
     intro:

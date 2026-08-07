@@ -1,12 +1,16 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { ConfirmProvider, useConfirm } from '../ConfirmDialog';
 
 function TestComponent({ onConfirm }) {
   const confirm = useConfirm();
   return (
-    <button onClick={async () => { const result = await confirm('Are you sure?'); onConfirm(result); }}>
+    <button
+      onClick={async () => {
+        const result = await confirm('Are you sure?');
+        onConfirm(result);
+      }}
+    >
       Show Confirm
     </button>
   );
@@ -25,7 +29,7 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmProvider>
         <TestComponent onConfirm={() => {}} />
-      </ConfirmProvider>
+      </ConfirmProvider>,
     );
     fireEvent.click(screen.getByText('Show Confirm'));
     expect(screen.getByText('Are you sure?')).toBeInTheDocument();
@@ -38,7 +42,7 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmProvider>
         <TestComponent onConfirm={onConfirm} />
-      </ConfirmProvider>
+      </ConfirmProvider>,
     );
     fireEvent.click(screen.getByText('Show Confirm'));
     fireEvent.click(screen.getByText('Confirm'));
@@ -50,7 +54,7 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmProvider>
         <TestComponent onConfirm={onConfirm} />
-      </ConfirmProvider>
+      </ConfirmProvider>,
     );
     fireEvent.click(screen.getByText('Show Confirm'));
     fireEvent.click(screen.getByText('Cancel'));
@@ -62,7 +66,7 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmProvider>
         <TestComponent onConfirm={onConfirm} />
-      </ConfirmProvider>
+      </ConfirmProvider>,
     );
     fireEvent.click(screen.getByText('Show Confirm'));
     const backdrop = document.querySelector('.fixed.inset-0.bg-black');
@@ -75,7 +79,7 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmProvider>
         <TestComponent onConfirm={onConfirm} />
-      </ConfirmProvider>
+      </ConfirmProvider>,
     );
     fireEvent.click(screen.getByText('Show Confirm'));
     fireEvent.keyDown(document, { key: 'Escape' });
@@ -86,7 +90,7 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmProvider>
         <TestComponent onConfirm={() => {}} />
-      </ConfirmProvider>
+      </ConfirmProvider>,
     );
     fireEvent.click(screen.getByText('Show Confirm'));
     expect(screen.getByText('Are you sure?')).toBeInTheDocument();
@@ -100,7 +104,7 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmProvider>
         <div>Child element</div>
-      </ConfirmProvider>
+      </ConfirmProvider>,
     );
     expect(screen.getByText('Child element')).toBeInTheDocument();
   });

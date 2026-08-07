@@ -17,16 +17,11 @@ async function buildAuthenticatedApp(routeHandler) {
   fastify.decorate('prisma', mockPrisma);
   const authPlugin = (await import('../../plugins/auth.js')).default;
   await fastify.register(authPlugin);
-  fastify.get('/test-auth', { preValidation: [fastify.authenticate] }, routeHandler || (async (req) => ({ ok: true, dbUser: req.dbUser })));
-  await fastify.ready();
-  return fastify;
-}
-
-async function buildAppWithAdmin() {
-  const fastify = Fastify();
-  fastify.decorate('prisma', mockPrisma);
-  const authPlugin = (await import('../../plugins/auth.js')).default;
-  await fastify.register(authPlugin);
+  fastify.get(
+    '/test-auth',
+    { preValidation: [fastify.authenticate] },
+    routeHandler || (async (req) => ({ ok: true, dbUser: req.dbUser })),
+  );
   await fastify.ready();
   return fastify;
 }
@@ -48,16 +43,29 @@ describe('auth plugin', () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockRejectedValue(new Error('invalid token'));
       const app = await buildAuthenticatedApp();
-      const res = await app.inject({ method: 'GET', url: '/test-auth', headers: { authorization: 'Bearer bad-token' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/test-auth',
+        headers: { authorization: 'Bearer bad-token' },
+      });
       expect(res.statusCode).toBe(401);
     });
 
     it('returns 403 when user is banned', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: true, vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: true,
+        vendor: null,
+      });
       const app = await buildAuthenticatedApp();
-      const res = await app.inject({ method: 'GET', url: '/test-auth', headers: { authorization: 'Bearer good-token' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/test-auth',
+        headers: { authorization: 'Bearer good-token' },
+      });
       expect(res.statusCode).toBe(403);
       expect(res.json().error).toContain('banned');
     });
@@ -65,9 +73,18 @@ describe('auth plugin', () => {
     it('sets request.dbUser when user exists and is not banned', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        vendor: null,
+      });
       const app = await buildAuthenticatedApp(async (req) => ({ dbUser: req.dbUser }));
-      const res = await app.inject({ method: 'GET', url: '/test-auth', headers: { authorization: 'Bearer good-token' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/test-auth',
+        headers: { authorization: 'Bearer good-token' },
+      });
       expect(res.statusCode).toBe(200);
       expect(res.json().dbUser.id).toBe('u1');
     });
@@ -77,7 +94,11 @@ describe('auth plugin', () => {
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-unknown' } });
       mockPrisma.user.findUnique.mockResolvedValue(null);
       const app = await buildAuthenticatedApp(async (req) => ({ dbUser: req.dbUser }));
-      const res = await app.inject({ method: 'GET', url: '/test-auth', headers: { authorization: 'Bearer good-token' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/test-auth',
+        headers: { authorization: 'Bearer good-token' },
+      });
       expect(res.statusCode).toBe(200);
       expect(res.json().dbUser).toBeNull();
     });
@@ -92,9 +113,17 @@ describe('auth plugin', () => {
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-req-db', { preValidation: [fastify.authenticate, fastify.requireDbUser] }, async () => ({ ok: true }));
+      fastify.get(
+        '/test-req-db',
+        { preValidation: [fastify.authenticate, fastify.requireDbUser] },
+        async () => ({ ok: true }),
+      );
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-req-db', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-req-db',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(401);
       expect(res.json().error).toBe('User profile not synchronized');
     });
@@ -104,14 +133,26 @@ describe('auth plugin', () => {
     it('returns 403 when user is not admin or curator', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, role: 'user', vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        role: 'user',
+        vendor: null,
+      });
       const fastify = Fastify();
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-admin', { preValidation: [fastify.authenticateAdmin] }, async () => ({ ok: true }));
+      fastify.get('/test-admin', { preValidation: [fastify.authenticateAdmin] }, async () => ({
+        ok: true,
+      }));
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-admin', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-admin',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(403);
       expect(res.json().error).toContain('Admin or Curator');
     });
@@ -119,28 +160,52 @@ describe('auth plugin', () => {
     it('allows admin role', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, role: 'admin', vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        role: 'admin',
+        vendor: null,
+      });
       const fastify = Fastify();
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-admin2', { preValidation: [fastify.authenticateAdmin] }, async () => ({ ok: true }));
+      fastify.get('/test-admin2', { preValidation: [fastify.authenticateAdmin] }, async () => ({
+        ok: true,
+      }));
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-admin2', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-admin2',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
     it('allows curator role', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, role: 'curator', vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        role: 'curator',
+        vendor: null,
+      });
       const fastify = Fastify();
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-admin3', { preValidation: [fastify.authenticateAdmin] }, async () => ({ ok: true }));
+      fastify.get('/test-admin3', { preValidation: [fastify.authenticateAdmin] }, async () => ({
+        ok: true,
+      }));
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-admin3', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-admin3',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
@@ -149,14 +214,26 @@ describe('auth plugin', () => {
     it('denies curator', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, role: 'curator', vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        role: 'curator',
+        vendor: null,
+      });
       const fastify = Fastify();
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-super', { preValidation: [fastify.authenticateSuperAdmin] }, async () => ({ ok: true }));
+      fastify.get('/test-super', { preValidation: [fastify.authenticateSuperAdmin] }, async () => ({
+        ok: true,
+      }));
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-super', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-super',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(403);
       expect(res.json().error).toContain('Super Admin');
     });
@@ -164,14 +241,28 @@ describe('auth plugin', () => {
     it('allows admin role', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, role: 'admin', vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        role: 'admin',
+        vendor: null,
+      });
       const fastify = Fastify();
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-super2', { preValidation: [fastify.authenticateSuperAdmin] }, async () => ({ ok: true }));
+      fastify.get(
+        '/test-super2',
+        { preValidation: [fastify.authenticateSuperAdmin] },
+        async () => ({ ok: true }),
+      );
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-super2', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-super2',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
@@ -180,14 +271,26 @@ describe('auth plugin', () => {
     it('denies when no vendor profile', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, role: 'user', vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        role: 'user',
+        vendor: null,
+      });
       const fastify = Fastify();
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-vendor', { preValidation: [fastify.authenticateVendor] }, async () => ({ ok: true }));
+      fastify.get('/test-vendor', { preValidation: [fastify.authenticateVendor] }, async () => ({
+        ok: true,
+      }));
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-vendor', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-vendor',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(403);
       expect(res.json().error).toContain('Vendor account required');
     });
@@ -195,14 +298,26 @@ describe('auth plugin', () => {
     it('denies when vendor not approved', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, role: 'user', vendor: { id: 'v1', status: 'PENDING' } });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        role: 'user',
+        vendor: { id: 'v1', status: 'PENDING' },
+      });
       const fastify = Fastify();
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-vendor2', { preValidation: [fastify.authenticateVendor] }, async () => ({ ok: true }));
+      fastify.get('/test-vendor2', { preValidation: [fastify.authenticateVendor] }, async () => ({
+        ok: true,
+      }));
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-vendor2', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-vendor2',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(403);
       expect(res.json().error).toContain('not approved');
     });
@@ -210,14 +325,26 @@ describe('auth plugin', () => {
     it('allows approved vendor', async () => {
       const { jwtVerify } = await import('jose');
       jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', supabaseId: 'sb-123', banned: false, role: 'user', vendor: { id: 'v1', status: 'APPROVED' } });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        supabaseId: 'sb-123',
+        banned: false,
+        role: 'user',
+        vendor: { id: 'v1', status: 'APPROVED' },
+      });
       const fastify = Fastify();
       fastify.decorate('prisma', mockPrisma);
       const authPlugin = (await import('../../plugins/auth.js')).default;
       await fastify.register(authPlugin);
-      fastify.get('/test-vendor3', { preValidation: [fastify.authenticateVendor] }, async () => ({ ok: true }));
+      fastify.get('/test-vendor3', { preValidation: [fastify.authenticateVendor] }, async () => ({
+        ok: true,
+      }));
       await fastify.ready();
-      const res = await fastify.inject({ method: 'GET', url: '/test-vendor3', headers: { authorization: 'Bearer token' } });
+      const res = await fastify.inject({
+        method: 'GET',
+        url: '/test-vendor3',
+        headers: { authorization: 'Bearer token' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });

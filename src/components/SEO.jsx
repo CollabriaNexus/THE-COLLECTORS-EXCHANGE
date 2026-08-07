@@ -13,6 +13,7 @@ import {
 const SEO = ({
   title,
   description,
+  keywords,
   canonical,
   image,
   ogType = 'website',
@@ -34,6 +35,7 @@ const SEO = ({
     <Helmet>
       <title>{pageTitle}</title>
       <meta name="description" content={pageDesc} />
+      {keywords && <meta name="keywords" content={keywords} />}
       <meta name="application-name" content={SITE_NAME} />
 
       {canonical && <link rel="canonical" href={`${SITE_URL}${canonical}`} />}
@@ -170,6 +172,10 @@ export const PageSchema = ({ type = 'WebPage', name, description, path }) => {
   );
 };
 
+const OFFER_VALID_UNTIL = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+  .toISOString()
+  .split('T')[0];
+
 export const ProductSchema = ({ product }) => {
   if (!product) return null;
   const schema = {
@@ -188,7 +194,7 @@ export const ProductSchema = ({ product }) => {
       availability:
         product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
       url: `${SITE_URL}/product/${product.id}`,
-      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      priceValidUntil: OFFER_VALID_UNTIL,
     },
     itemCondition:
       product.condition === 'New'
