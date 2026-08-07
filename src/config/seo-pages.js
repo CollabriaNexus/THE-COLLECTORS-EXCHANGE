@@ -32,7 +32,9 @@ export function buildPageTitle(title) {
  */
 export function buildCanonicalPath(path) {
   if (!path || path === '/') return '/';
-  return path.endsWith('/') ? path : `${path}/`;
+  const [pathname, query] = path.split('?');
+  const normalized = pathname.endsWith('/') ? pathname : `${pathname}/`;
+  return query ? `${normalized}?${query}` : normalized;
 }
 
 export function resolveImageUrl(image) {
