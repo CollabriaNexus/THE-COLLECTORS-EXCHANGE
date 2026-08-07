@@ -13,7 +13,16 @@ async function prismaPlugin(fastify, options) {
 
   // Reuse existing client in Lambda (module-level caching)
   if (!globalThis.__prisma) {
-    globalThis.__prisma = new PrismaClient();
+    globalThis.__prisma = new PrismaClient({
+      // Product.adminNotes holds admin-only free-text values for admin-defined
+      // custom columns. Omit it globally so it can never leak through the
+      // public catalogue, seller dashboards, cart/wishlist/order includes or
+      // any product feed. Admin-only routes opt back in per query with
+      // `omit: { adminNotes: false }`.
+      omit: {
+        product: { adminNotes: true },
+      },
+    });
   }
   const prisma = globalThis.__prisma;
 

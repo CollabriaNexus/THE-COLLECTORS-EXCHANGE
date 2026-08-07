@@ -178,4 +178,44 @@ describe('AdminProductUpdateSchema', () => {
   it('fails with empty condition', () => {
     expect(() => AdminProductUpdateSchema.parse({ condition: '' })).toThrow();
   });
+
+  it('fails with an invalid listingCategory', () => {
+    expect(() => AdminProductUpdateSchema.parse({ listingCategory: 'Featured' })).toThrow();
+  });
+
+  it('accepts every listingCategory enum value', () => {
+    for (const value of ['normal', 'featured', 'most_rare']) {
+      expect(() => AdminProductUpdateSchema.parse({ listingCategory: value })).not.toThrow();
+    }
+  });
+});
+
+describe('AdminProductUpdateSchema — adminNotes (custom columns)', () => {
+  it('accepts a flat record of custom column id -> free text', () => {
+    const data = {
+      adminNotes: { col_abc123: 'paid in cash', col_def456: 'needs polish' },
+    };
+    expect(() => AdminProductUpdateSchema.parse(data)).not.toThrow();
+    expect(AdminProductUpdateSchema.parse(data).adminNotes.col_abc123).toBe('paid in cash');
+  });
+
+  it('accepts an empty record (all custom columns cleared)', () => {
+    expect(() => AdminProductUpdateSchema.parse({ adminNotes: {} })).not.toThrow();
+  });
+
+  it('fails when adminNotes is not an object', () => {
+    expect(() => AdminProductUpdateSchema.parse({ adminNotes: 'paid in cash' })).toThrow();
+    expect(() => AdminProductUpdateSchema.parse({ adminNotes: ['a'] })).toThrow();
+  });
+
+  it('fails when a custom column value is not a string', () => {
+    expect(() => AdminProductUpdateSchema.parse({ adminNotes: { col_abc123: 42 } })).toThrow();
+    expect(() =>
+      AdminProductUpdateSchema.parse({ adminNotes: { col_abc123: { nested: 'no' } } }),
+    ).toThrow();
+  });
+
+  it('is optional', () => {
+    expect(AdminProductUpdateSchema.parse({ brand: 'Rolex' }).adminNotes).toBeUndefined();
+  });
 });

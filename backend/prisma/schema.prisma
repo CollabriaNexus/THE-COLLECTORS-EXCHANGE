@@ -192,6 +192,12 @@ model Product {
   commissionPercent  Float            @default(10)
   specs              Json             @default("[]")
 
+  // Admin-only free-text values for admin-defined custom columns, keyed by
+  // column id: {"col_abc123": "paid in cash"}. NEVER expose publicly —
+  // it is globally omitted in plugins/prisma.js and only re-enabled on
+  // admin-authenticated routes.
+  adminNotes         Json             @default("{}")
+
   status             ProductStatus    @default(Pending)
   isPublished        Boolean          @default(false)
   rejectionReason    String?

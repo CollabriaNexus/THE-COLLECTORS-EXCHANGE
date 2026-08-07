@@ -1,6 +1,25 @@
 import { ProductSchema, ProductIdParam } from '../schemas/product.js';
 
 /**
+ * `adminNotes` holds admin-only free-text values for admin-defined custom
+ * columns. It must never reach the public catalogue or a seller. Prisma is
+ * configured to omit it globally (plugins/prisma.js), so this is a second
+ * belt-and-braces strip applied to every response this router sends.
+ */
+function withoutAdminNotes(product) {
+  if (!product || typeof product !== 'object') return product;
+  const { adminNotes: _adminNotes, ...rest } = product;
+  return rest;
+}
+
+/**
+ * Only admin/curator may read or write admin-only fields.
+ */
+function isPrivileged(dbUser) {
+  return dbUser?.role === 'admin' || dbUser?.role === 'curator';
+}
+
+/**
  * Product Routes
  * @param {import('fastify').FastifyInstance} fastify
  */
@@ -89,7 +108,7 @@ export default async function productRoutes(fastify) {
         prisma.product.count({ where }),
       ]);
       return {
-        products,
+        products: products.map(withoutAdminNotes),
         total,
         page: pageNum,
         limit: limitNum,
@@ -145,7 +164,7 @@ export default async function productRoutes(fastify) {
       return reply.status(404).send({ error: 'Product not found' });
     }
 
-    return product;
+    return withoutAdminNotes(product);
   });
 
   // Add new product
@@ -212,9 +231,11 @@ export default async function productRoutes(fastify) {
         status: 'Pending',
         isPublished: false,
         isVerified: false, // trust badge — set by admin at approval only, never by seller input
+        listingCategory: 'normal', // curation tier — admin-only, a seller can't self-promote
+        adminNotes: {}, // admin-only custom columns, never seller-set
       },
     });
-    return reply.status(201).send(newProduct);
+    return reply.status(201).send(withoutAdminNotes(newProduct));
   });
 
   // Update product
@@ -257,14 +278,26 @@ export default async function productRoutes(fastify) {
         .send({ error: 'Seller KYC verification is required to edit listings.' });
     }
 
-    // If updated by seller, reset approval status back to Pending
-    const { sellerId: _sellerId, ...safeData } = productData;
+    // Admin-only fields are stripped from every payload up front and only
+    // re-applied for admin/curator, so a seller can never write them.
+    const {
+      sellerId: _sellerId,
+      adminNotes: incomingAdminNotes,
+      listingCategory: incomingListingCategory,
+      ...safeData
+    } = productData;
     const updateData = { ...safeData };
+
+    // If updated by seller, reset approval status back to Pending
     if (dbUser.role !== 'admin' && dbUser.role !== 'curator') {
       updateData.status = 'Pending';
       updateData.isPublished = false;
       updateData.authenticityStatus = 'Pending';
       updateData.isVerified = false; // edited listing must be re-verified; drop the trust badge
+    } else {
+      if (incomingAdminNotes !== undefined) updateData.adminNotes = incomingAdminNotes;
+      if (incomingListingCategory !== undefined)
+        updateData.listingCategory = incomingListingCategory;
     }
 
     const updatedProduct = await prisma.product.update({
@@ -272,7 +305,7 @@ export default async function productRoutes(fastify) {
       data: updateData,
     });
 
-    return updatedProduct;
+    return isPrivileged(dbUser) ? updatedProduct : withoutAdminNotes(updatedProduct);
   });
 
   // Delete product
@@ -379,9 +412,11 @@ export default async function productRoutes(fastify) {
             status: 'Pending',
             isPublished: false,
             isVerified: false, // trust badge — admin-only, never seller-set
+            listingCategory: 'normal', // curation tier — admin-only, never seller-set
+            adminNotes: {}, // admin-only custom columns, never seller-set
           },
         });
-        created.push(product);
+        created.push(withoutAdminNotes(product));
       } catch (err) {
         errors.push({
           row: i + 1,
@@ -420,9 +455,9 @@ export default async function productRoutes(fastify) {
         where: { id },
         data: { status: 'Sold', quantity: 0 },
       });
-      return updated;
+      return withoutAdminNotes(updated);
     }
     const updated = await prisma.product.update({ where: { id }, data: { quantity: remaining } });
-    return updated;
+    return withoutAdminNotes(updated);
   });
 }

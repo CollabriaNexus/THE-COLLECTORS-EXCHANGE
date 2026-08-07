@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, RefreshCw, BadgeIndianRupee } from 'lucide-react';
-import { useProducts } from '../hooks/api/useProducts';
+import { Search, Filter, RefreshCw, BadgeIndianRupee, Plus } from 'lucide-react';
+import { useProducts, useUpdateProduct } from '../hooks/api/useProducts';
 import { useCreateManualOrder } from '../hooks/api/useOrders';
 import Table from '../components/ui/Table';
 import StatusBadge from '../components/ui/StatusBadge';
 import ManualOrderModal from '../components/ManualOrderModal';
+import ListingCategorySelect from '../components/ListingCategorySelect';
+import CustomNoteCell from '../components/CustomNoteCell';
+import CustomColumnHeader from '../components/CustomColumnHeader';
+import { useCustomColumns } from '../hooks/useCustomColumns';
 import apiClient from '../hooks/api/apiClient';
 import { getUser } from '../utils/storage';
 
@@ -22,6 +26,8 @@ function Products() {
   const [punchError, setPunchError] = useState('');
   const [punchSuccess, setPunchSuccess] = useState('');
   const createManualOrderMutation = useCreateManualOrder();
+  const updateProductMutation = useUpdateProduct();
+  const { columns: customColumns, addColumn, renameColumn, removeColumn } = useCustomColumns();
 
   const { data: products, isLoading } = useProducts({
     category: categoryFilter !== 'all' ? categoryFilter : undefined,
@@ -79,6 +85,25 @@ function Products() {
     }
   };
 
+  /** Placement selector — saves immediately so admins can work down the list. */
+  const handleListingCategorySave = (productId, listingCategory) =>
+    updateProductMutation.mutateAsync({ id: productId, listingCategory });
+
+  /**
+   * Custom-column values live together on `product.adminNotes`, so a write has
+   * to merge into the existing object rather than replace it — otherwise
+   * editing one column would wipe the others on that row.
+   */
+  const handleNoteSave = (product, columnId, text) => {
+    const nextNotes = { ...(product.adminNotes || {}) };
+    if (text) {
+      nextNotes[columnId] = text;
+    } else {
+      delete nextNotes[columnId];
+    }
+    return updateProductMutation.mutateAsync({ id: product.id, adminNotes: nextNotes });
+  };
+
   const columns = [
     {
       key: 'image',
@@ -119,6 +144,16 @@ function Products() {
       key: 'status',
       label: 'Status',
       render: (status) => <StatusBadge status={status} />,
+    },
+    {
+      key: 'listingCategory',
+      label: 'Placement',
+      render: (listingCategory, row) => (
+        <ListingCategorySelect
+          value={listingCategory}
+          onSave={(next) => handleListingCategorySave(row.id, next)}
+        />
+      ),
     },
     {
       key: 'isPublished',
@@ -165,6 +200,26 @@ function Products() {
       ),
     },
   ];
+
+  /**
+   * Admin-defined columns are spliced in just before Actions so the controls
+   * stay pinned to the right-hand edge as columns are added.
+   */
+  const customTableColumns = customColumns.map((col) => ({
+    key: col.id,
+    label: <CustomColumnHeader column={col} onRename={renameColumn} onRemove={removeColumn} />,
+    // Table calls render(row[column.key], row); adminNotes is keyed by column id,
+    // so read the value off the row rather than the (undefined) top-level key.
+    render: (_unused, row) => (
+      <CustomNoteCell
+        value={row.adminNotes?.[col.id] || ''}
+        onSave={(text) => handleNoteSave(row, col.id, text)}
+      />
+    ),
+  }));
+
+  const actionsColumn = columns[columns.length - 1];
+  const tableColumns = [...columns.slice(0, -1), ...customTableColumns, actionsColumn];
 
   const handleRowClick = (row) => {
     navigate(`/products/${row.id}`);
@@ -255,9 +310,26 @@ function Products() {
         </div>
       </div>
 
+      {/* Custom columns toolbar */}
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+        <p className="text-sm text-gray-500">
+          {customColumns.length > 0
+            ? `${customColumns.length} custom column${customColumns.length === 1 ? '' : 's'} — click a heading to rename it.`
+            : 'Add your own columns to keep private notes against each product.'}
+        </p>
+        <button
+          type="button"
+          onClick={() => addColumn('New column')}
+          className="flex items-center gap-2 px-4 py-2 text-sm bg-heritage-charcoal text-white hover:bg-black rounded-md transition-colors font-medium"
+        >
+          <Plus size={15} />
+          Add column
+        </button>
+      </div>
+
       {/* Table */}
       <Table
-        columns={columns}
+        columns={tableColumns}
         data={products}
         loading={isLoading}
         onRowClick={handleRowClick}

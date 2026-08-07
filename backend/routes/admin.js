@@ -834,6 +834,9 @@ export default async function adminRoutes(fastify) {
 
       const products = await prisma.product.findMany({
         where,
+        // Admin-gated route: opt back into the globally-omitted admin-only
+        // custom column values (see plugins/prisma.js).
+        omit: { adminNotes: false },
         include: {
           seller: {
             select: {
@@ -858,6 +861,9 @@ export default async function adminRoutes(fastify) {
 
       const product = await prisma.product.findUnique({
         where: { id },
+        // Admin-gated route: opt back into the globally-omitted admin-only
+        // custom column values (see plugins/prisma.js).
+        omit: { adminNotes: false },
         include: {
           seller: {
             select: {
@@ -1091,7 +1097,13 @@ export default async function adminRoutes(fastify) {
         return reply.status(404).send({ error: 'Product not found' });
       }
 
-      const updated = await prisma.product.update({ where: { id }, data });
+      // Admin-gated route (authenticateAdmin): adminNotes may be written here
+      // and is echoed back so the admin table can render custom columns.
+      const updated = await prisma.product.update({
+        where: { id },
+        data,
+        omit: { adminNotes: false },
+      });
 
       return { message: 'Product updated successfully', product: updated };
     },

@@ -28,6 +28,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import CommissionSlider from '../components/account/CommissionSlider';
+import BrandCombobox from '../components/BrandCombobox';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Papa from 'papaparse';
@@ -130,6 +131,7 @@ const Account = () => {
   const [productForm, setProductForm] = useState({
     title: '',
     category: CATEGORIES[0],
+    brand: '',
     description: '',
     condition: 'Good',
     price: '',
@@ -235,6 +237,7 @@ const Account = () => {
     price: '',
     condition: '',
     category: '',
+    brand: '',
     keywords: '',
     image: '',
     images: [],
@@ -630,6 +633,9 @@ const Account = () => {
       await addProductMutation.mutateAsync({
         title: productForm.title,
         category: productForm.category,
+        // Brand is optional (unbranded collectibles are common) — omit rather than
+        // send an empty string so the column stays null for those listings.
+        brand: productForm.brand.trim() || undefined,
         description: productForm.description,
         condition: productForm.condition,
         price: parseFloat(productForm.price),
@@ -644,6 +650,7 @@ const Account = () => {
       setProductForm({
         title: '',
         category: CATEGORIES[0],
+        brand: '',
         description: '',
         condition: 'Good',
         price: '',
@@ -786,6 +793,7 @@ const Account = () => {
       price: product.price?.toString() || '',
       condition: product.condition || '',
       category: product.category || '',
+      brand: product.brand || '',
       keywords: (product.keywords || []).join(', '),
       image: product.image || '',
       images: product.images || [],
@@ -801,6 +809,7 @@ const Account = () => {
       price: '',
       condition: '',
       category: '',
+      brand: '',
       keywords: '',
       image: '',
       images: [],
@@ -817,6 +826,10 @@ const Account = () => {
           price: parseFloat(editProductForm.price),
           condition: editProductForm.condition,
           category: editProductForm.category,
+          // Optional. A cleared brand must be sent explicitly as null (the schema is
+          // nullable) so it is unset — omitting the key would leave the old value in
+          // place, since this is a partial update.
+          brand: editProductForm.brand.trim() || null,
           keywords: editProductForm.keywords
             .split(',')
             .map((k) => k.trim())
@@ -1523,6 +1536,24 @@ const Account = () => {
                       <p className="text-xs text-gray-400 mt-2">
                         Use the official name or a factual description. No decorative adjectives in
                         title.
+                      </p>
+                    </div>
+
+                    <div className="col-span-1 md:col-span-2">
+                      <label
+                        htmlFor="product-brand"
+                        className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
+                      >
+                        Brand / Maker <span className="text-gray-400 normal-case">(optional)</span>
+                      </label>
+                      <BrandCombobox
+                        id="product-brand"
+                        value={productForm.brand}
+                        onChange={(brand) => setProductForm({ ...productForm, brand })}
+                      />
+                      <p className="text-xs text-gray-400 mt-2">
+                        Search the list or type your own — unlisted and house-marked names are
+                        accepted. Leave blank for unbranded pieces.
                       </p>
                     </div>
 
@@ -2288,6 +2319,24 @@ const Account = () => {
                                     </option>
                                   ))}
                                 </select>
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor={`edit-brand-${product.id}`}
+                                  className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1"
+                                >
+                                  Brand / Maker{' '}
+                                  <span className="text-gray-400 normal-case">(optional)</span>
+                                </label>
+                                <BrandCombobox
+                                  id={`edit-brand-${product.id}`}
+                                  value={editProductForm.brand}
+                                  onChange={(brand) =>
+                                    setEditProductForm({ ...editProductForm, brand })
+                                  }
+                                  placeholder="Search or type a brand"
+                                  inputClassName="w-full p-3 border border-gray-200 text-base sm:text-sm focus:outline-none focus:border-luxury-gold"
+                                />
                               </div>
                               <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">

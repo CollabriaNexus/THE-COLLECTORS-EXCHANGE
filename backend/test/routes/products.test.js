@@ -413,6 +413,124 @@ describe('products routes', () => {
       });
       expect(res.statusCode).toBe(200);
     });
+
+    it('strips adminNotes when a seller tries to write it', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Pending',
+      });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', title: 'Updated' });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: { title: 'Updated', adminNotes: { col_abc123: 'hacked' } },
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.update.mock.calls[0][0].data).not.toHaveProperty('adminNotes');
+    });
+
+    it('strips listingCategory when a seller tries to self-promote', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Pending',
+      });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', title: 'Updated' });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: { title: 'Updated', listingCategory: 'featured' },
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.update.mock.calls[0][0].data).not.toHaveProperty('listingCategory');
+    });
+
+    it('lets an admin write adminNotes and listingCategory', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Pending',
+      });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', title: 'Updated' });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: {
+          adminNotes: { col_abc123: 'paid in cash' },
+          listingCategory: 'most_rare',
+        },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      const { data } = mockPrisma.product.update.mock.calls[0][0];
+      expect(data.adminNotes).toEqual({ col_abc123: 'paid in cash' });
+      expect(data.listingCategory).toBe('most_rare');
+    });
+
+    it('never returns adminNotes to a seller', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Pending',
+      });
+      mockPrisma.product.update.mockResolvedValue({
+        id: 'p1',
+        title: 'Updated',
+        adminNotes: { col_abc123: 'internal' },
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PUT',
+        url: '/p1',
+        payload: { title: 'Updated' },
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).not.toHaveProperty('adminNotes');
+    });
+  });
+
+  describe('adminNotes is never public', () => {
+    it('is stripped from the public catalogue list', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([
+        { id: 'p1', title: 'Test', adminNotes: { col_abc123: 'internal' } },
+      ]);
+      mockPrisma.product.count.mockResolvedValue(1);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/' });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().products[0]).not.toHaveProperty('adminNotes');
+    });
+
+    it('is stripped from the public product detail', async () => {
+      mockPrisma.product.findFirst.mockResolvedValue({
+        id: 'p1',
+        title: 'Test',
+        adminNotes: { col_abc123: 'internal' },
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/p1' });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).not.toHaveProperty('adminNotes');
+    });
   });
 
   describe('DELETE /:id', () => {
