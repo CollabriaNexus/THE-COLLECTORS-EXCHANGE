@@ -5,7 +5,7 @@ export const TWITTER_HANDLE = '@TCE_store';
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 export const DEFAULT_DESC =
-  "India's curated marketplace for authenticated vintage watches, watch collections, and rare pre-owned collectibles. Every piece expert-verified. Trusted sellers, secure transactions.";
+  "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.";
 
 /** Primary header navigation – keep labels aligned with sitelink targets. */
 export const PRIMARY_NAV = [
@@ -49,7 +49,7 @@ export const CORE_PAGES = {
   '/': {
     title: 'Vintage Watches & Rare Collectibles',
     description:
-      'Shop authenticated vintage watches, watch collections, and rare pre-owned collectibles in India. Every listing expert-verified before it reaches The Exchange.',
+      "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.",
     schemaType: null,
     h1: 'Authenticated Vintage Watches & Rare Collectibles',
     intro:
@@ -59,7 +59,7 @@ export const CORE_PAGES = {
   '/about': {
     title: 'About Us',
     description:
-      'Learn how The Collectors Exchange authenticates vintage watches, collectibles, and antiques across India. Expert verification, trusted sellers, and heritage preserved.',
+      'The story behind The Collectors Exchange — how we source, verify, and authenticate vintage watches and heritage collectibles across India.',
     schemaType: 'AboutPage',
     h1: 'About The Collectors Exchange',
     intro:

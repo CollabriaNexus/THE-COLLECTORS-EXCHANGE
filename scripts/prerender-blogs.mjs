@@ -68,7 +68,7 @@ const CORE_PAGES = {
   '/': {
     title: 'Vintage Watches & Rare Collectibles',
     description:
-      'Shop authenticated vintage watches, watch collections, and rare pre-owned collectibles in India. Every listing expert-verified before it reaches The Exchange.',
+      "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.",
     ogImage: '/og-image.png',
     schemaType: null,
     breadcrumb: null,
@@ -86,7 +86,7 @@ const CORE_PAGES = {
   '/about': {
     title: 'About Us',
     description:
-      'Learn how The Collectors Exchange authenticates vintage watches, collectibles, and antiques across India. Expert verification, trusted sellers, and heritage preserved.',
+      'The story behind The Collectors Exchange — how we source, verify, and authenticate vintage watches and heritage collectibles across India.',
     ogImage: '/og-image.png',
     schemaType: 'AboutPage',
     breadcrumb: [

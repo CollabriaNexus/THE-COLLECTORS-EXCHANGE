@@ -308,6 +308,11 @@ const Category = () => {
   // Filter state is mirrored to the URL (?cat=&q=&condition=&page=) below so
   // filtered views are crawlable, indexable, and shareable — not just client state.
   const [searchParams, setSearchParams] = useSearchParams();
+  // Whether this load explicitly requested a category via the URL (a real
+  // link, a crawler, a shared URL) — as opposed to landing on the bare
+  // default. Captured once at mount so the empty-category redirect below
+  // never overrides an explicit choice, only the un-parameterized default.
+  const hadExplicitCategory = useRef(!!searchParams.get('cat'));
   const [selectedCategory, setSelectedCategory] = useState(
     () => searchParams.get('cat') || 'Timepieces',
   );
@@ -334,6 +339,7 @@ const Category = () => {
   const ActiveCategoryIcon = activeCategory?.icon;
 
   useEffect(() => {
+    if (hadExplicitCategory.current) return;
     if (categoryCounts && selectedCategory) {
       const count = categoryCounts[selectedCategory] ?? 0;
       if (count === 0) {
