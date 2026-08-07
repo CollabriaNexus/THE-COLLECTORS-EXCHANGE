@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import SEO, { OrganizationSchema, WebSiteSchema, VideoObjectSchema } from '../components/SEO';
+import SEO, { WebSiteSchema, VideoObjectSchema } from '../components/SEO';
 import { CORE_PAGES } from '../config/seo-pages';
 import {
   ShieldCheck,

@@ -176,8 +176,22 @@ const OFFER_VALID_UNTIL = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
   .toISOString()
   .split('T')[0];
 
-export const ProductSchema = ({ product }) => {
+export const ProductSchema = ({ product, reviews }) => {
   if (!product) return null;
+
+  const reviewList = reviews?.data || [];
+  const reviewCount = reviews?.total ?? reviewList.length;
+  const aggregateRating =
+    reviewCount > 0 && reviewList.length > 0
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: (
+            reviewList.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewList.length
+          ).toFixed(1),
+          reviewCount,
+        }
+      : undefined;
+
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -187,6 +201,7 @@ export const ProductSchema = ({ product }) => {
     sku: product.id?.toString(),
     brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
     category: product.category,
+    ...(aggregateRating && { aggregateRating }),
     offers: {
       '@type': 'Offer',
       price: product.price?.toString(),
@@ -195,6 +210,24 @@ export const ProductSchema = ({ product }) => {
         product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
       url: `${SITE_URL}/product/${product.id}`,
       priceValidUntil: OFFER_VALID_UNTIL,
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 2,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+        applicableCountry: 'IN',
+      },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'INR' },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 5, unitCode: 'DAY' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: 5, maxValue: 10, unitCode: 'DAY' },
+        },
+      },
     },
     itemCondition:
       product.condition === 'New'

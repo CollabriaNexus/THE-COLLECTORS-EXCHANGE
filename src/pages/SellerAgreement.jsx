@@ -1,14 +1,30 @@
 import React from 'react';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { Reveal } from '../components/Motion';
+
+const SELLER_AGREEMENT_TITLE = 'Seller Agreement';
+const SELLER_AGREEMENT_DESC =
+  'Read the official Seller Agreement for listing items on The Collectors Exchange. Understand the terms, fees, and verification requirements for sellers.';
 
 const SellerAgreement = () => {
   return (
     <div className="min-h-screen bg-white text-black py-8 sm:py-12 px-4 sm:px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
       <SEO
-        title="Seller Agreement"
-        description="Read the official Seller Agreement for listing items on The Collectors Exchange. Understand the terms, fees, and verification requirements for sellers."
+        title={SELLER_AGREEMENT_TITLE}
+        description={SELLER_AGREEMENT_DESC}
         canonical="/seller-agreement"
+      />
+      <PageSchema
+        type="WebPage"
+        name={SELLER_AGREEMENT_TITLE}
+        description={SELLER_AGREEMENT_DESC}
+        path="/seller-agreement"
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Seller Agreement', url: '/seller-agreement' },
+        ]}
       />
 
       {/* Header */}

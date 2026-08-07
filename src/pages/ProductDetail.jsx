@@ -142,7 +142,7 @@ const ProductDetail = () => {
         image={product.images?.[0] || product.image}
         ogType="product"
       />
-      <ProductSchema product={product} />
+      <ProductSchema product={product} reviews={reviewsData} />
       <BreadcrumbSchema items={breadcrumbItems} />
       {/* Breadcrumbs */}
       <div className="hidden sm:block border-b border-gray-100 bg-gray-50/50">
@@ -317,7 +317,16 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {product.status !== 'Sold' && (product.quantity ?? 1) > 0 && (
+            {product.status !== 'Sold' && (product.quantity ?? 1) === 1 && (
+              <div className="flex items-center gap-2 mt-4">
+                <Gem size={14} className="text-luxury-gold" />
+                <span className="text-[10px] sm:text-xs uppercase tracking-widest text-luxury-gold font-bold">
+                  One of One — Once Sold, Gone
+                </span>
+              </div>
+            )}
+
+            {product.status !== 'Sold' && (product.quantity ?? 1) > 1 && (
               <div className="flex items-center gap-3 mt-4">
                 <span className="text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 font-medium">
                   Qty
@@ -364,7 +373,7 @@ const ProductDetail = () => {
                     className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-[#25D366] shadow-lg"
                   >
                     <MessageCircle size={14} className="sm:w-[18px] sm:h-[18px]" />
-                    Inquire on WhatsApp
+                    Reserve via WhatsApp
                   </a>
                 </Magnetic>
               )}

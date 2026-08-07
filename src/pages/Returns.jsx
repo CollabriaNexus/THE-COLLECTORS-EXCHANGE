@@ -1,14 +1,21 @@
 import React from 'react';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { Reveal } from '../components/Motion';
+
+const RETURNS_TITLE = 'Returns, Refunds & Shipping Policy';
+const RETURNS_DESC =
+  'Learn about The Collectors Exchange returns, refunds, and shipping policy. 48-hour return window, free domestic shipping, and authenticity guarantee.';
 
 const Returns = () => {
   return (
     <div className="min-h-screen bg-white text-black py-8 sm:py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
-      <SEO
-        title="Returns, Refunds & Shipping Policy"
-        description="Learn about The Collectors Exchange returns, refunds, and shipping policy. 48-hour return window, free domestic shipping, and authenticity guarantee."
-        canonical="/returns"
+      <SEO title={RETURNS_TITLE} description={RETURNS_DESC} canonical="/returns" />
+      <PageSchema type="WebPage" name={RETURNS_TITLE} description={RETURNS_DESC} path="/returns" />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Returns & Refunds', url: '/returns' },
+        ]}
       />
       <Reveal className="mb-12 border-b border-gray-200 pb-8">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-4">

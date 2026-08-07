@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { CORE_PAGES } from '../config/seo-pages';
 import {
@@ -240,6 +240,10 @@ const ArchiveProductCard = ({ product }) => {
         <p className="text-heritage-gold-muted font-sans text-xs sm:text-base lg:text-lg font-semibold mt-1.5 sm:mt-2">
           ₹{product.price?.toLocaleString()}
         </p>
+        <p className="flex items-center gap-1 text-[9px] sm:text-[10px] text-heritage-bronze/60 uppercase tracking-wider mt-0.5">
+          <ShieldCheck size={10} className="shrink-0" />
+          Authenticity Guaranteed · 48-Hr Returns
+        </p>
 
         {/* Add to Cart / Sold Button */}
         {product.status === 'Sold' ? (
@@ -279,13 +283,28 @@ const ArchiveProductCard = ({ product }) => {
 const CONDITION_OPTIONS = ['Excellent', 'Good', 'Fair', 'Like New'];
 
 const Category = () => {
-  const [selectedCategory, setSelectedCategory] = useState('Timepieces');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [condition, setCondition] = useState('');
-  const [page, setPage] = useState(1);
+  // Filter state is mirrored to the URL (?cat=&q=&condition=&page=) below so
+  // filtered views are crawlable, indexable, and shareable — not just client state.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedCategory, setSelectedCategory] = useState(
+    () => searchParams.get('cat') || 'Timepieces',
+  );
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
+  const [condition, setCondition] = useState(() => searchParams.get('condition') || '');
+  const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1);
   const { data, isLoading } = useProducts(selectedCategory, searchQuery, page, 20, null, condition);
   const showToast = useToast();
   const { data: categoryCounts } = useCategoryCounts();
+
+  useEffect(() => {
+    const params = {};
+    if (selectedCategory) params.cat = selectedCategory;
+    if (searchQuery) params.q = searchQuery;
+    if (condition) params.condition = condition;
+    if (page > 1) params.page = String(page);
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, searchQuery, condition, page]);
 
   const products = data?.products || [];
   const totalPages = data?.totalPages || 1;
@@ -338,14 +357,20 @@ const Category = () => {
   };
 
   const categorySeo = CORE_PAGES['/category'];
+  const qs = searchParams.toString();
+  const canonicalPath = qs ? `/category?${qs}` : '/category';
+  const filteredTitle =
+    selectedCategory && selectedCategory !== 'Timepieces'
+      ? `${selectedCategory} — ${categorySeo.title}`
+      : categorySeo.title;
 
   return (
     <div className="min-h-screen bg-heritage-cream">
       <SEO
-        title={categorySeo.title}
+        title={filteredTitle}
         description={categorySeo.description}
         keywords={categorySeo.keywords}
-        canonical="/category"
+        canonical={canonicalPath}
       />
       <PageSchema
         type="CollectionPage"
@@ -439,6 +464,8 @@ const Category = () => {
                       {activeCategory && (
                         <p className="text-[10px] sm:text-xs text-heritage-bronze/70 uppercase tracking-[0.2em] mt-0.5 font-sans">
                           {activeCategory.tagline}
+                          {categoryCounts?.[selectedCategory] != null &&
+                            ` · ${categoryCounts[selectedCategory]} in stock`}
                         </p>
                       )}
                     </div>
@@ -449,6 +476,11 @@ const Category = () => {
                   </h2>
                 )}
               </div>
+              {activeCategory && (
+                <p className="mt-2 sm:mt-3 max-w-2xl text-xs sm:text-sm text-heritage-charcoal/60 leading-relaxed">
+                  {activeCategory.description}
+                </p>
+              )}
             </Reveal>
 
             <div className="flex gap-2 w-full sm:w-auto">

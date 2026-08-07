@@ -1,14 +1,21 @@
 import React from 'react';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { Reveal } from '../components/Motion';
+
+const PRIVACY_TITLE = 'Privacy Policy';
+const PRIVACY_DESC =
+  'Read the Privacy & Discretion Policy of The Collectors Exchange. Learn how we protect your data and ensure secure transactions.';
 
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-white text-black py-8 sm:py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
-      <SEO
-        title="Privacy Policy"
-        description="Read the Privacy & Discretion Policy of The Collectors Exchange. Learn how we protect your data and ensure secure transactions."
-        canonical="/privacy"
+      <SEO title={PRIVACY_TITLE} description={PRIVACY_DESC} canonical="/privacy" />
+      <PageSchema type="WebPage" name={PRIVACY_TITLE} description={PRIVACY_DESC} path="/privacy" />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Privacy Policy', url: '/privacy' },
+        ]}
       />
       {/* Header */}
       <Reveal className="mb-12 border-b border-gray-200 pb-8">

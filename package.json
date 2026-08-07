@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "wrangler pages deploy dist --project-name=tce-user",
+    "indexnow": "node scripts/indexnow-submit.mjs --sitemap",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "node scripts/test-unit.mjs",
     "test:e2e": "npx playwright test --config=tests/playwright.config.js",

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { usePublishedBlogs } from '../hooks/api/useBlog';
 import { BookOpen, Clock, User, Search, Loader2, ArrowRight, Tag } from 'lucide-react';
 import { Reveal, Tilt } from '../components/Motion';
@@ -107,6 +107,18 @@ function BlogPage() {
         title="The Archive"
         description="Explore The Collectors Exchange Archive — curated articles on horology, gemology, collecting, and the stories behind rare artifacts."
         canonical="/archive"
+      />
+      <PageSchema
+        type="CollectionPage"
+        name="The Archive"
+        description="Curated articles on horology, gemology, collecting, and the stories behind rare artifacts."
+        path="/archive"
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'The Archive', url: '/archive' },
+        ]}
       />
 
       {/* Hero */}

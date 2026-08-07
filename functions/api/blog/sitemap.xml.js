@@ -1,14 +1,26 @@
 const SITE_URL = 'https://thecollectorsexchange.in';
 const API_URL = 'https://07u78lzel7.execute-api.ap-south-1.amazonaws.com';
 
+async function fetchAllBlogs() {
+  const allPosts = [];
+  let page = 1;
+  const limit = 100;
+
+  while (true) {
+    const res = await fetch(`${API_URL}/api/blog?limit=${limit}&page=${page}`);
+    if (!res.ok) throw new Error(`Failed to fetch blogs: ${res.status}`);
+    const data = await res.json();
+    allPosts.push(...(data.posts || []));
+    if (page >= (data.totalPages || 1)) break;
+    page++;
+  }
+
+  return allPosts;
+}
+
 export async function onRequest() {
   try {
-    const res = await fetch(`${API_URL}/api/blog?limit=1000`);
-    if (!res.ok) {
-      return new Response('Failed to fetch blogs', { status: 502 });
-    }
-
-    const { posts } = await res.json();
+    const posts = await fetchAllBlogs();
 
     const urls = posts
       .filter((p) => p.status === 'PUBLISHED' && p.slug)

@@ -1,15 +1,27 @@
 const SITE_URL = 'https://thecollectorsexchange.in';
 const API_URL = 'https://07u78lzel7.execute-api.ap-south-1.amazonaws.com';
 
+async function fetchAllProducts() {
+  const allProducts = [];
+  let page = 1;
+  const limit = 200;
+
+  while (true) {
+    const res = await fetch(`${API_URL}/api/products?limit=${limit}&page=${page}`);
+    if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
+    const data = await res.json();
+    const batch = data.products || data || [];
+    allProducts.push(...batch);
+    if (page >= (data.totalPages || 1) || batch.length === 0) break;
+    page++;
+  }
+
+  return allProducts;
+}
+
 export async function onRequest() {
   try {
-    const res = await fetch(`${API_URL}/api/products?limit=1000`);
-    if (!res.ok) {
-      return new Response('Failed to fetch products', { status: 502 });
-    }
-
-    const data = await res.json();
-    const products = data.products || data || [];
+    const products = await fetchAllProducts();
 
     const urls = products
       .filter((p) => p.id && p.isPublished)

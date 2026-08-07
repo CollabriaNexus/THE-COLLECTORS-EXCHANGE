@@ -1,14 +1,30 @@
 import React from 'react';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { Reveal } from '../components/Motion';
+
+const FOUNDERS_NOTE_TITLE = "Founder's Note";
+const FOUNDERS_NOTE_DESC =
+  'Read a personal letter from the founder of The Collectors Exchange. Learn about our mission to preserve heritage through authenticated collectibles and trusted transactions.';
 
 const FoundersNote = () => {
   return (
     <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
       <SEO
-        title="Founder's Note"
-        description="Read a personal letter from the founder of The Collectors Exchange. Learn about our mission to preserve heritage through authenticated collectibles and trusted transactions."
+        title={FOUNDERS_NOTE_TITLE}
+        description={FOUNDERS_NOTE_DESC}
         canonical="/founders-note"
+      />
+      <PageSchema
+        type="WebPage"
+        name={FOUNDERS_NOTE_TITLE}
+        description={FOUNDERS_NOTE_DESC}
+        path="/founders-note"
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: '/' },
+          { name: "Founder's Note", url: '/founders-note' },
+        ]}
       />
       {/* Header section for the note */}
       <Reveal

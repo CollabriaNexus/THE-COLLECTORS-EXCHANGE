@@ -679,8 +679,169 @@ function buildArchiveIndexHtml() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  PRODUCT PRERENDER                                                  */
+/* ------------------------------------------------------------------ */
+
+function buildProductMetaTags(product) {
+  const title = escapeHtml(product.title);
+  const plainDesc = stripHtml(product.description || '');
+  const desc = escapeHtml(
+    plainDesc.length > 0
+      ? plainDesc.slice(0, 160)
+      : `Authentic ${product.category || 'collectible'} at ₹${(product.price || 0).toLocaleString('en-IN')}. Verified by The Collectors Exchange.`,
+  );
+  const image = product.images?.[0] || product.image || `${SITE_URL}/og-image.png`;
+  const canonical = `${SITE_URL}/product/${product.id}`;
+
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: plainDesc.slice(0, 200),
+    image: product.images?.length > 0 ? product.images : product.image ? [product.image] : [],
+    sku: String(product.id),
+    ...(product.brand && { brand: { '@type': 'Brand', name: product.brand } }),
+    category: product.category,
+    offers: {
+      '@type': 'Offer',
+      price: product.price != null ? String(product.price) : undefined,
+      priceCurrency: 'INR',
+      availability:
+        product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+      url: canonical,
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 2,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+        applicableCountry: 'IN',
+      },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'INR' },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+      },
+    },
+    itemCondition:
+      product.condition === 'New'
+        ? 'https://schema.org/NewCondition'
+        : product.condition === 'Mint'
+          ? 'https://schema.org/MintCondition'
+          : 'https://schema.org/UsedCondition',
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'The Exchange', item: `${SITE_URL}/category` },
+      { '@type': 'ListItem', position: 3, name: product.title, item: canonical },
+    ],
+  };
+
+  return `
+    <title>${title} — The Collectors Exchange</title>
+    <meta name="description" content="${desc}" />
+    <link rel="canonical" href="${canonical}" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+    <meta property="og:site_name" content="The Collectors Exchange" />
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${desc}" />
+    <meta property="og:image" content="${escapeHtml(image)}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:type" content="product" />
+    <meta property="og:url" content="${canonical}" />
+    <meta property="og:locale" content="en_IN" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@TCE_store" />
+    <meta name="twitter:creator" content="@TCE_store" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${desc}" />
+    <meta name="twitter:image" content="${escapeHtml(image)}" />
+
+    <script type="application/ld+json">${JSON.stringify(productSchema)}</script>
+    <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`;
+}
+
+function buildProductHtml(product, metaTags) {
+  const image = product.images?.[0] || product.image || '';
+  const price = product.price != null ? `₹${product.price.toLocaleString('en-IN')}` : '';
+
+  return `<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  ${metaTags}
+  ${SHELL_HEAD}
+  ${VITE_HEAD_EXTRA}
+  <style>
+    body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:#fff;color:#1C1C1C;-webkit-font-smoothing:antialiased}
+    .product-hero{display:flex;flex-wrap:wrap;gap:2rem;max-width:1000px;margin:0 auto;padding:5rem 1.5rem 2rem}
+    .product-hero img{width:100%;max-width:420px;height:auto;object-fit:cover;background:#f5f5f5}
+    .product-info{flex:1;min-width:260px}
+    .product-info .category{font-size:.7rem;text-transform:uppercase;letter-spacing:.2em;font-weight:700;color:#D4AF37}
+    .product-info h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.5rem,4vw,2.5rem);margin:.5rem 0}
+    .product-info .price{font-size:1.5rem;font-weight:300}
+    .loading{text-align:center;padding:4rem 1.5rem;color:#999;font-style:italic}
+    .spinner{width:40px;height:40px;border:2px solid #D4AF37;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:2rem auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div id="root">
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    ${SHELL_NAV}
+    <main id="main-content" style="flex:1">
+      <div class="product-hero">
+        ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.title)}" fetchpriority="high" />` : ''}
+        <div class="product-info">
+          <span class="category">${escapeHtml(product.category || '')}</span>
+          <h1>${escapeHtml(product.title)}</h1>
+          <p class="price">${price}</p>
+        </div>
+      </div>
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading full listing...</p>
+      </div>
+    </main>
+    ${SHELL_FOOTER}
+  </div>
+  </div>
+  ${VITE_BODY_EXTRA}
+</body>
+</html>`;
+}
+
+/* ------------------------------------------------------------------ */
 /*  FETCH & MAIN                                                      */
 /* ------------------------------------------------------------------ */
+
+async function fetchAllProducts() {
+  const allProducts = [];
+  let page = 1;
+  const limit = 200;
+
+  while (true) {
+    const res = await fetch(`${API_URL}/products?limit=${limit}&page=${page}`);
+    if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
+    const data = await res.json();
+    const batch = data.products || [];
+    allProducts.push(...batch);
+    if (page >= (data.totalPages || 1) || batch.length === 0) break;
+    page++;
+  }
+
+  return allProducts;
+}
 
 async function fetchAllBlogs() {
   const allPosts = [];
@@ -761,6 +922,36 @@ async function main() {
   }
 
   console.log(`[prerender] Wrote ${written} prerendered blog post(s) to dist/archive/*/index.html`);
+
+  // --- Products ---
+  let products;
+  try {
+    products = await fetchAllProducts();
+  } catch (err) {
+    console.error('[prerender] Could not fetch products for prerender:', err.message);
+    console.log('[prerender] Done.');
+    return;
+  }
+
+  const publishedProducts = products.filter((p) => p.id && p.isPublished !== false);
+  console.log(`[prerender] Found ${publishedProducts.length} published product(s).`);
+
+  const productDir = resolve(DIST, 'product');
+  let productsWritten = 0;
+  for (const product of publishedProducts) {
+    const dir = resolve(productDir, String(product.id));
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    const metaTags = buildProductMetaTags(product);
+    const html = buildProductHtml(product, metaTags);
+    writeFileSync(resolve(dir, 'index.html'), html, 'utf-8');
+    productsWritten++;
+  }
+
+  console.log(
+    `[prerender] Wrote ${productsWritten} prerendered product page(s) to dist/product/*/index.html`,
+  );
   console.log('[prerender] Done.');
 }
 

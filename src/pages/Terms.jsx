@@ -1,14 +1,21 @@
 import React from 'react';
-import SEO from '../components/SEO';
+import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { Reveal } from '../components/Motion';
+
+const TERMS_TITLE = 'Terms & Conditions';
+const TERMS_DESC =
+  'Read the Terms & Conditions of The Collectors Exchange. Understand the custodianship agreement, buyer terms, and legal policies for our platform.';
 
 const Terms = () => {
   return (
     <div className="min-h-screen bg-white text-black py-8 sm:py-12 px-6 md:px-12 lg:px-24 max-w-5xl mx-auto">
-      <SEO
-        title="Terms & Conditions"
-        description="Read the Terms & Conditions of The Collectors Exchange. Understand the custodianship agreement, buyer terms, and legal policies for our platform."
-        canonical="/terms"
+      <SEO title={TERMS_TITLE} description={TERMS_DESC} canonical="/terms" />
+      <PageSchema type="WebPage" name={TERMS_TITLE} description={TERMS_DESC} path="/terms" />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Terms & Conditions', url: '/terms' },
+        ]}
       />
       {/* Header */}
       <Reveal className="mb-12 border-b border-gray-200 pb-8">
