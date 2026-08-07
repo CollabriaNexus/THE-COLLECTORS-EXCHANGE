@@ -11,25 +11,41 @@ const SITE_URL = 'https://thecollectorsexchange.in';
 const INDEXNOW_KEY = '62ee34b0915ad2d7d694fd2343b032da';
 const INDEXNOW_ENDPOINT = 'https://api.indexnow.org/indexnow';
 
+/**
+ * Discovers sub-sitemaps from sitemap-index.xml rather than hardcoding paths,
+ * so this can't silently drift out of sync when a sitemap route changes.
+ * (An earlier hardcoded list pointed at /products/sitemap.xml instead of
+ * /api/products/sitemap.xml and silently skipped every product page.)
+ */
 async function collectSitemapUrls() {
-  const sitemaps = [
-    `${SITE_URL}/sitemap.xml`,
-    `${SITE_URL}/products/sitemap.xml`,
-    `${SITE_URL}/api/blog/sitemap.xml`,
-  ];
   const urls = new Set();
-  for (const sitemapUrl of sitemaps) {
+
+  const readLocs = async (url) => {
     try {
-      const res = await fetch(sitemapUrl);
-      if (!res.ok) continue;
-      const xml = await res.text();
-      for (const match of xml.matchAll(/<loc>(.*?)<\/loc>/g)) {
-        urls.add(match[1]);
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error(`[indexnow] ${url} -> HTTP ${res.status}`);
+        return [];
       }
+      const xml = await res.text();
+      return [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1].trim());
     } catch (err) {
-      console.error(`[indexnow] Could not fetch ${sitemapUrl}:`, err.message);
+      console.error(`[indexnow] Could not fetch ${url}:`, err.message);
+      return [];
     }
+  };
+
+  const subSitemaps = await readLocs(`${SITE_URL}/sitemap-index.xml`);
+  if (subSitemaps.length === 0) {
+    throw new Error('sitemap-index.xml returned no sub-sitemaps — aborting.');
   }
+
+  for (const sitemapUrl of subSitemaps) {
+    const locs = await readLocs(sitemapUrl);
+    console.log(`[indexnow] ${sitemapUrl} -> ${locs.length} URLs`);
+    locs.forEach((u) => urls.add(u));
+  }
+
   return [...urls];
 }
 
