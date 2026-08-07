@@ -1,0 +1,33 @@
+{
+  "name": "tce-videos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion video studio for The Collectors Exchange — Instagram-first social video.",
+  "scripts": {
+    "dev": "remotion studio",
+    "studio": "remotion studio",
+    "render": "remotion render",
+    "render:intro": "remotion render IntroReel out/tce-intro.mp4 --codec=h264",
+    "render:all": "node scripts/render-all.mjs",
+    "still": "remotion still",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.507",
+    "@remotion/cli": "4.0.507",
+    "@remotion/fonts": "4.0.507",
+    "@remotion/google-fonts": "4.0.507",
+    "@remotion/media-utils": "4.0.507",
+    "@remotion/renderer": "4.0.507",
+    "@remotion/shapes": "4.0.507",
+    "@remotion/transitions": "4.0.507",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "4.0.507"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3"
+  }
+}
