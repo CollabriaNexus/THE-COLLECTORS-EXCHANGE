@@ -6,6 +6,7 @@ import Products from '../Products';
 
 const mockNavigate = vi.fn();
 const mockGet = vi.fn();
+const mockPatch = vi.fn();
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -13,7 +14,10 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('../../hooks/api/apiClient', () => ({
-  default: { get: (...args) => mockGet(...args) },
+  default: {
+    get: (...args) => mockGet(...args),
+    patch: (...args) => mockPatch(...args),
+  },
 }));
 
 const createWrapper = () => {
@@ -28,7 +32,9 @@ const createWrapper = () => {
 };
 
 describe('Products', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders the page title', () => {
     mockGet.mockResolvedValue({ data: [] });
@@ -52,7 +58,19 @@ describe('Products', () => {
 
   it('renders product data in table', async () => {
     mockGet.mockResolvedValue({
-      data: [{ id: 1, title: 'Vintage Watch', category: 'Timepieces', price: 50000, seller: { name: 'Seller1' }, status: 'Pending', isPublished: false, createdAt: '2024-01-01', image: 'http://example.com/img.jpg' }],
+      data: [
+        {
+          id: 1,
+          title: 'Vintage Watch',
+          category: 'Timepieces',
+          price: 50000,
+          seller: { name: 'Seller1' },
+          status: 'Pending',
+          isPublished: false,
+          createdAt: '2024-01-01',
+          image: 'http://example.com/img.jpg',
+        },
+      ],
     });
     render(<Products />, { wrapper: createWrapper() });
     await waitFor(() => {
@@ -62,8 +80,72 @@ describe('Products', () => {
     });
   });
 
+  it('toggles product visibility', async () => {
+    mockGet.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          title: 'Product A',
+          category: 'Collectibles',
+          price: 100,
+          seller: { name: 'Seller' },
+          status: 'Approved',
+          isPublished: true,
+          createdAt: '2024-01-01',
+          image: '',
+        },
+      ],
+    });
+    mockPatch.mockResolvedValue({ data: {} });
+    render(<Products />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText('Public')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Public'));
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/admin/products/1', { isPublished: false });
+    });
+  });
+
+  it('renders the seller unpublish remark for hidden products', async () => {
+    mockGet.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          title: 'Product A',
+          category: 'Collectibles',
+          price: 100,
+          seller: { name: 'Seller' },
+          status: 'Approved',
+          isPublished: false,
+          unpublishRemark: 'Sold offline at an exhibition',
+          createdAt: '2024-01-01',
+          image: '',
+        },
+      ],
+    });
+    render(<Products />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText('Sold offline at an exhibition')).toBeInTheDocument();
+    });
+  });
+
   it('navigates to product detail on row click', async () => {
-    mockGet.mockResolvedValue({ data: [{ id: 1, title: 'Product A', category: 'Collectibles', price: 100, seller: { name: 'Seller' }, status: 'Approved', isPublished: true, createdAt: '2024-01-01', image: '' }] });
+    mockGet.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          title: 'Product A',
+          category: 'Collectibles',
+          price: 100,
+          seller: { name: 'Seller' },
+          status: 'Approved',
+          isPublished: true,
+          createdAt: '2024-01-01',
+          image: '',
+        },
+      ],
+    });
     render(<Products />, { wrapper: createWrapper() });
     await waitFor(() => {
       fireEvent.click(screen.getByText('Product A'));

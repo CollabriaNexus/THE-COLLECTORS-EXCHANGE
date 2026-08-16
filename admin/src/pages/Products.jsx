@@ -89,6 +89,10 @@ function Products() {
   const handleListingCategorySave = (productId, listingCategory) =>
     updateProductMutation.mutateAsync({ id: productId, listingCategory });
 
+  /** Publish/unpublish toggle — sold items can be hidden but never re-published. */
+  const handleTogglePublish = (product) =>
+    updateProductMutation.mutateAsync({ id: product.id, isPublished: !product.isPublished });
+
   /**
    * Custom-column values live together on `product.adminNotes`, so a write has
    * to merge into the existing object rather than replace it — otherwise
@@ -158,13 +162,44 @@ function Products() {
     {
       key: 'isPublished',
       label: 'Visibility',
-      render: (isPublished) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-semibold ${isPublished ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+      render: (isPublished, row) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleTogglePublish(row);
+          }}
+          disabled={updateProductMutation.isPending || (row.status === 'Sold' && !row.isPublished)}
+          className={`px-2 py-1 rounded-full text-xs font-semibold transition-colors ${
+            row.status === 'Sold' && !row.isPublished
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : isPublished
+                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+          }`}
+          title={
+            row.status === 'Sold' && !row.isPublished
+              ? 'Sold — cannot be published'
+              : isPublished
+                ? 'Click to unpublish (hide from storefront)'
+                : 'Click to publish (show on storefront)'
+          }
         >
           {isPublished ? 'Public' : 'Hidden'}
-        </span>
+        </button>
       ),
+    },
+    {
+      key: 'unpublishRemark',
+      label: 'Unpublish Remark',
+      render: (remark) =>
+        remark ? (
+          <div className="max-w-[180px] truncate text-xs text-gray-600" title={remark}>
+            {remark}
+          </div>
+        ) : (
+          <span className="text-gray-300">—</span>
+        ),
     },
     {
       key: 'createdAt',

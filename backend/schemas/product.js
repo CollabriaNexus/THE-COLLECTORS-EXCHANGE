@@ -69,4 +69,6 @@ export const AdminProductUpdateSchema = z.object({
   commissionPercent: z.number().min(10).max(25).optional(),
   // Admin-defined custom column values (admin routes are already admin-gated)
   adminNotes: AdminNotesSchema.optional(),
+  // Publish/unpublish visibility toggle (admin routes are already admin-gated)
+  isPublished: z.boolean().optional(),
 });

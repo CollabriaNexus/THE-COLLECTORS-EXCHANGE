@@ -63,9 +63,11 @@ export default async function productRoutes(fastify) {
 
       if (!isOwner) {
         where.status = { in: ['Approved', 'Sold'] };
+        where.isPublished = true;
       }
     } else {
       where.status = { in: ['Approved', 'Sold'] };
+      where.isPublished = true;
     }
 
     if (category && category !== 'all') {
@@ -128,7 +130,7 @@ export default async function productRoutes(fastify) {
     try {
       const counts = await prisma.product.groupBy({
         by: ['category'],
-        where: { status: { in: ['Approved', 'Sold'] } },
+        where: { status: { in: ['Approved', 'Sold'] }, isPublished: true },
         _count: { id: true },
       });
       const result = {};
@@ -146,7 +148,7 @@ export default async function productRoutes(fastify) {
   fastify.get('/:id', async (request, reply) => {
     const { id } = ProductIdParam.parse(request.params);
     const product = await prisma.product.findFirst({
-      where: { id, status: { in: ['Approved', 'Sold'] } },
+      where: { id, status: { in: ['Approved', 'Sold'] }, isPublished: true },
       include: {
         seller: {
           select: {
@@ -460,4 +462,38 @@ export default async function productRoutes(fastify) {
     const updated = await prisma.product.update({ where: { id }, data: { quantity: remaining } });
     return withoutAdminNotes(updated);
   });
+
+  // Seller unpublish (hide without marking sold) — a remark is mandatory so the
+  // admin dashboard always shows why the listing was pulled from the storefront.
+  fastify.patch(
+    '/:id/unpublish',
+    { preValidation: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = ProductIdParam.parse(request.params);
+      const remark = (request.body?.remark || '').trim();
+      const dbUser = request.dbUser;
+
+      if (remark.length < 10) {
+        return reply
+          .status(422)
+          .send({ error: 'Please provide a remark of at least 10 characters' });
+      }
+
+      const existing = await prisma.product.findUnique({ where: { id } });
+      if (!existing) return reply.status(404).send({ error: 'Product not found' });
+      if (existing.sellerId !== dbUser.id)
+        return reply.status(403).send({ error: 'Not your product' });
+      if (existing.status === 'Sold')
+        return reply.status(422).send({ error: 'Cannot unpublish a sold product' });
+      if (!existing.isPublished)
+        return reply.status(422).send({ error: 'Listing is already hidden' });
+
+      const updated = await prisma.product.update({
+        where: { id },
+        data: { isPublished: false, unpublishRemark: remark },
+      });
+
+      return withoutAdminNotes(updated);
+    },
+  );
 }

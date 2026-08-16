@@ -174,6 +174,53 @@ describe('products routes', () => {
       const res = await app.inject({ method: 'GET', url: '/' });
       expect(res.statusCode).toBe(500);
     });
+
+    it('only returns published products from the public catalog', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/' });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ isPublished: true }) }),
+      );
+      expect(mockPrisma.product.count).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ isPublished: true }) }),
+      );
+    });
+
+    it('owner seller query ignores isPublished filter so sellers see their own listings', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/?sellerId=vendor-id',
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ sellerId: 'vendor-id' }) }),
+      );
+      expect(mockPrisma.product.findMany.mock.calls[0][0].where.isPublished).toBeUndefined();
+    });
+
+    it('guest sellerId query still filters out unpublished products', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/?sellerId=someone-else' });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ isPublished: true }) }),
+      );
+    });
   });
 
   describe('GET /:id', () => {
@@ -198,6 +245,23 @@ describe('products routes', () => {
       await app.ready();
       const res = await app.inject({ method: 'GET', url: '/nonexistent' });
       expect(res.statusCode).toBe(404);
+    });
+
+    it('only returns published products by id', async () => {
+      mockPrisma.product.findFirst.mockResolvedValue({
+        id: 'p1',
+        title: 'Test',
+        isPublished: true,
+        seller: { name: 'S' },
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/p1' });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ isPublished: true }) }),
+      );
     });
   });
 
@@ -842,6 +906,142 @@ describe('products routes', () => {
         method: 'PATCH',
         url: '/p1/sold',
         headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(mockPrisma.product.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('PATCH /:id/unpublish', () => {
+    const publishedProduct = {
+      id: 'p1',
+      sellerId: 'vendor-id',
+      status: 'Approved',
+      isPublished: true,
+    };
+
+    it('unpublishes with the remark and strips adminNotes from the response', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue(publishedProduct);
+      mockPrisma.product.update.mockResolvedValue({
+        ...publishedProduct,
+        isPublished: false,
+        unpublishRemark: 'No longer available',
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/unpublish',
+        headers: { authorization: 'Bearer vendor' },
+        body: { remark: 'No longer available' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.update).toHaveBeenCalledWith({
+        where: { id: 'p1' },
+        data: { isPublished: false, unpublishRemark: 'No longer available' },
+      });
+    });
+
+    it('returns 422 when the remark is missing', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue(publishedProduct);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/unpublish',
+        headers: { authorization: 'Bearer vendor' },
+        body: {},
+      });
+      expect(res.statusCode).toBe(422);
+      expect(mockPrisma.product.update).not.toHaveBeenCalled();
+    });
+
+    it('returns 422 when the remark is too short', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue(publishedProduct);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/unpublish',
+        headers: { authorization: 'Bearer vendor' },
+        body: { remark: 'short' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(mockPrisma.product.update).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 when product not found', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue(null);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/nope/unpublish',
+        headers: { authorization: 'Bearer vendor' },
+        body: { remark: 'No longer available' },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+
+    it('returns 403 when not the seller', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'other-id',
+        status: 'Approved',
+        isPublished: true,
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/unpublish',
+        headers: { authorization: 'Bearer vendor' },
+        body: { remark: 'No longer available' },
+      });
+      expect(res.statusCode).toBe(403);
+      expect(mockPrisma.product.update).not.toHaveBeenCalled();
+    });
+
+    it('returns 422 for a sold product', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Sold',
+        isPublished: false,
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/unpublish',
+        headers: { authorization: 'Bearer vendor' },
+        body: { remark: 'No longer available' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(mockPrisma.product.update).not.toHaveBeenCalled();
+    });
+
+    it('returns 422 when the listing is already hidden', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Approved',
+        isPublished: false,
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/unpublish',
+        headers: { authorization: 'Bearer vendor' },
+        body: { remark: 'No longer available' },
       });
       expect(res.statusCode).toBe(422);
       expect(mockPrisma.product.update).not.toHaveBeenCalled();

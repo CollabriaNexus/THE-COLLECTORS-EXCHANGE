@@ -924,6 +924,7 @@ export default async function adminRoutes(fastify) {
           isVerified: true,
           authenticityStatus: 'Verified',
           rejectionReason: null,
+          unpublishRemark: null,
           reviewedAt: new Date(),
         },
       });
@@ -1095,6 +1096,20 @@ export default async function adminRoutes(fastify) {
       const existing = await prisma.product.findUnique({ where: { id } });
       if (!existing) {
         return reply.status(404).send({ error: 'Product not found' });
+      }
+
+      // A sold product is terminal — it can be hidden (unpublished), but never
+      // brought back to the storefront. Sold is set exclusively via a punched
+      // manual order, not through this toggle.
+      if (data.isPublished === true && existing.status === 'Sold') {
+        return reply.status(422).send({ error: 'Cannot publish a sold product' });
+      }
+
+      // Republishing clears the seller's unpublish remark — it only describes
+      // why the listing was pulled from the storefront, so it is stale once the
+      // listing is live again.
+      if (data.isPublished === true) {
+        data.unpublishRemark = null;
       }
 
       // Admin-gated route (authenticateAdmin): adminNotes may be written here

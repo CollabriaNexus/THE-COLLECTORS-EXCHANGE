@@ -23,6 +23,7 @@ import {
   X,
   Mail,
   Upload,
+  EyeOff,
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
@@ -40,6 +41,7 @@ import {
   useAddBulkProducts,
   useUpdateProduct,
   useMarkAsSold,
+  useUnpublishProduct,
 } from '../hooks/api/useProducts';
 import { useMyOrders } from '../hooks/api/useOrders';
 import { supabase } from '../utils/supabase';
@@ -219,6 +221,10 @@ const Account = () => {
   const deleteProductMutation = useDeleteProduct();
   const bulkAddProductsMutation = useAddBulkProducts();
   const markAsSoldMutation = useMarkAsSold();
+  const unpublishProductMutation = useUnpublishProduct();
+  const [unpublishTarget, setUnpublishTarget] = useState(null);
+  const [unpublishRemarkText, setUnpublishRemarkText] = useState('');
+  const [unpublishError, setUnpublishError] = useState('');
   const [bulkResults, setBulkResults] = useState(null);
   const { data: myOrders = [], isLoading: ordersLoading } = useMyOrders();
   // Shares the ['notifications'] cache with NotificationsPanel, so this is a read
@@ -771,6 +777,38 @@ const Account = () => {
       showToast('Item marked as sold.', 'success');
     } catch {
       showToast('Failed to mark item as sold.', 'error');
+    }
+  };
+
+  const openUnpublishModal = (product) => {
+    setUnpublishTarget(product);
+    setUnpublishRemarkText('');
+    setUnpublishError('');
+  };
+
+  const closeUnpublishModal = () => {
+    if (unpublishProductMutation.isPending) return;
+    setUnpublishTarget(null);
+    setUnpublishRemarkText('');
+    setUnpublishError('');
+  };
+
+  const confirmUnpublish = async () => {
+    if (!unpublishTarget) return;
+    if (unpublishRemarkText.trim().length < 10) {
+      setUnpublishError('Please provide a remark of at least 10 characters.');
+      return;
+    }
+    setUnpublishError('');
+    try {
+      await unpublishProductMutation.mutateAsync({
+        id: unpublishTarget.id,
+        remark: unpublishRemarkText.trim(),
+      });
+      showToast('Listing hidden from the storefront.', 'success');
+      closeUnpublishModal();
+    } catch (err) {
+      setUnpublishError(err.message || 'Failed to unpublish the listing.');
     }
   };
 
@@ -2423,7 +2461,9 @@ const Account = () => {
                                   {product.status === 'Sold'
                                     ? 'Sold'
                                     : product.status === 'Approved'
-                                      ? 'Live'
+                                      ? product.isPublished
+                                        ? 'Live'
+                                        : 'Hidden'
                                       : product.status === 'In_Review'
                                         ? 'In Review'
                                         : product.status === 'Rejected'
@@ -2452,6 +2492,21 @@ const Account = () => {
                                   >
                                     <Edit3 size={12} />
                                   </button>
+                                  {product.status === 'Approved' && product.isPublished && (
+                                    <button
+                                      type="button"
+                                      onClick={() => openUnpublishModal(product)}
+                                      disabled={unpublishProductMutation.isPending}
+                                      className="text-gray-400 hover:text-red-500 transition-colors p-1 disabled:opacity-30"
+                                      title="Unpublish (hide from storefront)"
+                                    >
+                                      {unpublishProductMutation.isPending ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                      ) : (
+                                        <EyeOff size={12} />
+                                      )}
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={() => handleMarkAsSold(product.id)}
@@ -2517,7 +2572,7 @@ const Account = () => {
                                   </span>
                                 ) : product.status === 'Approved' ? (
                                   <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-1 rounded">
-                                    Published
+                                    {product.isPublished ? 'Published' : 'Hidden'}
                                   </span>
                                 ) : product.status === 'In_Review' ? (
                                   <span className="inline-flex items-center gap-1 text-[10px] text-purple-700 bg-purple-50 px-2 py-1 rounded">
@@ -2529,7 +2584,7 @@ const Account = () => {
                                   </span>
                                 )}
                               </div>
-                              {product.status === 'Approved' && (
+                              {product.status === 'Approved' && product.isPublished && (
                                 <div className="absolute top-2 left-2">
                                   <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">
                                     Live
@@ -2602,6 +2657,21 @@ const Account = () => {
                                   >
                                     <Edit3 size={14} />
                                   </button>
+                                  {product.status === 'Approved' && product.isPublished && (
+                                    <button
+                                      type="button"
+                                      onClick={() => openUnpublishModal(product)}
+                                      disabled={unpublishProductMutation.isPending}
+                                      className="text-gray-400 hover:text-red-500 transition-colors p-1 disabled:opacity-30"
+                                      title="Unpublish (hide from storefront)"
+                                    >
+                                      {unpublishProductMutation.isPending ? (
+                                        <Loader2 size={14} className="animate-spin" />
+                                      ) : (
+                                        <EyeOff size={14} />
+                                      )}
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={() => handleMarkAsSold(product.id)}
@@ -2652,6 +2722,62 @@ const Account = () => {
                 </div>
               )}
             </div>
+
+            {/* Unpublish remark modal — seller must say why they're hiding the listing */}
+            {unpublishTarget && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
+                <div className="bg-white p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-100 relative">
+                  <button
+                    onClick={closeUnpublishModal}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors"
+                    aria-label="Close"
+                  >
+                    <X size={20} />
+                  </button>
+                  <h3 className="font-serif text-base sm:text-xl mb-1 text-heritage-charcoal">
+                    Unpublish listing
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Hide "{unpublishTarget.title}" from the storefront. It stays in your listings
+                    and can be republished any time.
+                  </p>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wider">
+                    Reason for unpublishing
+                  </label>
+                  <textarea
+                    value={unpublishRemarkText}
+                    onChange={(e) => {
+                      setUnpublishRemarkText(e.target.value);
+                      if (unpublishError) setUnpublishError('');
+                    }}
+                    rows={4}
+                    placeholder="Why are you hiding this listing? (min 10 characters)"
+                    className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-luxury-gold transition-colors"
+                  />
+                  {unpublishError && <p className="text-xs text-red-500 mt-2">{unpublishError}</p>}
+                  <div className="flex justify-end gap-3 mt-5">
+                    <button
+                      onClick={closeUnpublishModal}
+                      className="px-4 py-2.5 border border-gray-300 text-gray-700 text-xs uppercase tracking-widest font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmUnpublish}
+                      disabled={unpublishProductMutation.isPending}
+                      className="px-4 py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-luxury-gold transition-colors disabled:opacity-40 flex items-center gap-2"
+                    >
+                      {unpublishProductMutation.isPending ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <EyeOff size={14} />
+                      )}
+                      Unpublish
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
 

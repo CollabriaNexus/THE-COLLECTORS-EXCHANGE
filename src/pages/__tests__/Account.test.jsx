@@ -45,6 +45,12 @@ vi.mock('../../hooks/api/useProducts', () => ({
     mutateAsync: vi.fn(() => Promise.resolve()),
     isLoading: false,
   })),
+  useUnpublishProduct: vi.fn(() => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(() => Promise.resolve()),
+    isLoading: false,
+    isPending: false,
+  })),
 }));
 
 vi.mock('../../hooks/api/useVendor', () => ({

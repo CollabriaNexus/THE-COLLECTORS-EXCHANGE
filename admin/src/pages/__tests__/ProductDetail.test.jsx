@@ -100,7 +100,7 @@ describe('ProductDetail', () => {
       expect(screen.getByText('Approve & Publish')).toBeInTheDocument();
       expect(screen.getByText('Reject Product')).toBeInTheDocument();
       expect(screen.getByText('Edit Product')).toBeInTheDocument();
-      expect(screen.getByText('Mark as Sold')).toBeInTheDocument();
+      expect(screen.getByText('Publish')).toBeInTheDocument();
       expect(screen.getByText('Delete Product')).toBeInTheDocument();
     });
   });
@@ -137,6 +137,15 @@ describe('ProductDetail', () => {
         reason: 'Bad quality',
       });
     });
+  });
+
+  it('calls update mutation on Publish click', async () => {
+    mockPatch.mockResolvedValue({ data: {} });
+    render(<ProductDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      fireEvent.click(screen.getByText('Publish'));
+    });
+    expect(mockPatch).toHaveBeenCalledWith('/admin/products/123', { isPublished: true });
   });
 
   it('shows error when rejecting without reason', async () => {
@@ -191,6 +200,24 @@ describe('ProductDetail', () => {
     await waitFor(() => {
       expect(screen.getByText('Rejection Reason')).toBeInTheDocument();
       expect(screen.getByText('Image too blurry')).toBeInTheDocument();
+    });
+  });
+
+  it('displays the seller unpublish remark when the listing is hidden', async () => {
+    const hiddenProduct = {
+      ...mockProduct,
+      status: 'Approved',
+      unpublishRemark: 'Sold offline at an exhibition',
+    };
+    mockGet.mockImplementation((url) => {
+      if (url === '/admin/products/123') return Promise.resolve({ data: hiddenProduct });
+      if (url === '/admin/brands') return Promise.resolve({ data: [] });
+      return Promise.resolve({ data: {} });
+    });
+    render(<ProductDetail />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText('Unpublished by seller')).toBeInTheDocument();
+      expect(screen.getByText('Sold offline at an exhibition')).toBeInTheDocument();
     });
   });
 

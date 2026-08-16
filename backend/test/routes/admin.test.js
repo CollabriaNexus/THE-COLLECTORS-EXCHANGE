@@ -496,6 +496,11 @@ describe('admin routes', () => {
         headers: { authorization: 'Bearer superadmin' },
       });
       expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ unpublishRemark: null }),
+        }),
+      );
     });
 
     it('returns 422 when product is sold', async () => {
@@ -652,6 +657,63 @@ describe('admin routes', () => {
         method: 'PATCH',
         url: '/products/p1',
         payload: { brand: 'Rolex' },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+    });
+
+    it('publishes an approved product via isPublished toggle', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        status: 'Approved',
+        isPublished: false,
+      });
+      mockPrisma.product.update.mockResolvedValue({
+        id: 'p1',
+        status: 'Approved',
+        isPublished: true,
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/products/p1',
+        payload: { isPublished: true },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.product.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { isPublished: true, unpublishRemark: null },
+        }),
+      );
+    });
+
+    it('returns 422 when trying to publish a sold product', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', status: 'Sold' });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/products/p1',
+        payload: { isPublished: true },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(422);
+    });
+
+    it('allows unpublishing a sold product', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', status: 'Sold' });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', status: 'Sold', isPublished: false });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/products/p1',
+        payload: { isPublished: false },
         headers: { authorization: 'Bearer admin' },
       });
       expect(res.statusCode).toBe(200);

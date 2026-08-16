@@ -1,7 +1,20 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useProducts, useProductDetail, useReviewProduct, useApproveProduct, useRejectProduct, useDeleteProduct, useUpdateProduct, useBrands, useMarkProductAsSold, useUpdateAuthenticityStatus, useTCEProducts, useCreateProduct, useEditProduct } from '../useProducts';
+import {
+  useProducts,
+  useProductDetail,
+  useReviewProduct,
+  useApproveProduct,
+  useRejectProduct,
+  useDeleteProduct,
+  useUpdateProduct,
+  useBrands,
+  useUpdateAuthenticityStatus,
+  useTCEProducts,
+  useCreateProduct,
+  useEditProduct,
+} from '../useProducts';
 
 const mockGet = vi.fn();
 const mockPatch = vi.fn();
@@ -41,9 +54,14 @@ describe('useProducts', () => {
 
   it('fetches products with category, status, and search filters', async () => {
     mockGet.mockResolvedValue({ data: [] });
-    const { result } = renderHook(() => useProducts({ category: 'Timepieces', status: 'Pending', search: 'watch' }), { wrapper: createWrapper() });
+    const { result } = renderHook(
+      () => useProducts({ category: 'Timepieces', status: 'Pending', search: 'watch' }),
+      { wrapper: createWrapper() },
+    );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockGet).toHaveBeenCalledWith('/admin/products?category=Timepieces&status=Pending&search=watch');
+    expect(mockGet).toHaveBeenCalledWith(
+      '/admin/products?category=Timepieces&status=Pending&search=watch',
+    );
   });
 
   it('returns loading state', () => {
@@ -124,7 +142,10 @@ describe('useUpdateProduct', () => {
     const { result } = renderHook(() => useUpdateProduct(), { wrapper: createWrapper() });
     result.current.mutate({ id: '123', brand: 'Rolex', listingCategory: 'featured' });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockPatch).toHaveBeenCalledWith('/admin/products/123', { brand: 'Rolex', listingCategory: 'featured' });
+    expect(mockPatch).toHaveBeenCalledWith('/admin/products/123', {
+      brand: 'Rolex',
+      listingCategory: 'featured',
+    });
   });
 });
 
@@ -138,23 +159,17 @@ describe('useBrands', () => {
   });
 });
 
-describe('useMarkProductAsSold', () => {
-  it('mutates with id', async () => {
-    mockPatch.mockResolvedValue({ data: { success: true } });
-    const { result } = renderHook(() => useMarkProductAsSold(), { wrapper: createWrapper() });
-    result.current.mutate('123');
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockPatch).toHaveBeenCalledWith('/admin/products/123/sold');
-  });
-});
-
 describe('useUpdateAuthenticityStatus', () => {
   it('mutates with id and status', async () => {
     mockPatch.mockResolvedValue({ data: { success: true } });
-    const { result } = renderHook(() => useUpdateAuthenticityStatus(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useUpdateAuthenticityStatus(), {
+      wrapper: createWrapper(),
+    });
     result.current.mutate({ id: '123', status: 'Verified' });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockPatch).toHaveBeenCalledWith('/admin/products/123/authenticity', { status: 'Verified' });
+    expect(mockPatch).toHaveBeenCalledWith('/admin/products/123/authenticity', {
+      status: 'Verified',
+    });
   });
 });
 

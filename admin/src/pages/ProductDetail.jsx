@@ -26,7 +26,6 @@ import {
   useDeleteProduct,
   useUpdateProduct,
   useBrands,
-  useMarkProductAsSold,
 } from '../hooks/api/useProducts';
 import { useCreateManualOrder } from '../hooks/api/useOrders';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -78,7 +77,6 @@ function ProductDetail() {
   const updateStatusMutation = useUpdateAuthenticityStatus();
   const deleteMutation = useDeleteProduct();
   const updateProductMutation = useUpdateProduct();
-  const markAsSoldMutation = useMarkProductAsSold();
   const createManualOrderMutation = useCreateManualOrder();
   const confirm = useConfirm();
 
@@ -86,18 +84,20 @@ function ProductDetail() {
   const generateCouponMutation = useGenerateCoupon();
   const deleteCouponMutation = useDeleteCoupon();
 
-  const handleMarkAsSold = async () => {
+  const handleTogglePublish = async () => {
     const confirmed = await confirm(
-      `Mark "${product.title}" as sold? This will unpublish the listing.`,
+      product.isPublished
+        ? `Hide "${product.title}" from the storefront? It can be republished any time.`
+        : `Publish "${product.title}" to the storefront?`,
     );
     if (!confirmed) return;
     setError('');
     try {
-      await markAsSoldMutation.mutateAsync(id);
-      setSuccess('Product marked as sold');
+      await updateProductMutation.mutateAsync({ id, isPublished: !product.isPublished });
+      setSuccess(product.isPublished ? 'Product hidden from storefront' : 'Product published');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to mark as sold');
+      setError(err.message || 'Failed to update visibility');
     }
   };
 
@@ -331,6 +331,21 @@ function ProductDetail() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
           {error}
+        </div>
+      )}
+
+      {/* Seller's unpublish remark — only present when the seller hid the listing */}
+      {!product.isPublished && product.unpublishRemark && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded mb-6">
+          <div className="flex items-start gap-3">
+            <EyeOff className="text-amber-600 mt-1 shrink-0" size={18} />
+            <div>
+              <p className="text-sm font-semibold text-amber-900">Unpublished by seller</p>
+              <p className="text-sm text-amber-800 mt-1 leading-relaxed">
+                {product.unpublishRemark}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -621,20 +636,33 @@ function ProductDetail() {
                   Edit Product
                 </button>
                 <button
-                  onClick={handleMarkAsSold}
-                  disabled={markAsSoldMutation.isPending || product.status === 'Sold'}
+                  onClick={handleTogglePublish}
+                  disabled={
+                    updateProductMutation.isPending ||
+                    (product.status === 'Sold' && !product.isPublished)
+                  }
                   className={`w-full flex items-center justify-center gap-2 py-3 rounded-md font-medium transition-colors ${
-                    product.status === 'Sold'
+                    product.status === 'Sold' && !product.isPublished
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                      : product.isPublished
+                        ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                        : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                   }`}
                 >
-                  <BadgeIndianRupee size={18} />
-                  {markAsSoldMutation.isPending
+                  {product.status === 'Sold' && !product.isPublished ? (
+                    <BadgeIndianRupee size={18} />
+                  ) : product.isPublished ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
+                  {updateProductMutation.isPending
                     ? 'Updating...'
-                    : product.status === 'Sold'
-                      ? 'Already Sold'
-                      : 'Mark as Sold'}
+                    : product.status === 'Sold' && !product.isPublished
+                      ? 'Sold'
+                      : product.isPublished
+                        ? 'Unpublish'
+                        : 'Publish'}
                 </button>
                 {isSuperAdmin && product.status === 'Approved' && (
                   <button

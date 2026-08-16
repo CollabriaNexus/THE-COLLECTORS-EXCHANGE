@@ -204,6 +204,13 @@ model Product {
   reviewedAt         DateTime?
   reviewedBy         String?
 
+  // Seller's mandatory reason when they voluntarily unpublish a listing. Set
+  // by the seller's unpublish action; cleared automatically once the listing
+  // is published again. Never exposed while the listing is hidden, and null
+  // for published listings, so it stays out of the public catalogue. Admins
+  // see it in the dashboard (list + detail).
+  unpublishRemark    String?
+
   sellerId           String
   seller             User             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   createdAt          DateTime         @default(now())

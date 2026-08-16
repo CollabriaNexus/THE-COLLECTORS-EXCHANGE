@@ -138,3 +138,21 @@ export const useMarkAsSold = () => {
     },
   });
 };
+
+/**
+ * Hook to unpublish (hide) a product without marking it sold — a mandatory
+ * remark is recorded so the admin dashboard can see why it was pulled.
+ */
+export const useUnpublishProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, remark }) => {
+      const { data } = await apiClient.patch(`/products/${id}/unpublish`, { remark });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+    },
+  });
+};
