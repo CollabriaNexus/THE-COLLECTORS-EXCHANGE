@@ -72,6 +72,7 @@ function App() {
                     <Route path="about-us" element={<Navigate to="/about" replace />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/category" element={<Category />} />
+                    <Route path="/category/:categorySlug" element={<Category />} />
                     <Route path="/vision" element={<Vision />} />
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/account" element={<Account />} />

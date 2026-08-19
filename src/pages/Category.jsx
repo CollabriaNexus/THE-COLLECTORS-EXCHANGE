@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { CORE_PAGES } from '../config/seo-pages';
 import {
@@ -30,6 +30,7 @@ import { Reveal, Stagger, Tilt } from '../components/Motion';
 const CATEGORIES = [
   {
     id: 'timepieces',
+    slug: 'timepieces',
     name: 'Timepieces',
     icon: Watch,
     tagline: 'The Mechanical Heartbeat',
@@ -42,6 +43,7 @@ const CATEGORIES = [
   },
   {
     id: 'accessories',
+    slug: 'accessories',
     name: 'Accessories',
     icon: Sparkles,
     tagline: 'The Perfect Finish',
@@ -53,7 +55,8 @@ const CATEGORIES = [
       'vintage accessories india, vintage cufflinks, vintage leather bags, heirloom accessories, pre-owned accessories india',
   },
   {
-    id: 'collectables',
+    id: 'collectibles',
+    slug: 'collectibles',
     name: 'Collectibles',
     icon: Box,
     tagline: 'The Curated Pulse',
@@ -66,6 +69,7 @@ const CATEGORIES = [
   },
   {
     id: 'antiques',
+    slug: 'antiques',
     name: 'Antiques',
     icon: Landmark,
     tagline: 'The Ancestral Anchor',
@@ -77,6 +81,7 @@ const CATEGORIES = [
   },
   {
     id: 'toys',
+    slug: 'toys-and-pop-culture',
     name: 'Toys & Pop Culture',
     icon: Gamepad2,
     tagline: 'The Nostalgic Truth',
@@ -89,6 +94,7 @@ const CATEGORIES = [
   },
   {
     id: 'jewelry',
+    slug: 'jewelry',
     name: 'Jewelry',
     icon: Gem,
     tagline: 'The TCE Original',
@@ -306,29 +312,39 @@ const CONDITION_OPTIONS = ['Excellent', 'Good', 'Fair', 'Like New'];
 
 const Category = () => {
   // Filter state is mirrored to the URL (?cat=&q=&condition=&page=) so views
-  // remain shareable. Query views are noindex and canonicalize to this page.
-  const location = useLocation();
+  // remain shareable. Query views are noindex and canonicalize to the matching
+  // clean category landing when the category vocabulary is recognized.
+  const { categorySlug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const routeCategory = CATEGORIES.find(
+    (category) => category.slug === categorySlug?.toLowerCase(),
+  );
+  const requestedQueryCategory = searchParams.get('cat');
+  const queryCategory = CATEGORIES.find(
+    (category) => category.name.toLowerCase() === requestedQueryCategory?.toLowerCase(),
+  );
+  const initialCategory = routeCategory?.name || queryCategory?.name || requestedQueryCategory;
   // Whether this load explicitly requested a category via the URL (a real
   // link, a crawler, a shared URL) — as opposed to landing on the bare
   // default. Captured once at mount so the empty-category redirect below
   // never overrides an explicit choice, only the un-parameterized default.
-  const hadExplicitCategory = useRef(!!searchParams.get('cat'));
-  const [selectedCategory, setSelectedCategory] = useState(
-    () => searchParams.get('cat') || 'Timepieces',
-  );
+  const hadExplicitCategory = useRef(Boolean(routeCategory || requestedQueryCategory));
+  const [selectedCategory, setSelectedCategory] = useState(() => initialCategory || 'Timepieces');
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
   const [condition, setCondition] = useState(() => searchParams.get('condition') || '');
   const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1);
   const { data, isLoading } = useProducts(selectedCategory, searchQuery, page, 20, null, condition);
-  const showToast = useToast();
   const { data: categoryCounts } = useCategoryCounts();
 
   useEffect(() => {
     // Keep unknown facets/sort keys in place so they remain explicit
     // noindex query views rather than silently becoming a clean URL.
     const params = new URLSearchParams(searchParams);
-    if (selectedCategory && (hadExplicitCategory.current || selectedCategory !== 'Timepieces')) {
+    if (
+      !routeCategory &&
+      selectedCategory &&
+      (hadExplicitCategory.current || selectedCategory !== 'Timepieces')
+    ) {
       params.set('cat', selectedCategory);
     } else {
       params.delete('cat');
@@ -352,6 +368,10 @@ const Category = () => {
   const ActiveCategoryIcon = activeCategory?.icon;
 
   useEffect(() => {
+    if (routeCategory) setSelectedCategory(routeCategory.name);
+  }, [routeCategory]);
+
+  useEffect(() => {
     if (hadExplicitCategory.current) return;
     if (categoryCounts && selectedCategory) {
       const count = categoryCounts[selectedCategory] ?? 0;
@@ -360,7 +380,7 @@ const Category = () => {
         setSelectedCategory(firstWithItems?.name || null);
       }
     }
-  }, [categoryCounts]);
+  }, [categoryCounts, selectedCategory]);
 
   const prevCategory = useRef(selectedCategory);
   const prevSearch = useRef(searchQuery);
@@ -380,30 +400,23 @@ const Category = () => {
 
   const productsRef = useRef(null);
 
-  const handleCategoryClick = (categoryName) => {
-    const count = categoryCounts?.[categoryName] ?? 0;
-    if (count === 0) {
-      showToast(`${categoryName} collection coming soon: new pieces are being authenticated.`);
-      return;
-    }
-    const isSelected = selectedCategory === categoryName;
-    setSelectedCategory(isSelected ? null : categoryName);
-
-    // Scroll to products section when selecting a category
-    if (!isSelected) {
-      setTimeout(() => {
-        productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-  };
-
   const categorySeo = CORE_PAGES['/category'];
-  const hasTransientQueryState = searchParams.toString().length > 0;
-  const canonicalPath = location.pathname;
-  const filteredTitle =
-    selectedCategory && selectedCategory !== 'Timepieces'
-      ? `${selectedCategory} — ${categorySeo.title}`
-      : categorySeo.title;
+  const canonicalCategory = routeCategory || (!categorySlug ? queryCategory : null);
+  const hasTransientQueryState =
+    searchParams.toString().length > 0 || Boolean(categorySlug && !routeCategory);
+  const canonicalPath = canonicalCategory ? `/category/${canonicalCategory.slug}` : '/category';
+  const filteredTitle = canonicalCategory
+    ? `${canonicalCategory.name} — ${categorySeo.title}`
+    : categorySeo.title;
+  const breadcrumbItems = canonicalCategory
+    ? [
+        ...categorySeo.breadcrumb,
+        { name: canonicalCategory.name, url: `/category/${canonicalCategory.slug}` },
+      ]
+    : categorySeo.breadcrumb;
+  const pageHeading = canonicalCategory
+    ? `Shop ${canonicalCategory.name}`
+    : 'Shop Vintage Watches, Watch Collections & Rare Collectibles';
 
   return (
     <div className="min-h-screen bg-heritage-cream">
@@ -421,9 +434,9 @@ const Category = () => {
         description={activeCategory?.metaDescription || categorySeo.description}
         path={canonicalPath}
       />
-      <BreadcrumbSchema items={categorySeo.breadcrumb} />
+      <BreadcrumbSchema items={breadcrumbItems} />
       {/* Accessible page-level H1 for SEO (design uses the category rail as the visual header) */}
-      <h1 className="sr-only">Shop Vintage Watches, Watch Collections & Rare Collectibles</h1>
+      <h1 className="sr-only">{pageHeading}</h1>
       {/* Category Icons Navigation - Polished with shadow and border */}
       <section className="py-4 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
         <div className="container mx-auto max-w-5xl">
@@ -438,10 +451,10 @@ const Category = () => {
               const count = categoryCounts?.[category.name] ?? 0;
               const isEmpty = count === 0;
               return (
-                <button
+                <Link
                   key={category.id}
-                  onClick={() => handleCategoryClick(category.name)}
-                  className={`group flex flex-col items-center text-center snap-start shrink-0 w-[72px] md:w-auto transition-opacity duration-300 ${isEmpty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                  to={`/category/${category.slug}/`}
+                  className={`group flex flex-col items-center text-center snap-start shrink-0 w-[72px] md:w-auto transition-opacity duration-300 ${isEmpty ? 'opacity-60' : ''}`}
                   title={isEmpty ? `${category.name} — coming soon` : category.tagline}
                 >
                   <div
@@ -478,7 +491,7 @@ const Category = () => {
                   <span className="hidden md:block text-[8px] text-heritage-bronze/50 uppercase tracking-[0.15em] mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     {isEmpty ? 'Coming Soon' : category.tagline}
                   </span>
-                </button>
+                </Link>
               );
             })}
           </Stagger>

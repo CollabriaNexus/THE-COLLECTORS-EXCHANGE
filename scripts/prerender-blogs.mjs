@@ -7,6 +7,9 @@ import { getProductSchemaCondition } from '../src/utils/productSeo.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, '..', 'dist');
 const SITE_URL = 'https://thecollectorsexchange.in';
+const ROOT_URL = `${SITE_URL}/`;
+const ORGANIZATION_ID = `${ROOT_URL}#organization`;
+const WEBSITE_ID = `${ROOT_URL}#website`;
 const API_URL =
   process.env.API_URL || 'https://07u78lzel7.execute-api.ap-south-1.amazonaws.com/api';
 
@@ -51,6 +54,25 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function serializeJsonLd(value) {
+  return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (character) => {
+    switch (character) {
+      case '<':
+        return '\\u003C';
+      case '>':
+        return '\\u003E';
+      case '&':
+        return '\\u0026';
+      case '\u2028':
+        return '\\u2028';
+      case '\u2029':
+        return '\\u2029';
+      default:
+        return character;
+    }
+  });
 }
 
 function stripHtml(html) {
@@ -214,8 +236,119 @@ const CORE_PAGES = {
   },
 };
 
-function buildCorePageSchemas(page) {
+const CATEGORY_LANDINGS = [
+  {
+    slug: 'timepieces',
+    name: 'Timepieces',
+    tagline: 'The Mechanical Heartbeat',
+    intro:
+      'Your phone tells the time. A mechanical watch tells a story. In a world of flickering screens and disposable tech, we choose the "Mechanical Truth." We don\'t sell battery-powered fashion; we rescue 17-jewel heartbeats that never need a plug or an algorithm to live.',
+    description:
+      'Shop authenticated vintage watches and timepieces at The Collectors Exchange. Rolex, Omega, HMT, Seiko and more — expert-verified, mid-range to rare, with secure transactions across India.',
+  },
+  {
+    slug: 'accessories',
+    name: 'Accessories',
+    tagline: 'The Perfect Finish',
+    intro:
+      'An outfit is a statement. The right accessory makes it iconic. In a world of fast fashion and disposable trends, we choose the "Enduring Truth." We rescue the definitive finishing pieces — the cufflinks, bags, belts, and heirlooms that transform the ordinary into the extraordinary.',
+    description:
+      'Shop authenticated vintage accessories at The Collectors Exchange, including cufflinks, bags, belts, and heirloom pieces.',
+  },
+  {
+    slug: 'collectibles',
+    name: 'Collectibles',
+    tagline: 'The Curated Pulse',
+    intro:
+      'A trend lasts a season. A collectible lasts a lifetime. In a world of digital clutter and fast consumption, we choose the "Physical Truth." We rescue the rare, nostalgic, and culturally significant objects worth preserving.',
+    description:
+      'Shop rare, curated collectibles at The Collectors Exchange, including nostalgic and culturally significant pieces.',
+  },
+  {
+    slug: 'antiques',
+    name: 'Antiques',
+    tagline: 'The Ancestral Anchor',
+    intro:
+      'A replica fills a space. An antique commands it. In a world of mass-produced vintage-look decor, we choose the "Ancestral Truth." We rescue weathered survivors of history that carry their craft and generations with them.',
+    description:
+      'Shop authenticated antiques at The Collectors Exchange, including heritage furniture, decor, and historical pieces.',
+  },
+  {
+    slug: 'toys-and-pop-culture',
+    name: 'Toys & Pop Culture',
+    tagline: 'The Nostalgic Truth',
+    intro:
+      'A plaything is for a moment. A pop icon is for the ages. We rescue definitive action figures, limited figurines, and media artifacts that shaped childhoods and culture.',
+    description:
+      'Shop vintage toys and pop culture collectibles at The Collectors Exchange, including action figures, limited figurines, and media artifacts.',
+  },
+  {
+    slug: 'jewelry',
+    name: 'Jewelry',
+    tagline: 'The TCE Original',
+    intro:
+      'A brand sells status. A TCE Original is designed as a legacy. After years of studying master artisans, The Collectors Exchange now creates pieces informed by the craftsmanship it preserves.',
+    description:
+      'Shop authenticated vintage jewelry and TCE Original pieces at The Collectors Exchange.',
+  },
+];
+
+function buildHomeEntityGraph() {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': ORGANIZATION_ID,
+        name: 'The Collectors Exchange',
+        url: ROOT_URL,
+        logo: `${SITE_URL}/favicon.png`,
+        description:
+          "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.",
+        foundingDate: '2024',
+        email: 'support@thecollectorsexchange.in',
+        sameAs: [
+          'https://www.instagram.com/the_collectors_exchange/',
+          'https://www.facebook.com/share/18mue4rLC4/',
+          'https://x.com/TCE_store',
+          'https://www.linkedin.com/company/thecollectorsexchange',
+        ],
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'New Guruppanapalya',
+          addressLocality: 'Bengaluru',
+          addressRegion: 'Karnataka',
+          postalCode: '560029',
+          addressCountry: 'IN',
+        },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': WEBSITE_ID,
+        name: 'The Collectors Exchange',
+        url: ROOT_URL,
+        publisher: { '@id': ORGANIZATION_ID },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${SITE_URL}/category/?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
+        description:
+          "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.",
+      },
+    ],
+  };
+}
+
+function buildCorePageSchemas(path, page) {
   const schemas = [];
+
+  if (path === '/') {
+    schemas.push(buildHomeEntityGraph());
+  }
 
   if (page.schemaType) {
     schemas.push({
@@ -223,7 +356,7 @@ function buildCorePageSchemas(page) {
       '@type': page.schemaType,
       name: page.title,
       description: page.description,
-      url: `${SITE_URL}${withTrailingSlash(Object.keys(CORE_PAGES).find((k) => CORE_PAGES[k] === page))}`,
+      url: `${SITE_URL}${withTrailingSlash(path)}`,
       isPartOf: {
         '@type': 'WebSite',
         name: 'The Collectors Exchange',
@@ -273,10 +406,10 @@ function buildCorePageMetaTags(path, page) {
   const desc = escapeHtml(page.description);
   const image = `${SITE_URL}${page.ogImage}`;
   const canonical = `${SITE_URL}${withTrailingSlash(path)}`;
-  const schemas = buildCorePageSchemas(page);
+  const schemas = buildCorePageSchemas(path, page);
 
   const schemaTags = schemas
-    .map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`)
+    .map((s) => `<script type="application/ld+json">${serializeJsonLd(s)}</script>`)
     .join('\n    ');
 
   return `
@@ -496,8 +629,8 @@ function buildMetaTags(post) {
     <meta name="twitter:description" content="${desc}" />
     <meta name="twitter:image" content="${escapeHtml(image)}" />
 
-    <script type="application/ld+json">${JSON.stringify(articleSchema)}</script>
-    <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`;
+    <script type="application/ld+json">${serializeJsonLd(articleSchema)}</script>
+    <script type="application/ld+json">${serializeJsonLd(breadcrumbSchema)}</script>`;
 }
 
 function buildBlogHtml(post, metaTags) {
@@ -735,7 +868,7 @@ function buildArchiveIndexHtml(posts = []) {
   <meta name="twitter:title" content="The Archive — The Collectors Exchange" />
   <meta name="twitter:description" content="Explore The Collectors Exchange Archive. Curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
   <meta name="twitter:image" content="${SITE_URL}/og-image.png" />
-  <script type="application/ld+json">${JSON.stringify({
+  <script type="application/ld+json">${serializeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: 'The Archive',
@@ -748,7 +881,7 @@ function buildArchiveIndexHtml(posts = []) {
       url: SITE_URL,
     },
   })}</script>
-  <script type="application/ld+json">${JSON.stringify({
+  <script type="application/ld+json">${serializeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
@@ -798,19 +931,52 @@ function buildArchiveIndexHtml(posts = []) {
 </html>`;
 }
 
-function buildCategoryHtml(products = []) {
-  const page = CORE_PAGES['/category'];
-  const metaTags = buildCorePageMetaTags('/category', page);
-  const categories = [...new Set(products.map((product) => product.category).filter(Boolean))].sort(
-    (a, b) => a.localeCompare(b),
-  );
-  const categoryLinks = categories
-    .map((category) => {
-      const count = products.filter((product) => product.category === category).length;
-      return `<a href="/category/?cat=${encodeURIComponent(category)}">${escapeHtml(category)} <span>(${count})</span></a>`;
-    })
-    .join('\n');
-  const productCards = products
+function buildCategoryHtml(products = [], categorySlug = null) {
+  const hubPage = CORE_PAGES['/category'];
+  const landing = CATEGORY_LANDINGS.find((category) => category.slug === categorySlug) || null;
+  const path = landing ? `/category/${landing.slug}` : '/category';
+  const visibleProducts = landing
+    ? products.filter((product) => product.category?.toLowerCase() === landing.name.toLowerCase())
+    : products;
+  const page = landing
+    ? {
+        ...hubPage,
+        title: `${landing.name} — The Exchange`,
+        description: landing.description,
+        breadcrumb: [
+          ...hubPage.breadcrumb,
+          { name: landing.name, url: `/category/${landing.slug}` },
+        ],
+      }
+    : hubPage;
+  const metaTags = buildCorePageMetaTags(path, page);
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    '@id': `${SITE_URL}${withTrailingSlash(path)}#item-list`,
+    name: landing ? `${landing.name} listings` : 'The Exchange listings',
+    numberOfItems: visibleProducts.length,
+    itemListElement: visibleProducts.map((product, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${SITE_URL}/product/${product.id}/`,
+      item: {
+        '@type': 'Product',
+        '@id': `${SITE_URL}/product/${product.id}/#product`,
+        name: product.title,
+        ...(product.images?.[0] || product.image
+          ? { image: product.images?.[0] || product.image }
+          : {}),
+      },
+    })),
+  };
+  const categoryLinks = CATEGORY_LANDINGS.map((category) => {
+    const count = products.filter(
+      (product) => product.category?.toLowerCase() === category.name.toLowerCase(),
+    ).length;
+    return `<a href="/category/${category.slug}/">${escapeHtml(category.name)} <span>(${count})</span></a>`;
+  }).join('\n');
+  const productCards = visibleProducts
     .filter((product) => product?.id && product?.title)
     .map((product) => {
       const image = product.images?.[0] || product.image || '';
@@ -841,6 +1007,7 @@ function buildCategoryHtml(products = []) {
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   ${metaTags}
+  <script type="application/ld+json">${serializeJsonLd(itemListSchema)}</script>
   ${SHELL_HEAD}
   ${VITE_HEAD_EXTRA}
   <style>
@@ -870,14 +1037,14 @@ function buildCategoryHtml(products = []) {
     ${SHELL_NAV}
     <main id="main-content" style="flex:1;padding-top:60px">
       <header class="catalogue-hero">
-        <h1>The Exchange</h1>
-        <p>${escapeHtml(page.description)}</p>
+        <h1>${escapeHtml(landing ? `Shop ${landing.name}` : 'The Exchange')}</h1>
+        ${landing ? `<p><strong>${escapeHtml(landing.tagline)}</strong></p><p>${escapeHtml(landing.intro)}</p>` : `<p>${escapeHtml(page.description)}</p>`}
       </header>
       ${categoryLinks ? `<nav class="category-links" aria-label="Product categories">${categoryLinks}</nav>` : ''}
       ${
         productCards
           ? `<section class="catalogue-grid" aria-label="Current product listings">${productCards}</section>`
-          : '<p class="catalogue-empty">No current product listings are available.</p>'
+          : `<p class="catalogue-empty">No current ${escapeHtml(landing?.name || 'product')} listings are available.</p>`
       }
     </main>
     ${SHELL_FOOTER}
@@ -969,8 +1136,8 @@ function buildProductMetaTags(product) {
     <meta name="twitter:description" content="${desc}" />
     <meta name="twitter:image" content="${escapeHtml(image)}" />
 
-    <script type="application/ld+json">${JSON.stringify(productSchema)}</script>
-    <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`;
+    <script type="application/ld+json">${serializeJsonLd(productSchema)}</script>
+    <script type="application/ld+json">${serializeJsonLd(breadcrumbSchema)}</script>`;
 }
 
 function normalizeSpecs(value) {
@@ -1176,6 +1343,14 @@ async function main() {
   writeFileSync(resolve(categoryDir, 'index.html'), buildCategoryHtml(), 'utf-8');
   coreWritten++;
   console.log('[prerender] Wrote /category/index.html (fallback)');
+  for (const category of CATEGORY_LANDINGS) {
+    const landingDir = resolve(categoryDir, category.slug);
+    if (!existsSync(landingDir)) {
+      mkdirSync(landingDir, { recursive: true });
+    }
+    writeFileSync(resolve(landingDir, 'index.html'), buildCategoryHtml([], category.slug), 'utf-8');
+    console.log(`[prerender] Wrote /category/${category.slug}/index.html (fallback)`);
+  }
   console.log(`[prerender] Prerendered ${coreWritten} core marketing pages.`);
 
   // 404 page — Cloudflare Pages serves this for unmatched routes.
@@ -1234,6 +1409,14 @@ async function main() {
 
   writeFileSync(resolve(categoryDir, 'index.html'), buildCategoryHtml(publishedProducts), 'utf-8');
   console.log('[prerender] Wrote /category/index.html with current product listings');
+  for (const category of CATEGORY_LANDINGS) {
+    writeFileSync(
+      resolve(categoryDir, category.slug, 'index.html'),
+      buildCategoryHtml(publishedProducts, category.slug),
+      'utf-8',
+    );
+    console.log(`[prerender] Wrote /category/${category.slug}/index.html`);
+  }
 
   const productDir = resolve(DIST, 'product');
   let productsWritten = 0;
@@ -1261,4 +1444,10 @@ if (isDirectExecution) {
   main();
 }
 
-export { buildArchiveIndexHtml, buildCategoryHtml, buildProductHtml, buildProductMetaTags };
+export {
+  buildArchiveIndexHtml,
+  buildCategoryHtml,
+  buildHomeEntityGraph,
+  buildProductHtml,
+  buildProductMetaTags,
+};

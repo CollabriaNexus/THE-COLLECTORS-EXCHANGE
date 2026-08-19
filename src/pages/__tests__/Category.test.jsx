@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Category from '../Category';
 
@@ -60,7 +60,10 @@ const renderCategory = (initialEntry = '/category') => {
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <MemoryRouter initialEntries={[initialEntry]}>
-          <Category />
+          <Routes>
+            <Route path="/category" element={<Category />} />
+            <Route path="/category/:categorySlug" element={<Category />} />
+          </Routes>
         </MemoryRouter>
       </HelmetProvider>
     </QueryClientProvider>,
@@ -98,7 +101,22 @@ describe('Category', () => {
     });
   });
 
-  it('noindexes filter, search and sort states while canonicalizing to the clean category', async () => {
+  it('noindexes transient hub queries while canonicalizing a recognized category query', async () => {
+    renderCategory('/category?cat=Timepieces&q=hmt&condition=Good&sort=price');
+
+    await waitFor(() => {
+      expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+        'href',
+        'https://thecollectorsexchange.in/category/timepieces/',
+      );
+      expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+        'content',
+        'noindex, follow',
+      );
+    });
+  });
+
+  it('keeps search-only hub queries canonicalized to the category hub', async () => {
     renderCategory('/category?q=hmt&condition=Good&sort=price');
 
     await waitFor(() => {
@@ -113,7 +131,24 @@ describe('Category', () => {
     });
   });
 
-  it('uses a future curated category pathname as the clean canonical', async () => {
+  it('indexes a clean category landing with a unique H1 and self-canonical', async () => {
+    renderCategory('/category/timepieces');
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Shop Timepieces' })).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+        'href',
+        'https://thecollectorsexchange.in/category/timepieces/',
+      );
+      expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+        'content',
+        'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1',
+      );
+    });
+  });
+
+  it('noindexes transient filters on a clean landing while retaining its canonical', async () => {
     renderCategory('/category/timepieces?sort=price');
 
     await waitFor(() => {
@@ -126,5 +161,13 @@ describe('Category', () => {
         'noindex, follow',
       );
     });
+  });
+
+  it('links category navigation to clean landing URLs', () => {
+    renderCategory('/category');
+
+    expect(document.querySelector('a[href="/category/timepieces/"]')).toBeInTheDocument();
+    expect(document.querySelector('a[href="/category/collectibles/"]')).toBeInTheDocument();
+    expect(document.querySelector('a[href="/category/toys-and-pop-culture/"]')).toBeInTheDocument();
   });
 });
