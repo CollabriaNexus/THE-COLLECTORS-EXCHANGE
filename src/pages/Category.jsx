@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { CORE_PAGES } from '../config/seo-pages';
 import {
@@ -305,8 +305,9 @@ const ArchiveProductCard = ({ product }) => {
 const CONDITION_OPTIONS = ['Excellent', 'Good', 'Fair', 'Like New'];
 
 const Category = () => {
-  // Filter state is mirrored to the URL (?cat=&q=&condition=&page=) below so
-  // filtered views are crawlable, indexable, and shareable — not just client state.
+  // Filter state is mirrored to the URL (?cat=&q=&condition=&page=) so views
+  // remain shareable. Query views are noindex and canonicalize to this page.
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   // Whether this load explicitly requested a category via the URL (a real
   // link, a crawler, a shared URL) — as opposed to landing on the bare
@@ -324,12 +325,24 @@ const Category = () => {
   const { data: categoryCounts } = useCategoryCounts();
 
   useEffect(() => {
-    const params = {};
-    if (selectedCategory) params.cat = selectedCategory;
-    if (searchQuery) params.q = searchQuery;
-    if (condition) params.condition = condition;
-    if (page > 1) params.page = String(page);
-    setSearchParams(params, { replace: true });
+    // Keep unknown facets/sort keys in place so they remain explicit
+    // noindex query views rather than silently becoming a clean URL.
+    const params = new URLSearchParams(searchParams);
+    if (selectedCategory && (hadExplicitCategory.current || selectedCategory !== 'Timepieces')) {
+      params.set('cat', selectedCategory);
+    } else {
+      params.delete('cat');
+    }
+    if (searchQuery) params.set('q', searchQuery);
+    else params.delete('q');
+    if (condition) params.set('condition', condition);
+    else params.delete('condition');
+    if (page > 1) params.set('page', String(page));
+    else params.delete('page');
+
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace: true });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, searchQuery, condition, page]);
 
@@ -385,8 +398,8 @@ const Category = () => {
   };
 
   const categorySeo = CORE_PAGES['/category'];
-  const qs = searchParams.toString();
-  const canonicalPath = qs ? `/category?${qs}` : '/category';
+  const hasTransientQueryState = searchParams.toString().length > 0;
+  const canonicalPath = location.pathname;
   const filteredTitle =
     selectedCategory && selectedCategory !== 'Timepieces'
       ? `${selectedCategory} — ${categorySeo.title}`
@@ -399,12 +412,14 @@ const Category = () => {
         description={activeCategory?.metaDescription || categorySeo.description}
         keywords={activeCategory?.metaKeywords || categorySeo.keywords}
         canonical={canonicalPath}
+        noindex={hasTransientQueryState}
+        nofollow={false}
       />
       <PageSchema
         type="CollectionPage"
         name={filteredTitle}
         description={activeCategory?.metaDescription || categorySeo.description}
-        path="/category"
+        path={canonicalPath}
       />
       <BreadcrumbSchema items={categorySeo.breadcrumb} />
       {/* Accessible page-level H1 for SEO (design uses the category rail as the visual header) */}

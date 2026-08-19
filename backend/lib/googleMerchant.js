@@ -112,21 +112,45 @@ export async function findOrCreateDataSource() {
   });
 }
 
-function mapCondition(cond) {
-  const map = {
-    Mint: 'NEW',
-    New: 'NEW',
-    Excellent: 'USED',
-    'Very Good': 'USED',
-    Good: 'USED',
-    Fair: 'USED',
-    Poor: 'USED',
-  };
-  return map[cond] || 'USED';
+/**
+ * Map the marketplace condition label to Google Merchant's condition enum.
+ * All catalogue grades except an explicit "New" represent pre-owned goods.
+ *
+ * @param {string | null | undefined} condition Marketplace condition label.
+ * @returns {'NEW' | 'USED'} Google Merchant condition value.
+ */
+export function mapCondition(condition) {
+  return typeof condition === 'string' && condition.trim().toLowerCase() === 'new' ? 'NEW' : 'USED';
 }
 
+/**
+ * Determine whether a product may be submitted to Merchant Center.
+ *
+ * @param {{status?: string, isPublished?: boolean}} product Product record.
+ * @returns {boolean} True only for public, approved inventory.
+ */
+export function isMerchantEligible(product) {
+  return product?.status === 'Approved' && product?.isPublished === true;
+}
+
+/**
+ * Submit one eligible product to the Merchant API data source.
+ *
+ * @param {object} product Product record.
+ * @param {string} dataSourceName Merchant data-source resource name.
+ * @param {string} baseUrl Public storefront base URL.
+ * @returns {Promise<object>} Merchant API response.
+ */
 export async function insertProduct(product, dataSourceName, baseUrl) {
+  if (!isMerchantEligible(product)) {
+    throw new Error(
+      `Product ${product?.id || '(unknown)'} is not eligible for Merchant sync: it must be Approved and published.`,
+    );
+  }
+
   const priceMicros = String(Math.round(product.price * 100) * 10000);
+  const brand = typeof product.brand === 'string' ? product.brand.trim() : '';
+  const storefrontBaseUrl = baseUrl.replace(/\/+$/, '');
   const payload = {
     contentLanguage: 'en',
     feedLabel: 'IN',
@@ -134,7 +158,7 @@ export async function insertProduct(product, dataSourceName, baseUrl) {
     productAttributes: {
       title: (product.title || '').slice(0, 150),
       description: (product.description || '').slice(0, 5000),
-      link: `${baseUrl}/product/${product.id}`,
+      link: `${storefrontBaseUrl}/product/${product.id}/`,
       imageLink: product.image || product.images?.[0] || '',
       additionalImageLinks: product.images?.slice(1) || [],
       availability: product.status === 'Sold' ? 'OUT_OF_STOCK' : 'IN_STOCK',
@@ -143,9 +167,23 @@ export async function insertProduct(product, dataSourceName, baseUrl) {
         amountMicros: priceMicros,
         currencyCode: 'INR',
       },
-      brand: product.brand || 'The Collectors Exchange',
+      ...(brand ? { brand } : {}),
     },
   };
   const url = `${BASE}/products/v1/accounts/${ACCOUNT_ID}/productInputs:insert?dataSource=${encodeURIComponent(dataSourceName)}`;
   return api('POST', url, payload);
+}
+
+/**
+ * Delete a product input from the primary Merchant data source.
+ * The v1 API recommends an unpadded base64url product-input identifier.
+ *
+ * @param {string} offerId Marketplace product identifier used as the Merchant offer id.
+ * @param {string} dataSourceName Full Merchant data-source resource name.
+ * @returns {Promise<object | string>} Merchant API response.
+ */
+export async function deleteProduct(offerId, dataSourceName) {
+  const productInputId = Buffer.from(`en~IN~${offerId}`).toString('base64url');
+  const url = `${BASE}/products/v1/accounts/${ACCOUNT_ID}/productInputs/${productInputId}?dataSource=${encodeURIComponent(dataSourceName)}`;
+  return api('DELETE', url);
 }

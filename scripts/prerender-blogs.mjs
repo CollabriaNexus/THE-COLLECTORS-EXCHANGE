@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { getProductSchemaCondition } from '../src/utils/productSeo.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, '..', 'dist');
@@ -11,23 +13,30 @@ const API_URL =
 /* ------------------------------------------------------------------ */
 /*  Read Vite's built dist/index.html to extract script/style refs     */
 /* ------------------------------------------------------------------ */
-const VITE_INDEX = readFileSync(resolve(DIST, 'index.html'), 'utf-8');
-const VITE_HEAD_EXTRA =
-  VITE_INDEX.split('<head>')[1]
-    ?.split('</head>')[0]
-    ?.replace(/<title>[\s\S]*?<\/title>/gi, '')
-    ?.replace(/<meta charset="UTF-8"\s*\/>/gi, '')
-    ?.replace(/<meta name="viewport"[\s\S]*?\/>/gi, '')
-    ?.replace(/<meta name="theme-color"[\s\S]*?\/>/gi, '')
-    ?.replace(/<meta[^>]*>/gi, '')
-    ?.replace(/<link rel="canonical"[^>]*>/gi, '')
-    ?.replace(/<link rel="icon"[^>]*>/gi, '')
-    ?.trim() ?? '';
-const VITE_BODY_EXTRA =
-  VITE_INDEX.split('<body>')[1]
-    ?.split('</body>')[0]
-    ?.replace(/<div id="root">[\s\S]*?<\/div>/gi, '')
-    ?.trim() ?? '';
+let VITE_HEAD_EXTRA = '';
+let VITE_BODY_EXTRA = '';
+
+function loadViteTemplate() {
+  const viteIndex = readFileSync(resolve(DIST, 'index.html'), 'utf-8');
+  VITE_HEAD_EXTRA =
+    viteIndex
+      .split('<head>')[1]
+      ?.split('</head>')[0]
+      ?.replace(/<title>[\s\S]*?<\/title>/gi, '')
+      ?.replace(/<meta charset="UTF-8"\s*\/>/gi, '')
+      ?.replace(/<meta name="viewport"[\s\S]*?\/>/gi, '')
+      ?.replace(/<meta name="theme-color"[\s\S]*?\/>/gi, '')
+      ?.replace(/<meta[^>]*>/gi, '')
+      ?.replace(/<link rel="canonical"[^>]*>/gi, '')
+      ?.replace(/<link rel="icon"[^>]*>/gi, '')
+      ?.trim() ?? '';
+  VITE_BODY_EXTRA =
+    viteIndex
+      .split('<body>')[1]
+      ?.split('</body>')[0]
+      ?.replace(/<div id="root">[\s\S]*?<\/div>/gi, '')
+      ?.trim() ?? '';
+}
 
 // Cloudflare Pages 308-redirects directory-style paths without a trailing
 // slash to the slash version. Canonical/sitemap URLs must match what
@@ -656,7 +665,51 @@ function build404Html() {
 </html>`;
 }
 
-function buildArchiveIndexHtml() {
+function formatDate(value) {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return date.toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function formatPrice(value) {
+  if (value == null || value === '') return '';
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? `₹${numericValue.toLocaleString('en-IN')}` : String(value);
+}
+
+function buildArchiveIndexHtml(posts = []) {
+  const publishedPosts = posts.filter(
+    (post) => post?.slug && (!post.status || post.status === 'PUBLISHED'),
+  );
+  const articleCards = publishedPosts
+    .map((post) => {
+      const published = formatDate(post.publishedAt || post.createdAt);
+      const excerpt = stripHtml(post.excerpt || '');
+
+      return `<article class="archive-card">
+        ${
+          post.coverImage
+            ? `<a href="/archive/${encodeURIComponent(post.slug)}/" aria-label="Read ${escapeHtml(post.title)}"><img src="${escapeHtml(post.coverImage)}" alt="" loading="lazy" /></a>`
+            : ''
+        }
+        <div class="archive-card-content">
+          ${post.category ? `<p class="archive-category">${escapeHtml(post.category)}</p>` : ''}
+          <h2><a href="/archive/${encodeURIComponent(post.slug)}/">${escapeHtml(post.title)}</a></h2>
+          ${excerpt ? `<p>${escapeHtml(excerpt)}</p>` : ''}
+          ${published ? `<time datetime="${escapeHtml(post.publishedAt || post.createdAt)}">${escapeHtml(published)}</time>` : ''}
+        </div>
+      </article>`;
+    })
+    .join('\n');
+
   return `<!DOCTYPE html>
 <html lang="en-IN">
 <head>
@@ -703,26 +756,131 @@ function buildArchiveIndexHtml() {
       { '@type': 'ListItem', position: 2, name: 'The Archive', item: `${SITE_URL}/archive/` },
     ],
   })}</script>
+  ${SHELL_HEAD}
   ${VITE_HEAD_EXTRA}
   <style>
     body{margin:0;padding:0;font-family:'Inter',system-ui,sans-serif;background:#fff;color:#1C1C1C}
     .hero{background:#1C1C1C;padding:5rem 1.5rem;text-align:center}
     .hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,3.5rem);color:#fff;margin:0 0 1rem}
     .hero p{color:rgba(255,255,255,.6);max-width:600px;margin:0 auto;font-size:1rem;line-height:1.7}
-    .spinner{width:40px;height:40px;border:2px solid #D4AF37;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:4rem auto}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .loading{text-align:center;padding:4rem 1.5rem;color:#999;font-style:italic}
+    .archive-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;max-width:1100px;margin:0 auto;padding:4rem 1.5rem}
+    .archive-card{border:1px solid #eee;background:#fff}
+    .archive-card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#f5f5f5}
+    .archive-card-content{padding:1.25rem}
+    .archive-category{font-size:.68rem;text-transform:uppercase;letter-spacing:.18em;color:#9a7a22;font-weight:700;margin:0 0 .65rem}
+    .archive-card h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;line-height:1.3;margin:0 0 .75rem}
+    .archive-card h2 a{color:#1C1C1C;text-decoration:none}
+    .archive-card p{color:#666;line-height:1.65}
+    .archive-card time{display:block;color:#888;font-size:.8rem;margin-top:1rem}
+    .archive-empty{max-width:700px;margin:0 auto;padding:4rem 1.5rem;text-align:center;color:#666}
   </style>
 </head>
 <body>
   <div id="root">
-  <div class="hero">
-    <h1>The Archive</h1>
-    <p>Stories behind the artifacts. Curated insights on horology, gemology, collecting, and the art of preservation.</p>
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    ${SHELL_NAV}
+    <main id="main-content" style="flex:1;padding-top:60px">
+      <div class="hero">
+        <h1>The Archive</h1>
+        <p>Stories behind the artifacts. Curated insights on horology, gemology, collecting, and the art of preservation.</p>
+      </div>
+      ${
+        articleCards
+          ? `<section class="archive-grid" aria-label="Archive articles">${articleCards}</section>`
+          : '<p class="archive-empty">No published articles are currently available.</p>'
+      }
+    </main>
+    ${SHELL_FOOTER}
   </div>
-  <div class="loading">
-    <div class="spinner"></div>
-    <p>Loading articles...</p>
+  </div>
+  ${VITE_BODY_EXTRA}
+</body>
+</html>`;
+}
+
+function buildCategoryHtml(products = []) {
+  const page = CORE_PAGES['/category'];
+  const metaTags = buildCorePageMetaTags('/category', page);
+  const categories = [...new Set(products.map((product) => product.category).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b),
+  );
+  const categoryLinks = categories
+    .map((category) => {
+      const count = products.filter((product) => product.category === category).length;
+      return `<a href="/category/?cat=${encodeURIComponent(category)}">${escapeHtml(category)} <span>(${count})</span></a>`;
+    })
+    .join('\n');
+  const productCards = products
+    .filter((product) => product?.id && product?.title)
+    .map((product) => {
+      const image = product.images?.[0] || product.image || '';
+      const price = formatPrice(product.price);
+
+      return `<article class="catalogue-card">
+        ${
+          image
+            ? `<a href="/product/${encodeURIComponent(String(product.id))}/" aria-label="View ${escapeHtml(product.title)}"><img src="${escapeHtml(image)}" alt="${escapeHtml(product.title)}" loading="lazy" /></a>`
+            : ''
+        }
+        <div class="catalogue-card-content">
+          ${product.category ? `<p class="catalogue-category">${escapeHtml(product.category)}</p>` : ''}
+          <h2><a href="/product/${encodeURIComponent(String(product.id))}/">${escapeHtml(product.title)}</a></h2>
+          ${product.condition ? `<p>Condition: ${escapeHtml(product.condition)}</p>` : ''}
+          ${price ? `<p class="catalogue-price">${escapeHtml(price)}</p>` : ''}
+          ${product.status === 'Sold' ? '<p class="catalogue-status">Sold</p>' : ''}
+        </div>
+      </article>`;
+    })
+    .join('\n');
+
+  return `<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  ${metaTags}
+  ${SHELL_HEAD}
+  ${VITE_HEAD_EXTRA}
+  <style>
+    body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:#FAF8F5;color:#1C1C1C;-webkit-font-smoothing:antialiased}
+    .catalogue-hero{background:#fff;border-bottom:1px solid #e8e2d8;padding:5rem 1.5rem 3rem;text-align:center}
+    .catalogue-hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(2rem,5vw,3.5rem);margin:0 0 1rem}
+    .catalogue-hero p{max-width:700px;margin:0 auto;color:#666;line-height:1.7}
+    .category-links{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;max-width:1100px;margin:0 auto;padding:2rem 1.5rem 0}
+    .category-links a{border:1px solid #d8d0c2;color:#1C1C1C;padding:.7rem 1rem;text-decoration:none;font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;background:#fff}
+    .category-links span{color:#777}
+    .catalogue-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.5rem;max-width:1100px;margin:0 auto;padding:3rem 1.5rem 5rem}
+    .catalogue-card{border:1px solid #e8e2d8;background:#fff}
+    .catalogue-card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#f3f3f3}
+    .catalogue-card-content{padding:1.15rem}
+    .catalogue-category{font-size:.65rem;text-transform:uppercase;letter-spacing:.18em;color:#9a7a22;font-weight:700;margin:0 0 .6rem}
+    .catalogue-card h2{font-family:'Playfair Display',Georgia,serif;font-size:1.2rem;line-height:1.35;margin:0 0 .75rem}
+    .catalogue-card h2 a{color:#1C1C1C;text-decoration:none}
+    .catalogue-card p{color:#666;font-size:.85rem;margin:.35rem 0}
+    .catalogue-card .catalogue-price{font-size:1rem;color:#1C1C1C}
+    .catalogue-card .catalogue-status{color:#8a3b2f;text-transform:uppercase;letter-spacing:.12em;font-size:.7rem}
+    .catalogue-empty{max-width:700px;margin:0 auto;padding:4rem 1.5rem;text-align:center;color:#666}
+  </style>
+</head>
+<body>
+  <div id="root">
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    ${SHELL_NAV}
+    <main id="main-content" style="flex:1;padding-top:60px">
+      <header class="catalogue-hero">
+        <h1>The Exchange</h1>
+        <p>${escapeHtml(page.description)}</p>
+      </header>
+      ${categoryLinks ? `<nav class="category-links" aria-label="Product categories">${categoryLinks}</nav>` : ''}
+      ${
+        productCards
+          ? `<section class="catalogue-grid" aria-label="Current product listings">${productCards}</section>`
+          : '<p class="catalogue-empty">No current product listings are available.</p>'
+      }
+    </main>
+    ${SHELL_FOOTER}
   </div>
   </div>
   ${VITE_BODY_EXTRA}
@@ -735,52 +893,47 @@ function buildArchiveIndexHtml() {
 /* ------------------------------------------------------------------ */
 
 function buildProductMetaTags(product) {
-  const title = escapeHtml(product.title);
+  const title = escapeHtml(product.title || 'Product listing');
   const plainDesc = stripHtml(product.description || '');
-  const desc = escapeHtml(
-    plainDesc.length > 0
-      ? plainDesc.slice(0, 160)
-      : `Authentic ${product.category || 'collectible'} at ₹${(product.price || 0).toLocaleString('en-IN')}. Verified by The Collectors Exchange.`,
-  );
+  const fallbackDescription = [
+    product.title,
+    product.category ? `Category: ${product.category}` : '',
+    product.condition ? `Condition: ${product.condition}` : '',
+    product.price != null ? `Price: ${formatPrice(product.price)}` : '',
+  ]
+    .filter(Boolean)
+    .join('. ');
+  const desc = escapeHtml((plainDesc || fallbackDescription).slice(0, 160));
   const image = product.images?.[0] || product.image || `${SITE_URL}/og-image.png`;
   const canonical = `${SITE_URL}/product/${product.id}/`;
+
+  const offer = {};
+  if (product.price != null) {
+    offer.price = String(product.price);
+    offer.priceCurrency = 'INR';
+  }
+  if (product.status) {
+    offer.availability =
+      product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock';
+  }
+  if (Object.keys(offer).length > 0) {
+    offer['@type'] = 'Offer';
+    offer.url = canonical;
+  }
 
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: product.title,
-    description: plainDesc.slice(0, 200),
+    name: product.title || 'Product listing',
+    ...(plainDesc && { description: plainDesc.slice(0, 200) }),
     image: product.images?.length > 0 ? product.images : product.image ? [product.image] : [],
     sku: String(product.id),
     ...(product.brand && { brand: { '@type': 'Brand', name: product.brand } }),
-    category: product.category,
-    offers: {
-      '@type': 'Offer',
-      price: product.price != null ? String(product.price) : undefined,
-      priceCurrency: 'INR',
-      availability:
-        product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
-      url: canonical,
-      hasMerchantReturnPolicy: {
-        '@type': 'MerchantReturnPolicy',
-        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
-        merchantReturnDays: 2,
-        returnMethod: 'https://schema.org/ReturnByMail',
-        returnFees: 'https://schema.org/FreeReturn',
-        applicableCountry: 'IN',
-      },
-      shippingDetails: {
-        '@type': 'OfferShippingDetails',
-        shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'INR' },
-        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
-      },
-    },
-    itemCondition:
-      product.condition === 'New'
-        ? 'https://schema.org/NewCondition'
-        : product.condition === 'Mint'
-          ? 'https://schema.org/MintCondition'
-          : 'https://schema.org/UsedCondition',
+    ...(product.category && { category: product.category }),
+    ...(Object.keys(offer).length > 0 && { offers: offer }),
+    ...(product.condition && {
+      itemCondition: getProductSchemaCondition(product.condition),
+    }),
   };
 
   const breadcrumbSchema = {
@@ -820,9 +973,63 @@ function buildProductMetaTags(product) {
     <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`;
 }
 
-function buildProductHtml(product, metaTags) {
+function normalizeSpecs(value) {
+  let specs = value;
+  if (typeof specs === 'string') {
+    try {
+      specs = JSON.parse(specs);
+    } catch {
+      return [];
+    }
+  }
+
+  if (!Array.isArray(specs)) return [];
+
+  return specs.filter(
+    (spec) =>
+      spec &&
+      typeof spec === 'object' &&
+      spec.key != null &&
+      String(spec.key).trim() &&
+      spec.value != null &&
+      String(spec.value).trim(),
+  );
+}
+
+function renderPlainText(value) {
+  if (!value) return '';
+
+  return String(value)
+    .trim()
+    .split(/\r?\n\s*\r?\n/)
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph.trim()).replace(/\r?\n/g, '<br />')}</p>`)
+    .join('\n');
+}
+
+function buildProductHtml(product, metaTags = buildProductMetaTags(product)) {
   const image = product.images?.[0] || product.image || '';
-  const price = product.price != null ? `₹${product.price.toLocaleString('en-IN')}` : '';
+  const price = formatPrice(product.price);
+  const specs = normalizeSpecs(product.specs);
+  const description = renderPlainText(product.description);
+  const facts = [
+    product.condition ? ['Condition', product.condition] : null,
+    product.brand ? ['Brand', product.brand] : null,
+    product.status ? ['Listing status', product.status] : null,
+    product.authenticityStatus ? ['Authentication status', product.authenticityStatus] : null,
+    product.seller?.name ? ['Seller', product.seller.name] : null,
+  ].filter(Boolean);
+  const factList = facts
+    .map(
+      ([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`,
+    )
+    .join('\n');
+  const specsTable = specs
+    .map(
+      (spec) =>
+        `<tr><th scope="row">${escapeHtml(spec.key)}</th><td>${escapeHtml(spec.value)}</td></tr>`,
+    )
+    .join('\n');
 
   return `<!DOCTYPE html>
 <html lang="en-IN">
@@ -840,11 +1047,23 @@ function buildProductHtml(product, metaTags) {
     .product-hero img{width:100%;max-width:420px;height:auto;object-fit:cover;background:#f5f5f5}
     .product-info{flex:1;min-width:260px}
     .product-info .category{font-size:.7rem;text-transform:uppercase;letter-spacing:.2em;font-weight:700;color:#D4AF37}
+    .product-info .category a{color:inherit;text-decoration:none}
     .product-info h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.5rem,4vw,2.5rem);margin:.5rem 0}
     .product-info .price{font-size:1.5rem;font-weight:300}
-    .loading{text-align:center;padding:4rem 1.5rem;color:#999;font-style:italic}
-    .spinner{width:40px;height:40px;border:2px solid #D4AF37;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:2rem auto}
-    @keyframes spin{to{transform:rotate(360deg)}}
+    .product-facts{margin:1.5rem 0 0;border-top:1px solid #eee}
+    .product-facts div{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:1rem;padding:.75rem 0;border-bottom:1px solid #eee}
+    .product-facts dt{font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:#777}
+    .product-facts dd{margin:0;color:#333}
+    .product-body{max-width:800px;margin:0 auto;padding:1rem 1.5rem 5rem}
+    .product-section{margin-top:2.5rem}
+    .product-section h2{font-family:'Playfair Display',Georgia,serif;font-size:1.65rem;margin:0 0 1rem}
+    .description p{color:#555;line-height:1.8;margin:0 0 1rem}
+    .specs{width:100%;border-collapse:collapse;border:1px solid #e8e8e8}
+    .specs th,.specs td{text-align:left;padding:.85rem 1rem;border-bottom:1px solid #e8e8e8;vertical-align:top}
+    .specs th{width:34%;font-weight:600;background:#fafafa}
+    .verification{border:1px solid #d8c47a;background:#fffdf5;padding:1.25rem}
+    .verification h2{font-size:1.25rem;margin:0 0 .5rem}
+    .verification p{color:#555;line-height:1.65;margin:0}
   </style>
 </head>
 <body>
@@ -855,14 +1074,32 @@ function buildProductHtml(product, metaTags) {
       <div class="product-hero">
         ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.title)}" fetchpriority="high" />` : ''}
         <div class="product-info">
-          <span class="category">${escapeHtml(product.category || '')}</span>
-          <h1>${escapeHtml(product.title)}</h1>
-          <p class="price">${price}</p>
+          ${
+            product.category
+              ? `<p class="category"><a href="/category/?cat=${encodeURIComponent(product.category)}">${escapeHtml(product.category)}</a></p>`
+              : ''
+          }
+          <h1>${escapeHtml(product.title || 'Product listing')}</h1>
+          ${price ? `<p class="price">${escapeHtml(price)}</p>` : ''}
+          ${factList ? `<dl class="product-facts">${factList}</dl>` : ''}
         </div>
       </div>
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Loading full listing...</p>
+      <div class="product-body">
+        ${
+          description
+            ? `<section class="product-section description"><h2>Description</h2>${description}</section>`
+            : ''
+        }
+        ${
+          specsTable
+            ? `<section class="product-section"><h2>Specifications</h2><table class="specs"><tbody>${specsTable}</tbody></table></section>`
+            : ''
+        }
+        ${
+          product.isVerified === true
+            ? `<aside class="product-section verification" aria-label="Listing verification"><h2>Verified Authentic</h2><p>This listing is marked Verified Authentic by The Collectors Exchange.</p></aside>`
+            : ''
+        }
       </div>
     </main>
     ${SHELL_FOOTER}
@@ -914,10 +1151,13 @@ async function fetchAllBlogs() {
 
 async function main() {
   console.log('[prerender] Starting build-time prerender...');
+  loadViteTemplate();
 
   // --- Core marketing pages ---
   let coreWritten = 0;
   for (const [path, page] of Object.entries(CORE_PAGES)) {
+    if (path === '/category') continue;
+
     const dir = resolve(DIST, path === '/' ? '.' : path.slice(1));
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
@@ -928,6 +1168,14 @@ async function main() {
     coreWritten++;
     console.log(`[prerender] Wrote ${path}/index.html`);
   }
+
+  const categoryDir = resolve(DIST, 'category');
+  if (!existsSync(categoryDir)) {
+    mkdirSync(categoryDir, { recursive: true });
+  }
+  writeFileSync(resolve(categoryDir, 'index.html'), buildCategoryHtml(), 'utf-8');
+  coreWritten++;
+  console.log('[prerender] Wrote /category/index.html (fallback)');
   console.log(`[prerender] Prerendered ${coreWritten} core marketing pages.`);
 
   // 404 page — Cloudflare Pages serves this for unmatched routes.
@@ -942,15 +1190,7 @@ async function main() {
     console.error('[prerender] Could not reach API at', API_URL);
     console.error('[prerender] Skipping blog prerender. Core pages are already written.');
     console.error('[prerender] Error:', err.message);
-    // Still write the archive index even if API is down
-    const archiveDir = resolve(DIST, 'archive');
-    if (!existsSync(archiveDir)) {
-      mkdirSync(archiveDir, { recursive: true });
-    }
-    writeFileSync(resolve(archiveDir, 'index.html'), buildArchiveIndexHtml(), 'utf-8');
-    console.log('[prerender] Wrote /archive/index.html (fallback)');
-    console.log('[prerender] Done.');
-    return;
+    posts = [];
   }
 
   const published = posts.filter((p) => p.status === 'PUBLISHED' && p.slug);
@@ -961,7 +1201,7 @@ async function main() {
   if (!existsSync(archiveDir)) {
     mkdirSync(archiveDir, { recursive: true });
   }
-  writeFileSync(resolve(archiveDir, 'index.html'), buildArchiveIndexHtml(), 'utf-8');
+  writeFileSync(resolve(archiveDir, 'index.html'), buildArchiveIndexHtml(published), 'utf-8');
   console.log('[prerender] Wrote /archive/index.html');
 
   // Prerender each blog post
@@ -992,6 +1232,9 @@ async function main() {
   const publishedProducts = products.filter((p) => p.id && p.isPublished !== false);
   console.log(`[prerender] Found ${publishedProducts.length} published product(s).`);
 
+  writeFileSync(resolve(categoryDir, 'index.html'), buildCategoryHtml(publishedProducts), 'utf-8');
+  console.log('[prerender] Wrote /category/index.html with current product listings');
+
   const productDir = resolve(DIST, 'product');
   let productsWritten = 0;
   for (const product of publishedProducts) {
@@ -1011,4 +1254,11 @@ async function main() {
   console.log('[prerender] Done.');
 }
 
-main();
+const isDirectExecution =
+  process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+if (isDirectExecution) {
+  main();
+}
+
+export { buildArchiveIndexHtml, buildCategoryHtml, buildProductHtml, buildProductMetaTags };

@@ -10,6 +10,7 @@ import {
   buildCanonicalPath,
   resolveImageUrl,
 } from '../config/seo-pages';
+import { getProductSchemaCondition } from '../utils/productSeo.js';
 
 const SEO = ({
   title,
@@ -20,6 +21,7 @@ const SEO = ({
   ogType = 'website',
   publishedTime,
   noindex = false,
+  nofollow = noindex,
   structuredData,
 }) => {
   const pageTitle = buildPageTitle(title);
@@ -42,7 +44,7 @@ const SEO = ({
 
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
-      {noindex && <meta name="robots" content="noindex, nofollow" />}
+      {noindex && <meta name="robots" content={`noindex, ${nofollow ? 'nofollow' : 'follow'}`} />}
       {!noindex && (
         <meta
           name="robots"
@@ -78,11 +80,16 @@ const SEO = ({
   );
 };
 
+const ROOT_URL = `${SITE_URL}/`;
+const ORGANIZATION_ID = `${ROOT_URL}#organization`;
+const WEBSITE_ID = `${ROOT_URL}#website`;
+
 export const buildOrganizationSchema = () => ({
   '@context': 'https://schema.org',
   '@type': 'Organization',
+  '@id': ORGANIZATION_ID,
   name: SITE_NAME,
-  url: SITE_URL,
+  url: ROOT_URL,
   logo: `${SITE_URL}/favicon.png`,
   description: DEFAULT_DESC,
   foundingDate: '2024',
@@ -112,13 +119,17 @@ export const OrganizationSchema = () => (
 export const buildWebSiteSchema = () => ({
   '@context': 'https://schema.org',
   '@type': 'WebSite',
+  '@id': WEBSITE_ID,
   name: SITE_NAME,
-  url: SITE_URL,
+  url: ROOT_URL,
+  publisher: {
+    '@id': ORGANIZATION_ID,
+  },
   potentialAction: {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: `${SITE_URL}/category/?search={search_term_string}`,
+      urlTemplate: `${SITE_URL}/category/?q={search_term_string}`,
     },
     'query-input': 'required name=search_term_string',
   },
@@ -149,19 +160,24 @@ export const SiteNavigationSchema = () => (
   </Helmet>
 );
 
-export const buildPageSchema = ({ type = 'WebPage', name, description, path }) => ({
-  '@context': 'https://schema.org',
-  '@type': type,
-  name,
-  description,
-  url: `${SITE_URL}${buildCanonicalPath(path)}`,
-  isPartOf: {
-    '@type': 'WebSite',
-    name: SITE_NAME,
-    url: SITE_URL,
-  },
-  publisher: buildOrganizationSchema(),
-});
+export const buildPageSchema = ({ type = 'WebPage', name, description, path }) => {
+  const pageUrl = `${SITE_URL}${buildCanonicalPath(path)}`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': type,
+    '@id': `${pageUrl}#webpage`,
+    name,
+    description,
+    url: pageUrl,
+    isPartOf: {
+      '@id': WEBSITE_ID,
+    },
+    publisher: {
+      '@id': ORGANIZATION_ID,
+    },
+  };
+};
 
 export const PageSchema = ({ type = 'WebPage', name, description, path }) => {
   if (!path) return null;
@@ -181,6 +197,7 @@ const OFFER_VALID_UNTIL = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
 export const ProductSchema = ({ product, reviews }) => {
   if (!product) return null;
 
+  const productUrl = `${SITE_URL}${buildCanonicalPath(`/product/${product.id}`)}`;
   const reviewList = reviews?.data || [];
   const reviewCount = reviews?.total ?? reviewList.length;
   const aggregateRating =
@@ -197,6 +214,7 @@ export const ProductSchema = ({ product, reviews }) => {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
+    '@id': `${productUrl}#product`,
     name: product.title,
     description: product.description?.replace(/<[^>]*>/g, '')?.substring(0, 200),
     image: product.images?.length > 0 ? product.images : product.image ? [product.image] : [],
@@ -210,33 +228,10 @@ export const ProductSchema = ({ product, reviews }) => {
       priceCurrency: 'INR',
       availability:
         product.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
-      url: `${SITE_URL}/product/${product.id}/`,
+      url: productUrl,
       priceValidUntil: OFFER_VALID_UNTIL,
-      hasMerchantReturnPolicy: {
-        '@type': 'MerchantReturnPolicy',
-        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
-        merchantReturnDays: 2,
-        returnMethod: 'https://schema.org/ReturnByMail',
-        returnFees: 'https://schema.org/FreeReturn',
-        applicableCountry: 'IN',
-      },
-      shippingDetails: {
-        '@type': 'OfferShippingDetails',
-        shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'INR' },
-        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
-        deliveryTime: {
-          '@type': 'ShippingDeliveryTime',
-          handlingTime: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 5, unitCode: 'DAY' },
-          transitTime: { '@type': 'QuantitativeValue', minValue: 5, maxValue: 10, unitCode: 'DAY' },
-        },
-      },
     },
-    itemCondition:
-      product.condition === 'New'
-        ? 'https://schema.org/NewCondition'
-        : product.condition === 'Mint'
-          ? 'https://schema.org/MintCondition'
-          : 'https://schema.org/UsedCondition',
+    itemCondition: getProductSchemaCondition(product.condition),
     ...(product.isVerified && {
       award: 'Verified Authentic by The Collectors Exchange',
     }),

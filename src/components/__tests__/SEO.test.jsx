@@ -8,6 +8,9 @@ import SEO, {
   BreadcrumbSchema,
   FAQSchema,
   ArticleSchema,
+  buildOrganizationSchema,
+  buildPageSchema,
+  buildWebSiteSchema,
 } from '../SEO';
 
 const renderWithHelmet = (ui) => render(<HelmetProvider>{ui}</HelmetProvider>);
@@ -48,6 +51,13 @@ describe('OrganizationSchema', () => {
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('Organization');
   });
+
+  it('uses a stable organization entity id and canonical root URL', () => {
+    const data = buildOrganizationSchema();
+
+    expect(data['@id']).toBe('https://thecollectorsexchange.in/#organization');
+    expect(data.url).toBe('https://thecollectorsexchange.in/');
+  });
 });
 
 describe('WebSiteSchema', () => {
@@ -56,6 +66,44 @@ describe('WebSiteSchema', () => {
     const script = await getJsonLd();
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('WebSite');
+  });
+
+  it('targets the q parameter used by the application search', () => {
+    const data = buildWebSiteSchema();
+
+    expect(data.potentialAction.target.urlTemplate).toBe(
+      'https://thecollectorsexchange.in/category/?q={search_term_string}',
+    );
+  });
+
+  it('connects the website to stable entity ids', () => {
+    const data = buildWebSiteSchema();
+
+    expect(data['@id']).toBe('https://thecollectorsexchange.in/#website');
+    expect(data.url).toBe('https://thecollectorsexchange.in/');
+    expect(data.publisher).toEqual({
+      '@id': 'https://thecollectorsexchange.in/#organization',
+    });
+  });
+});
+
+describe('PageSchema', () => {
+  it('uses a stable page id and references the shared website and organization entities', () => {
+    const data = buildPageSchema({
+      type: 'CollectionPage',
+      name: 'The Exchange',
+      description: 'Browse verified collectibles.',
+      path: '/category',
+    });
+
+    expect(data['@id']).toBe('https://thecollectorsexchange.in/category/#webpage');
+    expect(data.url).toBe('https://thecollectorsexchange.in/category/');
+    expect(data.isPartOf).toEqual({
+      '@id': 'https://thecollectorsexchange.in/#website',
+    });
+    expect(data.publisher).toEqual({
+      '@id': 'https://thecollectorsexchange.in/#organization',
+    });
   });
 });
 
@@ -77,6 +125,31 @@ describe('ProductSchema', () => {
     const data = JSON.parse(script.textContent);
     expect(data['@type']).toBe('Product');
     expect(data.name).toBe('Test Watch');
+    expect(data.itemCondition).toBe('https://schema.org/UsedCondition');
+  });
+
+  it('uses NewCondition only for an explicitly New product', async () => {
+    renderWithHelmet(
+      <ProductSchema product={{ id: 2, title: 'Unused Watch', condition: 'New' }} />,
+    );
+    const script = await getJsonLd();
+    const data = JSON.parse(script.textContent);
+
+    expect(data.itemCondition).toBe('https://schema.org/NewCondition');
+  });
+
+  it('does not advertise unsupported return or shipping promises', async () => {
+    renderWithHelmet(
+      <ProductSchema
+        product={{ id: 3, title: 'Vintage Watch', condition: 'Mint', price: 25000 }}
+      />,
+    );
+    const script = await getJsonLd();
+    const data = JSON.parse(script.textContent);
+
+    expect(data.offers).not.toHaveProperty('hasMerchantReturnPolicy');
+    expect(data.offers).not.toHaveProperty('shippingDetails');
+    expect(JSON.stringify(data)).not.toContain('FreeReturn');
   });
 
   it('renders with minimal props', async () => {
