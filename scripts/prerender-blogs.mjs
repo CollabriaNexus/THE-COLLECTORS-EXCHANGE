@@ -435,6 +435,9 @@ function buildCorePageMetaTags(path, page) {
     <meta name="twitter:description" content="${desc}" />
     <meta name="twitter:image" content="${image}" />
 
+    <!-- Facebook / Meta domain ownership verification -->
+    <meta name="facebook-domain-verification" content="pc03600zuo2z6e3bwn0i3vj7nbz6j8" />
+
     ${schemaTags}`;
 }
 
