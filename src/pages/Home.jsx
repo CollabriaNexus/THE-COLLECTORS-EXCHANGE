@@ -9,23 +9,22 @@ import {
   ArrowRight,
   Archive,
   Award,
+  Crown,
   Gem,
   Quote,
   QuoteIcon,
   ShoppingBag,
-  Sparkles,
   Check,
   XCircle,
   Instagram,
   Facebook,
   Linkedin,
   Mail,
-  ChevronDown,
 } from 'lucide-react';
 import Bullet from '../components/Bullet';
-import heroVideoWebm from '../assets/hero_section.webm';
-import heroVideoMp4 from '../assets/hero_section-compressed.mp4';
-import heroPoster from '../assets/hero-background.webp';
+import heroWestarWebm from '../assets/hero-westar/hero-westar-916.webm';
+import heroWestarMp4 from '../assets/hero-westar/hero-westar-916.mp4';
+import heroWestarPoster from '../assets/hero-westar/hero-westar-916-poster.jpg';
 import verificationAuthenticity from '../assets/verification_authenticity.webp';
 import { useProducts } from '../hooks/api/useProducts';
 import { useTestimonials } from '../hooks/api/useTestimonials';
@@ -34,7 +33,7 @@ import { getUser } from '../utils/storage';
 import { useToast } from '../components/Toast';
 import { Reveal, Stagger, Parallax, Magnetic, Tilt, Marquee } from '../components/Motion';
 
-const FeaturedProductCard = ({ product }) => {
+const FeaturedProductCard = ({ product, badge = 'Featured', BadgeIcon = Award }) => {
   const user = getUser();
   const navigate = useNavigate();
   const showToast = useToast();
@@ -75,7 +74,7 @@ const FeaturedProductCard = ({ product }) => {
   };
 
   return (
-    <div className="flex-shrink-0 w-[240px] sm:w-[280px] md:w-[320px] bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500 snap-start flex flex-col">
+    <div className="w-full h-full bg-white border border-heritage-beige rounded-2xl overflow-hidden group hover:shadow-heritage-hover transition-all duration-500 flex flex-col">
       <Link to={`/product/${product.id}`} className="block">
         <div className="relative aspect-[4/5] bg-heritage-beige overflow-hidden">
           {product.image ? (
@@ -94,14 +93,14 @@ const FeaturedProductCard = ({ product }) => {
           )}
           {product.status === 'Sold' && (
             <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center z-10">
-              <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-sm font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-[0.15em] shadow-lg">
+              <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-sm font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full uppercase tracking-[0.15em] shadow-lg">
                 Sold Out
               </span>
             </div>
           )}
-          <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] sm:text-xs px-2 sm:px-4 py-1 sm:py-2 font-sans tracking-[0.15em] uppercase flex items-center gap-1 sm:gap-2">
-            <Award size={12} strokeWidth={1.5} />
-            <span>Featured</span>
+          <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] sm:text-xs px-2 sm:px-4 py-1 sm:py-2 rounded-full font-sans tracking-[0.15em] uppercase flex items-center gap-1 sm:gap-2">
+            <BadgeIcon size={12} strokeWidth={1.5} />
+            <span>{badge}</span>
           </div>
         </div>
       </Link>
@@ -121,7 +120,7 @@ const FeaturedProductCard = ({ product }) => {
             to={`/product/${product.id}`}
             className="block hover:text-luxury-gold transition-colors"
           >
-            <h3 className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal mb-1 leading-tight mt-1">
+            <h3 className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal mb-1 leading-tight mt-1 line-clamp-2">
               {title}
             </h3>
           </Link>
@@ -130,7 +129,7 @@ const FeaturedProductCard = ({ product }) => {
           ₹{product.price?.toLocaleString()}
         </p>
         {product.status === 'Sold' ? (
-          <div className="w-full py-1.5 sm:py-2 text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 bg-gray-100 text-gray-400 cursor-default">
+          <div className="w-full py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 bg-gray-100 text-gray-400 cursor-default">
             <XCircle size={11} className="sm:w-[12px] sm:h-[12px]" />
             Sold Out
           </div>
@@ -138,7 +137,7 @@ const FeaturedProductCard = ({ product }) => {
           <button
             onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
             disabled={addToCartMutation.isPending || cartFeedback}
-            className={`w-full py-1.5 sm:py-2 text-[10px] sm:text-xs uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 active:scale-[0.97] ${
+            className={`w-full py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 active:scale-[0.97] ${
               cartFeedback || inCart
                 ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                 : 'bg-black text-white hover:bg-luxury-gold'
@@ -166,19 +165,12 @@ const FeaturedProductCard = ({ product }) => {
 const FeaturedProductsCarousel = () => {
   const trackRef = useRef(null);
   const [paused, setPaused] = React.useState(false);
-  // Query featured and most_rare directly on the server. The old approach fetched
-  // only the top-10 by commission and filtered client-side, so featured items that
-  // happened to rank below the top 10 never appeared at all.
-  const { data: featuredData, isLoading: featuredLoading } = useProducts(
-    null,
-    '',
-    1,
-    20,
-    'featured',
-  );
-  const { data: rareData, isLoading: rareLoading } = useProducts(null, '', 1, 20, 'most_rare');
-  const isLoading = featuredLoading || rareLoading;
-  let products = [...(featuredData?.products || []), ...(rareData?.products || [])];
+  // Query featured directly on the server. The old approach fetched only the
+  // top-10 by commission and filtered client-side, so featured items that
+  // happened to rank below the top 10 never appeared at all. most_rare items
+  // live in their own RarestFinds section below.
+  const { data: featuredData, isLoading } = useProducts(null, '', 1, 20, 'featured');
+  let products = featuredData?.products || [];
 
   if (isLoading || products.length === 0) return null;
 
@@ -189,13 +181,21 @@ const FeaturedProductsCarousel = () => {
     return 0;
   });
 
+  // Fixed-width wrappers keep the rail geometry identical for both marquee
+  // halves; the card itself is width-agnostic so it can also fill grid cells
+  // in the Rarest Finds section.
+  const CARD_WRAPPER = 'shrink-0 snap-start w-[240px] sm:w-[280px] md:w-[320px]';
   const cards = products.map((product) => (
-    <FeaturedProductCard key={product.id} product={product} />
+    <div key={product.id} className={CARD_WRAPPER}>
+      <FeaturedProductCard product={product} />
+    </div>
   ));
   // Second copy for the seamless marquee loop — must use distinct keys or React
   // warns about duplicate keys and mis-reconciles the two halves.
   const cardsDuplicate = products.map((product) => (
-    <FeaturedProductCard key={`dup-${product.id}`} product={product} />
+    <div key={`dup-${product.id}`} className={CARD_WRAPPER}>
+      <FeaturedProductCard product={product} />
+    </div>
   ));
 
   return (
@@ -253,6 +253,79 @@ const FeaturedProductsCarousel = () => {
   );
 };
 
+const RarestFinds = () => {
+  const { data, isLoading } = useProducts(null, '', 1, 8, 'most_rare');
+  let products = data?.products || [];
+
+  if (isLoading || products.length === 0) return null;
+
+  products = [...products].sort((a, b) => {
+    if (a.status === 'Sold' && b.status !== 'Sold') return 1;
+    if (a.status !== 'Sold' && b.status === 'Sold') return -1;
+    return 0;
+  });
+
+  return (
+    <section className="py-14 sm:py-20 lg:py-24 px-4 sm:px-6 bg-heritage-charcoal relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, #D4AF37 1px, transparent 0)',
+          backgroundSize: '26px 26px',
+        }}
+      />
+      <div className="container mx-auto max-w-7xl relative">
+        <Reveal>
+          <div className="text-center mb-10 sm:mb-14">
+            <div className="flex items-center justify-center gap-4 mb-3">
+              <div className="h-px w-8 bg-luxury-gold/40" />
+              <span className="text-luxury-gold tracking-[0.3em] text-xs font-bold uppercase">
+                From The Vault
+              </span>
+              <div className="h-px w-8 bg-luxury-gold/40" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-serif text-white">
+              Rarest <span className="text-luxury-gold italic font-light">Finds</span>
+            </h2>
+            <p className="text-white/50 text-sm sm:text-base mt-3 max-w-xl mx-auto leading-relaxed">
+              Museum-grade pieces that surface once in a lifetime, hand-picked by our curators for
+              provenance, condition and story.
+            </p>
+          </div>
+        </Reveal>
+
+        <Stagger
+          step={60}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+          childClassName="h-full"
+        >
+          {products.map((product) => (
+            <FeaturedProductCard
+              key={product.id}
+              product={product}
+              badge="Most Rare"
+              BadgeIcon={Crown}
+            />
+          ))}
+        </Stagger>
+
+        <Reveal>
+          <div className="text-center mt-10 sm:mt-12">
+            <Link
+              to="/category"
+              className="inline-flex items-center gap-2 rounded-full border border-luxury-gold/40 text-luxury-gold px-6 py-3 text-xs uppercase tracking-widest hover:bg-luxury-gold hover:text-black transition-all duration-300"
+            >
+              Explore The Vault
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
 const homeSeo = CORE_PAGES['/'];
 
 const Home = () => {
@@ -261,67 +334,76 @@ const Home = () => {
       <SEO title={homeSeo.title} description={homeSeo.description} canonical="/" ogType="website" />
       <WebSiteSchema />
       <VideoObjectSchema
-        name="The Collectors Exchange — Authenticated Vintage Watches & Rare Collectibles"
+        name="The Collectors Exchange: Authenticated Vintage Watches & Rare Collectibles"
         description="Discover authenticated vintage watches, rare collectibles, and expert-verified antiques at The Collectors Exchange. India's trusted marketplace for heritage timepieces."
-        thumbnail={heroPoster}
+        thumbnail={heroWestarPoster}
         uploadDate="2026-01-01T00:00:00+05:30"
-        contentUrl={`${window.location.origin}${heroVideoMp4}`}
-        duration="PT30S"
+        contentUrl={`${window.location.origin}${heroWestarMp4}`}
+        duration="PT10S"
       />
       {/* Hero Section */}
-      <section className="relative h-screen min-h-[500px] flex flex-col justify-center items-center px-4 sm:px-6 text-center overflow-hidden bg-black">
-        <video
-          autoPlay
-          muted
-          playsInline
-          preload="auto"
-          fetchpriority="high"
-          poster={heroPoster}
-          onEnded={() => window.dispatchEvent(new Event('homeVideoEnded'))}
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src={heroVideoWebm} type="video/webm" />
-          <source src={heroVideoMp4} type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-black/40"></div>
-
-        <Parallax speed={0.18} className="container mx-auto max-w-4xl relative z-10">
-          <Reveal delay={150}>
-            <h5 className="text-luxury-gold tracking-[0.2em] font-sans text-[10px] sm:text-sm font-semibold uppercase mb-3 sm:mb-4">
-              Authorized & Premium
-            </h5>
-          </Reveal>
-          <h1
-            className="animate-heritage-clip text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-serif text-white font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg"
-            style={{ animationDelay: '0.3s' }}
-          >
-            A Marketplace for Authentic{' '}
-            <span className="italic text-luxury-gold animate-gold-shimmer">Vintage Watches</span> &
-            Rare Collectibles
-          </h1>
-          <Reveal delay={650}>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 font-sans font-light mb-4 sm:mb-10 max-w-2xl mx-auto">
-              Verified. Original. Limited. Discover a curated world of rare finds and verified
-              sellers.
-            </p>
-          </Reveal>
-          <Reveal delay={800}>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-              <Magnetic>
-                <Link
-                  to="/category"
-                  className="block bg-luxury-gold text-black px-6 sm:px-8 py-3 sm:py-4 font-sans text-xs sm:text-sm tracking-widest hover:bg-white transition-colors duration-300"
-                >
-                  EXPLORE THE EXCHANGE
-                </Link>
-              </Magnetic>
+      <section className="relative overflow-hidden bg-cream py-20 sm:py-28 lg:py-32">
+        <div className="container mx-auto max-w-7xl px-6 md:px-10">
+          <div className="grid lg:grid-cols-2 items-center gap-14 lg:gap-16">
+            <div className="text-center lg:text-left order-2 lg:order-1">
+              <Reveal delay={100}>
+                <p className="text-[11px] sm:text-xs tracking-[0.4em] uppercase text-brass mb-6 flex items-center justify-center lg:justify-start gap-3">
+                  <span className="w-8 h-px bg-brass/60" />
+                  Authorized &amp; Premium
+                </p>
+              </Reveal>
+              <h1
+                className="animate-heritage-clip text-balance text-heritage-charcoal font-serif font-extrabold tracking-tight leading-[1.08] text-[clamp(2.2rem,4.6vw,3.4rem)]"
+                style={{ animationDelay: '0.25s' }}
+              >
+                A Marketplace for Authentic{' '}
+                <em className="not-italic animate-gold-shimmer">Vintage Watches</em> &amp; Rare
+                Collectibles
+              </h1>
+              <Reveal delay={500}>
+                <p className="mt-6 mx-auto lg:mx-0 text-heritage-charcoal/60 text-sm sm:text-base leading-relaxed max-w-md">
+                  Verified. Original. Limited. Discover a curated world of rare finds and verified
+                  sellers, archived and authenticated by The Collectors Exchange.
+                </p>
+              </Reveal>
+              <Reveal delay={650}>
+                <div className="mt-9 flex justify-center lg:justify-start">
+                  <Magnetic>
+                    <Link
+                      to="/category"
+                      className="inline-flex items-center gap-3 rounded-full bg-heritage-charcoal text-white px-8 py-4 font-sans text-xs tracking-[0.22em] uppercase transition-transform duration-300 hover:scale-[1.02] active:scale-[0.97]"
+                    >
+                      Explore the Exchange
+                      <ArrowRight size={16} />
+                    </Link>
+                  </Magnetic>
+                </div>
+              </Reveal>
             </div>
-          </Reveal>
-        </Parallax>
 
-        <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center gap-2 text-white/60">
-          <span className="text-[10px] uppercase tracking-[0.3em]">Scroll</span>
-          <ChevronDown size={18} className="animate-scroll-cue" />
+            <Reveal
+              direction="right"
+              distance={60}
+              className="order-1 lg:order-2 mx-auto w-full max-w-xs sm:max-w-sm"
+            >
+              <div className="rounded-[2rem] overflow-hidden shadow-heritage-hover">
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  fetchpriority="high"
+                  poster={heroWestarPoster}
+                  className="w-full h-auto block"
+                  aria-label="Westar automatic watch, cinematic product shot"
+                >
+                  <source src={heroWestarWebm} type="video/webm" />
+                  <source src={heroWestarMp4} type="video/mp4" />
+                </video>
+              </div>
+            </Reveal>
+          </div>
         </div>
       </section>
 
@@ -343,49 +425,60 @@ const Home = () => {
       {/* Marketplace Overview */}
       <section className="py-12 sm:py-16 lg:py-20 px-6 bg-secondary-bg">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 text-center">
-            <Reveal direction="up" delay={0} className="h-full">
+          <Reveal>
+            <div className="rounded-3xl bg-white shadow-heritage divide-y sm:divide-y-0 sm:divide-x divide-heritage-beige sm:grid sm:grid-cols-3 overflow-hidden">
               <Tilt className="h-full">
-                <div className="h-full p-6 sm:p-8 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
-                  <Archive className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
-                  <h3 className="text-xl sm:text-2xl font-serif mb-4">Curated Collection</h3>
-                  <p className="text-sm sm:text-base text-gray-600 font-sans font-light">
-                    From vintage artifacts to limited edition luxury goods, every item is
-                    hand-picked for its uniqueness.
-                  </p>
+                <div className="h-full p-8 sm:p-10 flex flex-col items-center text-center gap-4 hover:bg-heritage-cream/40 transition-colors duration-300">
+                  <Archive className="text-luxury-gold w-9 h-9 sm:w-10 sm:h-10" strokeWidth={1.5} />
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-serif mb-2">Curated Collection</h3>
+                    <p className="text-sm text-gray-600 font-sans font-light leading-relaxed">
+                      From vintage artifacts to limited edition luxury goods, every item is
+                      hand-picked for its uniqueness.
+                    </p>
+                  </div>
                 </div>
               </Tilt>
-            </Reveal>
-            <Reveal direction="up" delay={140} className="h-full">
               <Tilt className="h-full">
-                <div className="h-full p-6 sm:p-8 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
-                  <ShieldCheck className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
-                  <h3 className="text-xl sm:text-2xl font-serif mb-4">Authenticity Verified</h3>
-                  <p className="text-gray-600 font-sans font-light text-sm sm:text-base">
-                    We verify products with brands and experts to ensure 100% originality. No
-                    replicas, no fakes.
-                  </p>
+                <div className="h-full p-8 sm:p-10 flex flex-col items-center text-center gap-4 hover:bg-heritage-cream/40 transition-colors duration-300">
+                  <ShieldCheck
+                    className="text-luxury-gold w-9 h-9 sm:w-10 sm:h-10"
+                    strokeWidth={1.5}
+                  />
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-serif mb-2">Authenticity Verified</h3>
+                    <p className="text-sm text-gray-600 font-sans font-light leading-relaxed">
+                      We verify products with brands and experts to ensure 100% originality. No
+                      replicas, no fakes.
+                    </p>
+                  </div>
                 </div>
               </Tilt>
-            </Reveal>
-            <Reveal direction="up" delay={280} className="h-full sm:col-span-2 lg:col-span-1">
               <Tilt className="h-full">
-                <div className="h-full p-6 sm:p-8 bg-white shadow-sm hover:shadow-lg transition-all duration-300">
-                  <UserCheck className="mx-auto text-luxury-gold mb-6 w-10 h-10 sm:w-12 sm:h-12" />
-                  <h3 className="text-xl sm:text-2xl font-serif mb-4">Trusted Sellers</h3>
-                  <p className="text-sm sm:text-base text-gray-600 font-sans font-light">
-                    Sellers are strictly vetted with mandatory KYC and compliance checks before they
-                    can list.
-                  </p>
+                <div className="h-full p-8 sm:p-10 flex flex-col items-center text-center gap-4 hover:bg-heritage-cream/40 transition-colors duration-300">
+                  <UserCheck
+                    className="text-luxury-gold w-9 h-9 sm:w-10 sm:h-10"
+                    strokeWidth={1.5}
+                  />
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-serif mb-2">Trusted Sellers</h3>
+                    <p className="text-sm text-gray-600 font-sans font-light leading-relaxed">
+                      Sellers are strictly vetted with mandatory KYC and compliance checks before
+                      they can list.
+                    </p>
+                  </div>
                 </div>
               </Tilt>
-            </Reveal>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Featured Products Carousel */}
       <FeaturedProductsCarousel />
+
+      {/* Rarest Finds — most_rare tier */}
+      <RarestFinds />
 
       {/* Verification Works */}
       <section className="py-12 sm:py-16 lg:py-20 px-6 bg-primary-bg">
@@ -428,8 +521,8 @@ const Home = () => {
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
-            <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
+          <div className="rounded-3xl bg-gray-200/80 shadow-md divide-y md:divide-y-0 md:divide-x divide-heritage-charcoal/10 md:grid md:grid-cols-3 overflow-hidden">
+            <div className="p-8 sm:p-12 lg:p-14 flex flex-col items-center text-center hover:bg-gray-200 transition-colors group">
               <Archive
                 className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform"
                 strokeWidth={1.5}
@@ -442,7 +535,7 @@ const Home = () => {
                 list items; we archive history.
               </p>
             </div>
-            <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
+            <div className="p-8 sm:p-12 lg:p-14 flex flex-col items-center text-center hover:bg-gray-200 transition-colors group">
               <ShieldCheck
                 className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform"
                 strokeWidth={1.5}
@@ -455,7 +548,7 @@ const Home = () => {
                 restore the trust lost in the pre-owned market.
               </p>
             </div>
-            <div className="p-8 sm:p-12 lg:p-16 bg-gray-200/80 shadow-md flex flex-col items-center text-center hover:shadow-lg transition-shadow group">
+            <div className="p-8 sm:p-12 lg:p-14 flex flex-col items-center text-center hover:bg-gray-200 transition-colors group">
               <UserCheck
                 className="text-luxury-gold w-10 h-10 sm:w-12 sm:h-12 mb-6 sm:mb-8 group-hover:scale-110 transition-transform"
                 strokeWidth={1.5}
@@ -490,7 +583,7 @@ const Home = () => {
                 Trust is our only currency. Our verification process is not a check; it is a
                 commitment to the preservation of truth.
               </p>
-              <ul className="space-y-4 sm:space-y-6 relative z-10">
+              <ul className="border-t border-heritage-charcoal/10 relative z-10 max-w-md">
                 {[
                   'Institutional verification with heritage brands',
                   'Expert archival appraisal for all artifacts',
@@ -498,17 +591,21 @@ const Home = () => {
                 ].map((item, i) => (
                   <li
                     key={i}
-                    className="flex items-center gap-4 text-heritage-charcoal font-sans font-bold text-xs sm:text-sm tracking-wide"
+                    className="py-4 border-b border-heritage-charcoal/10 flex items-baseline gap-4"
                   >
-                    <Sparkles className="text-luxury-gold w-4 h-4 flex-shrink-0" strokeWidth={2} />
-                    {item}
+                    <span className="text-[10px] tracking-[0.15em] text-luxury-gold shrink-0">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-heritage-charcoal font-sans font-bold text-xs sm:text-sm tracking-wide">
+                      {item}
+                    </span>
                   </li>
                 ))}
               </ul>
             </Reveal>
             <Reveal direction="right" distance={90} blur className="lg:w-1/2 relative">
               <Parallax speed={0.14}>
-                <div className="relative z-10 p-2 bg-white border border-heritage-bronze/10 shadow-2xl overflow-hidden group">
+                <div className="relative z-10 rounded-[1.75rem] bg-white border border-heritage-bronze/10 shadow-2xl overflow-hidden group">
                   <img
                     loading="lazy"
                     width="600"
@@ -538,46 +635,48 @@ const Home = () => {
             </h2>
           </Reveal>
 
-          <div className="bg-[#0A0D12] border border-white/5 p-6 sm:p-12 lg:p-24 grid md:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 text-left max-w-5xl mx-auto shadow-heritage relative overflow-hidden">
+          <div className="rounded-3xl bg-[#0A0D12] border border-white/5 p-6 sm:p-12 lg:p-24 grid md:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 text-left max-w-5xl mx-auto shadow-heritage relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
-            <div className="space-y-6 sm:space-y-10 relative z-10">
+            <div className="space-y-6 sm:space-y-8 relative z-10">
               <h3 className="text-xl sm:text-2xl font-serif text-luxury-gold flex items-center gap-4">
                 <div className="w-8 h-px bg-luxury-gold/50"></div>
                 Individual Sellers
               </h3>
-              <ul className="space-y-4 sm:space-y-6">
+              <ul className="border-t border-white/10">
                 {[
                   'Mandatory KYC (Aadhaar/PAN)',
                   'Limit of 5 listings per account',
                   'Strict manual archival approval',
                 ].map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-4 text-[10px] sm:text-xs text-gray-300 font-sans font-bold tracking-widest uppercase"
-                  >
-                    <Sparkles className="text-luxury-gold/50 w-4 h-4" strokeWidth={2} />
-                    {item}
+                  <li key={i} className="py-3.5 border-b border-white/10 flex items-baseline gap-4">
+                    <span className="text-[10px] tracking-[0.15em] text-luxury-gold/70 shrink-0">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-gray-300 font-sans font-bold tracking-widest uppercase">
+                      {item}
+                    </span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="space-y-6 sm:space-y-10 relative z-10">
+            <div className="space-y-6 sm:space-y-8 relative z-10">
               <h3 className="text-xl sm:text-2xl font-serif text-luxury-gold flex items-center gap-4">
                 <div className="w-8 h-px bg-luxury-gold/50"></div>
                 Company Sellers
               </h3>
-              <ul className="space-y-4 sm:space-y-6">
+              <ul className="border-t border-white/10">
                 {[
                   'GST & Founder verification required',
                   'Company profile archival audit',
                   'Unlimited listings (post-approval)',
                 ].map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-4 text-[10px] sm:text-xs text-gray-300 font-sans font-bold tracking-widest uppercase"
-                  >
-                    <Sparkles className="text-luxury-gold/50 w-4 h-4" strokeWidth={2} />
-                    {item}
+                  <li key={i} className="py-3.5 border-b border-white/10 flex items-baseline gap-4">
+                    <span className="text-[10px] tracking-[0.15em] text-luxury-gold/70 shrink-0">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-gray-300 font-sans font-bold tracking-widest uppercase">
+                      {item}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -587,7 +686,7 @@ const Home = () => {
           <div className="mt-12 sm:mt-24">
             <Link
               to="/account"
-              className="inline-flex items-center gap-4 sm:gap-6 text-white border border-white/20 px-8 sm:px-12 py-4 sm:py-6 hover:bg-white hover:text-black transition-all duration-500 font-sans text-[10px] sm:text-xs tracking-[0.4em] uppercase font-black group"
+              className="inline-flex items-center gap-4 sm:gap-6 rounded-full text-white border border-white/20 px-8 sm:px-12 py-4 sm:py-6 hover:bg-white hover:text-black transition-all duration-500 font-sans text-[10px] sm:text-xs tracking-[0.4em] uppercase font-black group"
             >
               Start Selling{' '}
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-2 transition-transform duration-500" />
@@ -611,7 +710,7 @@ const Home = () => {
             <Reveal delay={100}>
               <Link
                 to="/about"
-                className="block p-6 bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
+                className="block p-6 rounded-2xl bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
               >
                 <h3 className="text-lg font-serif text-heritage-charcoal group-hover:text-luxury-gold transition-colors mb-2">
                   About Us
@@ -625,7 +724,7 @@ const Home = () => {
             <Reveal delay={200}>
               <Link
                 to="/contact"
-                className="block p-6 bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
+                className="block p-6 rounded-2xl bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
               >
                 <h3 className="text-lg font-serif text-heritage-charcoal group-hover:text-luxury-gold transition-colors mb-2">
                   Contact Us
@@ -638,7 +737,7 @@ const Home = () => {
             <Reveal delay={300}>
               <Link
                 to="/faq"
-                className="block p-6 bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
+                className="block p-6 rounded-2xl bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
               >
                 <h3 className="text-lg font-serif text-heritage-charcoal group-hover:text-luxury-gold transition-colors mb-2">
                   FAQ
@@ -729,7 +828,7 @@ const TestimonialsSection = () => {
             What Our <span className="text-luxury-gold italic font-light">Collectors</span> Say
           </h2>
         </Reveal>
-        <div className="bg-white p-8 sm:p-12 shadow-sm border border-gray-100 relative">
+        <div className="bg-white rounded-2xl p-8 sm:p-12 shadow-sm border border-gray-100 relative">
           <Quote className="text-luxury-gold/20 absolute top-4 left-4 w-12 h-12 sm:w-16 sm:h-16" />
           <p className="text-lg sm:text-xl text-gray-700 leading-relaxed font-sans italic mb-6 relative z-10">
             {'\u201C'}
@@ -746,7 +845,7 @@ const TestimonialsSection = () => {
                   height="96"
                   src={img}
                   alt={`${t.authorName}'s collectible`}
-                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded border border-gray-200 flex-shrink-0"
+                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 flex-shrink-0"
                 />
               ))}
             </div>

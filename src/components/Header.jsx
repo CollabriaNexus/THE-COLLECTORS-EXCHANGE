@@ -8,8 +8,6 @@ import { PRIMARY_NAV } from '../config/seo-pages';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(true);
-  const [videoEnded, setVideoEnded] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const headerRef = useRef(null);
   const location = useLocation();
@@ -20,27 +18,9 @@ const Header = () => {
 
   const wishlistCount = wishlistItems.length;
 
-  const isHomePage = ['/'].includes(location.pathname);
-  const showNav = !isHomePage || scrolled || videoEnded;
-
-  useEffect(() => {
-    const handleVideoEnded = () => setVideoEnded(true);
-    window.addEventListener('homeVideoEnded', handleVideoEnded);
-    return () => window.removeEventListener('homeVideoEnded', handleVideoEnded);
-  }, []);
-
-  useEffect(() => {
-    if (!isHomePage) {
-      setScrolled(true);
-      return;
-    }
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isHomePage]);
+  // Nav is always visible — the old hide-until-scroll-or-video-ends behavior
+  // existed for the full-bleed video hero, which the homepage no longer has.
+  const showNav = true;
 
   useEffect(() => {
     if (headerRef.current) {
