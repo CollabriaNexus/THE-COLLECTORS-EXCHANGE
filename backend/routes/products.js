@@ -26,17 +26,6 @@ function isPrivileged(dbUser) {
 export default async function productRoutes(fastify) {
   const { prisma } = fastify;
 
-  // Debug: test Prisma connection
-  fastify.get('/debug/prisma', async (request, reply) => {
-    try {
-      const result = await prisma.$queryRaw`SELECT 1 as ok`;
-      const count = await prisma.product.count();
-      return { connected: true, productCount: count, queryResult: result };
-    } catch (err) {
-      return reply.status(500).send({ connected: false, error: err.message, stack: err.stack });
-    }
-  });
-
   // Get all products (Public catalog)
   fastify.get('/', async (request, reply) => {
     const { category, search, condition, sellerId, page, limit, listingCategory } = request.query;
@@ -92,10 +81,14 @@ export default async function productRoutes(fastify) {
     const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
 
     try {
-      // Higher commissionPercent = boosted visibility in catalog
+      // Higher commissionPercent = boosted visibility in catalog. Sold items
+      // must sort after Approved ones globally (not just within a page), so
+      // this has to happen in the query, not client-side per-page — the where
+      // clause above only ever admits 'Approved' or 'Sold' here, and those
+      // sort correctly in that order alphabetically.
       const orderBy = sellerId
         ? { createdAt: 'desc' }
-        : [{ commissionPercent: 'desc' }, { createdAt: 'desc' }];
+        : [{ status: 'asc' }, { commissionPercent: 'desc' }, { createdAt: 'desc' }];
 
       const [products, total] = await Promise.all([
         prisma.product.findMany({
