@@ -45,86 +45,91 @@ const Header = () => {
       />
       <header
         ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-50 bg-white text-text-main transition-transform duration-300 ${showNav ? 'translate-y-0 border-b border-gray-100 shadow-sm' : '-translate-y-full'}`}
+        className={`fixed top-0 left-0 right-0 z-50 pt-3 px-3 lg:pt-4 lg:px-6 transition-transform duration-300 ${showNav ? 'translate-y-0' : '-translate-y-full'}`}
       >
-        <div className="px-3 sm:px-6 lg:container lg:mx-auto lg:px-8 xl:px-10 pt-2 pb-2 md:py-4">
-          {/* Mobile layout */}
-          <div className="flex items-center justify-between lg:hidden min-h-[40px]">
-            <div className="flex-1" />
-            <Link
-              to="/"
-              className="text-[15px] xs:text-[16px] sm:text-base md:text-lg font-serif font-bold tracking-tight leading-snug text-center shrink-0 inline-flex items-center justify-center px-2"
-            >
-              THE COLLECTORS
-              <br className="hidden xs:block sm:hidden" /> EXCHANGE
-            </Link>
-            <div className="flex-1 flex justify-end">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label="Toggle menu"
-                aria-expanded={isMenuOpen}
-                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+        <div className="rounded-2xl lg:rounded-full bg-white/95 backdrop-blur-md border border-gray-100 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] text-text-main">
+          <div className="px-3 sm:px-6 lg:mx-auto lg:max-w-7xl lg:px-8 xl:px-10 pt-2 pb-2 md:py-3.5">
+            {/* Mobile layout */}
+            <div className="flex items-center justify-between lg:hidden min-h-[40px]">
+              <div className="flex-1" />
+              <Link
+                to="/"
+                className="text-[15px] xs:text-[16px] sm:text-base md:text-lg font-serif font-bold tracking-tight leading-snug text-center shrink-0 inline-flex items-center justify-center px-2"
               >
-                {isMenuOpen ? (
-                  <X size={20} aria-hidden="true" />
-                ) : (
-                  <Menu size={20} aria-hidden="true" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Desktop layout */}
-          <div className="hidden lg:flex items-center justify-between">
-            <Link
-              to="/"
-              className="text-lg lg:text-xl xl:text-2xl font-serif font-bold tracking-wide shrink-0 leading-tight"
-            >
-              THE COLLECTORS EXCHANGE
-            </Link>
-            <nav aria-label="Main navigation" className="flex items-center space-x-5 xl:space-x-7">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className="text-[10px] xl:text-xs font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.15em] whitespace-nowrap"
+                THE COLLECTORS
+                <br className="hidden xs:block sm:hidden" /> EXCHANGE
+              </Link>
+              <div className="flex-1 flex justify-end">
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  aria-label="Toggle menu"
+                  aria-expanded={isMenuOpen}
+                  className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
                 >
-                  {item.name}
+                  {isMenuOpen ? (
+                    <X size={20} aria-hidden="true" />
+                  ) : (
+                    <Menu size={20} aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop layout */}
+            <div className="hidden lg:flex items-center justify-between">
+              <Link
+                to="/"
+                className="text-lg lg:text-xl xl:text-2xl font-serif font-bold tracking-wide shrink-0 leading-tight"
+              >
+                THE COLLECTORS EXCHANGE
+              </Link>
+              <nav
+                aria-label="Main navigation"
+                className="flex items-center space-x-5 xl:space-x-7"
+              >
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className="text-[10px] xl:text-xs font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.15em] whitespace-nowrap"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </nav>
+              <div className="flex items-center space-x-5 xl:space-x-7">
+                <Link
+                  to="/wishlist"
+                  className="relative hover:text-luxury-gold transition-colors"
+                  aria-label="Wishlist"
+                >
+                  <Heart size={20} />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-luxury-gold text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
                 </Link>
-              ))}
-            </nav>
-            <div className="flex items-center space-x-5 xl:space-x-7">
-              <Link
-                to="/wishlist"
-                className="relative hover:text-luxury-gold transition-colors"
-                aria-label="Wishlist"
-              >
-                <Heart size={20} />
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-luxury-gold text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
-              </Link>
-              <Link
-                to="/account"
-                className="hover:text-luxury-gold transition-colors"
-                aria-label="Account"
-              >
-                <User size={20} />
-              </Link>
-              <Link
-                to="/cart"
-                className="relative hover:text-luxury-gold transition-colors"
-                aria-label="Cart"
-              >
-                <ShoppingBag size={20} />
-                {cartItems.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-                    {cartItems.length}
-                  </span>
-                )}
-              </Link>
+                <Link
+                  to="/account"
+                  className="hover:text-luxury-gold transition-colors"
+                  aria-label="Account"
+                >
+                  <User size={20} />
+                </Link>
+                <Link
+                  to="/cart"
+                  className="relative hover:text-luxury-gold transition-colors"
+                  aria-label="Cart"
+                >
+                  <ShoppingBag size={20} />
+                  {cartItems.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                      {cartItems.length}
+                    </span>
+                  )}
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -140,7 +145,7 @@ const Header = () => {
         />
         {/* Drawer panel */}
         <div
-          className={`fixed top-0 right-0 h-full w-[280px] max-w-[80vw] bg-white shadow-2xl z-[70] lg:hidden transition-transform duration-500 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`fixed top-0 right-0 h-full w-[280px] max-w-[80vw] rounded-l-3xl bg-white shadow-2xl z-[70] lg:hidden transition-transform duration-500 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
           aria-modal="true"
           aria-label="Navigation menu"
         >
@@ -214,7 +219,8 @@ const Header = () => {
       {/* Mobile Bottom Navigation Bar */}
       <nav
         aria-label="Mobile navigation"
-        className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] flex items-center justify-around pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-transform duration-500 ease-out ${showNav ? 'translate-y-0' : 'translate-y-full'}`}
+        style={{ bottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+        className={`lg:hidden fixed left-3 right-3 z-50 rounded-2xl bg-white/95 backdrop-blur-md border border-gray-100 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.15)] flex items-center justify-around py-2 transition-transform duration-500 ease-out ${showNav ? 'translate-y-0' : 'translate-y-[150%]'}`}
       >
         {bottomNav.map((item) => {
           const Icon = item.icon;

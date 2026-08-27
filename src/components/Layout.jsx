@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { ArrowUp, MessageCircle } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
+import WhatsAppIcon from './WhatsAppIcon';
 import { ScrollProgress } from './Motion';
 import { OrganizationSchema, SiteNavigationSchema } from './SEO';
 
@@ -30,7 +31,7 @@ const Layout = () => {
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-grow pb-16 lg:pb-0">
+      <main id="main-content" className="flex-grow pb-24 lg:pb-0">
         <div key={location.pathname} className="animate-page-enter">
           <Outlet />
         </div>
@@ -45,7 +46,7 @@ const Layout = () => {
         aria-label="Chat on WhatsApp"
         className="fixed bottom-24 lg:bottom-8 right-6 z-50 w-12 h-12 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#20BD5A] transition-all duration-300 flex items-center justify-center hover:scale-110"
       >
-        <MessageCircle size={22} />
+        <WhatsAppIcon size={22} />
       </a>
       <button
         onClick={scrollToTop}

@@ -25,6 +25,7 @@ import Bullet from '../components/Bullet';
 import heroWestarWebm from '../assets/hero-westar/hero-westar-916.webm';
 import heroWestarMp4 from '../assets/hero-westar/hero-westar-916.mp4';
 import heroWestarPoster from '../assets/hero-westar/hero-westar-916-poster.jpg';
+import crestSeal from '../assets/brand/crest-seal-520.webp';
 import verificationAuthenticity from '../assets/verification_authenticity.webp';
 import { useProducts } from '../hooks/api/useProducts';
 import { useTestimonials } from '../hooks/api/useTestimonials';
@@ -381,10 +382,27 @@ const Home = () => {
               </Reveal>
             </div>
 
+            {/* Mobile: brand crest in place of the video — no autoplaying media on
+                small screens, and a cleaner moment than a cropped product film. */}
+            <Reveal direction="up" distance={30} className="lg:hidden order-1 flex justify-center">
+              <div className="relative w-36 sm:w-44 py-4">
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 rounded-full bg-luxury-gold/10 blur-2xl"
+                />
+                <img
+                  src={crestSeal}
+                  alt="The Collectors Exchange crest"
+                  className="relative w-full h-auto"
+                />
+              </div>
+            </Reveal>
+
+            {/* Desktop/tablet: the real product film */}
             <Reveal
               direction="right"
               distance={60}
-              className="order-1 lg:order-2 mx-auto w-full max-w-xs sm:max-w-sm"
+              className="hidden lg:block lg:order-2 mx-auto w-full max-w-xs sm:max-w-sm"
             >
               <div className="rounded-[2rem] overflow-hidden shadow-heritage-hover">
                 <video
