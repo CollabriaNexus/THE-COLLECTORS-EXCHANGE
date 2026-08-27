@@ -1,5 +1,5 @@
 const SITE_URL = 'https://thecollectorsexchange.in';
-const API_URL = 'https://07u78lzel7.execute-api.ap-south-1.amazonaws.com';
+const API_URL = 'https://uinie5uugg.execute-api.ap-south-1.amazonaws.com';
 
 async function fetchAllBlogs() {
   const allPosts = [];

@@ -11,7 +11,7 @@ const ROOT_URL = `${SITE_URL}/`;
 const ORGANIZATION_ID = `${ROOT_URL}#organization`;
 const WEBSITE_ID = `${ROOT_URL}#website`;
 const API_URL =
-  process.env.API_URL || 'https://07u78lzel7.execute-api.ap-south-1.amazonaws.com/api';
+  process.env.API_URL || 'https://uinie5uugg.execute-api.ap-south-1.amazonaws.com/api';
 
 /* ------------------------------------------------------------------ */
 /*  Read Vite's built dist/index.html to extract script/style refs     */
@@ -90,7 +90,6 @@ const DEFAULT_NAV = [
   { name: 'About Us', path: '/about' },
   { name: 'The Exchange', path: '/category' },
   { name: 'Contact', path: '/contact' },
-  { name: 'FAQ', path: '/faq' },
   { name: 'The Archive', path: '/archive' },
   { name: 'Vision', path: '/vision' },
 ];
@@ -1041,7 +1040,6 @@ function buildCategoryHtml(products = [], categorySlug = null) {
     <main id="main-content" style="flex:1;padding-top:60px">
       <header class="catalogue-hero">
         <h1>${escapeHtml(landing ? `Shop ${landing.name}` : 'The Exchange')}</h1>
-        ${landing ? `<p><strong>${escapeHtml(landing.tagline)}</strong></p><p>${escapeHtml(landing.intro)}</p>` : `<p>${escapeHtml(page.description)}</p>`}
       </header>
       ${categoryLinks ? `<nav class="category-links" aria-label="Product categories">${categoryLinks}</nav>` : ''}
       ${

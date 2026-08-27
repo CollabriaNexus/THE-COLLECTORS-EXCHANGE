@@ -49,7 +49,7 @@ All use JavaScript (JSX), not TypeScript.
 
 | Service             | Platform                 | URL                                                       | Deploy Command                                                                                   |
 | ------------------- | ------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **Backend**         | AWS Lambda (API Gateway) | `https://07u78lzel7.execute-api.ap-south-1.amazonaws.com` | `cd backend && npx serverless deploy`                                                            |
+| **Backend**         | AWS Lambda (API Gateway) | `https://uinie5uugg.execute-api.ap-south-1.amazonaws.com` | `cd backend && npx serverless deploy`                                                            |
 | **User Frontend**   | Cloudflare Pages         | `https://tce-user.pages.dev`                              | `npm run build && wrangler pages deploy dist --project-name tce-user --branch=main`              |
 | **Admin Dashboard** | Cloudflare Pages         | `https://tce-admin.pages.dev`                             | `cd admin && npm run build && wrangler pages deploy dist --project-name tce-admin --branch=main` |
 
