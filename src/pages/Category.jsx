@@ -25,7 +25,7 @@ import { useCart, useAddToCart } from '../hooks/api/useCart';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import Bullet from '../components/Bullet';
-import { Reveal, Stagger, Tilt } from '../components/Motion';
+import { Reveal, Tilt } from '../components/Motion';
 
 const CATEGORIES = [
   {
@@ -446,66 +446,9 @@ const Category = () => {
       <BreadcrumbSchema items={breadcrumbItems} />
       {/* Accessible page-level H1 for SEO (design uses the category rail as the visual header) */}
       <h1 className="sr-only">{pageHeading}</h1>
-      {/* Category Icons Navigation - Polished with shadow and border */}
-      <section className="py-4 md:py-10 px-6 bg-white border-b border-heritage-beige shadow-sm z-20 relative">
-        <div className="container mx-auto max-w-5xl">
-          <Stagger
-            step={80}
-            className="flex justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory md:snap-none -mx-6 md:mx-0 px-6 md:px-0"
-            childClassName="snap-start shrink-0"
-          >
-            {VISIBLE_CATEGORIES.map((category) => {
-              const IconComponent = category.icon;
-              const isSelected = selectedCategory === category.name;
-              const count = categoryCounts?.[category.name] ?? 0;
-              const isEmpty = count === 0;
-              return (
-                <Link
-                  key={category.id}
-                  to={`/category/${category.slug}/`}
-                  className={`group flex flex-col items-center text-center snap-start shrink-0 w-[72px] md:w-auto transition-opacity duration-300 ${isEmpty ? 'opacity-60' : ''}`}
-                  title={isEmpty ? `${category.name}: coming soon` : category.tagline}
-                >
-                  <div
-                    className={`w-12 h-12 md:w-20 md:h-20 rounded-full border-2 md:border-2 flex items-center justify-center transition-all duration-300 mb-2 md:mb-3 ${
-                      isSelected
-                        ? 'border-heritage-gold-muted bg-luxury-gold/10 shadow-heritage-hover'
-                        : 'border-heritage-beige bg-heritage-cream/50 hover:border-heritage-bronze hover:shadow-heritage group-hover:bg-heritage-cream'
-                    } ${isEmpty ? 'hover:border-heritage-beige hover:shadow-none group-hover:bg-heritage-cream/50' : ''}`}
-                  >
-                    <IconComponent
-                      size={20}
-                      strokeWidth={1.2}
-                      className={`md:w-7 md:h-7 transition-colors duration-300 ${
-                        isSelected
-                          ? 'text-luxury-gold'
-                          : 'text-heritage-bronze/60 group-hover:text-heritage-bronze'
-                      }`}
-                    />
-                  </div>
-                  <div className="relative">
-                    <span
-                      className={`text-[10px] md:text-xs tracking-widest uppercase font-sans transition-colors duration-300 leading-tight ${
-                        isSelected
-                          ? 'text-heritage-charcoal font-semibold'
-                          : 'text-heritage-charcoal/60 group-hover:text-heritage-charcoal'
-                      }`}
-                    >
-                      {category.name}
-                    </span>
-                    {isSelected && (
-                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 md:w-6 h-0.5 bg-luxury-gold rounded-full" />
-                    )}
-                  </div>
-                  <span className="hidden md:block text-[8px] text-heritage-bronze/50 uppercase tracking-[0.15em] mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {isEmpty ? 'Coming Soon' : category.tagline}
-                  </span>
-                </Link>
-              );
-            })}
-          </Stagger>
-        </div>
-      </section>
+      {/* Category Icons Navigation is hidden for now, alongside VISIBLE_CATEGORIES
+          above — with only Timepieces showing, a selector rail with one tab
+          just looked broken. Restore both together when more categories are live. */}
 
       {/* All Products Grid */}
       <section ref={productsRef} className="py-5 sm:py-8 md:py-20 px-3 sm:px-4 lg:px-6 bg-white">

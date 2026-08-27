@@ -49,7 +49,7 @@ const Header = () => {
         className={`fixed top-0 left-0 right-0 z-50 pt-3 px-3 lg:pt-4 lg:px-6 transition-transform duration-300 ${showNav ? 'translate-y-0' : '-translate-y-full'}`}
       >
         <div
-          className="rounded-2xl lg:rounded-full text-cream/90 border border-white/[0.07]"
+          className="rounded-2xl text-cream/90 border border-white/[0.07]"
           style={{
             background: 'rgba(9,8,6,0.82)',
             backdropFilter: 'blur(22px) saturate(140%)',
@@ -64,7 +64,7 @@ const Header = () => {
               </Link>
               <Link
                 to="/"
-                className="text-[15px] xs:text-[16px] sm:text-base font-serif font-bold tracking-tight leading-snug text-center inline-flex items-center justify-center px-2 text-cream"
+                className="font-serif tracking-[0.14em] text-[13px] uppercase leading-snug text-center inline-flex items-center justify-center px-2 text-cream/90"
               >
                 THE COLLECTORS
                 <br className="hidden xs:block sm:hidden" /> EXCHANGE
@@ -91,7 +91,7 @@ const Header = () => {
                   alt=""
                   className="h-9 w-auto transition-transform duration-500 group-hover:scale-110"
                 />
-                <span className="text-lg lg:text-xl xl:text-2xl font-serif font-bold tracking-wide leading-tight text-cream">
+                <span className="font-serif tracking-[0.14em] text-sm uppercase leading-tight text-cream/90">
                   THE COLLECTORS EXCHANGE
                 </span>
               </Link>
@@ -103,7 +103,7 @@ const Header = () => {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className="text-[10px] xl:text-xs font-medium text-cream/60 hover:text-luxury-gold transition-colors uppercase tracking-[0.15em] whitespace-nowrap"
+                    className="text-[11px] font-medium text-cream/60 hover:text-luxury-gold transition-colors uppercase tracking-[0.18em] whitespace-nowrap"
                   >
                     {item.name}
                   </Link>
