@@ -105,7 +105,7 @@ function BlogPage() {
       <style>{scrollHideCss}</style>
       <SEO
         title="The Archive"
-        description="Explore The Collectors Exchange Archive — curated articles on horology, gemology, collecting, and the stories behind rare artifacts."
+        description="Explore The Collectors Exchange Archive: curated articles on horology, gemology, collecting, and the stories behind rare artifacts."
         canonical="/archive"
       />
       <PageSchema

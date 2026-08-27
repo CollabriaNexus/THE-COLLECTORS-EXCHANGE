@@ -173,7 +173,7 @@ const ProductDetail = () => {
                   <button
                     key={idx}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`aspect-square border-2 transition-all ${activeImageIndex === idx ? 'border-luxury-gold ring-1 ring-luxury-gold/50' : 'border-gray-100 hover:border-gray-300'}`}
+                    className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImageIndex === idx ? 'border-luxury-gold ring-1 ring-luxury-gold/50' : 'border-gray-100 hover:border-gray-300'}`}
                   >
                     <img
                       loading="lazy"
@@ -195,7 +195,7 @@ const ProductDetail = () => {
               className="relative flex-1 min-h-[300px] sm:min-h-[400px] max-h-[500px] sm:max-h-[600px]"
             >
               <Parallax speed={0.1} className="h-full">
-                <div className="relative h-full bg-gray-50 overflow-hidden shadow-sm border border-gray-100 group">
+                <div className="relative h-full rounded-2xl bg-gray-50 overflow-hidden shadow-sm border border-gray-100 group">
                   {images.length > 0 ? (
                     <>
                       {/* Desktop zoom version */}
@@ -232,7 +232,7 @@ const ProductDetail = () => {
                     </div>
                   )}
                   {product.isVerified && (
-                    <div className="absolute top-2 sm:top-6 left-2 sm:left-6 bg-white/90 backdrop-blur-sm border border-gray-200 px-2 sm:px-4 py-1 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-sm">
+                    <div className="absolute top-2 sm:top-6 left-2 sm:left-6 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full px-2 sm:px-4 py-1 sm:py-2 flex items-center gap-1 sm:gap-2 shadow-sm">
                       <ShieldCheck size={12} className="sm:w-4 sm:h-4 text-green-700" />
                       <span className="text-[9px] sm:text-xs font-bold uppercase tracking-widest text-gray-800">
                         Verified Authentic
@@ -248,7 +248,7 @@ const ProductDetail = () => {
           <Reveal direction="right" className="w-full lg:w-2/5 order-2">
             <div className="mb-4 sm:mb-8">
               <div className="flex items-center flex-wrap gap-1.5 sm:gap-3 mb-2 sm:mb-4">
-                <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-heritage-cream text-heritage-bronze text-[9px] sm:text-xs font-bold uppercase tracking-widest">
+                <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-heritage-cream text-heritage-bronze text-[9px] sm:text-xs font-bold uppercase tracking-widest">
                   {product.category}
                 </span>
                 {product.condition && (
@@ -283,7 +283,7 @@ const ProductDetail = () => {
 
             {/* Seller Info */}
             {product.seller && (
-              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 border border-gray-100">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl bg-gray-50 border border-gray-100">
                 <p className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest mb-0.5 sm:mb-1">
                   Brokered By
                 </p>
@@ -321,7 +321,7 @@ const ProductDetail = () => {
               <div className="flex items-center gap-2 mt-4">
                 <Gem size={14} className="text-luxury-gold" />
                 <span className="text-[10px] sm:text-xs uppercase tracking-widest text-luxury-gold font-bold">
-                  One of One — Once Sold, Gone
+                  One of One: Once Sold, Gone
                 </span>
               </div>
             )}
@@ -331,7 +331,7 @@ const ProductDetail = () => {
                 <span className="text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 font-medium">
                   Qty
                 </span>
-                <div className="flex items-center border border-gray-200">
+                <div className="flex items-center rounded-full border border-gray-200 overflow-hidden">
                   <button
                     onClick={() => setSelectedQty(Math.max(1, selectedQty - 1))}
                     className="px-3 py-1.5 text-gray-500 hover:text-heritage-charcoal transition-colors"
@@ -360,7 +360,7 @@ const ProductDetail = () => {
             {/* Actions */}
             <div className="flex gap-2 sm:gap-4 mt-3">
               {product.status === 'Sold' ? (
-                <div className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium flex items-center justify-center gap-1.5 sm:gap-3 bg-gray-100 text-gray-400 cursor-default">
+                <div className="flex-1 py-3 sm:py-5 rounded-full text-[10px] sm:text-sm uppercase tracking-widest font-medium flex items-center justify-center gap-1.5 sm:gap-3 bg-gray-100 text-gray-400 cursor-default">
                   <XCircle size={14} className="sm:w-[18px] sm:h-[18px]" />
                   Sold Out
                 </div>
@@ -370,7 +370,7 @@ const ProductDetail = () => {
                     href={`https://wa.me/916362771355?text=${encodeURIComponent(`Hi, I'm interested in "${product?.title}" (Qty: ${selectedQty}). Here's the product link: ${window.location.href}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 py-3 sm:py-5 text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-[#25D366] shadow-lg"
+                    className="flex-1 py-3 sm:py-5 rounded-full text-[10px] sm:text-sm uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-3 bg-heritage-charcoal text-white hover:bg-[#25D366] shadow-lg"
                   >
                     <MessageCircle size={14} className="sm:w-[18px] sm:h-[18px]" />
                     Reserve via WhatsApp
@@ -384,7 +384,7 @@ const ProductDetail = () => {
                   addToWishlistMutation.isPending ||
                   removeFromWishlistMutation.isPending
                 }
-                className={`px-3 sm:px-6 border transition-colors ${
+                className={`px-3 sm:px-6 rounded-full border transition-colors ${
                   inWishlist
                     ? 'border-red-200 bg-red-50 text-red-600'
                     : 'border-gray-200 hover:border-heritage-charcoal text-gray-500 hover:text-heritage-charcoal'
@@ -400,7 +400,7 @@ const ProductDetail = () => {
                 onClick={handleShare}
                 title={shareCopied ? 'Link copied' : 'Share this item'}
                 aria-label={shareCopied ? 'Link copied' : 'Share this item'}
-                className="px-3 sm:px-6 border border-gray-200 hover:border-heritage-charcoal text-gray-500 hover:text-heritage-charcoal transition-colors"
+                className="px-3 sm:px-6 rounded-full border border-gray-200 hover:border-heritage-charcoal text-gray-500 hover:text-heritage-charcoal transition-colors"
               >
                 {shareCopied ? (
                   <Check size={16} className="sm:w-5 sm:h-5 text-green-600" />
@@ -555,7 +555,7 @@ const ProductDetail = () => {
                 <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-6">
                   Specifications
                 </h3>
-                <div className="border border-gray-100">
+                <div className="rounded-xl overflow-hidden border border-gray-100">
                   {specs.map((spec, index) => (
                     <div
                       key={index}
@@ -576,7 +576,7 @@ const ProductDetail = () => {
 
           {/* Trust Indicators */}
           {product.isVerified && (
-            <div className="bg-heritage-cream border border-luxury-gold/20 p-3 sm:p-6">
+            <div className="rounded-2xl bg-heritage-cream border border-luxury-gold/20 p-3 sm:p-6">
               <div className="flex items-start gap-2 sm:gap-4">
                 <ShieldCheck size={20} className="sm:w-8 sm:h-8 text-green-700 flex-shrink-0" />
                 <div>
@@ -586,7 +586,7 @@ const ProductDetail = () => {
                   <p className="text-[11px] sm:text-sm text-heritage-charcoal/70 leading-relaxed">
                     This item is marked <strong>Verified Authentic</strong> by The Collectors
                     Exchange. When you purchase this item, you receive our unconditional guarantee
-                    of authenticity — backed by our expert curation team.
+                    of authenticity, backed by our expert curation team.
                   </p>
                 </div>
               </div>
@@ -640,7 +640,10 @@ const SuggestedProducts = ({ category, currentId }) => {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {isLoading
             ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-white border border-heritage-beige animate-pulse">
+                <div
+                  key={i}
+                  className="rounded-2xl overflow-hidden bg-white border border-heritage-beige animate-pulse"
+                >
                   <div className="aspect-square bg-gray-200" />
                   <div className="p-4 space-y-2">
                     <div className="h-4 bg-gray-200 rounded w-3/4" />
@@ -648,58 +651,56 @@ const SuggestedProducts = ({ category, currentId }) => {
                   </div>
                 </div>
               ))
-            : products.map((product, i) => {
+            : products.map((product) => {
                 const title = product.title || product.name;
                 return (
-                  <Reveal key={product.id} delay={i * 120} className="h-full">
-                    <Tilt className="h-full">
-                      <Link
-                        to={`/product/${product.id}`}
-                        className="block h-full bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500"
-                      >
-                        <div className="relative aspect-square bg-heritage-beige overflow-hidden">
-                          {product.image ? (
-                            <img
-                              loading="lazy"
-                              width="400"
-                              height="400"
-                              src={product.image}
-                              alt={title}
-                              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/30 bg-heritage-cream">
-                              <Gem size={32} strokeWidth={1} />
-                            </div>
-                          )}
-                          {product.status === 'Sold' && (
-                            <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
-                              <span className="bg-white/90 text-heritage-charcoal text-[10px] font-bold px-4 py-1.5 uppercase tracking-[0.15em] shadow-lg">
-                                Sold Out
-                              </span>
-                            </div>
-                          )}
-                          <div className="absolute bottom-3 left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 font-sans tracking-[0.12em] uppercase flex items-center gap-1.5">
-                            <Award size={12} strokeWidth={1.5} />
-                            <span>{product.condition || 'Excellent'}</span>
+                  <Tilt key={product.id} className="h-full">
+                    <Link
+                      to={`/product/${product.id}`}
+                      className="block h-full rounded-2xl overflow-hidden bg-white border border-heritage-beige group hover:shadow-heritage-hover transition-all duration-500"
+                    >
+                      <div className="relative aspect-square bg-heritage-beige overflow-hidden">
+                        {product.image ? (
+                          <img
+                            loading="lazy"
+                            width="400"
+                            height="400"
+                            src={product.image}
+                            alt={title}
+                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-heritage-bronze/30 bg-heritage-cream">
+                            <Gem size={32} strokeWidth={1} />
                           </div>
+                        )}
+                        {product.status === 'Sold' && (
+                          <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
+                            <span className="bg-white/90 text-heritage-charcoal text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-[0.15em] shadow-lg">
+                              Sold Out
+                            </span>
+                          </div>
+                        )}
+                        <div className="absolute bottom-3 left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 rounded-full font-sans tracking-[0.12em] uppercase flex items-center gap-1.5">
+                          <Award size={12} strokeWidth={1.5} />
+                          <span>{product.condition || 'Excellent'}</span>
                         </div>
-                        <div className="p-4">
-                          <h3
-                            className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal leading-snug line-clamp-1"
-                            title={title}
-                          >
-                            {title}
-                          </h3>
-                          <p
-                            className={`font-sans text-sm font-medium mt-1.5 ${product.status === 'Sold' ? 'text-gray-400 line-through' : 'text-heritage-gold-muted'}`}
-                          >
-                            ₹{product.price?.toLocaleString()}
-                          </p>
-                        </div>
-                      </Link>
-                    </Tilt>
-                  </Reveal>
+                      </div>
+                      <div className="p-4">
+                        <h3
+                          className="font-serif text-sm sm:text-base md:text-lg font-medium text-heritage-charcoal leading-snug line-clamp-1"
+                          title={title}
+                        >
+                          {title}
+                        </h3>
+                        <p
+                          className={`font-sans text-sm font-medium mt-1.5 ${product.status === 'Sold' ? 'text-gray-400 line-through' : 'text-heritage-gold-muted'}`}
+                        >
+                          ₹{product.price?.toLocaleString()}
+                        </p>
+                      </div>
+                    </Link>
+                  </Tilt>
                 );
               })}
         </div>

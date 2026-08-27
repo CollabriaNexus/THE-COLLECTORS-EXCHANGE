@@ -37,7 +37,7 @@ const Vision = () => {
       />
       <BreadcrumbSchema items={visionSeo.breadcrumb} />
       {/* Vision Hero & Statement Section */}
-      <section className="relative pt-32 pb-24 px-6 bg-heritage-cream">
+      <section className="relative pt-12 sm:pt-16 pb-24 px-6 bg-heritage-cream">
         <div className="container mx-auto max-w-4xl text-center">
           <Reveal className="flex items-center justify-center gap-6 mb-8 mt-12">
             <div className="w-12 h-[1px] bg-luxury-gold/50"></div>

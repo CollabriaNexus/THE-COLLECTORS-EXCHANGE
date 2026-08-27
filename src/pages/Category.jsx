@@ -37,7 +37,7 @@ const CATEGORIES = [
     description:
       'Your phone tells the time. A mechanical watch tells a story. In a world of flickering screens and disposable tech, we choose the "Mechanical Truth." We don\'t sell battery-powered fashion; we rescue 17-jewel heartbeats that never need a plug or an algorithm to live.',
     metaDescription:
-      'Shop authenticated vintage watches and timepieces at The Collectors Exchange. Rolex, Omega, HMT, Seiko & more — expert-verified, mid-range to rare, secure transactions across India.',
+      'Shop authenticated vintage watches and timepieces at The Collectors Exchange. Rolex, Omega, HMT, Seiko & more, expert-verified, mid-range to rare, secure transactions across India.',
     metaKeywords:
       'vintage watches for men, vintage watches india, rolex vintage watches, omega vintage watches, hmt vintage watches, mechanical watches, pre-owned watches india',
   },
@@ -48,9 +48,9 @@ const CATEGORIES = [
     icon: Sparkles,
     tagline: 'The Perfect Finish',
     description:
-      'An outfit is a statement. The right accessory makes it iconic. In a world of fast fashion and disposable trends, we choose the "Enduring Truth." We rescue the definitive finishing pieces — the cufflinks, the bags, the belts, and the heirlooms that transform the ordinary into the extraordinary.',
+      'An outfit is a statement. The right accessory makes it iconic. In a world of fast fashion and disposable trends, we choose the "Enduring Truth." We rescue the definitive finishing pieces: the cufflinks, the bags, the belts, and the heirlooms that transform the ordinary into the extraordinary.',
     metaDescription:
-      'Shop authenticated vintage accessories at The Collectors Exchange — cufflinks, bags, belts, and heirloom pieces. Every piece expert-verified, secure transactions across India.',
+      'Shop authenticated vintage accessories at The Collectors Exchange: cufflinks, bags, belts, and heirloom pieces. Every piece expert-verified, secure transactions across India.',
     metaKeywords:
       'vintage accessories india, vintage cufflinks, vintage leather bags, heirloom accessories, pre-owned accessories india',
   },
@@ -63,7 +63,7 @@ const CATEGORIES = [
     description:
       'A trend lasts a season. A collectible lasts a lifetime. In a world of digital clutter and "fast-consumption," we choose the "Physical Truth." We don\'t deal in landfill-ready trinkets; we rescue the rare, the nostalgic, and the culturally significant.',
     metaDescription:
-      'Shop rare, curated collectibles at The Collectors Exchange — nostalgic and culturally significant pieces, expert-verified. Secure transactions across India.',
+      'Shop rare, curated collectibles at The Collectors Exchange: nostalgic and culturally significant pieces, expert-verified. Secure transactions across India.',
     metaKeywords:
       'rare collectibles india, curated collectibles, vintage collectibles, pre-owned collectibles india',
   },
@@ -76,7 +76,7 @@ const CATEGORIES = [
     description:
       'A replica fills a space. An antique commands it. In a world of flat-pack furniture and mass-produced "vintage-look" decor, we choose the "Ancestral Truth." We rescue the weathered survivors of our history, solid objects that carry the craftsman\'s soul and the weight of the generations before us.',
     metaDescription:
-      'Shop authenticated antiques at The Collectors Exchange — heritage furniture, decor, and historical pieces, expert-verified. Secure transactions across India.',
+      'Shop authenticated antiques at The Collectors Exchange: heritage furniture, decor, and historical pieces, expert-verified. Secure transactions across India.',
     metaKeywords: 'antiques india, vintage antiques, heritage antiques, pre-owned antiques india',
   },
   {
@@ -86,9 +86,9 @@ const CATEGORIES = [
     icon: Gamepad2,
     tagline: 'The Nostalgic Truth',
     description:
-      'A plaything is for a moment. A pop icon is for the ages. In a world of disposable plastic and "over-hyped" trends, we choose the "Cultural Truth." We rescue the definitive pieces — the action figures, the limited figurines, and the media artifacts that shaped our childhoods.',
+      'A plaything is for a moment. A pop icon is for the ages. In a world of disposable plastic and "over-hyped" trends, we choose the "Cultural Truth." We rescue the definitive pieces: the action figures, the limited figurines, and the media artifacts that shaped our childhoods.',
     metaDescription:
-      'Shop vintage toys and pop culture collectibles at The Collectors Exchange — action figures, limited figurines, and media artifacts, expert-verified.',
+      'Shop vintage toys and pop culture collectibles at The Collectors Exchange: action figures, limited figurines, and media artifacts, expert-verified.',
     metaKeywords:
       'vintage toys india, pop culture collectibles, vintage action figures, collectible figurines india',
   },
@@ -101,10 +101,16 @@ const CATEGORIES = [
     description:
       'A brand sells you a status. A TCE Original gives you a legacy. In a world of hollow "luxury" and gold-plated illusions, we choose the "Absolute Truth." After years of studying the ancestors and master artisans, we have moved from protecting history to creating it.',
     metaDescription:
-      'Shop authenticated vintage jewelry at The Collectors Exchange — expert-verified craftsmanship, secure transactions across India.',
+      'Shop authenticated vintage jewelry at The Collectors Exchange: expert-verified craftsmanship, secure transactions across India.',
     metaKeywords: 'vintage jewelry india, pre-owned jewelry, antique jewelry india',
   },
 ];
+
+// Temporary: only Timepieces is being showcased for now — the other category
+// tabs are hidden from the rail below (routes/data lookups still use the full
+// CATEGORIES list, so nothing else breaks). To bring the rest back, change
+// this back to `CATEGORIES`.
+const VISIBLE_CATEGORIES = CATEGORIES.filter((category) => category.id === 'timepieces');
 
 // Standard Product Card Component (Archive-style)
 const ArchiveProductCard = ({ product }) => {
@@ -189,7 +195,7 @@ const ArchiveProductCard = ({ product }) => {
     CATEGORIES.find((c) => c.name.toLowerCase() === product.category?.toLowerCase())?.icon || Gem;
 
   return (
-    <div className="bg-white border border-gray-100 group hover:shadow-heritage transition-all duration-500 flex flex-col h-full">
+    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden group hover:shadow-heritage transition-all duration-500 flex flex-col h-full">
       <Link
         to={`/product/${product.id}`}
         className="block relative aspect-square bg-heritage-beige overflow-hidden shrink-0"
@@ -220,14 +226,14 @@ const ArchiveProductCard = ({ product }) => {
         </button>
 
         {/* Condition Badge */}
-        <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-white/90 backdrop-blur-sm text-heritage-charcoal/70 text-[10px] sm:text-xs px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase">
+        <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-white/90 backdrop-blur-sm text-heritage-charcoal/70 text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-sans tracking-widest uppercase">
           {product.condition || 'Excellent'}
         </div>
 
         {/* Sold Badge */}
         {product.status === 'Sold' && (
           <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
-            <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-widest shadow-lg">
+            <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full uppercase tracking-widest shadow-lg">
               Sold Out
             </span>
           </div>
@@ -235,7 +241,7 @@ const ArchiveProductCard = ({ product }) => {
 
         {/* Verified Badge */}
         {product.isVerified && (
-          <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-1.5 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase flex items-center gap-1">
+          <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-sans tracking-widest uppercase flex items-center gap-1">
             <ShieldCheck size={10} />
             <span className="inline">Verified</span>
           </div>
@@ -268,14 +274,17 @@ const ArchiveProductCard = ({ product }) => {
         <p className="text-heritage-gold-muted font-sans text-xs sm:text-base lg:text-lg font-semibold mt-1.5 sm:mt-2">
           ₹{product.price?.toLocaleString()}
         </p>
-        <p className="flex items-center gap-1 text-[9px] sm:text-[10px] text-heritage-bronze/60 uppercase tracking-wider mt-0.5">
-          <ShieldCheck size={10} className="shrink-0" />
-          Authenticity Guaranteed · 48-Hr Returns
-        </p>
+        <span
+          className="inline-flex items-center mt-1 text-heritage-bronze/60"
+          title="Authenticity Guaranteed · 48-Hr Returns"
+        >
+          <ShieldCheck size={13} strokeWidth={1.5} className="shrink-0" />
+          <span className="sr-only">Authenticity guaranteed · 48-hour returns</span>
+        </span>
 
         {/* Add to Cart / Sold Button */}
         {product.status === 'Sold' ? (
-          <div className="w-full py-2 sm:py-2.5 md:py-3 text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.12em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-2 bg-gray-100 text-gray-400 cursor-default mt-1.5 sm:mt-2">
+          <div className="w-full py-2 sm:py-2.5 md:py-3 rounded-full text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.12em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-2 bg-gray-100 text-gray-400 cursor-default mt-1.5 sm:mt-2">
             <XCircle size={11} className="sm:w-4 sm:h-4" />
             Sold Out
           </div>
@@ -283,7 +292,7 @@ const ArchiveProductCard = ({ product }) => {
           <button
             onClick={inCart ? () => navigate('/cart') : cartFeedback ? undefined : handleAddToCart}
             disabled={addToCartMutation.isPending || cartFeedback}
-            className={`w-full py-2 sm:py-2.5 md:py-3 text-[10px] sm:text-xs md:text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 active:scale-[0.97] mt-1.5 sm:mt-2 ${
+            className={`w-full py-2 sm:py-2.5 md:py-3 rounded-full text-[10px] sm:text-xs md:text-sm uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-1 sm:gap-2 active:scale-[0.97] mt-1.5 sm:mt-2 ${
               cartFeedback || inCart
                 ? 'bg-luxury-gold text-white cursor-pointer hover:bg-luxury-gold/90'
                 : 'bg-heritage-charcoal text-white hover:bg-heritage-brown'
@@ -406,7 +415,7 @@ const Category = () => {
     searchParams.toString().length > 0 || Boolean(categorySlug && !routeCategory);
   const canonicalPath = canonicalCategory ? `/category/${canonicalCategory.slug}` : '/category';
   const filteredTitle = canonicalCategory
-    ? `${canonicalCategory.name} — ${categorySeo.title}`
+    ? `${canonicalCategory.name} | ${categorySeo.title}`
     : categorySeo.title;
   const breadcrumbItems = canonicalCategory
     ? [
@@ -445,7 +454,7 @@ const Category = () => {
             className="flex justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory md:snap-none -mx-6 md:mx-0 px-6 md:px-0"
             childClassName="snap-start shrink-0"
           >
-            {CATEGORIES.map((category) => {
+            {VISIBLE_CATEGORIES.map((category) => {
               const IconComponent = category.icon;
               const isSelected = selectedCategory === category.name;
               const count = categoryCounts?.[category.name] ?? 0;
@@ -455,7 +464,7 @@ const Category = () => {
                   key={category.id}
                   to={`/category/${category.slug}/`}
                   className={`group flex flex-col items-center text-center snap-start shrink-0 w-[72px] md:w-auto transition-opacity duration-300 ${isEmpty ? 'opacity-60' : ''}`}
-                  title={isEmpty ? `${category.name} — coming soon` : category.tagline}
+                  title={isEmpty ? `${category.name}: coming soon` : category.tagline}
                 >
                   <div
                     className={`w-12 h-12 md:w-20 md:h-20 rounded-full border-2 md:border-2 flex items-center justify-center transition-all duration-300 mb-2 md:mb-3 ${
@@ -499,7 +508,7 @@ const Category = () => {
       </section>
 
       {/* All Products Grid */}
-      <section ref={productsRef} className="py-8 md:py-20 px-3 sm:px-4 lg:px-6 bg-white">
+      <section ref={productsRef} className="py-5 sm:py-8 md:py-20 px-3 sm:px-4 lg:px-6 bg-white">
         <div className="w-full max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 md:mb-10 gap-2 sm:gap-3 md:gap-4 px-0 sm:px-0">
             <Reveal className="flex flex-col min-w-0 w-full sm:w-auto">
@@ -532,11 +541,6 @@ const Category = () => {
                   </h2>
                 )}
               </div>
-              {activeCategory && (
-                <p className="mt-2 sm:mt-3 max-w-2xl text-xs sm:text-sm text-heritage-charcoal/60 leading-relaxed">
-                  {activeCategory.description}
-                </p>
-              )}
             </Reveal>
 
             <div className="flex gap-2 w-full sm:w-auto">
@@ -591,12 +595,10 @@ const Category = () => {
                 });
                 return (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                    {sorted.map((product, i) => (
-                      <Reveal key={product.id} delay={i * 120} className="h-full">
-                        <Tilt className="h-full">
-                          <ArchiveProductCard product={product} />
-                        </Tilt>
-                      </Reveal>
+                    {sorted.map((product) => (
+                      <Tilt key={product.id} className="h-full">
+                        <ArchiveProductCard product={product} />
+                      </Tilt>
                     ))}
                   </div>
                 );

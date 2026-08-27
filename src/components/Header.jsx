@@ -5,6 +5,7 @@ import { getUser } from '../utils/storage';
 import { useCart } from '../hooks/api/useCart';
 import { useWishlist } from '../hooks/api/useWishlist';
 import { PRIMARY_NAV } from '../config/seo-pages';
+import crestMark from '../assets/brand/crest-mark-160.webp';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,41 +48,52 @@ const Header = () => {
         ref={headerRef}
         className={`fixed top-0 left-0 right-0 z-50 pt-3 px-3 lg:pt-4 lg:px-6 transition-transform duration-300 ${showNav ? 'translate-y-0' : '-translate-y-full'}`}
       >
-        <div className="rounded-2xl lg:rounded-full bg-white/95 backdrop-blur-md border border-gray-100 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] text-text-main">
+        <div
+          className="rounded-2xl lg:rounded-full text-cream/90 border border-white/[0.07]"
+          style={{
+            background: 'rgba(9,8,6,0.82)',
+            backdropFilter: 'blur(22px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(22px) saturate(140%)',
+          }}
+        >
           <div className="px-3 sm:px-6 lg:mx-auto lg:max-w-7xl lg:px-8 xl:px-10 pt-2 pb-2 md:py-3.5">
             {/* Mobile layout */}
             <div className="flex items-center justify-between lg:hidden min-h-[40px]">
-              <div className="flex-1" />
+              <Link to="/" className="flex items-center gap-2 shrink-0">
+                <img src={crestMark} alt="" className="h-8 w-auto" />
+              </Link>
               <Link
                 to="/"
-                className="text-[15px] xs:text-[16px] sm:text-base md:text-lg font-serif font-bold tracking-tight leading-snug text-center shrink-0 inline-flex items-center justify-center px-2"
+                className="text-[15px] xs:text-[16px] sm:text-base font-serif font-bold tracking-tight leading-snug text-center inline-flex items-center justify-center px-2 text-cream"
               >
                 THE COLLECTORS
                 <br className="hidden xs:block sm:hidden" /> EXCHANGE
               </Link>
-              <div className="flex-1 flex justify-end">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  aria-label="Toggle menu"
-                  aria-expanded={isMenuOpen}
-                  className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  {isMenuOpen ? (
-                    <X size={20} aria-hidden="true" />
-                  ) : (
-                    <Menu size={20} aria-hidden="true" />
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="Toggle menu"
+                aria-expanded={isMenuOpen}
+                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors shrink-0"
+              >
+                {isMenuOpen ? (
+                  <X size={20} aria-hidden="true" />
+                ) : (
+                  <Menu size={20} aria-hidden="true" />
+                )}
+              </button>
             </div>
 
             {/* Desktop layout */}
             <div className="hidden lg:flex items-center justify-between">
-              <Link
-                to="/"
-                className="text-lg lg:text-xl xl:text-2xl font-serif font-bold tracking-wide shrink-0 leading-tight"
-              >
-                THE COLLECTORS EXCHANGE
+              <Link to="/" className="flex items-center gap-3 shrink-0 group">
+                <img
+                  src={crestMark}
+                  alt=""
+                  className="h-9 w-auto transition-transform duration-500 group-hover:scale-110"
+                />
+                <span className="text-lg lg:text-xl xl:text-2xl font-serif font-bold tracking-wide leading-tight text-cream">
+                  THE COLLECTORS EXCHANGE
+                </span>
               </Link>
               <nav
                 aria-label="Main navigation"
@@ -91,13 +103,13 @@ const Header = () => {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className="text-[10px] xl:text-xs font-medium hover:text-luxury-gold transition-colors uppercase tracking-[0.15em] whitespace-nowrap"
+                    className="text-[10px] xl:text-xs font-medium text-cream/60 hover:text-luxury-gold transition-colors uppercase tracking-[0.15em] whitespace-nowrap"
                   >
                     {item.name}
                   </Link>
                 ))}
               </nav>
-              <div className="flex items-center space-x-5 xl:space-x-7">
+              <div className="flex items-center space-x-5 xl:space-x-7 text-cream/70">
                 <Link
                   to="/wishlist"
                   className="relative hover:text-luxury-gold transition-colors"
@@ -105,7 +117,7 @@ const Header = () => {
                 >
                   <Heart size={20} />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-luxury-gold text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 bg-luxury-gold text-obsidian text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
                       {wishlistCount}
                     </span>
                   )}
@@ -124,7 +136,7 @@ const Header = () => {
                 >
                   <ShoppingBag size={20} />
                   {cartItems.length > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 bg-cream text-obsidian text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
                       {cartItems.length}
                     </span>
                   )}
@@ -219,8 +231,13 @@ const Header = () => {
       {/* Mobile Bottom Navigation Bar */}
       <nav
         aria-label="Mobile navigation"
-        style={{ bottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
-        className={`lg:hidden fixed left-3 right-3 z-50 rounded-2xl bg-white/95 backdrop-blur-md border border-gray-100 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.15)] flex items-center justify-around py-2 transition-transform duration-500 ease-out ${showNav ? 'translate-y-0' : 'translate-y-[150%]'}`}
+        style={{
+          bottom: 'calc(0.75rem + env(safe-area-inset-bottom))',
+          background: 'rgba(9,8,6,0.86)',
+          backdropFilter: 'blur(22px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(140%)',
+        }}
+        className={`lg:hidden fixed left-3 right-3 z-50 rounded-2xl border border-white/[0.07] flex items-center justify-around py-2 transition-transform duration-500 ease-out ${showNav ? 'translate-y-0' : 'translate-y-[150%]'}`}
       >
         {bottomNav.map((item) => {
           const Icon = item.icon;
@@ -229,7 +246,7 @@ const Header = () => {
             <Link
               key={item.name}
               to={item.path}
-              className={`group relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-1 transition-all duration-300 ease-out ${isActive ? 'text-luxury-gold' : 'text-gray-500 hover:text-luxury-gold'}`}
+              className={`group relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-1 transition-all duration-300 ease-out ${isActive ? 'text-luxury-gold' : 'text-cream/50 hover:text-luxury-gold'}`}
             >
               {/* Active indicator dot */}
               <span
@@ -243,7 +260,7 @@ const Header = () => {
                 />
                 {item.count > 0 && (
                   <span
-                    className={`absolute -top-1.5 -right-2 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${isActive ? 'bg-luxury-gold scale-110' : 'bg-luxury-gold'}`}
+                    className={`absolute -top-1.5 -right-2 text-obsidian text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${isActive ? 'bg-luxury-gold scale-110' : 'bg-luxury-gold'}`}
                   >
                     {item.count > 9 ? '9+' : item.count}
                   </span>

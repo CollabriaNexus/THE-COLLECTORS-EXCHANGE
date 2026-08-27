@@ -12,7 +12,6 @@ export const PRIMARY_NAV = [
   { name: 'About Us', path: '/about' },
   { name: 'The Exchange', path: '/category' },
   { name: 'Contact', path: '/contact' },
-  { name: 'FAQ', path: '/faq' },
   { name: 'The Archive', path: '/archive' },
   { name: 'Vision', path: '/vision' },
 ];
@@ -59,7 +58,7 @@ export const CORE_PAGES = {
   '/about': {
     title: 'About Us',
     description:
-      'The story behind The Collectors Exchange — how we source, verify, and authenticate vintage watches and heritage collectibles across India.',
+      'The story behind The Collectors Exchange: how we source, verify, and authenticate vintage watches and heritage collectibles across India.',
     schemaType: 'AboutPage',
     h1: 'About The Collectors Exchange',
     intro:

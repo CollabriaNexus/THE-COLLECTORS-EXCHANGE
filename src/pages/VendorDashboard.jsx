@@ -543,7 +543,7 @@ export default function VendorDashboard() {
                             ₹{payout.amount?.toLocaleString()}
                           </p>
                           <p className="text-[10px] sm:text-xs text-gray-500 truncate">
-                            {new Date(payout.periodStart).toLocaleDateString()} —{' '}
+                            {new Date(payout.periodStart).toLocaleDateString()} to{' '}
                             {new Date(payout.periodEnd).toLocaleDateString()}
                           </p>
                         </div>

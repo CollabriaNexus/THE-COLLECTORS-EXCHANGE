@@ -891,12 +891,12 @@ const Account = () => {
           as="div"
           direction="up"
           delay={140}
-          className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-8"
+          className="bg-white p-6 sm:p-10 rounded-2xl shadow-heritage border border-gray-100 space-y-8"
         >
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-3.5 sm:py-4 text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-xl py-3.5 sm:py-4 text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors"
           >
             <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
             Continue with Google
@@ -906,7 +906,7 @@ const Account = () => {
         {/* Company Registration Popup */}
         {showCompanyPopup && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
-            <div className="bg-white p-8 max-w-md w-full shadow-2xl border border-gray-100 relative">
+            <div className="bg-white p-8 max-w-md w-full rounded-2xl shadow-2xl border border-gray-100 relative">
               <button
                 onClick={() => setShowCompanyPopup(false)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors"
@@ -926,7 +926,7 @@ const Account = () => {
                 </p>
                 <a
                   href="mailto:support@thecollectorsexchange.in"
-                  className="flex items-center justify-center w-full bg-black text-white py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors gap-2"
+                  className="flex items-center justify-center w-full bg-black text-white rounded-full py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors gap-2"
                 >
                   <Mail size={16} />
                   support@thecollectorsexchange.in
@@ -943,7 +943,7 @@ const Account = () => {
     switch (activeTab) {
       case 'profile':
         return (
-          <div className="bg-white p-4 sm:p-10 shadow-sm border border-gray-100">
+          <div className="bg-white p-4 sm:p-10 rounded-2xl shadow-sm border border-gray-100">
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start mb-6 sm:mb-8">
               <h3 className="text-lg sm:text-2xl font-serif text-heritage-charcoal">
                 Collector Profile
@@ -1019,7 +1019,7 @@ const Account = () => {
                   <button
                     type="submit"
                     disabled={updateProfileMutation.isPending}
-                    className="bg-heritage-charcoal text-white px-6 sm:px-8 py-3 sm:py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors flex items-center gap-2"
+                    className="bg-heritage-charcoal text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors flex items-center gap-2"
                   >
                     {updateProfileMutation.isPending && (
                       <Loader2 size={16} className="animate-spin" />
@@ -1091,7 +1091,7 @@ const Account = () => {
 
       case 'seller':
         return (
-          <div className="bg-white p-4 sm:p-10 shadow-sm border border-gray-100">
+          <div className="bg-white p-4 sm:p-10 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="text-lg sm:text-2xl font-serif mb-6 sm:mb-8 text-heritage-charcoal">
               {user.kycStatus === 'verified' ? 'Seller Profile' : 'Seller Registration'}
             </h3>
@@ -1283,7 +1283,7 @@ const Account = () => {
                         <button
                           type="submit"
                           disabled={pickupSaving}
-                          className="px-6 py-2.5 text-sm bg-heritage-charcoal text-white hover:bg-heritage-brown flex items-center gap-2"
+                          className="px-6 py-2.5 rounded-full text-sm bg-heritage-charcoal text-white hover:bg-heritage-brown flex items-center gap-2"
                         >
                           {pickupSaving && <Loader2 size={14} className="animate-spin" />}
                           Save Address
@@ -1427,7 +1427,7 @@ const Account = () => {
                       2. Seller Agreement
                     </h4>
 
-                    <div className="bg-white p-6 border border-gray-200 max-h-80 overflow-y-auto text-sm text-gray-700 leading-relaxed space-y-3">
+                    <div className="bg-white p-6 rounded-xl border border-gray-200 max-h-80 overflow-y-auto text-sm text-gray-700 leading-relaxed space-y-3">
                       <p className="font-semibold text-heritage-charcoal">
                         Seller Agreement - The Collectors Exchange
                       </p>
@@ -1507,7 +1507,7 @@ const Account = () => {
           <div className="space-y-12">
             {/* Add New Product Form */}
             {user.kycStatus === 'verified' && (
-              <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
+              <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-gray-100">
                 <div className="mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-100">
                   <h3 className="text-lg sm:text-2xl font-serif mb-2 text-heritage-charcoal">
                     Broker a New Item
@@ -1552,7 +1552,7 @@ const Account = () => {
                         onChange={(brand) => setProductForm({ ...productForm, brand })}
                       />
                       <p className="text-xs text-gray-400 mt-2">
-                        Search the list or type your own — unlisted and house-marked names are
+                        Search the list or type your own; unlisted and house-marked names are
                         accepted. Leave blank for unbranded pieces.
                       </p>
                     </div>
@@ -1866,7 +1866,7 @@ const Account = () => {
                       </div>
                     )}
 
-                    <div className="mt-3 sm:mt-4 flex items-start gap-2 text-[10px] sm:text-xs text-gray-400 bg-white p-2 sm:p-3 border border-gray-100">
+                    <div className="mt-3 sm:mt-4 flex items-start gap-2 text-[10px] sm:text-xs text-gray-400 bg-white p-2 sm:p-3 rounded-lg border border-gray-100">
                       <Info size={12} className="mt-0.5 flex-shrink-0 hidden sm:block" />
                       <Info size={14} className="mt-0.5 flex-shrink-0 sm:hidden" />
                       <p>
@@ -1940,7 +1940,7 @@ const Account = () => {
                       ))}
                     </div>
 
-                    <div className="mt-2 sm:mt-3 flex items-start gap-2 text-[10px] sm:text-xs text-gray-400 bg-white p-2 sm:p-3 border border-gray-100">
+                    <div className="mt-2 sm:mt-3 flex items-start gap-2 text-[10px] sm:text-xs text-gray-400 bg-white p-2 sm:p-3 rounded-lg border border-gray-100">
                       <Info size={12} className="mt-0.5 flex-shrink-0 hidden sm:block" />
                       <Info size={14} className="mt-0.5 flex-shrink-0 sm:hidden" />
                       <p>
@@ -1962,7 +1962,7 @@ const Account = () => {
                     <button
                       type="submit"
                       disabled={addProductMutation.isPending}
-                      className="w-full sm:w-auto bg-heritage-charcoal text-white px-6 sm:px-12 py-3 sm:py-4 text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto bg-heritage-charcoal text-white px-6 sm:px-12 py-3 sm:py-4 rounded-full text-sm uppercase tracking-widest hover:bg-heritage-brown transition-colors shadow-lg flex items-center justify-center gap-2"
                     >
                       {addProductMutation.isPending && (
                         <Loader2 size={16} className="animate-spin" />
@@ -1975,7 +1975,7 @@ const Account = () => {
             )}
 
             {/* User's Listings / Portfolio */}
-            <div className="bg-white p-6 sm:p-10 shadow-sm border border-gray-100">
+            <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
                 <div>
                   <h3 className="text-lg sm:text-2xl font-serif text-heritage-charcoal">
@@ -2376,7 +2376,7 @@ const Account = () => {
                                 type="button"
                                 onClick={() => handleSaveEdit(product.id)}
                                 disabled={updateProductMutation.isPending}
-                                className="px-6 py-2 text-sm bg-heritage-charcoal text-white hover:bg-heritage-brown flex items-center gap-2"
+                                className="px-6 py-2 rounded-full text-sm bg-heritage-charcoal text-white hover:bg-heritage-brown flex items-center gap-2"
                               >
                                 {updateProductMutation.isPending && (
                                   <Loader2 size={14} className="animate-spin" />
@@ -2389,7 +2389,7 @@ const Account = () => {
                       ) : (
                         <div
                           key={product.id}
-                          className="border border-gray-100 bg-white sm:border-gray-100 sm:hover:shadow-md sm:transition-shadow sm:group"
+                          className="border border-gray-100 bg-white rounded-xl overflow-hidden sm:border-gray-100 sm:hover:shadow-md sm:transition-shadow sm:group"
                         >
                           {/* Mobile: horizontal compact card */}
                           <div className="flex sm:hidden">
@@ -2657,7 +2657,7 @@ const Account = () => {
 
       case 'orders':
         return (
-          <div className="bg-white p-4 sm:p-8 shadow-sm border border-gray-100">
+          <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-lg sm:text-2xl font-serif mb-2">My Orders</h2>
             <p className="text-gray-500 text-sm mb-6 sm:mb-8">Track your purchases and shipments</p>
             {ordersLoading ? (
@@ -2893,7 +2893,7 @@ const Account = () => {
                       }
                     }}
                     disabled={submitTestimonial.isPending || testimonialImageUploading}
-                    className="px-6 py-3 bg-heritage-charcoal text-white text-xs uppercase tracking-widest hover:bg-heritage-brown transition-colors"
+                    className="px-6 py-3 rounded-full bg-heritage-charcoal text-white text-xs uppercase tracking-widest hover:bg-heritage-brown transition-colors"
                   >
                     {submitTestimonial.isPending ? 'Submitting...' : 'Submit Testimonial'}
                   </button>
@@ -2924,7 +2924,7 @@ const Account = () => {
           <Reveal
             as="div"
             direction="up"
-            className="bg-white p-6 sm:p-10 shadow-heritage border border-gray-100 space-y-6"
+            className="bg-white p-6 sm:p-10 rounded-2xl shadow-heritage border border-gray-100 space-y-6"
           >
             <div className="text-center mb-4">
               <h1 className="text-3xl font-serif mb-3">Set Your Password</h1>
@@ -3004,7 +3004,7 @@ const Account = () => {
   // 375px and every target clears 44px.
   const renderMobileSectionIndex = () => (
     <div className="lg:hidden">
-      <div className="bg-white border border-gray-100 shadow-heritage p-5 mb-4">
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-heritage p-5 mb-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-heritage-cream flex flex-shrink-0 items-center justify-center text-heritage-bronze">
             <User size={24} aria-hidden="true" />
@@ -3021,7 +3021,7 @@ const Account = () => {
 
       <nav
         aria-label="Account sections"
-        className="bg-white border border-gray-100 shadow-heritage divide-y divide-gray-100"
+        className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-heritage divide-y divide-gray-100"
       >
         {sections.map(({ id, label, icon: Icon, hint, badge }) => (
           <button
@@ -3102,7 +3102,7 @@ const Account = () => {
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           {/* Desktop Sidebar */}
           <div className="hidden lg:block lg:w-1/4">
-            <div className="bg-white shadow-sm border border-gray-100 lg:sticky lg:top-24">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 lg:sticky lg:top-24">
               <div className="p-8 border-b border-gray-100 text-center">
                 <div className="w-20 h-20 rounded-full bg-heritage-cream mx-auto flex items-center justify-center mb-4 text-heritage-bronze">
                   <User size={32} aria-hidden="true" />
