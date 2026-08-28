@@ -14,6 +14,7 @@ import {
   Smartphone,
   BookOpen,
   Mail,
+  QrCode,
 } from 'lucide-react';
 
 function Sidebar() {
@@ -64,6 +65,11 @@ function Sidebar() {
       name: 'Blog / Archive',
       path: '/blog',
       icon: BookOpen,
+    },
+    {
+      name: 'QR Scans',
+      path: '/qr-scans',
+      icon: QrCode,
     },
     {
       name: 'Contact Messages',

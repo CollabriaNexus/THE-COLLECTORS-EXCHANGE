@@ -639,3 +639,39 @@ model Review {
   @@index([orderId])
 }
 
+model QrCode {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  targetUrl String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  scans     QrScan[]
+}
+
+model QrScan {
+  id          String   @id @default(cuid())
+  qrCodeId    String
+  qrCode      QrCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  scannedAt   DateTime @default(now())
+  visitorId   String?
+  deviceHash  String?
+  ipHash      String?
+  country     String?
+  countryCode String?
+  region      String?
+  city        String?
+  latitude    Float?
+  longitude   Float?
+  deviceType  String?
+  os          String?
+  browser     String?
+
+  @@index([qrCodeId, scannedAt])
+  @@index([country])
+  @@index([city])
+  @@index([deviceType])
+  @@index([os])
+}
+

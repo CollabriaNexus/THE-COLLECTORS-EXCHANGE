@@ -23,6 +23,7 @@ import PhoneVerifications from './pages/PhoneVerifications';
 import BlogManager from './pages/BlogManager';
 import BlogEditor from './pages/BlogEditor';
 import ContactMessages from './pages/ContactMessages';
+import QrScans from './pages/QrScans';
 import AdminLayout from './components/AdminLayout';
 
 // Protected Route wrapper
@@ -211,6 +212,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <ContactMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/qr-scans"
+            element={
+              <ProtectedRoute>
+                <QrScans />
               </ProtectedRoute>
             }
           />

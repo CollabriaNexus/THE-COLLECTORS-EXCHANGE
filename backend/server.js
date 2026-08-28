@@ -23,8 +23,11 @@ import testimonialRoutes from './routes/testimonials.js';
 import blogRoutes from './routes/blog.js';
 import blogAiRoutes from './routes/blog-ai.js';
 import googleMerchantRoutes from './routes/googleMerchant.js';
+import metaCatalogRoutes from './routes/metaCatalog.js';
 import couponRoutes from './routes/coupon.js';
 import reviewRoutes from './routes/reviews.js';
+import qrRoutes from './routes/qr.js';
+import qrAdminRoutes from './routes/qrAdmin.js';
 
 dotenv.config();
 
@@ -115,8 +118,11 @@ fastify.register(testimonialRoutes, { prefix: '/api/testimonials' });
 fastify.register(blogRoutes, { prefix: '/api/blog' });
 fastify.register(blogAiRoutes, { prefix: '/api/blog/ai' });
 fastify.register(googleMerchantRoutes, { prefix: '/api' });
+fastify.register(metaCatalogRoutes, { prefix: '/api' });
 fastify.register(couponRoutes, { prefix: '/api' });
 fastify.register(reviewRoutes, { prefix: '/api/reviews' });
+fastify.register(qrRoutes, { prefix: '/api/qr' });
+fastify.register(qrAdminRoutes, { prefix: '/api/admin/qr' });
 
 fastify.get('/health', async (request, reply) => {
   return { status: 'ok', timestamp: new Date().toISOString() };
