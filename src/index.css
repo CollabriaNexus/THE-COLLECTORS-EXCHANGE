@@ -125,6 +125,20 @@ img[loading='lazy'] {
   }
 }
 
+/* Floating-nav hero bleed — the header is fixed/floating with a transparent
+   margin around its glass pill, so a page's own hero background must reach
+   the true viewport top to show through that margin (otherwise the generic
+   Layout background shows instead, which reads as a mismatched seam behind
+   the nav). Put this on a page's outermost/hero wrapper: it pulls the
+   element up by the nav's measured height, then re-pads by the same amount
+   so content still clears the pill. --header-h is kept in sync with the
+   nav's real rendered height (see Header.jsx), so this stays pixel-accurate
+   at every breakpoint automatically. */
+.hero-bleed {
+  margin-top: calc(var(--header-h, 0px) * -1);
+  padding-top: var(--header-h, 0px);
+}
+
 /* Hide scrollbar but keep scroll functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;

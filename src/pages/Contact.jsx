@@ -107,7 +107,7 @@ const Contact = () => {
             return (
               <Reveal key={i} delay={i * 130} className="h-full">
                 <Tilt className="h-full">
-                  <div className="h-full bg-white rounded-lg p-6 sm:p-8 text-center shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 flex flex-col items-center justify-center min-h-[180px] sm:min-h-[220px]">
+                  <div className="h-full bg-white rounded-2xl p-6 sm:p-8 text-center shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 flex flex-col items-center justify-center min-h-[180px] sm:min-h-[220px]">
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-luxury-gold/10 flex items-center justify-center mb-4 sm:mb-5 shrink-0">
                       <Icon size={22} className="text-luxury-gold sm:w-7 sm:h-7" />
                     </div>
@@ -124,7 +124,7 @@ const Contact = () => {
 
         <Reveal
           direction="up"
-          className="bg-white rounded-lg p-6 sm:p-8 md:p-12 shadow-sm border border-gray-100 max-w-3xl mx-auto"
+          className="bg-white rounded-2xl p-6 sm:p-8 md:p-12 shadow-sm border border-gray-100 max-w-3xl mx-auto"
         >
           <h2 className="text-lg sm:text-2xl font-serif mb-6 sm:mb-8 text-center">
             Send us a message
@@ -184,7 +184,7 @@ const Contact = () => {
               <button
                 type="submit"
                 disabled={sending}
-                className="bg-black text-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center justify-center gap-2 w-full sm:w-auto sm:mx-auto rounded"
+                className="bg-black text-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors flex items-center justify-center gap-2 w-full sm:w-auto sm:mx-auto rounded-full"
               >
                 {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 Send Message

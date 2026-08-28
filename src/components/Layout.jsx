@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowUp } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
@@ -10,6 +10,11 @@ import { OrganizationSchema, SiteNavigationSchema } from './SEO';
 const Layout = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  // Mirrors Header.jsx's own check: the mobile bottom tab bar hides itself
+  // while an Account section is open, so the space <main> reserves for it
+  // should collapse too, instead of leaving a dead gap at the bottom.
+  const isAccountSectionOpen = location.pathname === '/account' && searchParams.has('tab');
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
@@ -31,7 +36,10 @@ const Layout = () => {
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-grow pb-24 lg:pb-0">
+      <main
+        id="main-content"
+        className={`flex-grow ${isAccountSectionOpen ? 'pb-4' : 'pb-24'} lg:pb-0`}
+      >
         <div key={location.pathname} className="animate-page-enter">
           <Outlet />
         </div>

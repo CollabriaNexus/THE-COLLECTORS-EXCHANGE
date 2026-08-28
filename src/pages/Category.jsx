@@ -428,7 +428,9 @@ const Category = () => {
     : 'Shop Vintage Watches, Watch Collections & Rare Collectibles';
 
   return (
-    <div className="min-h-screen bg-heritage-cream">
+    // hero-bleed pulls the page's own background up behind the floating nav
+    // so the generic layout background doesn't show through as a seam.
+    <div className="hero-bleed min-h-screen bg-heritage-cream">
       <SEO
         title={filteredTitle}
         description={activeCategory?.metaDescription || categorySeo.description}
@@ -490,7 +492,7 @@ const Category = () => {
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
-                className="w-28 sm:w-32 shrink-0 px-2.5 py-2 md:px-3 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal focus:outline-none focus:border-heritage-bronze transition-colors appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394826e%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_8px_center] bg-no-repeat pr-7"
+                className="w-28 sm:w-32 shrink-0 px-2.5 py-2 md:px-3 md:py-2.5 rounded-full border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal focus:outline-none focus:border-heritage-bronze transition-colors appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394826e%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_8px_center] bg-no-repeat pr-7"
               >
                 <option value="">All</option>
                 {CONDITION_OPTIONS.map((opt) => (
@@ -505,7 +507,7 @@ const Category = () => {
                   placeholder="Search listings..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 md:px-4 md:py-2.5 border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
+                  className="w-full px-4 py-2 md:px-4 md:py-2.5 rounded-full border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
                 />
               </div>
             </div>
@@ -516,7 +518,7 @@ const Category = () => {
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-gray-100 flex flex-col animate-pulse"
+                  className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col animate-pulse"
                 >
                   <div className="aspect-square bg-heritage-beige/60" />
                   <div className="p-2 sm:p-5 space-y-2 sm:space-y-3">
@@ -552,7 +554,7 @@ const Category = () => {
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1 || isLoading}
-                      className="px-4 py-2.5 border border-heritage-charcoal/20 text-heritage-charcoal text-xs uppercase tracking-[0.15em] font-medium hover:bg-heritage-charcoal hover:text-white transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="px-4 py-2.5 rounded-full border border-heritage-charcoal/20 text-heritage-charcoal text-xs uppercase tracking-[0.15em] font-medium hover:bg-heritage-charcoal hover:text-white transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       Prev
                     </button>
@@ -572,7 +574,7 @@ const Category = () => {
                           key={pageNum}
                           onClick={() => setPage(pageNum)}
                           disabled={isLoading}
-                          className={`w-10 h-10 text-xs font-medium transition-all duration-300 ${
+                          className={`w-10 h-10 rounded-full text-xs font-medium transition-all duration-300 ${
                             page === pageNum
                               ? 'bg-heritage-charcoal text-white'
                               : 'border border-heritage-charcoal/20 text-heritage-charcoal/70 hover:bg-heritage-cream'
@@ -588,7 +590,7 @@ const Category = () => {
                         <button
                           onClick={() => setPage(totalPages)}
                           disabled={isLoading}
-                          className="w-10 h-10 text-xs font-medium border border-heritage-charcoal/20 text-heritage-charcoal/70 hover:bg-heritage-cream transition-all duration-300"
+                          className="w-10 h-10 rounded-full text-xs font-medium border border-heritage-charcoal/20 text-heritage-charcoal/70 hover:bg-heritage-cream transition-all duration-300"
                         >
                           {totalPages}
                         </button>
@@ -597,7 +599,7 @@ const Category = () => {
                     <button
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages || isLoading}
-                      className="px-4 py-2.5 border border-heritage-charcoal/20 text-heritage-charcoal text-xs uppercase tracking-[0.15em] font-medium hover:bg-heritage-charcoal hover:text-white transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="px-4 py-2.5 rounded-full border border-heritage-charcoal/20 text-heritage-charcoal text-xs uppercase tracking-[0.15em] font-medium hover:bg-heritage-charcoal hover:text-white transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       Next
                     </button>
@@ -606,7 +608,7 @@ const Category = () => {
               )}
             </>
           ) : (
-            <div className="text-center py-16 md:py-24 bg-heritage-cream border border-heritage-beige">
+            <div className="text-center py-16 md:py-24 rounded-2xl bg-heritage-cream border border-heritage-beige">
               <Gem
                 size={32}
                 strokeWidth={1}

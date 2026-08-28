@@ -112,6 +112,14 @@ function BlogPost() {
                     background: linear-gradient(to right, transparent, #D4AF37, transparent);
                     opacity: 0.3;
                 }
+                /* Layout safety net, not content styling: GFM tables in
+                   article body have no built-in mobile handling from the
+                   typography plugin, so a wide table would force the whole
+                   page to scroll horizontally. Scope it to just the table. */
+                .prose table {
+                    display: block;
+                    overflow-x: auto;
+                }
             `}</style>
       <SEO
         title={post.metaTitle || post.title}
@@ -144,9 +152,16 @@ function BlogPost() {
         />
       </div>
 
-      {/* Hero */}
+      {/* Hero — hero-bleed pulls this band up behind the floating nav so its
+          image/background reaches the true viewport top instead of the
+          generic Layout background showing through as a mismatched seam.
+          This band uses a fixed viewport-relative height (not padding), so
+          the bled height is grown by --header-h at each breakpoint to
+          exactly offset the negative margin-top hero-bleed applies —
+          otherwise the section (and everything below it) would silently
+          shift up by the header's height. */}
       {post.coverImage ? (
-        <section className="relative h-[40vh] sm:h-[50vh] lg:h-[60vh] min-h-[300px] overflow-hidden">
+        <section className="hero-bleed relative h-[calc(40vh_+_var(--header-h,0px))] sm:h-[calc(50vh_+_var(--header-h,0px))] lg:h-[calc(60vh_+_var(--header-h,0px))] min-h-[calc(300px_+_var(--header-h,0px))] overflow-hidden">
           <Reveal direction="scale" className="absolute inset-0">
             <Parallax speed={0.12} className="w-full h-full">
               <img
@@ -188,7 +203,7 @@ function BlogPost() {
           </div>
         </section>
       ) : (
-        <section className="relative py-20 sm:py-28 px-6 bg-heritage-charcoal overflow-hidden">
+        <section className="hero-bleed relative px-6 bg-heritage-charcoal overflow-hidden">
           <div
             className="absolute inset-0 opacity-[0.03]"
             style={{
@@ -196,7 +211,7 @@ function BlogPost() {
               backgroundSize: '32px 32px',
             }}
           ></div>
-          <Reveal className="container mx-auto max-w-4xl relative z-10">
+          <Reveal className="container mx-auto max-w-4xl relative z-10 py-20 sm:py-28">
             <Link
               to="/archive"
               className="inline-flex items-center gap-2 text-white/60 hover:text-luxury-gold text-xs uppercase tracking-widest transition-colors mb-8"
@@ -226,7 +241,7 @@ function BlogPost() {
       )}
 
       {/* Meta Bar */}
-      <div className="border-b border-gray-100 bg-white">
+      <div className="relative bg-white">
         <div className="container mx-auto max-w-4xl px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500">
@@ -270,6 +285,7 @@ function BlogPost() {
             </button>
           </div>
         </div>
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-px bg-luxury-gold/50" />
       </div>
 
       {/* Article Layout */}
@@ -312,24 +328,25 @@ function BlogPost() {
           <main className="flex-1 min-w-0 py-10 sm:py-16">
             <Reveal>
               <article
-                className="prose prose-sm sm:prose-lg max-w-none
+                className="prose prose-sm sm:prose-lg
                                 prose-headings:font-serif prose-headings:text-heritage-charcoal prose-headings:tracking-tight
                                 prose-h2:text-2xl sm:prose-h2:text-4xl prose-h2:mt-0 prose-h2:mb-6 sm:prose-h2:mb-8 prose-h2:pb-3 prose-h2:border-b prose-h2:border-gray-100
                                 prose-h3:text-xl sm:prose-h3:text-2xl prose-h3:mt-8 sm:prose-h3:mt-10 prose-h3:mb-3 sm:prose-h3:mb-4
                                 prose-p:text-heritage-charcoal/80 prose-p:leading-relaxed prose-p:mb-4 sm:prose-p:mb-6
                                 prose-a:text-luxury-gold prose-a:no-underline hover:prose-a:underline
-                                prose-blockquote:border-l-luxury-gold prose-blockquote:bg-heritage-cream prose-blockquote:py-5 prose-blockquote:px-6 sm:prose-blockquote:px-8 prose-blockquote:italic prose-blockquote:text-base sm:prose-blockquote:text-lg prose-blockquote:rounded-r-sm prose-blockquote:my-10 sm:prose-blockquote:my-12
+                                prose-blockquote:border-l-luxury-gold prose-blockquote:bg-heritage-cream prose-blockquote:py-5 prose-blockquote:px-6 sm:prose-blockquote:px-8 prose-blockquote:italic prose-blockquote:text-base sm:prose-blockquote:text-lg prose-blockquote:rounded-r-2xl prose-blockquote:my-10 sm:prose-blockquote:my-12
                                 prose-strong:text-heritage-charcoal
                                 prose-ul:space-y-2 prose-li:marker:text-luxury-gold
-                                prose-img:rounded-sm prose-img:shadow-md prose-img:my-8
+                                prose-img:rounded-2xl prose-img:shadow-md prose-img:my-8
                                 prose-code:bg-gray-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-                                prose-pre:bg-heritage-charcoal prose-pre:text-gray-100 prose-pre:rounded-sm"
+                                prose-pre:bg-heritage-charcoal prose-pre:text-gray-100 prose-pre:rounded-2xl"
                 dangerouslySetInnerHTML={{ __html: processContent.html }}
               />
             </Reveal>
 
             {/* Author Bio */}
-            <Reveal direction="up" className="mt-12 sm:mt-16 pt-8 border-t border-gray-100">
+            <Reveal direction="up" className="mt-12 sm:mt-16">
+              <div className="w-12 h-px bg-luxury-gold/50 mb-8" />
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-full bg-heritage-charcoal flex items-center justify-center flex-shrink-0">
                   <BookOpen size={18} className="text-luxury-gold" />
@@ -359,7 +376,7 @@ function BlogPost() {
               <h2 className="text-sm uppercase tracking-[0.2em] font-bold text-heritage-charcoal">
                 Related Articles
               </h2>
-              <div className="h-px flex-1 bg-gray-200" />
+              <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
             </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {related.map((r, i) => (
@@ -367,7 +384,7 @@ function BlogPost() {
                   <Tilt className="h-full">
                     <Link
                       to={`/archive/${r.slug}`}
-                      className="group block h-full bg-white rounded-sm border border-gray-100 hover:border-luxury-gold/30 hover:shadow-md transition-all duration-500 overflow-hidden"
+                      className="group block h-full bg-white rounded-2xl border border-gray-100 hover:border-luxury-gold/30 hover:shadow-md transition-all duration-500 overflow-hidden"
                     >
                       {r.coverImage ? (
                         <div className="relative h-40 overflow-hidden">
@@ -416,7 +433,7 @@ function BlogPost() {
           <Magnetic>
             <Link
               to="/archive"
-              className="inline-flex items-center gap-2 bg-black text-white px-8 py-3.5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+              className="inline-flex items-center gap-2 bg-black text-white px-8 py-3.5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors rounded-full"
             >
               Browse The Archive <ArrowRight size={14} />
             </Link>

@@ -31,7 +31,7 @@ const Links = () => {
             </Link>
           </div>
         </div>
-        <div className="border-t border-gray-100" />
+        <div className="w-12 h-px bg-luxury-gold/50 mx-auto" />
         <div className="flex flex-col space-y-4">
           <h3 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
             Support
@@ -51,7 +51,7 @@ const Links = () => {
             </Link>
           </div>
         </div>
-        <div className="border-t border-gray-100" />
+        <div className="w-12 h-px bg-luxury-gold/50 mx-auto" />
         <div className="flex flex-col space-y-4">
           <h3 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
             Legal
@@ -68,7 +68,7 @@ const Links = () => {
             </Link>
           </div>
         </div>
-        <div className="border-t border-gray-100" />
+        <div className="w-12 h-px bg-luxury-gold/50 mx-auto" />
         <div className="flex flex-col space-y-4">
           <h3 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
             Connect

@@ -28,7 +28,7 @@ const DocUploadField = ({
         )}
         <div className="flex gap-2 items-center">
           <label
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 border border-dashed border-gray-300 cursor-pointer hover:border-luxury-gold transition-colors text-sm ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 border border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-luxury-gold transition-colors text-sm ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <Upload size={16} className="text-gray-400" />
             <span className="text-gray-500">

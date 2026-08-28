@@ -1,15 +1,20 @@
-import { BrowserRouter, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import { ConfirmProvider } from './components/ConfirmDialog';
 import { HelmetProvider } from 'react-helmet-async';
-import SEO from './components/SEO';
 import { pageview } from './utils/gtag';
+// Home, Category and NotFound are bundled eagerly, not lazy — Home/Category
+// are the two most-visited entry routes, and NotFound is what a confused
+// user hits right after a bad link; none of them should cost an extra chunk
+// fetch and a visible Suspense-spinner flash on top of that. Every other
+// route stays lazy/code-split.
+import Home from './pages/Home';
+import Category from './pages/Category';
+import NotFound from './pages/NotFound';
 
-const Home = lazy(() => import('./pages/Home'));
-const Category = lazy(() => import('./pages/Category'));
 const Account = lazy(() => import('./pages/Account'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Cart = lazy(() => import('./pages/Cart'));
@@ -90,32 +95,7 @@ function App() {
                     <Route path="/faq" element={<FAQ />} />
                     <Route path="/returns" element={<Returns />} />
                     <Route path="/links" element={<Links />} />
-                    <Route
-                      path="*"
-                      element={
-                        <div className="container mx-auto py-24 px-6 text-center">
-                          <SEO title="Page Not Found" noindex />
-                          <h1 className="text-6xl font-serif text-luxury-gold mb-6">404</h1>
-                          <p className="text-xl text-gray-500 mb-8">
-                            This archive record could not be located.
-                          </p>
-                          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link
-                              to="/"
-                              className="bg-black text-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
-                            >
-                              Return Home
-                            </Link>
-                            <Link
-                              to="/category"
-                              className="border border-black px-8 py-4 text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
-                            >
-                              Browse The Exchange
-                            </Link>
-                          </div>
-                        </div>
-                      }
-                    />
+                    <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>
               </Suspense>

@@ -28,6 +28,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import CommissionSlider from '../components/account/CommissionSlider';
+import { LoginVisualPanel, LoginVisualBand } from '../components/account/LoginVisual';
 import BrandCombobox from '../components/BrandCombobox';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -83,6 +84,11 @@ const Account = () => {
   // the URL explicitly names a valid one. Desktop always shows a section.
   const sectionOpen = TAB_IDS.includes(tabParam);
 
+  // Both replace (not push) the history entry: the mobile index<->section
+  // drill-down and every tab switch collapse into a single history slot, so
+  // one browser/gesture back always leaves Account in one step — matching
+  // the in-page back chevron — instead of stepping back through every tab
+  // visited along the way.
   const setActiveTab = useCallback(
     (tabId) => {
       setSearchParams(
@@ -91,18 +97,21 @@ const Account = () => {
           next.set('tab', tabId);
           return next;
         },
-        { replace: false },
+        { replace: true },
       );
     },
     [setSearchParams],
   );
 
   const closeSection = useCallback(() => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete('tab');
-      return next;
-    });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('tab');
+        return next;
+      },
+      { replace: true },
+    );
   }, [setSearchParams]);
 
   // The global ScrollToTop only keys on pathname, so section changes (which are
@@ -873,34 +882,42 @@ const Account = () => {
 
   if (!localUser) {
     return (
-      <div className="container mx-auto py-20 px-6 max-w-xl">
+      <div className="container mx-auto py-12 sm:py-16 lg:py-20 px-4 sm:px-6 max-w-4xl">
         <SEO
           title="My Account"
           description="Manage your profile, orders, and seller account on The Collectors Exchange."
           canonical="/account"
           noindex
         />
-        <Reveal as="div" direction="up" className="text-center mb-12">
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-4">Welcome Back</h1>
-          <p className="text-gray-500 font-light">
-            Sign in to The Collectors' Exchange secure portal.
-          </p>
-        </Reveal>
 
         <Reveal
           as="div"
           direction="up"
-          delay={140}
-          className="bg-white p-6 sm:p-10 rounded-2xl shadow-heritage border border-gray-100 space-y-8"
+          className="grid lg:grid-cols-2 rounded-2xl overflow-hidden shadow-heritage border border-gray-100 bg-white"
         >
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-xl py-3.5 sm:py-4 text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors"
-          >
-            <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-            Continue with Google
-          </button>
+          <LoginVisualPanel />
+          <LoginVisualBand />
+
+          <div className="p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif mb-3">Welcome Back</h1>
+            <p className="text-gray-500 font-light mb-8">
+              Sign in to The Collectors' Exchange secure portal.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-xl py-3.5 sm:py-4 text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors"
+            >
+              <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
+              Continue with Google
+            </button>
+
+            <p className="mt-8 flex items-center justify-center gap-2 text-[11px] text-gray-400 uppercase tracking-[0.15em]">
+              <ShieldCheck size={14} className="text-luxury-gold" aria-hidden="true" />
+              Secure sign-in &middot; Verified marketplace
+            </p>
+          </div>
         </Reveal>
 
         {/* Company Registration Popup */}
@@ -2977,7 +2994,10 @@ const Account = () => {
   // Mobile only. Anchors the drilled-into section: names where you are and offers
   // the way back to the index. Sticky so it survives the very long sections.
   const renderMobileSectionHeader = () => (
-    <div className="lg:hidden sticky top-16 z-30 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
+    <div
+      className="lg:hidden sticky z-30 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm"
+      style={{ top: 'var(--header-h, 4rem)' }}
+    >
       <div className="flex items-center gap-1 h-14 px-2">
         <button
           type="button"

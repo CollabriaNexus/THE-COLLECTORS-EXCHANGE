@@ -21,6 +21,13 @@ export function useReveal({ threshold = 0.15, rootMargin = '0px 0px -8% 0px', on
   useEffect(() => {
     const el = ref.current;
     if (!el || reduceMotion()) return;
+    // IntersectionObserver isn't available in every environment (jsdom/test
+    // runners, very old browsers) — degrade to instantly visible rather than
+    // throwing and leaving the element permanently hidden.
+    if (typeof IntersectionObserver === 'undefined') {
+      setInView(true);
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -134,7 +141,8 @@ export function Parallax({ children, speed = 0.12, className = '', ...rest }) {
   useEffect(() => {
     const el = ref.current;
     if (!el || reduceMotion()) return;
-    if (!window.matchMedia('(min-width: 768px)').matches) return;
+    if (typeof window.matchMedia !== 'function' || !window.matchMedia('(min-width: 768px)').matches)
+      return;
 
     let raf = 0;
     const update = () => {

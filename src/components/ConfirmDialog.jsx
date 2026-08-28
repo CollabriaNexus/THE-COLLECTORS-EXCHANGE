@@ -56,7 +56,7 @@ export function ConfirmProvider({ children }) {
           <div className="flex min-h-full items-center justify-center p-4">
             <div
               ref={dialogRef}
-              className="relative bg-white rounded-sm shadow-xl max-w-md w-full p-6"
+              className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <p className="text-heritage-charcoal font-serif text-lg mb-6">{state.message}</p>

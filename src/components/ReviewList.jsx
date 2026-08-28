@@ -7,8 +7,8 @@ const ReviewList = ({ reviews = [], total = 0 }) => {
 
   return (
     <div className="space-y-4">
-      {reviews.map((review) => (
-        <div key={review.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+      {reviews.map((review, i) => (
+        <div key={review.id}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-heritage-cream flex items-center justify-center shrink-0">
@@ -44,6 +44,11 @@ const ReviewList = ({ reviews = [], total = 0 }) => {
           )}
           {review.comment && (
             <p className="text-sm text-gray-600 mt-2 ml-11 leading-relaxed">{review.comment}</p>
+          )}
+          {i < reviews.length - 1 && (
+            <div className="flex justify-center mt-4">
+              <div className="w-12 h-px bg-luxury-gold/50" />
+            </div>
           )}
         </div>
       ))}

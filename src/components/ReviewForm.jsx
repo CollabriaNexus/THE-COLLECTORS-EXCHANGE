@@ -28,14 +28,14 @@ const ReviewForm = ({ orderId, productId, productName, onSuccess }) => {
 
   if (createReview.isSuccess) {
     return (
-      <div className="p-4 bg-green-50 border border-green-200 rounded-sm text-center">
+      <div className="p-4 bg-green-50 border border-green-200 rounded-2xl text-center">
         <p className="text-sm text-green-700 font-medium">Thank you for your review!</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border border-gray-100 bg-gray-50/50">
+    <form onSubmit={handleSubmit} className="p-4 rounded-2xl border border-gray-100 bg-gray-50/50">
       <p className="text-xs uppercase tracking-widest text-gray-500 font-medium mb-3">
         Review: {productName}
       </p>

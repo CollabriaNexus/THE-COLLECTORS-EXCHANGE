@@ -65,7 +65,7 @@ const Cart = () => {
         <div className="flex flex-col lg:flex-row gap-8 sm:gap-12">
           {/* Cart Items */}
           <Reveal as="div" direction="up" className="w-full lg:w-2/3">
-            <div className="bg-white shadow-sm border border-gray-100">
+            <div className="bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
               {cartItems.map((item) => (
                 <div
                   key={item.id}
@@ -80,7 +80,7 @@ const Cart = () => {
                     width="96"
                     height="96"
                     loading="lazy"
-                    className="w-16 sm:w-24 h-16 sm:h-24 object-cover shrink-0"
+                    className="w-16 sm:w-24 h-16 sm:h-24 object-cover shrink-0 rounded-lg"
                   />
                   <div className="flex-grow min-w-0">
                     <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest mb-0.5 sm:mb-1">
@@ -111,7 +111,7 @@ const Cart = () => {
 
           {/* Checkout Summary */}
           <Reveal as="div" direction="up" delay={120} className="w-full lg:w-1/3">
-            <div className="bg-white p-6 sm:p-8 shadow-sm border border-gray-100 lg:sticky lg:top-24">
+            <div className="bg-white p-6 sm:p-8 shadow-sm border border-gray-100 lg:sticky lg:top-24 rounded-2xl">
               <h3 className="text-lg sm:text-xl lg:text-2xl font-serif mb-4 sm:mb-6">
                 Order Summary
               </h3>
@@ -132,7 +132,7 @@ const Cart = () => {
               <Magnetic className="block w-full">
                 <button
                   onClick={() => navigate('/checkout')}
-                  className="w-full bg-black text-white py-3 sm:py-4 font-sans text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+                  className="w-full bg-black text-white py-3 sm:py-4 font-sans text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors rounded-full"
                 >
                   Proceed to Checkout
                 </button>
@@ -154,7 +154,7 @@ const Cart = () => {
           </p>
           <Link
             to="/category"
-            className="inline-block bg-black text-white px-6 sm:px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors mb-8 sm:mb-16"
+            className="inline-block bg-black text-white px-6 sm:px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors mb-8 sm:mb-16 rounded-full"
           >
             Explore The Exchange
           </Link>
@@ -172,7 +172,7 @@ const Cart = () => {
                   <Link
                     key={product.id}
                     to={`/product/${product.id}`}
-                    className="group bg-white border border-gray-100 hover:shadow-heritage transition-all duration-500 flex flex-col"
+                    className="group bg-white border border-gray-100 hover:shadow-heritage transition-all duration-500 flex flex-col rounded-2xl overflow-hidden"
                   >
                     <div className="relative aspect-square bg-heritage-beige overflow-hidden shrink-0">
                       {product.image ? (

@@ -342,9 +342,15 @@ const Home = () => {
         contentUrl={`${window.location.origin}${heroWestarMp4}`}
         duration="PT10S"
       />
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-cream py-20 sm:py-28 lg:py-32">
-        <div className="container mx-auto max-w-7xl px-6 md:px-10">
+      {/* Hero Section — hero-bleed pulls the cream background up behind the
+          floating nav so the true viewport top isn't the mismatched generic
+          layout background. The section's own vertical padding lives on the
+          inner container, not here: hero-bleed's padding-top is unlayered
+          CSS and unconditionally wins over a layered Tailwind py/pt utility
+          on the same element (replaces it, doesn't add to it), so combining
+          them on one element silently deletes the smaller value. */}
+      <section className="hero-bleed relative overflow-hidden bg-cream">
+        <div className="container mx-auto max-w-7xl px-6 md:px-10 py-20 sm:py-28 lg:py-32">
           <div className="grid lg:grid-cols-2 items-center gap-14 lg:gap-16">
             <div className="text-center lg:text-left order-2 lg:order-1">
               <Reveal delay={100}>

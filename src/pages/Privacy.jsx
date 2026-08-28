@@ -222,7 +222,7 @@ const Privacy = () => {
       </div>
 
       {/* Founder's Closing Note */}
-      <Reveal className="mt-12 sm:mt-16 p-6 sm:p-8 bg-heritage-cream border border-luxury-gold/20 rounded-sm">
+      <Reveal className="mt-12 sm:mt-16 p-6 sm:p-8 bg-heritage-cream border border-luxury-gold/20 rounded-2xl">
         <h3 className="text-sm font-bold uppercase tracking-widest text-luxury-gold mb-4">
           Founder's Closing Note
         </h3>

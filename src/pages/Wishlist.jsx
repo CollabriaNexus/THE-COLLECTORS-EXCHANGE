@@ -1,11 +1,13 @@
 import React from 'react';
-import { Heart, Trash2, ShoppingBag, ShieldCheck, Loader2 } from 'lucide-react';
+import { Trash2, ShoppingBag, ShieldCheck, Loader2 } from 'lucide-react';
 import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { useWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useAddToCart, useCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
-import { Reveal, Tilt } from '../components/Motion';
+import { Tilt } from '../components/Motion';
+import SignInPrompt from '../components/SignInPrompt';
+import EmptyWishlistVisual from '../components/EmptyWishlistVisual';
 
 const Wishlist = () => {
   const user = getUser();
@@ -41,23 +43,17 @@ const Wishlist = () => {
 
   if (!user) {
     return (
-      <div className="container mx-auto py-8 sm:py-20 px-4 sm:px-6 text-center">
+      <div className="container mx-auto py-8 sm:py-20 px-4 sm:px-6">
         <SEO
           title="Wishlist"
           description="View your saved collectibles and rare finds on The Collectors Exchange wishlist."
           canonical="/wishlist"
           noindex
         />
-        <h1 className="text-2xl sm:text-4xl font-serif mb-4">Please Sign In</h1>
-        <p className="text-sm sm:text-base text-gray-500 mb-6">
-          You need to be logged in to view your wishlist.
-        </p>
-        <Link
-          to="/account"
-          className="bg-black text-white px-6 py-2 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors"
-        >
-          Sign In
-        </Link>
+        <SignInPrompt
+          title="Please Sign In"
+          description="Your saved treasures are waiting. Sign in to view your wishlist."
+        />
       </div>
     );
   }
@@ -101,103 +97,101 @@ const Wishlist = () => {
               if (!aSold && bSold) return -1;
               return 0;
             })
-            .map((product, i) => (
-              <Reveal key={product.id} delay={i * 120} className="h-full">
-                <Tilt className="h-full">
-                  <div className="bg-white border border-gray-100 group hover:shadow-heritage transition-all duration-500 flex flex-col h-full">
-                    {/* Image */}
+            .map((product) => (
+              <Tilt key={product.id} className="h-full">
+                <div className="bg-white border border-gray-100 group hover:shadow-heritage transition-all duration-500 flex flex-col h-full rounded-2xl overflow-hidden">
+                  {/* Image */}
+                  <Link
+                    to={`/product/${product.id}`}
+                    className="block relative aspect-square bg-heritage-beige overflow-hidden shrink-0"
+                  >
+                    <img
+                      src={
+                        product.image ||
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f5f0e8'/%3E%3C/svg%3E"
+                      }
+                      alt={product.title}
+                      width="400"
+                      height="400"
+                      loading="lazy"
+                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
+                    />
+
+                    {/* Condition Badge */}
+                    <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-white/90 backdrop-blur-sm text-heritage-charcoal/70 text-[10px] sm:text-xs px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase rounded-full">
+                      {product.condition || 'Excellent'}
+                    </div>
+
+                    {/* Sold Badge */}
+                    {product.status === 'Sold' && (
+                      <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
+                        <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-widest shadow-lg rounded-full">
+                          Sold Out
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Verified Badge */}
+                    {product.isVerified && (
+                      <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-1.5 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase flex items-center gap-1 rounded-full">
+                        <ShieldCheck size={10} />
+                        <span className="inline">Verified</span>
+                      </div>
+                    )}
+                  </Link>
+
+                  {/* Content */}
+                  <div className="p-3 sm:p-5 flex flex-col flex-grow">
+                    <p className="text-[10px] sm:text-xs text-heritage-bronze/80 uppercase tracking-widest truncate mb-0.5 sm:mb-1">
+                      {product.category}
+                    </p>
+                    {product.seller?.name && (
+                      <p className="text-[10px] sm:text-xs text-heritage-charcoal/50 truncate mb-0.5 sm:mb-1">
+                        by {product.seller.name}
+                      </p>
+                    )}
                     <Link
                       to={`/product/${product.id}`}
-                      className="block relative aspect-square bg-heritage-beige overflow-hidden shrink-0"
+                      className="block hover:text-heritage-bronze transition-colors"
                     >
-                      <img
-                        src={
-                          product.image ||
-                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f5f0e8'/%3E%3C/svg%3E"
-                        }
-                        alt={product.title}
-                        width="400"
-                        height="400"
-                        loading="lazy"
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
-                      />
-
-                      {/* Condition Badge */}
-                      <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-white/90 backdrop-blur-sm text-heritage-charcoal/70 text-[10px] sm:text-xs px-1 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase">
-                        {product.condition || 'Excellent'}
-                      </div>
-
-                      {/* Sold Badge */}
-                      {product.status === 'Sold' && (
-                        <div className="absolute inset-0 bg-heritage-charcoal/40 backdrop-blur-[1px] flex items-center justify-center">
-                          <span className="bg-white/90 text-heritage-charcoal text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 uppercase tracking-widest shadow-lg">
-                            Sold Out
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Verified Badge */}
-                      {product.isVerified && (
-                        <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-heritage-charcoal/90 backdrop-blur-sm text-white text-[10px] px-1.5 sm:px-2.5 py-0.5 sm:py-1 font-sans tracking-widest uppercase flex items-center gap-1">
-                          <ShieldCheck size={10} />
-                          <span className="inline">Verified</span>
-                        </div>
-                      )}
+                      <h3 className="font-serif text-sm md:text-base text-heritage-charcoal leading-tight line-clamp-2">
+                        {product.title}
+                      </h3>
                     </Link>
+                    <p className="text-heritage-gold-muted font-sans text-xs md:text-sm font-semibold mt-1.5 sm:mt-2 mb-2 sm:mb-3">
+                      ₹{product.price?.toLocaleString()}
+                    </p>
 
-                    {/* Content */}
-                    <div className="p-3 sm:p-5 flex flex-col flex-grow">
-                      <p className="text-[10px] sm:text-xs text-heritage-bronze/80 uppercase tracking-widest truncate mb-0.5 sm:mb-1">
-                        {product.category}
-                      </p>
-                      {product.seller?.name && (
-                        <p className="text-[10px] sm:text-xs text-heritage-charcoal/50 truncate mb-0.5 sm:mb-1">
-                          by {product.seller.name}
-                        </p>
-                      )}
-                      <Link
-                        to={`/product/${product.id}`}
-                        className="block hover:text-heritage-bronze transition-colors"
-                      >
-                        <h3 className="font-serif text-sm md:text-base text-heritage-charcoal leading-tight line-clamp-2">
-                          {product.title}
-                        </h3>
-                      </Link>
-                      <p className="text-heritage-gold-muted font-sans text-xs md:text-sm font-semibold mt-1.5 sm:mt-2 mb-2 sm:mb-3">
-                        ₹{product.price?.toLocaleString()}
-                      </p>
-
-                      {product.status === 'Sold' ? (
-                        <div className="w-full py-2 sm:py-1.5 text-[10px] uppercase tracking-[0.12em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-1.5 bg-gray-100 text-gray-400 cursor-default mt-auto">
-                          Sold Out
-                        </div>
-                      ) : (
-                        <div className="flex gap-1.5 sm:gap-2 mt-auto">
-                          <button
-                            onClick={() => handleAddToCart(product.id)}
-                            disabled={isInCart(product.id)}
-                            className="flex-1 bg-heritage-charcoal text-white py-2 sm:py-1.5 text-[10px] uppercase tracking-widest hover:bg-luxury-gold active:scale-[0.97] transition-all disabled:bg-gray-300 flex items-center justify-center gap-1"
-                          >
-                            <ShoppingBag size={11} className="sm:w-[10px] sm:h-[10px]" />
-                            {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
-                          </button>
-                          <button
-                            onClick={() => handleRemove(product.id)}
-                            className="px-2 sm:px-3 py-1 sm:py-1.5 border border-gray-200 text-red-500 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={12} className="sm:w-[14px] sm:h-[14px]" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    {product.status === 'Sold' ? (
+                      <div className="w-full py-2 sm:py-1.5 text-[10px] uppercase tracking-[0.12em] sm:tracking-[0.15em] flex items-center justify-center gap-1 sm:gap-1.5 bg-gray-100 text-gray-400 cursor-default mt-auto rounded-full">
+                        Sold Out
+                      </div>
+                    ) : (
+                      <div className="flex gap-1.5 sm:gap-2 mt-auto">
+                        <button
+                          onClick={() => handleAddToCart(product.id)}
+                          disabled={isInCart(product.id)}
+                          className="flex-1 bg-heritage-charcoal text-white py-2 sm:py-1.5 text-[10px] uppercase tracking-widest hover:bg-luxury-gold active:scale-[0.97] transition-all disabled:bg-gray-300 flex items-center justify-center gap-1 rounded-full"
+                        >
+                          <ShoppingBag size={11} className="sm:w-[10px] sm:h-[10px]" />
+                          {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
+                        </button>
+                        <button
+                          onClick={() => handleRemove(product.id)}
+                          className="px-2 sm:px-3 py-1 sm:py-1.5 border border-gray-200 text-red-500 hover:bg-red-50 transition-colors rounded-full"
+                        >
+                          <Trash2 size={12} className="sm:w-[14px] sm:h-[14px]" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </Tilt>
-              </Reveal>
+                </div>
+              </Tilt>
             ))}
         </div>
       ) : (
-        <div className="text-center py-12 sm:py-20 bg-white border border-gray-100">
-          <Heart size={48} className="mx-auto text-gray-300 mb-4 sm:mb-6" />
+        <div className="text-center py-12 sm:py-20 bg-white border border-gray-100 rounded-2xl">
+          <EmptyWishlistVisual />
           <h3 className="text-lg sm:text-xl font-serif text-gray-600 mb-2">
             Your wishlist is empty
           </h3>
@@ -206,7 +200,7 @@ const Wishlist = () => {
           </p>
           <Link
             to="/category"
-            className="inline-block bg-black text-white px-6 sm:px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+            className="inline-block bg-black text-white px-6 sm:px-8 py-3 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors rounded-full"
           >
             Explore The Exchange
           </Link>

@@ -52,7 +52,7 @@ function Skeleton({ className = '' }) {
 function StatCard({ title, value, icon: Icon, color, prefix, loading, error, onRetry }) {
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-red-100 p-4 sm:p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-red-100 p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
@@ -69,7 +69,7 @@ function StatCard({ title, value, icon: Icon, color, prefix, loading, error, onR
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
@@ -134,7 +134,7 @@ function PeriodSelector({ value, onChange }) {
           <button
             key={p.value}
             onClick={() => onChange(p.value)}
-            className={`px-2 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded transition-colors ${
+            className={`px-2 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full transition-colors ${
               value === p.value
                 ? 'bg-heritage-charcoal text-white shadow-sm'
                 : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-400'
@@ -148,13 +148,13 @@ function PeriodSelector({ value, onChange }) {
       <div className="sm:hidden relative">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium"
         >
           <Calendar size={16} />
           {currentLabel}
         </button>
         {mobileOpen && (
-          <div className="absolute top-10 left-0 bg-white border border-gray-200 rounded shadow-lg z-50 w-48">
+          <div className="absolute top-10 left-0 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-lg z-50 w-48">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
@@ -177,7 +177,7 @@ function PeriodSelector({ value, onChange }) {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white shadow-lg border border-gray-100 p-4 rounded">
+      <div className="bg-white shadow-lg border border-gray-100 p-4 rounded-2xl">
         <p className="text-sm font-bold text-heritage-charcoal mb-2">{label}</p>
         {payload.map((entry, i) => (
           <p key={i} className="text-sm" style={{ color: entry.color }}>
@@ -243,7 +243,7 @@ export default function VendorDashboard() {
         </Reveal>
 
         {overviewError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
             <AlertCircle size={16} className="text-red-500 flex-shrink-0 sm:w-5 sm:h-5" />
             <p className="text-xs sm:text-sm text-red-700 flex-grow">
               Failed to load analytics. The backend may be unavailable.
@@ -310,7 +310,7 @@ export default function VendorDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8 mb-6 sm:mb-8">
           {/* Sales Graph */}
           <Reveal className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
                 Sales Trend
               </h3>
@@ -362,7 +362,7 @@ export default function VendorDashboard() {
 
           {/* Customer Interest Funnel */}
           <Reveal delay={120}>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
                 Customer Interest
               </h3>
@@ -422,7 +422,7 @@ export default function VendorDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
           {/* Top Products */}
           <Reveal>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal mb-1">
                 Top Products
               </h3>
@@ -491,7 +491,7 @@ export default function VendorDashboard() {
 
           {/* Payout Dashboard */}
           <Reveal delay={120}>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="text-base sm:text-lg font-serif font-bold text-heritage-charcoal">
                   Payouts
@@ -508,7 +508,7 @@ export default function VendorDashboard() {
                       setPayoutFilter(s === payoutFilter ? '' : s);
                       setPayoutPage(1);
                     }}
-                    className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded transition-colors ${payoutFilter === s ? 'bg-heritage-charcoal text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                    className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full transition-colors ${payoutFilter === s ? 'bg-heritage-charcoal text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                   >
                     {s || 'All'}
                   </button>
@@ -568,7 +568,7 @@ export default function VendorDashboard() {
                       <button
                         disabled={payoutPage <= 1}
                         onClick={() => setPayoutPage((p) => p - 1)}
-                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded ${payoutPage <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full ${payoutPage <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
                       >
                         Previous
                       </button>
@@ -578,7 +578,7 @@ export default function VendorDashboard() {
                       <button
                         disabled={payoutPage >= payoutsData.pagination.pages}
                         onClick={() => setPayoutPage((p) => p + 1)}
-                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded ${payoutPage >= payoutsData.pagination.pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider rounded-full ${payoutPage >= payoutsData.pagination.pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
                       >
                         Next
                       </button>

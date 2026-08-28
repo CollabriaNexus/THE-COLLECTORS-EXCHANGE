@@ -23,7 +23,7 @@ const CATEGORIES = [
 const BlogCard = ({ post }) => (
   <Link
     to={`/archive/${post.slug}`}
-    className="group bg-white rounded-sm border border-gray-100 hover:border-luxury-gold/30 hover:shadow-lg transition-all duration-500 overflow-hidden flex flex-col h-full"
+    className="group bg-white rounded-2xl border border-gray-100 hover:border-luxury-gold/30 hover:shadow-lg transition-all duration-500 overflow-hidden flex flex-col h-full"
   >
     {post.coverImage ? (
       <div className="relative h-40 sm:h-56 overflow-hidden">
@@ -44,11 +44,11 @@ const BlogCard = ({ post }) => (
     )}
     <div className="p-4 sm:p-6 flex flex-col flex-1">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-[10px] uppercase tracking-widest font-bold text-luxury-gold bg-luxury-gold/5 px-2.5 py-1 rounded-sm">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-luxury-gold bg-luxury-gold/5 px-2.5 py-1 rounded-full">
           {post.category}
         </span>
         {post.featured && (
-          <span className="text-[10px] uppercase tracking-widest font-bold text-heritage-charcoal bg-heritage-charcoal/5 px-2.5 py-1 rounded-sm">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-heritage-charcoal bg-heritage-charcoal/5 px-2.5 py-1 rounded-full">
             Featured
           </span>
         )}
@@ -121,8 +121,14 @@ function BlogPage() {
         ]}
       />
 
-      {/* Hero */}
-      <section className="relative py-16 sm:py-28 px-4 sm:px-6 bg-heritage-charcoal overflow-hidden">
+      {/* Hero — hero-bleed pulls this dark band up behind the floating nav so
+          the true viewport top matches the hero instead of the generic
+          Layout background showing through as a mismatched seam. The
+          section's own vertical padding lives on the inner container below
+          it, not on the bled element, so hero-bleed's injected padding-top
+          doesn't clobber it (unlayered CSS beats a layered Tailwind utility
+          for the same property). */}
+      <section className="hero-bleed relative px-4 sm:px-6 bg-heritage-charcoal overflow-hidden">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=1600"
@@ -131,7 +137,7 @@ function BlogPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-heritage-charcoal via-heritage-charcoal/70 to-heritage-charcoal/60" />
         </div>
-        <div className="container mx-auto max-w-4xl relative z-10 text-center">
+        <div className="container mx-auto max-w-4xl relative z-10 text-center py-16 sm:py-28">
           <Reveal delay={100}>
             <div className="flex items-center justify-center gap-4 mb-6">
               <div className="h-px w-8 sm:w-12 bg-luxury-gold/50"></div>
@@ -227,13 +233,13 @@ function BlogPage() {
                     <h2 className="text-sm uppercase tracking-[0.2em] font-bold text-heritage-charcoal">
                       Featured Story
                     </h2>
-                    <div className="h-px flex-1 bg-gray-100" />
+                    <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
                   </div>
                   {featured.slice(0, 1).map((post) => (
                     <Reveal key={post.id} direction="scale">
                       <Link
                         to={`/archive/${post.slug}`}
-                        className="group block bg-gradient-to-r from-heritage-charcoal to-[#2a2520] rounded-sm overflow-hidden"
+                        className="group block bg-gradient-to-r from-heritage-charcoal to-[#2a2520] rounded-2xl overflow-hidden"
                       >
                         <div className="grid md:grid-cols-2 min-h-[260px] sm:min-h-[300px]">
                           {post.coverImage ? (
@@ -285,11 +291,11 @@ function BlogPage() {
                 <>
                   {displayFeatured && featured.length > 0 && (
                     <div className="flex items-center gap-3 mb-8">
-                      <div className="h-px flex-1 bg-gray-100" />
+                      <div className="h-px flex-1 bg-gradient-to-l from-gray-200 to-transparent" />
                       <h2 className="text-sm uppercase tracking-[0.2em] font-bold text-gray-400">
                         More Articles
                       </h2>
-                      <div className="h-px flex-1 bg-gray-100" />
+                      <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
                     </div>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">

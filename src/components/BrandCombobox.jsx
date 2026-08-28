@@ -200,7 +200,7 @@ export default function BrandCombobox({
           id={listboxId}
           role="listbox"
           aria-label="Watch brands"
-          className="absolute z-40 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-white border border-gray-200 shadow-lg"
+          className="absolute z-40 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-2xl bg-white border border-gray-200 shadow-lg"
         >
           {items.length === 0 && (
             <li className="px-4 py-3 text-sm text-gray-400 italic">No matching brands</li>

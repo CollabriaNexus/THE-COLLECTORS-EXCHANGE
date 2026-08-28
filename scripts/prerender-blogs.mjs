@@ -440,6 +440,19 @@ function buildCorePageMetaTags(path, page) {
     ${schemaTags}`;
 }
 
+// Matches the real floating glass-pill nav (src/components/Header.jsx) so the
+// prerendered placeholder reads as the same site continuing to load, not a
+// different, cheaper-looking stand-in page swapped out from under the user
+// once React mounts.
+const PLACEHOLDER_NAV_CSS = `
+    .nav-wrap{position:fixed;top:0;left:0;right:0;z-index:50;padding:12px}
+    @media(min-width:1024px){.nav-wrap{padding:16px 24px}}
+    .nav-bar{background:rgba(9,8,6,.86);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%)}
+    .nav-brand{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,251,247,.9);text-decoration:none}
+    .nav-links{display:none;gap:28px;align-items:center}
+    @media(min-width:1024px){.nav-links{display:flex}}
+    .nav-links a{color:rgba(253,251,247,.6)!important;font-size:11px!important;letter-spacing:.18em!important}`;
+
 function buildCorePageHtml(path, page, metaTags) {
   const isHome = path === '/';
   const navLinks = page.navLinks || [];
@@ -468,12 +481,10 @@ function buildCorePageHtml(path, page, metaTags) {
   <style>
     body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:#fff;color:#1C1C1C;-webkit-font-smoothing:antialiased}
     h1,h2,h3,h4,h5,h6{font-family:'Playfair Display',Georgia,serif}
-    .nav-bar{position:fixed;top:0;left:0;right:0;z-index:50;background:#fff;border-bottom:1px solid #f0f0f0;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
-    .nav-brand{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:16px;letter-spacing:0.05em;color:#1C1C1C;text-decoration:none}
-    .nav-links{display:flex;gap:32px;align-items:center}
-    .spinner{width:40px;height:40px;border:2px solid #D4AF37;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:4rem auto}
+    ${PLACEHOLDER_NAV_CSS}
+    .spinner{width:28px;height:28px;border:2px solid #D4AF37;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:2.5rem auto}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .loading{text-align:center;padding:4rem 1.5rem;color:#999;font-style:italic}
+    .loading{text-align:center;padding:2rem 1.5rem 4rem}
     .footer{background:#000;color:#fff;padding:48px 24px;text-align:center;margin-top:auto}
     .footer a{color:#D4AF37;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:0.15em}
     .skip-link{position:absolute;top:-40px;left:0;background:#000;color:#fff;padding:8px 16px;z-index:100;font-size:12px;text-transform:uppercase;letter-spacing:0.15em;text-decoration:none}
@@ -486,17 +497,18 @@ function buildCorePageHtml(path, page, metaTags) {
   <div id="root">
   <div class="min-h-screen">
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <nav class="nav-bar" aria-label="Main navigation">
-      <a href="/" class="nav-brand">THE COLLECTORS EXCHANGE</a>
-      <div class="nav-links">
-        ${navHtml}
-      </div>
-    </nav>
-    <main id="main-content" class="flex-grow" style="padding-top:60px">
-      ${isHome ? '<div style="background:#1C1C1C;color:#fff;min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4rem 1.5rem"><div><h1 style="font-family:\'Playfair Display\',Georgia,serif;font-size:clamp(2rem,5vw,4rem);margin:0 0 1rem">Authenticated Vintage Watches & Rare Collectibles</h1><p style="color:rgba(255,255,255,.6);max-width:600px;margin:0 auto 2rem;font-size:1rem;line-height:1.7">India\'s curated marketplace for verified pre-owned collectibles, antiques, and limited-edition timepieces. Every item is authenticated before listing.</p><a href="/category" style="display:inline-block;background:#000;color:#fff;border:1px solid #D4AF37;padding:14px 32px;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;text-decoration:none;transition:background .3s">Browse The Exchange</a></div></div>' : `<div style="padding:4rem 1.5rem;text-align:center"><h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.5rem,5vw,3rem)">${escapeHtml(page.title)}</h1><p style="color:#666;max-width:600px;margin:1rem auto;line-height:1.7">${escapeHtml(page.description)}</p></div>`}
+    <div class="nav-wrap">
+      <nav class="nav-bar" aria-label="Main navigation">
+        <a href="/" class="nav-brand">THE COLLECTORS EXCHANGE</a>
+        <div class="nav-links">
+          ${navHtml}
+        </div>
+      </nav>
+    </div>
+    <main id="main-content" class="flex-grow" style="padding-top:88px">
+      ${isHome ? '<div style="background:#FDFBF7;color:#1C1C1C;min-height:70vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4rem 1.5rem"><div><p style="color:#B8860B;font-size:11px;letter-spacing:.4em;text-transform:uppercase;margin:0 0 1.5rem">Authorized &amp; Premium</p><h1 style="font-family:\'Playfair Display\',Georgia,serif;font-weight:800;font-size:clamp(2.2rem,4.6vw,3.4rem);line-height:1.08;margin:0 0 1.5rem">A Marketplace for Authentic Vintage Watches &amp; Rare Collectibles</h1><p style="color:rgba(28,28,28,.6);max-width:520px;margin:0 auto 2.25rem;font-size:1rem;line-height:1.7">Verified. Original. Limited. Discover a curated world of rare finds and verified sellers, archived and authenticated by The Collectors Exchange.</p><a href="/category" style="display:inline-block;background:#1C1C1C;color:#fff;border-radius:9999px;padding:16px 32px;font-size:11px;text-transform:uppercase;letter-spacing:0.22em;text-decoration:none">Explore the Exchange</a></div></div>' : `<div style="padding:4rem 1.5rem;text-align:center"><h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.5rem,5vw,3rem)">${escapeHtml(page.title)}</h1><p style="color:#666;max-width:600px;margin:1rem auto;line-height:1.7">${escapeHtml(page.description)}</p></div>`}
       <div class="loading">
         <div class="spinner"></div>
-        <p>Loading content...</p>
       </div>
     </main>
     <footer class="footer">
@@ -529,9 +541,7 @@ const SHELL_HEAD = `
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" /></noscript>
   <style>
-    .nav-bar{position:fixed;top:0;left:0;right:0;z-index:50;background:#fff;border-bottom:1px solid #f0f0f0;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
-    .nav-brand{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:16px;letter-spacing:0.05em;color:#1C1C1C;text-decoration:none}
-    .nav-links{display:flex;gap:32px;align-items:center}
+    ${PLACEHOLDER_NAV_CSS}
     .site-footer{background:#000;color:#fff;padding:48px 24px;text-align:center;margin-top:auto}
     .site-footer a{color:#D4AF37;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:0.15em}
     .skip-link{position:absolute;top:-40px;left:0;background:#000;color:#fff;padding:8px 16px;z-index:100;font-size:12px;text-transform:uppercase;letter-spacing:0.15em;text-decoration:none}
@@ -540,10 +550,12 @@ const SHELL_HEAD = `
 
 const SHELL_NAV = `
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <nav class="nav-bar" aria-label="Main navigation">
-      <a href="/" class="nav-brand">THE COLLECTORS EXCHANGE</a>
-      <div class="nav-links">${NAV_HTML}</div>
-    </nav>`;
+    <div class="nav-wrap">
+      <nav class="nav-bar" aria-label="Main navigation">
+        <a href="/" class="nav-brand">THE COLLECTORS EXCHANGE</a>
+        <div class="nav-links">${NAV_HTML}</div>
+      </nav>
+    </div>`;
 
 const SHELL_FOOTER = `
     <footer class="site-footer">
@@ -694,7 +706,7 @@ function buildBlogHtml(post, metaTags) {
   <div id="root">
   <div style="min-height:100vh;display:flex;flex-direction:column">
     ${SHELL_NAV}
-    <main id="main-content" style="flex:1;padding-top:60px">
+    <main id="main-content" style="flex:1;padding-top:88px">
   ${
     coverImage
       ? `
@@ -914,7 +926,7 @@ function buildArchiveIndexHtml(posts = []) {
   <div id="root">
   <div style="min-height:100vh;display:flex;flex-direction:column">
     ${SHELL_NAV}
-    <main id="main-content" style="flex:1;padding-top:60px">
+    <main id="main-content" style="flex:1;padding-top:88px">
       <div class="hero">
         <h1>The Archive</h1>
         <p>Stories behind the artifacts. Curated insights on horology, gemology, collecting, and the art of preservation.</p>
@@ -1037,7 +1049,7 @@ function buildCategoryHtml(products = [], categorySlug = null) {
   <div id="root">
   <div style="min-height:100vh;display:flex;flex-direction:column">
     ${SHELL_NAV}
-    <main id="main-content" style="flex:1;padding-top:60px">
+    <main id="main-content" style="flex:1;padding-top:88px">
       <header class="catalogue-hero">
         <h1>${escapeHtml(landing ? `Shop ${landing.name}` : 'The Exchange')}</h1>
       </header>
@@ -1238,7 +1250,7 @@ function buildProductHtml(product, metaTags = buildProductMetaTags(product)) {
   <div id="root">
   <div style="min-height:100vh;display:flex;flex-direction:column">
     ${SHELL_NAV}
-    <main id="main-content" style="flex:1">
+    <main id="main-content" style="flex:1;padding-top:88px">
       <div class="product-hero">
         ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.title)}" fetchpriority="high" />` : ''}
         <div class="product-info">

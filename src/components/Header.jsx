@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { ShoppingBag, User, Heart, Menu, X, Store } from 'lucide-react';
 import { getUser } from '../utils/storage';
 import { useCart } from '../hooks/api/useCart';
@@ -12,7 +12,14 @@ const Header = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
   const headerRef = useRef(null);
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const user = getUser();
+
+  // On mobile, the Account page has its own in-page section index/drill-down
+  // nav (back chevron included) once a section is open — keeping the bottom
+  // tab bar visible on top of that duplicates the "back to Account" action
+  // and eats vertical space. Hide it only for that specific state.
+  const isAccountSectionOpen = location.pathname === '/account' && searchParams.has('tab');
 
   const { data: cartItems = [] } = useCart(user?.id);
   const { data: wishlistItems = [] } = useWishlist(user?.id);
@@ -23,10 +30,33 @@ const Header = () => {
   // existed for the full-bleed video hero, which the homepage no longer has.
   const showNav = true;
 
+  // Keep the reserved spacer height (and the --header-h custom property that
+  // pages use to bleed their hero background up behind the floating nav) in
+  // sync with the nav's actual rendered height — not just on mount. The pill
+  // changes height across the lg breakpoint (mobile bar vs desktop row) and
+  // can reflow when fonts finish loading, so a one-time measurement drifts.
   useEffect(() => {
-    if (headerRef.current) {
-      setHeaderHeight(headerRef.current.offsetHeight);
-    }
+    const el = headerRef.current;
+    if (!el) return;
+
+    const applyHeight = (height) => {
+      setHeaderHeight(height);
+      document.documentElement.style.setProperty('--header-h', `${height}px`);
+    };
+
+    applyHeight(el.offsetHeight);
+
+    // ResizeObserver isn't available in every environment (jsdom/test
+    // runners, very old browsers) — fall back to the one-time measurement
+    // above rather than throwing and taking the whole tree down with it.
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver((entries) => {
+      const height = entries[0]?.contentRect?.height;
+      if (height) applyHeight(Math.round(height));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const navItems = PRIMARY_NAV;
@@ -237,7 +267,7 @@ const Header = () => {
           backdropFilter: 'blur(22px) saturate(140%)',
           WebkitBackdropFilter: 'blur(22px) saturate(140%)',
         }}
-        className={`lg:hidden fixed left-3 right-3 z-50 rounded-2xl border border-white/[0.07] flex items-center justify-around py-2 transition-transform duration-500 ease-out ${showNav ? 'translate-y-0' : 'translate-y-[150%]'}`}
+        className={`lg:hidden fixed left-3 right-3 z-50 rounded-2xl border border-white/[0.07] flex items-center justify-around py-2 transition-transform duration-500 ease-out ${showNav && !isAccountSectionOpen ? 'translate-y-0' : 'translate-y-[150%]'}`}
       >
         {bottomNav.map((item) => {
           const Icon = item.icon;

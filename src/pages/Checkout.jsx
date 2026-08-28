@@ -8,6 +8,7 @@ import { getUser } from '../utils/storage';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { Reveal, Magnetic } from '../components/Motion';
+import SignInPrompt from '../components/SignInPrompt';
 
 const Checkout = () => {
   const currentUser = getUser();
@@ -198,14 +199,10 @@ const Checkout = () => {
           canonical="/checkout"
           noindex
         />
-        <h1 className="text-2xl sm:text-4xl font-serif mb-4">Please Sign In</h1>
-        <p className="text-gray-500 mb-6">You need to be logged in to checkout.</p>
-        <Link
-          to="/account"
-          className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors"
-        >
-          Sign In
-        </Link>
+        <SignInPrompt
+          title="Please Sign In"
+          description="Sign in to securely complete your purchase."
+        />
       </div>
     );
   }
@@ -237,7 +234,7 @@ const Checkout = () => {
         <h1 className="text-2xl sm:text-4xl font-serif mb-4">Your cart is empty</h1>
         <Link
           to="/category"
-          className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors"
+          className="bg-black text-white px-6 py-3 uppercase tracking-widest text-sm hover:bg-luxury-gold transition-colors rounded-full"
         >
           Explore The Exchange
         </Link>
@@ -310,7 +307,7 @@ const Checkout = () => {
           direction="up"
           delay={60}
           aria-labelledby="order-reference-heading"
-          className="bg-heritage-cream border border-luxury-gold/20 p-5 sm:p-6 mb-6 sm:mb-8 text-center"
+          className="bg-heritage-cream border border-luxury-gold/20 p-5 sm:p-6 mb-6 sm:mb-8 text-center rounded-2xl"
         >
           <h2
             id="order-reference-heading"
@@ -335,7 +332,7 @@ const Checkout = () => {
             direction="up"
             delay={100}
             aria-labelledby="acquisition-heading"
-            className="bg-white border border-gray-100 shadow-heritage p-5 sm:p-8 mb-6 sm:mb-8"
+            className="bg-white border border-gray-100 shadow-heritage p-5 sm:p-8 mb-6 sm:mb-8 rounded-2xl"
           >
             <h2
               id="acquisition-heading"
@@ -357,7 +354,7 @@ const Checkout = () => {
                     width="80"
                     height="80"
                     loading="lazy"
-                    className="w-16 h-16 sm:w-20 sm:h-20 object-cover border border-gray-100 shrink-0"
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-cover border border-gray-100 shrink-0 rounded-lg"
                   />
                   <div className="flex-grow min-w-0">
                     {item.product?.brand && (
@@ -423,7 +420,7 @@ const Checkout = () => {
           direction="up"
           delay={140}
           aria-labelledby="delivery-heading"
-          className="bg-white border border-gray-100 shadow-heritage p-5 sm:p-8 mb-6 sm:mb-8"
+          className="bg-white border border-gray-100 shadow-heritage p-5 sm:p-8 mb-6 sm:mb-8 rounded-2xl"
         >
           <h2
             id="delivery-heading"
@@ -455,7 +452,7 @@ const Checkout = () => {
           direction="up"
           delay={180}
           aria-labelledby="next-heading"
-          className="bg-white border border-gray-100 shadow-heritage p-5 sm:p-8 mb-6 sm:mb-8"
+          className="bg-white border border-gray-100 shadow-heritage p-5 sm:p-8 mb-6 sm:mb-8 rounded-2xl"
         >
           <h2
             id="next-heading"
@@ -499,7 +496,11 @@ const Checkout = () => {
               </li>
             ))}
           </ol>
-          <p className="flex items-start gap-2.5 border-t border-gray-100 mt-6 pt-5 text-xs text-gray-500 leading-relaxed">
+          <div
+            className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mt-6"
+            aria-hidden="true"
+          />
+          <p className="flex items-start gap-2.5 pt-5 text-xs text-gray-500 leading-relaxed">
             <ShieldCheck
               size={14}
               className="text-luxury-gold shrink-0 mt-0.5"
@@ -519,13 +520,13 @@ const Checkout = () => {
         <Reveal as="div" direction="up" delay={220} className="flex flex-col sm:flex-row gap-3">
           <Link
             to="/account?tab=orders"
-            className="flex-1 bg-black text-white px-6 py-4 text-sm uppercase tracking-widest text-center hover:bg-luxury-gold transition-colors"
+            className="flex-1 bg-black text-white px-6 py-4 text-sm uppercase tracking-widest text-center hover:bg-luxury-gold transition-colors rounded-full"
           >
             View My Orders
           </Link>
           <Link
             to="/category"
-            className="flex-1 border border-heritage-charcoal text-heritage-charcoal px-6 py-4 text-sm uppercase tracking-widest text-center hover:bg-heritage-charcoal hover:text-white transition-colors"
+            className="flex-1 border border-heritage-charcoal text-heritage-charcoal px-6 py-4 text-sm uppercase tracking-widest text-center hover:bg-heritage-charcoal hover:text-white transition-colors rounded-full"
           >
             Continue Browsing
           </Link>
@@ -614,7 +615,7 @@ const Checkout = () => {
           {/* Shipping Form */}
           <div className="w-full lg:w-3/5 space-y-6">
             <Reveal as="div" direction="left">
-              <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8">
+              <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8 rounded-2xl">
                 <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">
                   Shipping Details
                 </h2>
@@ -760,13 +761,13 @@ const Checkout = () => {
 
             {/* Payment Method */}
             <Reveal as="div" direction="left" delay={120}>
-              <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8">
+              <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8 rounded-2xl">
                 <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">
                   Payment Method
                 </h2>
                 <div className="space-y-3">
                   <label
-                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'online' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}
+                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors rounded-xl ${paymentMethod === 'online' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}
                   >
                     <input
                       type="radio"
@@ -784,7 +785,7 @@ const Checkout = () => {
                     </div>
                   </label>
                   <label
-                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${paymentMethod === 'cod' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}
+                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors rounded-xl ${paymentMethod === 'cod' ? 'border-luxury-gold bg-luxury-gold/5' : 'border-gray-200 hover:border-gray-300'}`}
                   >
                     <input
                       type="radio"
@@ -817,7 +818,10 @@ const Checkout = () => {
                 { icon: ShieldCheck, label: 'Authenticity', sub: 'Expert verified' },
                 { icon: ShieldCheck, label: 'Insured Shipping', sub: 'Full coverage' },
               ].map(({ icon: Icon, label, sub }) => (
-                <div key={label} className="bg-white border border-gray-100 p-4 text-center">
+                <div
+                  key={label}
+                  className="bg-white border border-gray-100 p-4 text-center rounded-2xl"
+                >
                   <Icon size={20} className="mx-auto text-luxury-gold mb-2" />
                   <p className="text-xs font-bold uppercase tracking-widest text-gray-700">
                     {label}
@@ -830,7 +834,7 @@ const Checkout = () => {
 
           {/* Order Summary */}
           <Reveal as="div" direction="right" className="w-full lg:w-2/5">
-            <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8 lg:sticky lg:top-24">
+            <div className="bg-white border border-gray-100 shadow-sm p-5 sm:p-8 lg:sticky lg:top-24 rounded-2xl">
               <h2 className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal mb-6">
                 Order Summary
               </h2>
@@ -848,7 +852,7 @@ const Checkout = () => {
                       width="56"
                       height="56"
                       loading="lazy"
-                      className="w-14 h-14 object-cover border border-gray-100 shrink-0"
+                      className="w-14 h-14 object-cover border border-gray-100 shrink-0 rounded-lg"
                     />
                     <div className="flex-grow min-w-0">
                       <p className="text-sm font-serif font-medium truncate">
@@ -866,7 +870,7 @@ const Checkout = () => {
               {/* Coupon Code */}
               <div className="border-t border-gray-100 pt-4 mb-4">
                 {appliedCoupon ? (
-                  <div className="flex items-center justify-between bg-green-50 border border-green-200 p-3">
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 p-3 rounded-xl">
                     <div className="flex items-center gap-2">
                       <Percent size={14} className="text-green-600" />
                       <div>
@@ -976,7 +980,7 @@ const Checkout = () => {
                 <button
                   type="submit"
                   disabled={createOrderMutation.isPending || verifyPaymentMutation.isPending}
-                  className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-3 disabled:opacity-60"
+                  className="w-full bg-black text-white py-5 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors duration-300 flex items-center justify-center gap-3 disabled:opacity-60 rounded-full"
                 >
                   {createOrderMutation.isPending || verifyPaymentMutation.isPending ? (
                     <>

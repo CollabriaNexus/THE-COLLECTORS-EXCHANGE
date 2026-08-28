@@ -27,7 +27,7 @@ const visionSeo = CORE_PAGES['/vision'];
 
 const Vision = () => {
   return (
-    <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
+    <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-x-clip">
       <SEO title={visionSeo.title} description={visionSeo.description} canonical="/vision" />
       <PageSchema
         type="AboutPage"
@@ -36,9 +36,15 @@ const Vision = () => {
         path="/vision"
       />
       <BreadcrumbSchema items={visionSeo.breadcrumb} />
-      {/* Vision Hero & Statement Section */}
-      <section className="relative pt-12 sm:pt-16 pb-24 px-6 bg-heritage-cream">
-        <div className="container mx-auto max-w-4xl text-center">
+      {/* Vision Hero & Statement Section — hero-bleed pulls this section's cream
+          background up behind the floating nav so the true viewport top matches
+          the page background instead of the generic layout background peeking
+          through the gap. The section's own padding lives on the inner
+          container, not here: hero-bleed's padding-top is unlayered CSS and
+          unconditionally wins over a layered Tailwind pt-* utility on the
+          *same* element (replaces it, doesn't add to it). */}
+      <section className="hero-bleed relative bg-heritage-cream">
+        <div className="container mx-auto max-w-4xl text-center pt-12 sm:pt-16 pb-24 px-6">
           <Reveal className="flex items-center justify-center gap-6 mb-8 mt-12">
             <div className="w-12 h-[1px] bg-luxury-gold/50"></div>
             <span className="text-luxury-gold tracking-[0.2em] font-sans text-xs font-bold uppercase">
@@ -59,10 +65,11 @@ const Vision = () => {
           <div className="relative max-w-3xl mx-auto">
             <div className="absolute -left-6 top-0 w-px h-full bg-gradient-to-b from-[#C9A962]/40 via-[#C9A962]/10 to-transparent hidden md:block"></div>
             <Stagger className="space-y-4 text-sm sm:text-base lg:text-lg font-serif italic leading-relaxed text-[#4A443E]">
-              <p className="text-lg sm:text-xl lg:text-2xl text-[#1A1816] font-medium not-italic mb-6 border-b border-[#C9A962]/10 pb-6">
+              <p className="text-lg sm:text-xl lg:text-2xl text-[#1A1816] font-medium not-italic mb-6">
                 To restore integrity to the world of collectibles by eliminating cheap quality in
                 favor of authentic Indian heritage.
               </p>
+              <div className="w-12 h-px bg-luxury-gold/50 mx-auto mb-6"></div>
               <div className="pl-0 md:pl-6 space-y-4">
                 <p>
                   We are building the world's most trusted bridge from the local streets to the
@@ -117,15 +124,16 @@ const Vision = () => {
               </div>
 
               <div className="space-y-4 text-[#4A443E] leading-relaxed text-sm lg:text-base font-light">
-                <p className="text-base sm:text-lg lg:text-xl font-serif italic text-[#1A1816] border-b border-[#C9A962]/5 pb-2">
+                <p className="text-base sm:text-lg lg:text-xl font-serif italic text-[#1A1816]">
                   For collectors, The Collectors’ Exchange is a sanctuary.
                 </p>
+                <div className="w-10 h-px bg-[#C9A962]/50"></div>
                 <p>
                   A place built by people who understand the discipline, patience, and emotional
                   commitment required to collect with purpose. Every collection represents years of
                   intention, research, restraint, and passion.
                 </p>
-                <div className="bg-[#F9F7F4] p-6 border border-[#C9A962]/10 rounded-sm shadow-sm relative overflow-hidden">
+                <div className="bg-[#F9F7F4] p-6 border border-[#C9A962]/10 rounded-2xl shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-[2px] h-full bg-[#C9A962]"></div>
                   <p className="mb-4 font-serif italic text-base md:text-lg text-[#1A1816]">
                     Our vision is to create an environment where collectors can:
@@ -154,7 +162,7 @@ const Vision = () => {
 
             <Reveal direction="right" distance={90} blur className="lg:col-span-6 relative">
               <Parallax speed={0.1}>
-                <div className="relative z-10 p-1 bg-white border border-[#C9A962]/20 shadow-[-10px_10px_30px_rgba(0,0,0,0.05)] rounded-sm group overflow-hidden">
+                <div className="relative z-10 p-1 bg-white border border-[#C9A962]/20 shadow-[-10px_10px_30px_rgba(0,0,0,0.05)] rounded-2xl group overflow-hidden">
                   <img
                     src="/img/collectors-study-800.webp"
                     srcSet="/img/collectors-study-480.webp 480w, /img/collectors-study-800.webp 800w"
@@ -187,7 +195,7 @@ const Vision = () => {
               className="lg:col-span-6 order-2 lg:order-1 relative"
             >
               <Parallax speed={0.1}>
-                <div className="relative z-10 p-1 bg-white border border-[#C9A962]/20 shadow-[10px_10px_30px_rgba(0,0,0,0.05)] rounded-sm group overflow-hidden">
+                <div className="relative z-10 p-1 bg-white border border-[#C9A962]/20 shadow-[10px_10px_30px_rgba(0,0,0,0.05)] rounded-2xl group overflow-hidden">
                   <img
                     src="/img/artisan-800.webp"
                     srcSet="/img/artisan-480.webp 480w, /img/artisan-800.webp 800w"
@@ -214,15 +222,16 @@ const Vision = () => {
               </div>
 
               <div className="space-y-4 text-[#4A443E] leading-relaxed text-sm lg:text-base font-light">
-                <p className="text-base sm:text-lg lg:text-xl font-serif italic text-[#1A1816] border-b border-[#C9A962]/5 pb-2">
+                <p className="text-base sm:text-lg lg:text-xl font-serif italic text-[#1A1816]">
                   We believe the secondary market should not diminish creation: it should honour it.
                 </p>
+                <div className="w-10 h-px bg-[#C9A962]/50 ml-auto"></div>
                 <p>
                   For brands and creators who produce limited works, rare editions, or culturally
                   significant pieces, The Collectors’ Exchange is a modern online museum: a place
                   where intent and originality are preserved long after the first sale.
                 </p>
-                <div className="bg-white p-6 border border-[#C9A962]/10 rounded-sm shadow-sm relative overflow-hidden">
+                <div className="bg-white p-6 border border-[#C9A962]/10 rounded-2xl shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-[2px] h-full bg-[#C9A962]"></div>
                   <p className="mb-4 font-serif italic text-base md:text-lg text-[#1A1816]">
                     Our vision is to offer:
@@ -283,7 +292,7 @@ const Vision = () => {
             A <span className="text-[#C9A962] italic font-normal">Living Legacy</span>
           </Reveal>
 
-          <div className="w-full max-w-4xl mx-auto h-[1px] bg-heritage-bronze/10 mb-12"></div>
+          <div className="w-full max-w-4xl mx-auto h-px bg-gradient-to-r from-transparent via-heritage-bronze/30 to-transparent mb-12"></div>
 
           <Stagger className="space-y-8 text-lg md:text-xl text-heritage-charcoal font-serif italic font-bold leading-relaxed max-w-3xl mx-auto mb-16">
             <p>
@@ -312,9 +321,9 @@ const Vision = () => {
       {/* Three Pillars of Vision */}
       <section className="py-24 px-6 bg-heritage-cream border-y border-heritage-bronze/10">
         <div className="container mx-auto max-w-6xl">
-          <Stagger step={130} className="grid md:grid-cols-3 gap-12">
+          <Stagger step={130} className="grid md:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
             <Tilt>
-              <div className="bg-white p-12 border border-heritage-bronze/10 group hover:border-luxury-gold transition-all duration-500 shadow-sm">
+              <div className="bg-white p-6 sm:p-8 lg:p-12 border border-heritage-bronze/10 rounded-2xl group hover:border-luxury-gold transition-all duration-500 shadow-sm">
                 <History
                   className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform duration-500"
                   strokeWidth={1}
@@ -329,7 +338,7 @@ const Vision = () => {
               </div>
             </Tilt>
             <Tilt>
-              <div className="bg-white p-12 border border-heritage-bronze/10 group hover:border-luxury-gold transition-all duration-500 shadow-sm">
+              <div className="bg-white p-6 sm:p-8 lg:p-12 border border-heritage-bronze/10 rounded-2xl group hover:border-luxury-gold transition-all duration-500 shadow-sm">
                 <ShieldCheck
                   className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform duration-500"
                   strokeWidth={1}
@@ -344,7 +353,7 @@ const Vision = () => {
               </div>
             </Tilt>
             <Tilt>
-              <div className="bg-white p-12 border border-heritage-bronze/10 group hover:border-luxury-gold transition-all duration-500 shadow-sm">
+              <div className="bg-white p-6 sm:p-8 lg:p-12 border border-heritage-bronze/10 rounded-2xl group hover:border-luxury-gold transition-all duration-500 shadow-sm">
                 <Landmark
                   className="text-luxury-gold w-12 h-12 mb-8 group-hover:scale-110 transition-transform duration-500"
                   strokeWidth={1}

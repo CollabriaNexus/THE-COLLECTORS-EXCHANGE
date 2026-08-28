@@ -22,6 +22,11 @@ vi.mock('../hooks/api/useWishlist', () => ({
   useRemoveFromWishlist: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })),
 }));
 
+vi.mock('../hooks/api/useTestimonials', () => ({
+  useTestimonials: vi.fn(() => ({ data: [], isLoading: false })),
+  useSubmitTestimonial: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })),
+}));
+
 vi.mock('../utils/storage', () => ({
   getUser: vi.fn(() => null),
 }));
@@ -40,6 +45,10 @@ describe('App', () => {
   });
 
   it('renders loading fallback while lazy routes load', () => {
+    // Home/Category are bundled eagerly (no fallback flash on the two
+    // highest-traffic entry routes — see App.jsx), so exercise the Suspense
+    // fallback on a route that's still lazy-loaded instead.
+    window.history.pushState({}, '', '/wishlist');
     render(<App />);
     expect(screen.getByText(/loading the archive/i)).toBeInTheDocument();
   });

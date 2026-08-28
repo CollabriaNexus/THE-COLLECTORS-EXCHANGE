@@ -95,7 +95,7 @@ const ProductDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+      <div className="hero-bleed min-h-screen flex flex-col items-center justify-center bg-white">
         <Helmet>
           <title>Product - The Collectors Exchange</title>
         </Helmet>
@@ -131,7 +131,9 @@ const ProductDetail = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    // hero-bleed pulls the page's own background up behind the floating nav
+    // so the generic layout background doesn't show through as a seam.
+    <div className="hero-bleed min-h-screen bg-white">
       <SEO
         title={product.title}
         description={
@@ -464,7 +466,10 @@ const ProductDetail = () => {
 
       {/* Below: Full-width content */}
       <div className="container mx-auto px-4 sm:px-6 pb-12 md:pb-20">
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12 mt-8 sm:mt-16 pt-8 sm:pt-16 border-t border-gray-100">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12 mt-8 sm:mt-16 pt-8 sm:pt-16">
+          {/* Decorative section divider — centered gold micro-line replaces a
+              bare gray hairline (see DESIGN.md dividers convention). */}
+          <div className="w-12 h-px bg-luxury-gold/50 mx-auto" />
           {/* Provenance & Story */}
           <div>
             <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-6">
@@ -597,7 +602,10 @@ const ProductDetail = () => {
 
       {/* Reviews Section */}
       {(reviewsData?.total ?? 0) > 0 && (
-        <div className="container mx-auto max-w-4xl px-4 sm:px-6 py-10 border-t border-gray-100">
+        <div className="container mx-auto max-w-4xl px-4 sm:px-6 py-10">
+          {/* Decorative section divider — centered gold micro-line replaces a
+              bare gray hairline (see DESIGN.md dividers convention). */}
+          <div className="w-12 h-px bg-luxury-gold/50 mx-auto mb-8" />
           <h3 className="text-lg sm:text-xl font-serif text-heritage-charcoal mb-6">
             Customer Reviews
           </h3>
@@ -618,7 +626,12 @@ const SuggestedProducts = ({ category, currentId }) => {
   if (products.length === 0 && !isLoading) return null;
 
   return (
-    <section className="py-12 sm:py-20 px-4 sm:px-6 bg-heritage-cream border-t border-gray-100">
+    <section className="relative py-12 sm:py-20 px-4 sm:px-6 bg-heritage-cream">
+      {/* Decorative full-bleed section boundary — soft fade replaces a bare
+          gray hairline (see DESIGN.md dividers convention). Absolutely
+          positioned at the section's top edge so it doesn't add extra
+          vertical spacing beyond what the border-t it replaces used to. */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
       <div className="container mx-auto max-w-6xl">
         <div className="flex items-center justify-between mb-6 sm:mb-10">
           <div>

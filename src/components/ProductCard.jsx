@@ -59,7 +59,7 @@ const ProductCard = ({ product }) => {
   const title = product.title || product.name;
 
   return (
-    <div className="bg-white border border-gray-100 group hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
+    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
       <Link
         to={`/product/${product.id}`}
         className="block relative aspect-square bg-gray-100 overflow-hidden cursor-pointer shrink-0"

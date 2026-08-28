@@ -144,7 +144,7 @@ const FAQ = () => {
               placeholder="Search FAQs..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 focus:outline-none focus:border-luxury-gold"
+              className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:border-luxury-gold"
             />
           </div>
         </Reveal>
@@ -152,15 +152,19 @@ const FAQ = () => {
         <div className="space-y-8">
           {filtered.map((category, catIdx) => (
             <Reveal key={category.category} as="div">
-              <h2 className="text-xl sm:text-2xl font-serif mb-4 text-heritage-charcoal border-b border-gray-200 pb-3">
+              <h2 className="text-xl sm:text-2xl font-serif mb-3 text-heritage-charcoal">
                 {category.category}
               </h2>
+              <div className="w-12 h-px bg-luxury-gold/50 mb-4" />
               <Stagger className="space-y-2" step={70} distance={28}>
                 {category.questions.map((item, qIdx) => {
                   const key = `${catIdx}-${qIdx}`;
                   const isOpen = openItems[key];
                   return (
-                    <div key={qIdx} className="bg-white border border-gray-100 shadow-sm">
+                    <div
+                      key={qIdx}
+                      className="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden"
+                    >
                       <button
                         onClick={() => toggleItem(catIdx, qIdx)}
                         className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
@@ -186,13 +190,13 @@ const FAQ = () => {
           ))}
         </div>
 
-        <Reveal className="mt-16 text-center bg-white p-10 border border-gray-100 shadow-sm">
+        <Reveal className="mt-16 text-center bg-white p-10 border border-gray-100 shadow-sm rounded-2xl">
           <h2 className="text-xl sm:text-2xl font-serif mb-4">Still have questions?</h2>
           <p className="text-gray-500 mb-6">We're here to help you.</p>
           <Magnetic>
             <a
               href="/contact"
-              className="inline-block bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors"
+              className="inline-block bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors rounded-full"
             >
               Contact Us
             </a>

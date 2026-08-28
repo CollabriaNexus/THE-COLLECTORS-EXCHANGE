@@ -11,7 +11,7 @@ const aboutSeo = CORE_PAGES['/about'];
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
+    <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-x-clip">
       <SEO title={aboutSeo.title} description={aboutSeo.description} canonical="/about" />
       <PageSchema
         type="AboutPage"
@@ -20,8 +20,10 @@ const About = () => {
         path="/about"
       />
       <BreadcrumbSchema items={aboutSeo.breadcrumb} />
-      {/* Cinematic Hero */}
-      <section className="relative min-h-[60vh] sm:min-h-[75vh] lg:min-h-[90vh] flex items-center justify-center overflow-hidden border-b border-heritage-bronze/10 bg-heritage-charcoal">
+      {/* Cinematic Hero — hero-bleed pulls this section's dark background up
+          behind the floating nav so the true viewport top matches the hero
+          instead of showing the generic page background through the gap. */}
+      <section className="hero-bleed relative min-h-[60vh] sm:min-h-[75vh] lg:min-h-[90vh] flex items-center justify-center overflow-hidden border-b border-heritage-bronze/10 bg-heritage-charcoal">
         <div className="absolute inset-0 z-0">
           <img
             src="/img/about-us-800.webp"

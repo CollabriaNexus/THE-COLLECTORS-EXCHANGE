@@ -45,7 +45,7 @@ const CommissionSlider = ({ value, price, onChange, disabled }) => {
   const nextTier = TIERS.find((t) => t.threshold > value);
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8 border border-gray-100 rounded-sm">
+    <div className="bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8 border border-gray-100 rounded-2xl">
       <div className="flex items-center justify-between mb-4">
         <div>
           <label className="block text-xs font-bold uppercase tracking-widest text-gray-600">
@@ -86,7 +86,7 @@ const CommissionSlider = ({ value, price, onChange, disabled }) => {
               type="button"
               onClick={() => onChange(tier.threshold)}
               disabled={disabled}
-              className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1 py-0.5 rounded transition-colors ${
+              className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1 py-0.5 rounded-full transition-colors ${
                 value >= tier.threshold
                   ? `${tier.color} bg-white shadow-sm`
                   : 'text-gray-300 hover:text-gray-500'
@@ -101,7 +101,7 @@ const CommissionSlider = ({ value, price, onChange, disabled }) => {
       {/* Earnings breakdown */}
       {priceNum > 0 && (
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-white border border-gray-100 p-3 text-center">
+          <div className="bg-white border border-gray-100 p-3 text-center rounded-xl">
             <p className="text-lg sm:text-xl font-serif font-bold text-green-700">
               ₹
               {yourEarnings.toLocaleString('en-IN', {
@@ -113,7 +113,7 @@ const CommissionSlider = ({ value, price, onChange, disabled }) => {
               Your Earnings
             </p>
           </div>
-          <div className="bg-white border border-gray-100 p-3 text-center">
+          <div className="bg-white border border-gray-100 p-3 text-center rounded-xl">
             <p className="text-lg sm:text-xl font-serif font-bold text-amber-700">
               ₹
               {platformFee.toLocaleString('en-IN', {
@@ -134,7 +134,7 @@ const CommissionSlider = ({ value, price, onChange, disabled }) => {
       )}
 
       {/* Boost meter */}
-      <div className="bg-white border border-gray-100 p-3">
+      <div className="bg-white border border-gray-100 p-3 rounded-xl">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             {value >= 20 ? (
@@ -171,7 +171,7 @@ const CommissionSlider = ({ value, price, onChange, disabled }) => {
       </div>
 
       {value >= 20 && (
-        <div className="mt-4 bg-gradient-to-r from-luxury-gold/10 to-purple-50 border border-luxury-gold/20 p-3 flex items-start gap-2">
+        <div className="mt-4 bg-gradient-to-r from-luxury-gold/10 to-purple-50 border border-luxury-gold/20 p-3 rounded-xl flex items-start gap-2">
           <Zap size={14} className="text-luxury-gold mt-0.5 shrink-0" />
           <p className="text-[11px] text-gray-600">
             {value >= 20

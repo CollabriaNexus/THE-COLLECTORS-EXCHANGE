@@ -8,7 +8,7 @@ const FOUNDERS_NOTE_DESC =
 
 const FoundersNote = () => {
   return (
-    <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-hidden">
+    <div className="min-h-screen bg-heritage-cream text-heritage-charcoal font-sans overflow-x-clip">
       <SEO
         title={FOUNDERS_NOTE_TITLE}
         description={FOUNDERS_NOTE_DESC}
@@ -26,12 +26,15 @@ const FoundersNote = () => {
           { name: "Founder's Note", url: '/founders-note' },
         ]}
       />
-      {/* Header section for the note */}
-      <Reveal
-        as="section"
-        className="py-16 sm:py-24 px-6 bg-white border-b border-heritage-bronze/10"
-      >
-        <div className="container mx-auto max-w-4xl text-center">
+      {/* Header section for the note — hero-bleed pulls this white band up
+          behind the floating nav so the true viewport top matches the page's
+          own background instead of the generic layout background peeking
+          through the gap. The section's own padding lives on the inner
+          container, not here: hero-bleed's padding-top is unlayered CSS and
+          unconditionally wins over a layered Tailwind py-* utility on the
+          *same* element (replaces it, doesn't add to it). */}
+      <Reveal as="section" className="hero-bleed bg-white border-b border-heritage-bronze/10">
+        <div className="container mx-auto max-w-4xl text-center py-16 sm:py-24 px-6">
           <span className="text-luxury-gold text-xs font-bold tracking-[0.3em] uppercase mb-6 block">
             Founder’s message
           </span>
@@ -70,12 +73,8 @@ const FoundersNote = () => {
         </Reveal>
 
         {/* The Story: The Heartbeat of Heritage */}
-        <Reveal
-          as="section"
-          direction="up"
-          delay={80}
-          className="mb-12 sm:mb-20 pt-12 sm:pt-16 border-t border-gray-100"
-        >
+        <Reveal as="section" direction="up" delay={80} className="mb-12 sm:mb-20 pt-12 sm:pt-16">
+          <div className="w-16 h-px bg-gradient-to-r from-transparent via-luxury-gold/30 to-transparent mb-10 sm:mb-12"></div>
           <h2 className="text-3xl md:text-4xl font-serif mb-12">
             The Story: The Heartbeat of Heritage
           </h2>
@@ -120,7 +119,8 @@ const FoundersNote = () => {
               on our collectors and the "health" of their articles annually. We believe that if we
               take care of our history, our history will take care of our future.
             </p>
-            <p className="text-xl font-normal text-black mt-8 pt-8 border-t border-gray-100">
+            <div className="w-16 h-px bg-gradient-to-r from-transparent via-luxury-gold/30 to-transparent mt-8 mb-8"></div>
+            <p className="text-xl font-normal text-black">
               History isn't meant to be lived in the past; it is meant to be lived in the present.
             </p>
             <p className="text-2xl font-serif text-luxury-gold">Welcome to the Exchange.</p>
