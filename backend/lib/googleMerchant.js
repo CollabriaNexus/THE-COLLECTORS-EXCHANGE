@@ -187,3 +187,75 @@ export async function deleteProduct(offerId, dataSourceName) {
   const url = `${BASE}/products/v1/accounts/${ACCOUNT_ID}/productInputs/${productInputId}?dataSource=${encodeURIComponent(dataSourceName)}`;
   return api('DELETE', url);
 }
+
+let _dataSourcePromise = null;
+
+async function ensureDataSource() {
+  if (!_dataSourcePromise) {
+    _dataSourcePromise = (async () => {
+      try {
+        await ensureDeveloperRegistration();
+      } catch (err) {
+        if (!err.message?.includes('already') && !err.message?.includes('registered')) {
+          throw err;
+        }
+      }
+      return findOrCreateDataSource();
+    })().catch((err) => {
+      _dataSourcePromise = null;
+      throw err;
+    });
+  }
+  return _dataSourcePromise;
+}
+
+/**
+ * Identify deletion failures that mean the Merchant input is already absent
+ * — mirrors the tolerance the sync-to-google route already applies.
+ *
+ * @param {{status?: number, message?: string}} error Merchant API error.
+ * @returns {boolean} True when deletion is already complete from the desired-state perspective.
+ */
+function isNotFoundError(error) {
+  return error?.status === 404 || /not[ -]?found/i.test(error?.message || '');
+}
+
+/**
+ * Upsert-or-remove one product against Google Merchant. Unlike Meta, Google
+ * has no availability-based upsert (no mark_as_sold/discontinued), so an
+ * ineligible product is deleted outright rather than updated in place.
+ *
+ * @param {object} product Product record.
+ * @param {string} baseUrl Public storefront base URL.
+ * @returns {Promise<void>}
+ */
+async function syncProductToGoogle(product, baseUrl) {
+  const dataSource = await ensureDataSource();
+  if (isMerchantEligible(product)) {
+    await insertProduct(product, dataSource.name, baseUrl);
+    return;
+  }
+  try {
+    await deleteProduct(product.id, dataSource.name);
+  } catch (err) {
+    if (!isNotFoundError(err)) throw err;
+  }
+}
+
+/**
+ * Fire-and-forget variant for call sites that must not block their HTTP
+ * response (checkout, admin actions) on a third-party API round trip.
+ * Failures are logged, never thrown.
+ *
+ * @param {object} product Product record.
+ * @param {string} [baseUrl] Public storefront base URL.
+ * @returns {void}
+ */
+export function syncProductToGoogleAsync(
+  product,
+  baseUrl = process.env.FRONTEND_URL || 'https://thecollectorsexchange.in',
+) {
+  syncProductToGoogle(product, baseUrl).catch((err) => {
+    console.error(`Google Merchant sync failed for product ${product.id}:`, err.message);
+  });
+}

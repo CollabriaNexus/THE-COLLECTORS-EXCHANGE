@@ -8,6 +8,8 @@ import {
   ManualOrderSchema,
 } from '../schemas/admin.js';
 import { CATEGORIES, AdminProductUpdateSchema } from '../schemas/product.js';
+import { syncProductToMetaAsync } from '../lib/metaCatalog.js';
+import { syncProductToGoogleAsync } from '../lib/googleMerchant.js';
 
 class ManualOrderError extends Error {
   constructor(statusCode, message) {
@@ -768,10 +770,11 @@ export default async function adminRoutes(fastify) {
     },
   );
 
-  // Update user role
+  // Update user role — super admin only. Curators must not be able to grant
+  // themselves (or any other account) admin access.
   fastify.patch(
     '/users/:id/role',
-    { preValidation: [fastify.authenticateAdmin] },
+    { preValidation: [fastify.authenticateSuperAdmin] },
     async (request, reply) => {
       const { id } = request.params;
       const { role } = request.body;
@@ -928,6 +931,9 @@ export default async function adminRoutes(fastify) {
         },
       });
 
+      syncProductToMetaAsync(updatedProduct);
+      syncProductToGoogleAsync(updatedProduct);
+
       // Notify seller
       await prisma.notification.create({
         data: {
@@ -970,6 +976,13 @@ export default async function adminRoutes(fastify) {
         },
       });
 
+      // Only reaches Meta/Google if it was previously live there — otherwise it
+      // was never pushed and there is nothing to delist.
+      if (existingProduct.status === 'Approved' && existingProduct.isPublished) {
+        syncProductToMetaAsync(updatedProduct);
+        syncProductToGoogleAsync(updatedProduct);
+      }
+
       // Notify seller
       await prisma.notification.create({
         data: {
@@ -999,6 +1012,9 @@ export default async function adminRoutes(fastify) {
         where: { id },
         data: { status: 'Sold', isPublished: false },
       });
+
+      syncProductToMetaAsync(updatedProduct);
+      syncProductToGoogleAsync(updatedProduct);
 
       await prisma.notification.create({
         data: {
@@ -1050,6 +1066,18 @@ export default async function adminRoutes(fastify) {
         data,
       });
 
+      if (authStatus === 'Verified') {
+        syncProductToMetaAsync(updatedProduct);
+        syncProductToGoogleAsync(updatedProduct);
+      } else if (
+        authStatus === 'Rejected' &&
+        existingProduct.status === 'Approved' &&
+        existingProduct.isPublished
+      ) {
+        syncProductToMetaAsync(updatedProduct);
+        syncProductToGoogleAsync(updatedProduct);
+      }
+
       return { message: 'Authenticity status updated', product: updatedProduct };
     },
   );
@@ -1064,6 +1092,11 @@ export default async function adminRoutes(fastify) {
       const existing = await prisma.product.findUnique({ where: { id } });
       if (!existing) {
         return reply.status(404).send({ error: 'Product not found' });
+      }
+
+      if (existing.status === 'Approved' && existing.isPublished) {
+        syncProductToMetaAsync({ ...existing, status: 'Rejected', isPublished: false });
+        syncProductToGoogleAsync({ ...existing, status: 'Rejected', isPublished: false });
       }
 
       // Delete related records first to avoid foreign key constraint errors
@@ -1104,6 +1137,11 @@ export default async function adminRoutes(fastify) {
         data,
         omit: { adminNotes: false },
       });
+
+      if (updated.status === 'Approved' && updated.isPublished) {
+        syncProductToMetaAsync(updated);
+        syncProductToGoogleAsync(updated);
+      }
 
       return { message: 'Product updated successfully', product: updated };
     },
@@ -1352,6 +1390,11 @@ export default async function adminRoutes(fastify) {
         throw err;
       }
 
+      if (!isBackfill) {
+        syncProductToMetaAsync({ ...product, status: 'Sold' });
+        syncProductToGoogleAsync({ ...product, status: 'Sold' });
+      }
+
       // Audit log. `notes` has no column on Order, so it is only recorded here.
       request.log.info(
         {
@@ -1419,6 +1462,13 @@ export default async function adminRoutes(fastify) {
           await prisma.product.updateMany({
             where: { id: { in: productIds }, status: 'Sold' },
             data: { status: 'Approved' },
+          });
+          const restockedProducts = await prisma.product.findMany({
+            where: { id: { in: productIds }, status: 'Approved' },
+          });
+          restockedProducts.forEach((p) => {
+            syncProductToMetaAsync(p);
+            syncProductToGoogleAsync(p);
           });
         }
         // Refund a captured online payment. The order is marked Refunded either

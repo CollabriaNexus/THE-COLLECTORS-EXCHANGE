@@ -13,6 +13,9 @@ import {
   toPaise,
 } from '../lib/money.js';
 import { claimCouponUse, OrderError } from '../lib/coupon.js';
+import { syncProductToMetaAsync } from '../lib/metaCatalog.js';
+import { buildUserData, sendConversionEventAsync } from '../lib/metaConversions.js';
+import { syncProductToGoogleAsync } from '../lib/googleMerchant.js';
 
 /**
  * Last line of defence for the money invariant:
@@ -658,6 +661,37 @@ export default async function checkoutRoutes(fastify) {
       // Notify buyer that order is confirmed. Skipped when a concurrent verify
       // already finalized (and already notified) — this call is just a no-op echo.
       if (!alreadyFinalized) {
+        const soldProductIds = (updatedOrder.items || []).map((i) => i.productId);
+        if (soldProductIds.length > 0) {
+          const soldProducts = await prisma.product.findMany({
+            where: { id: { in: soldProductIds } },
+          });
+          soldProducts.forEach((p) => {
+            syncProductToMetaAsync(p);
+            syncProductToGoogleAsync(p);
+          });
+
+          sendConversionEventAsync({
+            eventName: 'Purchase',
+            eventId: updatedOrder.id,
+            eventSourceUrl: `${process.env.FRONTEND_URL || 'https://thecollectorsexchange.in'}/checkout`,
+            userData: buildUserData({
+              email: dbUser.email,
+              phone: dbUser.phone,
+              externalId: dbUser.id,
+              ip: request.ip,
+              userAgent: request.headers['user-agent'],
+            }),
+            customData: {
+              value: updatedOrder.totalAmount,
+              currency: 'INR',
+              content_type: 'product',
+              content_ids: soldProductIds,
+              contents: soldProducts.map((p) => ({ id: p.id, quantity: 1, item_price: p.price })),
+            },
+          });
+        }
+
         await prisma.notification.create({
           data: {
             userId: dbUser.id,

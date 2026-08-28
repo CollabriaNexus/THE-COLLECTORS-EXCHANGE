@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Fastify from 'fastify';
 
+// Real GOOGLE_MERCHANT_KEY / google-merchant-key.json can exist in a local dev
+// checkout, so this MUST be mocked or fire-and-forget syncProductToGoogleAsync
+// calls in the routes below would hit the live Merchant Center with test data.
+vi.mock('../../lib/googleMerchant.js', () => ({
+  syncProductToGoogleAsync: vi.fn(),
+}));
+
 function buildApp(mockPrisma) {
   const fastify = Fastify();
   fastify.decorate('prisma', mockPrisma);
@@ -77,29 +84,6 @@ describe('products routes', () => {
         create: vi.fn(),
       },
     };
-  });
-
-  describe('GET /debug/prisma', () => {
-    it('returns connection status', async () => {
-      mockPrisma.$queryRaw.mockResolvedValue([{ ok: 1 }]);
-      mockPrisma.product.count.mockResolvedValue(5);
-      const app = buildApp(mockPrisma);
-      await app.register((await import('../../routes/products.js')).default);
-      await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/debug/prisma' });
-      expect(res.statusCode).toBe(200);
-      expect(res.json().connected).toBe(true);
-      expect(res.json().productCount).toBe(5);
-    });
-
-    it('returns 500 on error', async () => {
-      mockPrisma.$queryRaw.mockRejectedValue(new Error('DB down'));
-      const app = buildApp(mockPrisma);
-      await app.register((await import('../../routes/products.js')).default);
-      await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/debug/prisma' });
-      expect(res.statusCode).toBe(500);
-    });
   });
 
   describe('GET /', () => {

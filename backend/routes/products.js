@@ -1,4 +1,6 @@
 import { ProductSchema, ProductIdParam } from '../schemas/product.js';
+import { syncProductToMetaAsync } from '../lib/metaCatalog.js';
+import { syncProductToGoogleAsync } from '../lib/googleMerchant.js';
 
 /**
  * `adminNotes` holds admin-only free-text values for admin-defined custom
@@ -298,6 +300,15 @@ export default async function productRoutes(fastify) {
       data: updateData,
     });
 
+    // Covers both directions: a field edit while still live, and a seller
+    // edit that pulls an already-live listing back into review.
+    const wasLive = existingProduct.status === 'Approved' && existingProduct.isPublished;
+    const isLive = updatedProduct.status === 'Approved' && updatedProduct.isPublished;
+    if (wasLive || isLive) {
+      syncProductToMetaAsync(updatedProduct);
+      syncProductToGoogleAsync(updatedProduct);
+    }
+
     return isPrivileged(dbUser) ? updatedProduct : withoutAdminNotes(updatedProduct);
   });
 
@@ -321,6 +332,11 @@ export default async function productRoutes(fastify) {
     // Ensure user is the owner or an admin
     if (existingProduct.sellerId !== dbUser.id && dbUser.role !== 'admin') {
       return reply.status(403).send({ error: 'Not authorized to delete this product' });
+    }
+
+    if (existingProduct.status === 'Approved' && existingProduct.isPublished) {
+      syncProductToMetaAsync({ ...existingProduct, status: 'Rejected', isPublished: false });
+      syncProductToGoogleAsync({ ...existingProduct, status: 'Rejected', isPublished: false });
     }
 
     await prisma.product.delete({
@@ -448,6 +464,8 @@ export default async function productRoutes(fastify) {
         where: { id },
         data: { status: 'Sold', quantity: 0 },
       });
+      syncProductToMetaAsync(updated);
+      syncProductToGoogleAsync(updated);
       return withoutAdminNotes(updated);
     }
     const updated = await prisma.product.update({ where: { id }, data: { quantity: remaining } });

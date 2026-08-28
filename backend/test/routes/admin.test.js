@@ -2,6 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Fastify from 'fastify';
 import { ZodError } from 'zod';
 
+// Real GOOGLE_MERCHANT_KEY / google-merchant-key.json can exist in a local dev
+// checkout, so this MUST be mocked or fire-and-forget syncProductToGoogleAsync
+// calls in the routes below would hit the live Merchant Center with test data.
+vi.mock('../../lib/googleMerchant.js', () => ({
+  syncProductToGoogleAsync: vi.fn(),
+}));
+
 function buildApp(mockPrisma) {
   const fastify = Fastify();
   fastify.setErrorHandler((error, request, reply) => {
@@ -755,6 +762,9 @@ describe('admin routes', () => {
         items: [{ productId: 'p1' }],
       });
       mockPrisma.product.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.product.findMany.mockResolvedValue([
+        { id: 'p1', status: 'Approved', isPublished: true, title: 'Item', price: 100 },
+      ]);
       mockPrisma.order.update.mockResolvedValue({ id: 'o1', status: 'Cancelled', userId: 'uid' });
       mockPrisma.notification.create.mockResolvedValue({});
       const app = buildApp(mockPrisma);

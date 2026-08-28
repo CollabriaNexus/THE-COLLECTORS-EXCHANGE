@@ -255,4 +255,180 @@ describe('googleMerchant lib', () => {
       },
     );
   });
+
+  describe('syncProductToGoogleAsync', () => {
+    function mockAuth() {
+      const mockClient = { getAccessToken: vi.fn().mockResolvedValue({ token: 'test-token' }) };
+      return import('google-auth-library').then(({ GoogleAuth }) => {
+        GoogleAuth.mockImplementation(() => ({ getClient: vi.fn().mockResolvedValue(mockClient) }));
+      });
+    }
+
+    it('never throws, even when the sync fails', async () => {
+      const { syncProductToGoogleAsync } = await import('../../lib/googleMerchant.js');
+      expect(() =>
+        syncProductToGoogleAsync({ id: 'p1', title: 'X', price: 1, status: 'Approved' }),
+      ).not.toThrow();
+    });
+
+    it('inserts an eligible (Approved + published) product', async () => {
+      process.env.GOOGLE_MERCHANT_KEY = Buffer.from(
+        JSON.stringify({ client_email: 'test@test.com', private_key: 'key' }),
+      ).toString('base64');
+      await mockAuth();
+
+      let calls = 0;
+      mockFetch.mockImplementation((url) => {
+        calls++;
+        if (calls === 1) {
+          // ensureDeveloperRegistration
+          return Promise.resolve({ ok: true, text: vi.fn().mockResolvedValue('{}') });
+        }
+        if (calls === 2) {
+          // findOrCreateDataSource — existing source found
+          return Promise.resolve({
+            ok: true,
+            text: vi
+              .fn()
+              .mockResolvedValue(
+                JSON.stringify({ dataSources: [{ displayName: 'API Products', name: 'ds1' }] }),
+              ),
+          });
+        }
+        // insertProduct
+        expect(url).toContain('productInputs:insert');
+        return Promise.resolve({
+          ok: true,
+          text: vi.fn().mockResolvedValue(JSON.stringify({ name: 'inserted' })),
+        });
+      });
+
+      const { syncProductToGoogleAsync } = await import('../../lib/googleMerchant.js');
+      syncProductToGoogleAsync({
+        id: 'p1',
+        title: 'Test',
+        description: 'Desc',
+        price: 100,
+        image: 'https://img.jpg',
+        condition: 'Mint',
+        status: 'Approved',
+        isPublished: true,
+      });
+
+      await vi.waitFor(() => expect(calls).toBe(3));
+    });
+
+    it('deletes an ineligible (Sold) product', async () => {
+      process.env.GOOGLE_MERCHANT_KEY = Buffer.from(
+        JSON.stringify({ client_email: 'test@test.com', private_key: 'key' }),
+      ).toString('base64');
+      await mockAuth();
+
+      let calls = 0;
+      mockFetch.mockImplementation((url, opts) => {
+        calls++;
+        if (calls === 1) {
+          return Promise.resolve({ ok: true, text: vi.fn().mockResolvedValue('{}') });
+        }
+        if (calls === 2) {
+          return Promise.resolve({
+            ok: true,
+            text: vi
+              .fn()
+              .mockResolvedValue(
+                JSON.stringify({ dataSources: [{ displayName: 'API Products', name: 'ds1' }] }),
+              ),
+          });
+        }
+        expect(opts.method).toBe('DELETE');
+        return Promise.resolve({ ok: true, text: vi.fn().mockResolvedValue('') });
+      });
+
+      const { syncProductToGoogleAsync } = await import('../../lib/googleMerchant.js');
+      syncProductToGoogleAsync({ id: 'p1', title: 'Test', status: 'Sold' });
+
+      await vi.waitFor(() => expect(calls).toBe(3));
+    });
+
+    it('swallows a 404 on delete instead of logging it as a failure', async () => {
+      process.env.GOOGLE_MERCHANT_KEY = Buffer.from(
+        JSON.stringify({ client_email: 'test@test.com', private_key: 'key' }),
+      ).toString('base64');
+      await mockAuth();
+
+      let calls = 0;
+      mockFetch.mockImplementation(() => {
+        calls++;
+        if (calls === 1) {
+          return Promise.resolve({ ok: true, text: vi.fn().mockResolvedValue('{}') });
+        }
+        if (calls === 2) {
+          return Promise.resolve({
+            ok: true,
+            text: vi
+              .fn()
+              .mockResolvedValue(
+                JSON.stringify({ dataSources: [{ displayName: 'API Products', name: 'ds1' }] }),
+              ),
+          });
+        }
+        return Promise.resolve({
+          ok: false,
+          status: 404,
+          text: vi.fn().mockResolvedValue(JSON.stringify({ error: { message: 'Not found' } })),
+        });
+      });
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const { syncProductToGoogleAsync } = await import('../../lib/googleMerchant.js');
+      syncProductToGoogleAsync({ id: 'gone', title: 'Test', status: 'Sold' });
+
+      await vi.waitFor(() => expect(calls).toBe(3));
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('reuses the cached data source across repeated calls', async () => {
+      process.env.GOOGLE_MERCHANT_KEY = Buffer.from(
+        JSON.stringify({ client_email: 'test@test.com', private_key: 'key' }),
+      ).toString('base64');
+      await mockAuth();
+
+      let calls = 0;
+      mockFetch.mockImplementation(() => {
+        calls++;
+        if (calls === 1) {
+          return Promise.resolve({ ok: true, text: vi.fn().mockResolvedValue('{}') });
+        }
+        if (calls === 2) {
+          return Promise.resolve({
+            ok: true,
+            text: vi
+              .fn()
+              .mockResolvedValue(
+                JSON.stringify({ dataSources: [{ displayName: 'API Products', name: 'ds1' }] }),
+              ),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          text: vi.fn().mockResolvedValue(JSON.stringify({ name: 'inserted' })),
+        });
+      });
+
+      const { syncProductToGoogleAsync } = await import('../../lib/googleMerchant.js');
+      const product = {
+        id: 'p1',
+        title: 'Test',
+        price: 100,
+        image: 'https://img.jpg',
+        status: 'Approved',
+        isPublished: true,
+      };
+      syncProductToGoogleAsync(product);
+      await vi.waitFor(() => expect(calls).toBe(3));
+      syncProductToGoogleAsync(product);
+      await vi.waitFor(() => expect(calls).toBe(4));
+    });
+  });
 });

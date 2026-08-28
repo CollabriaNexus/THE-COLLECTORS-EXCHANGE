@@ -16,6 +16,22 @@ vi.mock('razorpay', () => ({
   default: vi.fn(() => razorpayMock),
 }));
 
+// Real GOOGLE_MERCHANT_KEY / google-merchant-key.json can exist in a local dev
+// checkout, so this MUST be mocked or fire-and-forget syncProductToGoogleAsync
+// calls in the route below would hit the live Merchant Center with test data.
+vi.mock('../../lib/googleMerchant.js', () => ({
+  syncProductToGoogleAsync: vi.fn(),
+}));
+
+const { mockSendConversionEventAsync } = vi.hoisted(() => ({
+  mockSendConversionEventAsync: vi.fn(),
+}));
+
+vi.mock('../../lib/metaConversions.js', async () => {
+  const actual = await vi.importActual('../../lib/metaConversions.js');
+  return { ...actual, sendConversionEventAsync: mockSendConversionEventAsync };
+});
+
 // Genuine gateway signature over a (gateway order, payment) pair.
 const sign = (rpOrderId, rpPaymentId) =>
   crypto
@@ -63,6 +79,7 @@ describe('checkout routes', () => {
       cartItem: { findMany: vi.fn(), deleteMany: vi.fn() },
       product: {
         findUnique: vi.fn(),
+        findMany: vi.fn().mockResolvedValue([]),
         update: vi.fn(),
         updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
@@ -776,20 +793,25 @@ describe('checkout routes', () => {
     });
 
     it('claims the product atomically and clears carts on success', async () => {
-      mockPrisma.order.findUnique.mockResolvedValue({
-        id: 'order-1',
-        userId: 'buyer-id',
-        paymentStatus: 'Pending',
-        paymentMethod: 'online',
-        items: [{ productId: 'p1' }],
-      });
+      mockPrisma.order.findUnique
+        .mockResolvedValueOnce({
+          id: 'order-1',
+          userId: 'buyer-id',
+          paymentStatus: 'Pending',
+          paymentMethod: 'online',
+          items: [{ productId: 'p1' }],
+        })
+        .mockResolvedValue({
+          id: 'order-1',
+          paymentStatus: 'Paid',
+          status: 'Processing',
+          totalAmount: 100,
+          items: [{ productId: 'p1' }],
+        });
       mockPrisma.product.updateMany = vi.fn().mockResolvedValue({ count: 1 });
-      mockPrisma.order.update.mockResolvedValue({
-        id: 'order-1',
-        paymentStatus: 'Paid',
-        status: 'Processing',
-        items: [{ productId: 'p1' }],
-      });
+      mockPrisma.product.findMany.mockResolvedValue([
+        { id: 'p1', status: 'Sold', isPublished: true, title: 'Item', price: 100 },
+      ]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/checkout.js')).default);
       await app.ready();
@@ -812,6 +834,54 @@ describe('checkout routes', () => {
         }),
       );
       expect(mockPrisma.cartItem.deleteMany).toHaveBeenCalledWith({ where: { productId: 'p1' } });
+      expect(mockSendConversionEventAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventName: 'Purchase',
+          eventId: 'order-1',
+          customData: expect.objectContaining({
+            value: 100,
+            currency: 'INR',
+            content_ids: ['p1'],
+          }),
+          userData: expect.objectContaining({
+            em: expect.any(String),
+          }),
+        }),
+      );
+    });
+
+    it('does not fire a Purchase event when the verify call is just a no-op echo of an already-finalized order', async () => {
+      // Both requests read Pending; the first one wins the guarded finalize, so
+      // this one's gate matches 0 rows and it just echoes the already-Paid order.
+      mockPrisma.order.findUnique
+        .mockResolvedValueOnce({
+          id: 'order-1',
+          userId: 'buyer-id',
+          paymentStatus: 'Pending',
+          paymentMethod: 'online',
+          items: [{ productId: 'p1' }],
+        })
+        .mockResolvedValue({
+          id: 'order-1',
+          status: 'Processing',
+          paymentStatus: 'Paid',
+          items: [{ productId: 'p1' }],
+        });
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 0 });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/checkout.js')).default);
+      await app.ready();
+      delete process.env.RAZORPAY_KEY_ID;
+      delete process.env.RAZORPAY_KEY_SECRET;
+      process.env.NODE_ENV = 'development';
+      const res = await app.inject({
+        method: 'POST',
+        url: '/verify-payment',
+        payload: { orderId: 'order-1' },
+        headers: { authorization: 'Bearer buyer' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockSendConversionEventAsync).not.toHaveBeenCalled();
     });
 
     it('cancels the order and flags a refund when an item is already sold', async () => {
