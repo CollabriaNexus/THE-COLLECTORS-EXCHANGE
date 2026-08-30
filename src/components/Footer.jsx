@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Linkedin, Mail } from 'lucide-react';
+import { Instagram, Facebook, Linkedin, Mail, Phone, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -48,6 +48,30 @@ const Footer = () => {
                 <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">
                   New Guruppanapalya, Bengaluru, Karnataka - 560029
                 </p>
+              </div>
+              <div>
+                <p className="text-[8px] sm:text-[10px] uppercase tracking-widest text-luxury-gold mb-1.5 sm:mb-2">
+                  Call &amp; WhatsApp
+                </p>
+                <div className="flex items-center gap-4">
+                  <a
+                    href="tel:+919740799109"
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs sm:text-sm"
+                  >
+                    <Phone size={14} />
+                    +91 97407 99109
+                  </a>
+                  <a
+                    href="https://wa.me/919740799109"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Chat on WhatsApp"
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs sm:text-sm"
+                  >
+                    <MessageCircle size={14} />
+                    WhatsApp
+                  </a>
+                </div>
               </div>
             </div>
           </div>

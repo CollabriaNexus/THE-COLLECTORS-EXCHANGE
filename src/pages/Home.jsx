@@ -439,7 +439,7 @@ const Home = () => {
             'Verified Provenance',
             'Rare & Collectible',
             'Curated by Experts',
-            'Heritage Timepieces',
+            'Heritage Accessories',
             'Trusted Sellers',
           ]}
           duration={30}
