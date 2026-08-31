@@ -498,11 +498,13 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Products Carousel */}
-      <FeaturedProductsCarousel />
+      {/* Featured Products Carousel — hidden for now, see project memory
+          for why (temp unpublish + Accessories-only rollback note).
+          Restore by uncommenting when products/categories go back to normal. */}
+      {/* <FeaturedProductsCarousel /> */}
 
-      {/* Rarest Finds — most_rare tier */}
-      <RarestFinds />
+      {/* Rarest Finds — most_rare tier — hidden for now, same as above. */}
+      {/* <RarestFinds /> */}
 
       {/* Verification Works */}
       <section className="py-12 sm:py-16 lg:py-20 px-6 bg-primary-bg">
