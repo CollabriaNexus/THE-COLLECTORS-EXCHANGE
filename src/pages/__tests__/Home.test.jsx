@@ -55,7 +55,7 @@ vi.mock('../../hooks/useMediaQuery', () => ({
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 describe('Home', () => {
-  it('renders hero section with authorized badge', () => {
+  it('renders the simplified hero heading', () => {
     render(
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
@@ -65,7 +65,7 @@ describe('Home', () => {
         </HelmetProvider>
       </QueryClientProvider>,
     );
-    expect(screen.getByText(/authorized.*premium/i)).toBeInTheDocument();
+    expect(screen.getByText(/great products, great prices/i)).toBeInTheDocument();
   });
 
   it('hides the featured products and rarest finds sections', () => {
@@ -82,7 +82,7 @@ describe('Home', () => {
     expect(screen.queryByText(/rarest/i)).not.toBeInTheDocument();
   });
 
-  it('renders explore exchange link', () => {
+  it('renders shop now link', () => {
     render(
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
@@ -92,7 +92,7 @@ describe('Home', () => {
         </HelmetProvider>
       </QueryClientProvider>,
     );
-    expect(screen.getByText(/explore the exchange/i)).toBeInTheDocument();
+    expect(screen.getByText(/shop now/i)).toBeInTheDocument();
   });
 
   it('renders SEO component', () => {

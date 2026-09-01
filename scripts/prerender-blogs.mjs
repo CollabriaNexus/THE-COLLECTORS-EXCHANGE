@@ -95,30 +95,21 @@ const DEFAULT_NAV = [
 ];
 
 const CORE_PAGES = {
+  // Title/description simplified and the `video` block dropped along with
+  // the hero video — see docs/TEMPORARY_CHANGES_ROLLBACK.md to restore.
   '/': {
-    title: 'Vintage Watches & Rare Collectibles',
-    description:
-      "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.",
+    title: 'Quality Everyday Products',
+    description: 'Shop quality everyday products at great prices, shipped across India.',
     ogImage: '/og-image.png',
     schemaType: null,
     breadcrumb: null,
     navLinks: DEFAULT_NAV,
-    video: {
-      name: 'The Collectors Exchange — Authenticated Vintage Watches & Rare Collectibles',
-      description:
-        "Discover authenticated vintage watches, rare collectibles, and expert-verified antiques at The Collectors Exchange. India's trusted marketplace for heritage timepieces.",
-      thumbnail: '/og-image.png',
-      uploadDate: '2026-01-01T00:00:00+05:30',
-      contentUrl: 'https://thecollectorsexchange.in/assets/hero_section-compressed-BX0s--ub.mp4',
-      duration: 'PT30S',
-    },
   },
   // '/about' entry removed — the page is temporarily hidden/redirected.
   // See docs/TEMPORARY_CHANGES_ROLLBACK.md to restore.
   '/category': {
     title: 'The Exchange',
-    description:
-      'Browse authenticated vintage watches, timepieces, antiques, jewelry, and collectibles at The Exchange. Mid-range to rare pieces, every listing expert-verified.',
+    description: 'Shop quality everyday products at great prices, shipped across India.',
     ogImage: '/og-image.png',
     schemaType: 'CollectionPage',
     breadcrumb: [
@@ -239,10 +230,9 @@ const CATEGORY_LANDINGS = [
     slug: 'accessories',
     name: 'Accessories',
     tagline: 'The Perfect Finish',
-    intro:
-      'An outfit is a statement. The right accessory makes it iconic. In a world of fast fashion and disposable trends, we choose the "Enduring Truth." We rescue the definitive finishing pieces — the cufflinks, bags, belts, and heirlooms that transform the ordinary into the extraordinary.',
+    intro: 'Everyday accessories at great prices, shipped straight to your door.',
     description:
-      'Shop authenticated vintage accessories at The Collectors Exchange, including cufflinks, bags, belts, and heirloom pieces.',
+      'Shop accessories at The Collectors Exchange: bags, belts, and everyday finishing pieces at great prices, shipped across India.',
   },
   {
     slug: 'collectibles',
@@ -292,8 +282,7 @@ function buildHomeEntityGraph() {
         name: 'The Collectors Exchange',
         url: ROOT_URL,
         logo: `${SITE_URL}/favicon.png`,
-        description:
-          "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.",
+        description: 'Shop quality everyday products at great prices, shipped across India.',
         foundingDate: '2024',
         email: 'support@thecollectorsexchange.in',
         sameAs: [
@@ -325,8 +314,7 @@ function buildHomeEntityGraph() {
           },
           'query-input': 'required name=search_term_string',
         },
-        description:
-          "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.",
+        description: 'Shop quality everyday products at great prices, shipped across India.',
       },
     ],
   };
@@ -496,7 +484,7 @@ function buildCorePageHtml(path, page, metaTags) {
       </nav>
     </div>
     <main id="main-content" class="flex-grow" style="padding-top:88px">
-      ${isHome ? '<div style="background:#FDFBF7;color:#1C1C1C;min-height:70vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4rem 1.5rem"><div><p style="color:#B8860B;font-size:11px;letter-spacing:.4em;text-transform:uppercase;margin:0 0 1.5rem">Authorized &amp; Premium</p><h1 style="font-family:\'Playfair Display\',Georgia,serif;font-weight:800;font-size:clamp(2.2rem,4.6vw,3.4rem);line-height:1.08;margin:0 0 1.5rem">A Marketplace for Authentic Vintage Watches &amp; Rare Collectibles</h1><p style="color:rgba(28,28,28,.6);max-width:520px;margin:0 auto 2.25rem;font-size:1rem;line-height:1.7">Verified. Original. Limited. Discover a curated world of rare finds and verified sellers, archived and authenticated by The Collectors Exchange.</p><a href="/category" style="display:inline-block;background:#1C1C1C;color:#fff;border-radius:9999px;padding:16px 32px;font-size:11px;text-transform:uppercase;letter-spacing:0.22em;text-decoration:none">Explore the Exchange</a></div></div>' : `<div style="padding:4rem 1.5rem;text-align:center"><h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.5rem,5vw,3rem)">${escapeHtml(page.title)}</h1><p style="color:#666;max-width:600px;margin:1rem auto;line-height:1.7">${escapeHtml(page.description)}</p></div>`}
+      ${isHome ? '<div style="background:#FDFBF7;color:#1C1C1C;min-height:70vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4rem 1.5rem"><div><h1 style="font-family:\'Playfair Display\',Georgia,serif;font-weight:800;font-size:clamp(2.2rem,4.6vw,3.4rem);line-height:1.08;margin:0 0 1.5rem">Great Products, Great Prices</h1><p style="color:rgba(28,28,28,.6);max-width:520px;margin:0 auto 2.25rem;font-size:1rem;line-height:1.7">Browse our collection of everyday products, shipped straight to your door.</p><a href="/category" style="display:inline-block;background:#1C1C1C;color:#fff;border-radius:9999px;padding:16px 32px;font-size:11px;text-transform:uppercase;letter-spacing:0.22em;text-decoration:none">Shop Now</a></div></div>' : `<div style="padding:4rem 1.5rem;text-align:center"><h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.5rem,5vw,3rem)">${escapeHtml(page.title)}</h1><p style="color:#666;max-width:600px;margin:1rem auto;line-height:1.7">${escapeHtml(page.description)}</p></div>`}
       <div class="loading">
         <div class="spinner"></div>
       </div>
@@ -768,7 +756,7 @@ function build404Html() {
   <link rel="icon" type="image/png" href="/favicon.png" />
   <title>Page Not Found — The Collectors Exchange</title>
   <meta name="robots" content="noindex, follow" />
-  <meta name="description" content="This page could not be found. Browse authenticated vintage watches and rare collectibles at The Collectors Exchange." />
+  <meta name="description" content="This page could not be found. Browse our collection of everyday products at The Collectors Exchange." />
   ${SHELL_HEAD}
   <style>
     body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:#0A0A0A;color:#FAF8F5;-webkit-font-smoothing:antialiased}

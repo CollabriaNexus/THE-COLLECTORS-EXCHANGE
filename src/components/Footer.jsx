@@ -16,11 +16,7 @@ const Footer = () => {
               <div className="w-12 sm:w-16 h-0.5 bg-luxury-gold opacity-70"></div>
             </div>
             <p className="text-gray-400 font-light leading-relaxed max-w-sm text-xs sm:text-sm">
-              A curated marketplace for verified pre-owned collectibles, antiques, and limited
-              pieces.
-            </p>
-            <p className="font-serif italic text-white text-base sm:text-lg">
-              Preserving Value. Celebrating Authenticity.
+              Quality everyday products at great prices.
             </p>
             <div className="pt-1 sm:pt-2 space-y-3">
               <div>

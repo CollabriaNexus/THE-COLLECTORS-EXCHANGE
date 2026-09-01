@@ -1,10 +1,12 @@
 # Temporary changes — rollback guide
 
 Everything on this page was done at the site owner's request to temporarily
-take the storefront near-empty (no products, no blog, no About/Archive
-pages, no brand names in visible copy) while the catalog is being rebuilt.
-**None of it is meant to be permanent.** This doc is the single place that
-lists what changed and exactly how to put it back.
+take the storefront near-empty and repositioned as a plain, generic
+everyday-products shop (no products, no blog, no About/Archive pages, no
+brand names, no hero video, no "marketplace"/authenticity-verified
+positioning) while the catalog is being rebuilt. **None of it is meant to
+be permanent.** This doc is the single place that lists what changed and
+exactly how to put it back.
 
 The one exception: the footer "Call & WhatsApp" line (`+91 97407 99109`,
 commit `87ff63b`) is a permanent addition, not part of this rollback set.
@@ -140,6 +142,103 @@ sellers' ability to enter a brand when listing a product.
 - **To undo:** these are plain string edits — check git history on each
   file for the previous wording if the exact original copy is wanted back,
   or just write new copy.
+
+## 9. Simplified positioning — hero, marketplace/authenticity copy removed (2026-09-01)
+
+Repositioned the storefront to look like a plain, generic everyday-products
+shop instead of an authenticated vintage/heritage marketplace — hero video
+removed, "Marketplace"/"Authentic"/branded-reseller language stripped from
+the highest-visibility surfaces (Home, the Shop/category hub, the live
+Accessories category, Cart, ProductDetail, 404, and all global SEO/OG/
+JSON-LD descriptions).
+
+- **Home hero (`src/pages/Home.jsx`):** the two-column hero (autoplay watch
+  video, mobile crest image, "Authorized & Premium" eyebrow, "A Marketplace
+  for Authentic Vintage Watches & Rare Collectibles" headline, "Explore the
+  Exchange" CTA) was replaced with a single centered block: headline "Great
+  Products, Great Prices", generic subtext, "Shop Now" CTA. The
+  `VideoObjectSchema` usage and the `heroWestar*`/`crestSeal`/
+  `verificationAuthenticity` asset imports were removed entirely (imports
+  now cause lint errors if the JSX referencing them comes back without
+  restoring the imports too).
+- **Home marketing sections, all temporarily commented out** (same
+  `{/* ... */}` pattern as the Featured/Rarest Finds hide) — trust ticker,
+  "Marketplace Overview" (Curated Collection / Authenticity Verified /
+  Trusted Sellers), "Verification Works", "Institutional Registry Section"
+  (Archive / Verification / Handshake), "Authenticated Heritage Section",
+  and "Sell with Confidence" (the marketplace seller-onboarding pitch). To
+  restore: find each `{/* ... temporarily removed ... */}` marker in
+  `Home.jsx` and delete the two comment-boundary lines around each block.
+- **Global SEO copy (`src/config/seo-pages.js`):** `DEFAULT_DESC`, the
+  `buildPageTitle` fallback, and `CORE_PAGES['/']` (title/description/h1/
+  intro) simplified to generic "quality everyday products" copy — this
+  feeds the `<meta description>`, OG/Twitter tags, and the Organization/
+  WebSite JSON-LD (`SEO.jsx`) site-wide. `CORE_PAGES['/category']`
+  description/keywords/intro simplified too, but its `title`/`h1`/
+  breadcrumb label were deliberately left as **"The Exchange"** — that name
+  is used as a proper-noun label in ~20 other places across the app (Cart,
+  Checkout, FAQ, NotFound, ProductDetail, Wishlist, Account, etc.); renaming
+  it only here would have made those links inconsistent. Only the identity
+  _claims_ ("authenticated", "expert-verified", "marketplace") were removed,
+  not the "Exchange" name itself.
+- **The same duplicated config in `scripts/prerender-blogs.mjs`** (this
+  build script can't import the React-side config, so it keeps its own
+  copies) was updated to match: `CORE_PAGES['/']` (title/description, and
+  the `video` block removed entirely), `CORE_PAGES['/category']`
+  description, the static home-page hero markup inside `buildCorePageHtml`
+  (the `isHome ? ... : ...` branch), the `buildHomeEntityGraph()`
+  Organization/WebSite JSON-LD descriptions (two occurrences), the 404
+  page's meta description, and the Accessories entry in `CATEGORY_LANDINGS`
+  (tagline kept, intro/description simplified) to match the same edit made
+  in `Category.jsx`.
+- **`src/pages/Category.jsx`:** the Accessories category's `description`/
+  `metaDescription`/`metaKeywords` simplified (it's the one category
+  actually shown right now). The other five categories' rich narrative
+  copy (Timepieces, Collectibles, Antiques, Toys, Jewelry) was **left
+  alone** — reachable only by typing a direct URL, not linked from
+  anywhere live, so effectively zero visibility right now. Revisit these
+  if any of them become visible again.
+- **`src/pages/Cart.jsx`:** SEO description and the "Curated Picks" →
+  "You Might Like" upsell heading (only shows on an empty cart when
+  featured products exist).
+- **`src/pages/ProductDetail.jsx`:** SEO description fallback, the always-
+  shown "Authenticity Guarantee" trust indicator → renamed "Fast Dispatch"
+  (the other two indicators, Secure Transfer / Condition Report, are fine
+  and were left as-is), and the "Provenance & Story" section heading →
+  "Description". **Left alone, deliberately:** the "Verified Authentic"
+  badge and "The Exchange's Guarantee" block are both conditional on the
+  product's real `isVerified` flag (admin-set per product) — they're
+  data-driven product metadata, not blanket marketing copy, so they were
+  treated the same as the `brand` field (see #8). If a specific live
+  product shouldn't show "Verified Authentic", set `isVerified: false` on
+  it rather than changing this code.
+- **`src/components/Footer.jsx`:** dropped the "A curated marketplace for
+  verified pre-owned collectibles..." description line and the "Preserving
+  Value. Celebrating Authenticity." tagline entirely (not replaced with
+  anything — kept it simple).
+
+**Explicitly out of scope / not touched** (flag if these also need it):
+Vision and Founder's Note pages (both still live, still fully in the old
+"authenticated heritage" narrative voice — these are whole pages built
+around that identity, not a few lines to scrub, so hiding or rewriting
+either is a bigger call than this pass made unilaterally); Terms, Privacy,
+and FAQ (legal/policy pages — Terms in particular has an actual authenticity
+_guarantee_ clause, which is a legal representation, not just marketing
+copy); the seller-listing flow in `Account.jsx` (KYC/"Provenance &
+Description" form fields, "Verified marketplace" and "integrity of our
+marketplace" copy — functional seller-onboarding UI, lower visibility);
+`CommissionSlider.jsx` and `LoginVisual.jsx` (small, low-visibility
+strings); `watchBrands.js`/`BrandCombobox.jsx` (not display copy — see #8);
+anything inside About\*/Genesis/HeroManifesto/OdysseyTimeline or
+BlogPage/BlogPost (already unreachable per #6/#7, so editing them has zero
+visible effect right now).
+
+- **To undo:** this is the widest-reaching item on this page — check git
+  history/diff on each file listed above rather than trying to reconstruct
+  the original copy from memory. The Home.jsx section removals are the
+  mechanical part (uncomment); the SEO/description copy will need to be
+  restored to whatever the "authenticated heritage marketplace" positioning
+  should say once that's the real answer again.
 
 ## Quick reference — backup files
 

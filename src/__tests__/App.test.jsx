@@ -63,7 +63,7 @@ describe('App', () => {
   it('renders home page at root with header', async () => {
     window.history.pushState({}, '', '/');
     render(<App />);
-    const exchangeText = await screen.findByText(/explore the exchange/i, {}, { timeout: 5000 });
-    expect(exchangeText).toBeInTheDocument();
+    const shopNowText = await screen.findByText(/shop now/i, {}, { timeout: 5000 });
+    expect(shopNowText).toBeInTheDocument();
   });
 });

@@ -138,7 +138,7 @@ const ProductDetail = () => {
         title={product.title}
         description={
           product.description?.replace(/<[^>]*>/g, '')?.substring(0, 160) ||
-          `Authentic ${product.category} collectible at ₹${product.price?.toLocaleString()}. Verified by The Collectors Exchange.`
+          `${product.category} at ₹${product.price?.toLocaleString()} from The Collectors Exchange.`
         }
         canonical={`/product/${product.id}`}
         image={product.images?.[0] || product.image}
@@ -416,7 +416,7 @@ const ProductDetail = () => {
             <div className="grid grid-cols-1 gap-2 sm:gap-3 mt-4 sm:mt-6">
               <div
                 className="flex gap-2 sm:gap-3 items-start"
-                title="Every item is verified by our expert team before shipping."
+                title="Ships within 2-3 business days."
               >
                 <ShieldCheck
                   size={16}
@@ -424,10 +424,10 @@ const ProductDetail = () => {
                 />
                 <div>
                   <h4 className="font-serif text-xs sm:text-sm md:text-base font-medium text-black">
-                    Authenticity Guarantee
+                    Fast Dispatch
                   </h4>
                   <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">
-                    Every item is verified by our expert team before shipping.
+                    Ships within 2-3 business days.
                   </p>
                 </div>
               </div>
@@ -470,10 +470,10 @@ const ProductDetail = () => {
           {/* Decorative section divider — centered gold micro-line replaces a
               bare gray hairline (see DESIGN.md dividers convention). */}
           <div className="w-12 h-px bg-luxury-gold/50 mx-auto" />
-          {/* Provenance & Story */}
+          {/* Description */}
           <div>
             <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-6">
-              Provenance & Story
+              Description
             </h3>
             <div className="font-serif text-gray-700 text-sm sm:text-lg leading-relaxed">
               <ReactMarkdown

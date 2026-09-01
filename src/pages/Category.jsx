@@ -47,12 +47,10 @@ const CATEGORIES = [
     name: 'Accessories',
     icon: Sparkles,
     tagline: 'The Perfect Finish',
-    description:
-      'An outfit is a statement. The right accessory makes it iconic. In a world of fast fashion and disposable trends, we choose the "Enduring Truth." We rescue the definitive finishing pieces: the cufflinks, the bags, the belts, and the heirlooms that transform the ordinary into the extraordinary.',
+    description: 'Everyday accessories at great prices, shipped straight to your door.',
     metaDescription:
-      'Shop authenticated vintage accessories at The Collectors Exchange: cufflinks, bags, belts, and heirloom pieces. Every piece expert-verified, secure transactions across India.',
-    metaKeywords:
-      'vintage accessories india, vintage cufflinks, vintage leather bags, heirloom accessories, pre-owned accessories india',
+      'Shop accessories at The Collectors Exchange: bags, belts, and everyday finishing pieces at great prices, shipped across India.',
+    metaKeywords: 'accessories india, bags, belts, everyday accessories india',
   },
   {
     id: 'collectibles',
