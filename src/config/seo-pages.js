@@ -7,12 +7,12 @@ export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 export const DEFAULT_DESC =
   "India's trusted marketplace for authenticated vintage watches and rare pre-owned collectibles. Every piece verified, every seller vetted, every sale secure.";
 
-/** Primary header navigation – keep labels aligned with sitelink targets. */
+/** Primary header navigation – keep labels aligned with sitelink targets.
+ * "About Us" and "The Archive" are temporarily removed (both pages are
+ * hidden/redirected right now — see docs/TEMPORARY_CHANGES_ROLLBACK.md). */
 export const PRIMARY_NAV = [
-  { name: 'About Us', path: '/about' },
   { name: 'The Exchange', path: '/category' },
   { name: 'Contact', path: '/contact' },
-  { name: 'The Archive', path: '/archive' },
   { name: 'Vision', path: '/vision' },
 ];
 
@@ -73,7 +73,7 @@ export const CORE_PAGES = {
     description:
       'Browse authenticated vintage watches, timepieces, antiques, jewelry, and collectibles at The Exchange. Mid-range to rare pieces, every listing expert-verified.',
     keywords:
-      'vintage watches for men, casio vintage watches for men, vintage watch for men, rolex vintage watches for men, omega vintage watches for men, vintage watches for men india, mens vintage watches for sale, vintage mens wrist watches for sale, antique vintage watches for men, casio ad01 vintage series watch for men & women',
+      'vintage watches for men, vintage watch for men, vintage watches for men india, mens vintage watches for sale, vintage mens wrist watches for sale, antique vintage watches for men',
     schemaType: 'CollectionPage',
     h1: 'Shop The Exchange',
     intro:

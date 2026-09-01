@@ -86,11 +86,11 @@ function stripHtml(html) {
 /*  CORE PAGE PRERENDER                                                */
 /* ------------------------------------------------------------------ */
 
+// About Us and The Archive are temporarily removed — both pages are
+// hidden/redirected right now. See docs/TEMPORARY_CHANGES_ROLLBACK.md.
 const DEFAULT_NAV = [
-  { name: 'About Us', path: '/about' },
   { name: 'The Exchange', path: '/category' },
   { name: 'Contact', path: '/contact' },
-  { name: 'The Archive', path: '/archive' },
   { name: 'Vision', path: '/vision' },
 ];
 
@@ -113,18 +113,8 @@ const CORE_PAGES = {
       duration: 'PT30S',
     },
   },
-  '/about': {
-    title: 'About Us',
-    description:
-      'The story behind The Collectors Exchange — how we source, verify, and authenticate vintage watches and heritage collectibles across India.',
-    ogImage: '/og-image.png',
-    schemaType: 'AboutPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'About Us', url: '/about' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
+  // '/about' entry removed — the page is temporarily hidden/redirected.
+  // See docs/TEMPORARY_CHANGES_ROLLBACK.md to restore.
   '/category': {
     title: 'The Exchange',
     description:
@@ -512,11 +502,9 @@ function buildCorePageHtml(path, page, metaTags) {
       </div>
     </main>
     <footer class="footer">
-      <a href="/about">About</a> &middot;
       <a href="/category">The Exchange</a> &middot;
       <a href="/contact">Contact</a> &middot;
-      <a href="/faq">FAQ</a> &middot;
-      <a href="/archive">The Archive</a>
+      <a href="/faq">FAQ</a>
       <p style="color:#666;font-size:11px;margin-top:16px">&copy; ${new Date().getFullYear()} The Collectors Exchange. All rights reserved.</p>
     </footer>
   </div>
@@ -559,11 +547,9 @@ const SHELL_NAV = `
 
 const SHELL_FOOTER = `
     <footer class="site-footer">
-      <a href="/about">About</a> &middot;
       <a href="/category">The Exchange</a> &middot;
       <a href="/contact">Contact</a> &middot;
-      <a href="/faq">FAQ</a> &middot;
-      <a href="/archive">The Archive</a>
+      <a href="/faq">FAQ</a>
       <p style="color:#666;font-size:11px;margin-top:16px">&copy; ${new Date().getFullYear()} The Collectors Exchange. All rights reserved.</p>
     </footer>`;
 

@@ -83,12 +83,8 @@ const Footer = () => {
                 Company
               </h3>
               <div className="flex flex-col space-y-2 sm:space-y-3 font-light text-gray-400 text-xs sm:text-sm">
-                <Link to="/about" className="hover:text-white transition-colors duration-300">
-                  About Us
-                </Link>
-                <Link to="/archive" className="hover:text-white transition-colors duration-300">
-                  Archive
-                </Link>
+                {/* About Us / Archive links temporarily removed — both pages
+                    are hidden. See docs/TEMPORARY_CHANGES_ROLLBACK.md. */}
                 <Link to="/vision" className="hover:text-white transition-colors duration-300">
                   Our Vision
                 </Link>

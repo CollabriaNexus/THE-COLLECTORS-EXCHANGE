@@ -420,7 +420,7 @@ const Home = () => {
                   fetchpriority="high"
                   poster={heroWestarPoster}
                   className="w-full h-auto block"
-                  aria-label="Westar automatic watch, cinematic product shot"
+                  aria-label="Vintage automatic watch, cinematic product shot"
                 >
                   <source src={heroWestarWebm} type="video/webm" />
                   <source src={heroWestarMp4} type="video/mp4" />
@@ -732,21 +732,9 @@ const Home = () => {
               Learn More About Us
             </h2>
           </Reveal>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <Reveal delay={100}>
-              <Link
-                to="/about"
-                className="block p-6 rounded-2xl bg-heritage-cream border border-heritage-beige hover:border-luxury-gold transition-colors group"
-              >
-                <h3 className="text-lg font-serif text-heritage-charcoal group-hover:text-luxury-gold transition-colors mb-2">
-                  About Us
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Discover our mission to preserve heritage through verified sourcing and expert
-                  authentication.
-                </p>
-              </Link>
-            </Reveal>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* About Us card temporarily removed — page is hidden. See
+                docs/TEMPORARY_CHANGES_ROLLBACK.md. */}
             <Reveal delay={200}>
               <Link
                 to="/contact"

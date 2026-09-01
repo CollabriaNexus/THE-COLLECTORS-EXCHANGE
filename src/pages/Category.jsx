@@ -37,9 +37,9 @@ const CATEGORIES = [
     description:
       'Your phone tells the time. A mechanical watch tells a story. In a world of flickering screens and disposable tech, we choose the "Mechanical Truth." We don\'t sell battery-powered fashion; we rescue 17-jewel heartbeats that never need a plug or an algorithm to live.',
     metaDescription:
-      'Shop authenticated vintage watches and timepieces at The Collectors Exchange. Rolex, Omega, HMT, Seiko & more, expert-verified, mid-range to rare, secure transactions across India.',
+      'Shop authenticated vintage watches and timepieces at The Collectors Exchange. Expert-verified, mid-range to rare, secure transactions across India.',
     metaKeywords:
-      'vintage watches for men, vintage watches india, rolex vintage watches, omega vintage watches, hmt vintage watches, mechanical watches, pre-owned watches india',
+      'vintage watches for men, vintage watches india, mechanical watches, pre-owned watches india',
   },
   {
     id: 'accessories',
