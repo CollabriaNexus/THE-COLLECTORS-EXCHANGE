@@ -10,6 +10,9 @@ function buildApp(mockPrisma) {
     req.user = { sub: 'sb-123' };
     req.dbUser = { id: 'user-id', role: 'user' };
   });
+  fastify.decorate('requireDbUser', async (req, reply) => {
+    if (!req.dbUser) return reply.status(401).send({ error: 'User profile not synchronized' });
+  });
   return fastify;
 }
 
@@ -33,7 +36,12 @@ describe('analytics routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/analytics.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/view', payload: { productId: 'p1', sessionId: 'sess-1' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/view',
+        payload: { productId: 'p1', sessionId: 'sess-1' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -41,7 +49,12 @@ describe('analytics routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/analytics.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/view', payload: {}, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/view',
+        payload: {},
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(400);
     });
 
@@ -50,7 +63,12 @@ describe('analytics routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/analytics.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/view', payload: { productId: 'p1' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/view',
+        payload: { productId: 'p1' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
@@ -62,7 +80,12 @@ describe('analytics routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/analytics.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/cart', payload: { productId: 'p1', action: 'ADD' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/cart',
+        payload: { productId: 'p1', action: 'ADD' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -70,7 +93,12 @@ describe('analytics routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/analytics.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/cart', payload: {}, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/cart',
+        payload: {},
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(400);
     });
 
@@ -78,7 +106,12 @@ describe('analytics routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/analytics.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/cart', payload: { productId: 'p1', action: 'INVALID' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/cart',
+        payload: { productId: 'p1', action: 'INVALID' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(400);
     });
   });
@@ -89,7 +122,12 @@ describe('analytics routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/analytics.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/checkout', payload: { productId: 'p1' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/checkout',
+        payload: { productId: 'p1' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -97,7 +135,12 @@ describe('analytics routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/analytics.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/checkout', payload: {}, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/checkout',
+        payload: {},
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(400);
     });
   });

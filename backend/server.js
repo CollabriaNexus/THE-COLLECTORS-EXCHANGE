@@ -14,6 +14,7 @@ import cartRoutes from './routes/cart.js';
 import wishlistRoutes from './routes/wishlist.js';
 import userRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
+import adminKycRoutes from './routes/adminKyc.js';
 import vendorRoutes from './routes/vendor.js';
 import checkoutRoutes from './routes/checkout.js';
 import auctionRoutes from './routes/auction.js';
@@ -37,8 +38,44 @@ if (!SUPABASE_URL) {
   process.exit(1);
 }
 
+// Same behaviour as `logger: true` (pino at default level/transport), plus a
+// redaction guardrail. Fastify does not log headers or bodies by default, so
+// nothing leaks today - this exists so that turning on request/response body
+// logging (or a route logging `request.body` explicitly) cannot quietly start
+// writing bearer tokens, cookies or KYC/PII into CloudWatch.
 const fastify = Fastify({
-  logger: true,
+  logger: {
+    redact: {
+      paths: [
+        // Credentials
+        'req.headers.authorization',
+        'req.headers.cookie',
+        'res.headers["set-cookie"]',
+        'headers.authorization',
+        'headers.cookie',
+        // PII / secrets that could appear in a logged body or error payload
+        'password',
+        '*.password',
+        '*.*.password',
+        'aadhaar',
+        '*.aadhaar',
+        '*.*.aadhaar',
+        'pan',
+        '*.pan',
+        '*.*.pan',
+        'phone',
+        '*.phone',
+        '*.*.phone',
+        'email',
+        '*.email',
+        '*.*.email',
+        'kycData',
+        '*.kycData',
+        '*.*.kycData',
+      ],
+      censor: '[REDACTED]',
+    },
+  },
 });
 
 // Register Security & Utility Plugins
@@ -109,6 +146,7 @@ fastify.register(cartRoutes, { prefix: '/api/cart' });
 fastify.register(wishlistRoutes, { prefix: '/api/wishlist' });
 fastify.register(userRoutes, { prefix: '/api/users' });
 fastify.register(adminRoutes, { prefix: '/api/admin' });
+fastify.register(adminKycRoutes, { prefix: '/api/admin' });
 fastify.register(vendorRoutes, { prefix: '/api/vendor' });
 fastify.register(checkoutRoutes, { prefix: '/api/checkout' });
 fastify.register(auctionRoutes, { prefix: '/api/auctions' });

@@ -17,6 +17,11 @@ provider:
     SUPABASE_URL: ${ssm:/thecollectorsexchange/SUPABASE_URL}
     SUPABASE_ANON_KEY: ${ssm:/thecollectorsexchange/SUPABASE_ANON_KEY}
     SUPABASE_SERVICE_ROLE_KEY: ${ssm:/thecollectorsexchange/SUPABASE_SERVICE_ROLE_KEY}
+    # Optional overrides for the Supabase JWT iss/aud claims validated in
+    # plugins/auth.js. Defaults ("<SUPABASE_URL>/auth/v1" and "authenticated")
+    # apply when the SSM parameters are absent.
+    SUPABASE_JWT_ISSUER: ${ssm:/thecollectorsexchange/SUPABASE_JWT_ISSUER, ''}
+    SUPABASE_JWT_AUDIENCE: ${ssm:/thecollectorsexchange/SUPABASE_JWT_AUDIENCE, ''}
     FRONTEND_URL: ${ssm:/thecollectorsexchange/FRONTEND_URL, 'https://thecollectorsexchange.in'}
     RAZORPAY_KEY_ID: ${ssm:/thecollectorsexchange/RAZORPAY_KEY_ID}
     RAZORPAY_KEY_SECRET: ${ssm:/thecollectorsexchange/RAZORPAY_KEY_SECRET}

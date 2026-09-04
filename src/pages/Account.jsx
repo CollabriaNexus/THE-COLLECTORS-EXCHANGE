@@ -45,6 +45,7 @@ import {
 import { useMyOrders } from '../hooks/api/useOrders';
 import { supabase } from '../utils/supabase';
 import { uploadProductImage, uploadKycDocument, uploadTestimonialImage } from '../utils/storage';
+import { resolveKycDocumentHref } from '../utils/kycDocuments';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -508,14 +509,17 @@ const Account = () => {
     if (!file) return;
     setKycDocUploading((prev) => ({ ...prev, [docType]: true }));
     try {
-      const url = await uploadKycDocument(file, docType);
+      // Returns a PRIVATE storage path (`kyc/<uid>/<uuid>.<ext>`), not a URL.
+      // That path is what gets persisted in kycData; only an admin can exchange
+      // it for a short-lived signed URL.
+      const storagePath = await uploadKycDocument(file, docType);
       const fieldMap = {
         aadhaar: 'aadhaarDoc',
         pan: 'panDoc',
         gst: 'gstDoc',
         incorporation: 'incorporationDoc',
       };
-      setKycForm((prev) => ({ ...prev, [fieldMap[docType]]: url }));
+      setKycForm((prev) => ({ ...prev, [fieldMap[docType]]: storagePath }));
       showToast(
         `${docType.charAt(0).toUpperCase() + docType.slice(1)} document uploaded successfully`,
         'success',
@@ -1346,6 +1350,7 @@ const Account = () => {
                           placeholder="Enter 12-digit Aadhaar number"
                           value={kycForm.aadhaar}
                           docUrl={kycForm.aadhaarDoc}
+                          docHref={resolveKycDocumentHref(kycForm.aadhaarDoc)}
                           docType="aadhaar"
                           uploading={kycDocUploading.aadhaar}
                           onValueChange={(v) => setKycForm({ ...kycForm, aadhaar: v })}
@@ -1356,6 +1361,7 @@ const Account = () => {
                           placeholder="Enter 10-digit PAN"
                           value={kycForm.pan}
                           docUrl={kycForm.panDoc}
+                          docHref={resolveKycDocumentHref(kycForm.panDoc)}
                           docType="pan"
                           uploading={kycDocUploading.pan}
                           onValueChange={(v) => setKycForm({ ...kycForm, pan: v })}
@@ -1369,6 +1375,7 @@ const Account = () => {
                           placeholder="Enter 12-digit Aadhaar number"
                           value={kycForm.aadhaar}
                           docUrl={kycForm.aadhaarDoc}
+                          docHref={resolveKycDocumentHref(kycForm.aadhaarDoc)}
                           docType="aadhaar"
                           uploading={kycDocUploading.aadhaar}
                           onValueChange={(v) => setKycForm({ ...kycForm, aadhaar: v })}
@@ -1379,6 +1386,7 @@ const Account = () => {
                           placeholder="Enter 10-digit PAN"
                           value={kycForm.pan}
                           docUrl={kycForm.panDoc}
+                          docHref={resolveKycDocumentHref(kycForm.panDoc)}
                           docType="pan"
                           uploading={kycDocUploading.pan}
                           onValueChange={(v) => setKycForm({ ...kycForm, pan: v })}
@@ -1407,6 +1415,7 @@ const Account = () => {
                             placeholder="Enter GST number"
                             value={kycForm.gst}
                             docUrl={kycForm.gstDoc}
+                            docHref={resolveKycDocumentHref(kycForm.gstDoc)}
                             docType="gst"
                             uploading={kycDocUploading.gst}
                             onValueChange={(v) => setKycForm({ ...kycForm, gst: v })}
@@ -1429,6 +1438,7 @@ const Account = () => {
                           <DocUploadField
                             label="Certificate of Incorporation / LLP Registration"
                             docUrl={kycForm.incorporationDoc}
+                            docHref={resolveKycDocumentHref(kycForm.incorporationDoc)}
                             docType="incorporation"
                             uploading={kycDocUploading.incorporation}
                             onFileUpload={(f) => handleKycDocUpload('incorporation', f)}

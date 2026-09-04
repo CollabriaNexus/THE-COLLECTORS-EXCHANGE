@@ -138,7 +138,7 @@ export default async function vendorRoutes(fastify) {
   // Get vendor analytics overview
   fastify.get(
     '/analytics/overview',
-    { preValidation: [fastify.authenticate] },
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
     async (request, reply) => {
       const dbUser = request.dbUser;
       const { period = '30d' } = request.query;
@@ -215,7 +215,7 @@ export default async function vendorRoutes(fastify) {
   // Get customer interest funnel
   fastify.get(
     '/analytics/interest',
-    { preValidation: [fastify.authenticate] },
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
     async (request, reply) => {
       const dbUser = request.dbUser;
       const { period = '30d' } = request.query;
@@ -253,7 +253,7 @@ export default async function vendorRoutes(fastify) {
   // Get sales graph data (time-series grouped by day)
   fastify.get(
     '/analytics/sales-graph',
-    { preValidation: [fastify.authenticate] },
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
     async (request, reply) => {
       const dbUser = request.dbUser;
       const { period = '30d' } = request.query;
@@ -322,7 +322,7 @@ export default async function vendorRoutes(fastify) {
   // Get top-selling products
   fastify.get(
     '/analytics/top-products',
-    { preValidation: [fastify.authenticate] },
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
     async (request, reply) => {
       const dbUser = request.dbUser;
       const { period = '30d', limit = 10 } = request.query;
@@ -395,47 +395,51 @@ export default async function vendorRoutes(fastify) {
   );
 
   // Get vendor payouts with filters
-  fastify.get('/payouts', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-    const dbUser = request.dbUser;
-    const { status, from, to, page = 1, limit = 20 } = request.query;
+  fastify.get(
+    '/payouts',
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
+    async (request, reply) => {
+      const dbUser = request.dbUser;
+      const { status, from, to, page = 1, limit = 20 } = request.query;
 
-    const vendor = await prisma.vendor.findUnique({ where: { userId: dbUser.id } });
-    if (!vendor) return reply.status(404).send({ error: 'Vendor profile not found' });
+      const vendor = await prisma.vendor.findUnique({ where: { userId: dbUser.id } });
+      if (!vendor) return reply.status(404).send({ error: 'Vendor profile not found' });
 
-    const where = { vendorId: vendor.id };
-    if (status) where.status = status;
-    if (from || to) {
-      where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(from);
-      if (to) where.createdAt.lte = new Date(to);
-    }
+      const where = { vendorId: vendor.id };
+      if (status) where.status = status;
+      if (from || to) {
+        where.createdAt = {};
+        if (from) where.createdAt.gte = new Date(from);
+        if (to) where.createdAt.lte = new Date(to);
+      }
 
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-    const [payouts, total] = await Promise.all([
-      prisma.payout.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: parseInt(limit, 10),
-      }),
-      prisma.payout.count({ where }),
-    ]);
+      const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+      const [payouts, total] = await Promise.all([
+        prisma.payout.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: parseInt(limit, 10),
+        }),
+        prisma.payout.count({ where }),
+      ]);
 
-    return {
-      payouts,
-      pagination: {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10),
-        total,
-        pages: Math.ceil(total / parseInt(limit, 10)),
-      },
-    };
-  });
+      return {
+        payouts,
+        pagination: {
+          page: parseInt(page, 10),
+          limit: parseInt(limit, 10),
+          total,
+          pages: Math.ceil(total / parseInt(limit, 10)),
+        },
+      };
+    },
+  );
 
   // Update vendor pickup address
   fastify.patch(
     '/pickup-address',
-    { preValidation: [fastify.authenticate] },
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
     async (request, reply) => {
       const dbUser = request.dbUser;
       const { pickupAddress, pickupCity, pickupState, pickupZip, pickupContactName, pickupPhone } =
@@ -461,86 +465,96 @@ export default async function vendorRoutes(fastify) {
   );
 
   // Rate a vendor (buyers after purchase, one rating per user)
-  fastify.post('/rate', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-    const dbUser = request.dbUser;
-    const { vendorId, rating } = request.body;
+  fastify.post(
+    '/rate',
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
+    async (request, reply) => {
+      const dbUser = request.dbUser;
+      const { vendorId, rating } = request.body;
 
-    if (!vendorId || !rating || rating < 1 || rating > 5) {
-      return reply.status(400).send({ error: 'Valid vendorId and rating (1-5) required' });
-    }
+      if (!vendorId || !rating || rating < 1 || rating > 5) {
+        return reply.status(400).send({ error: 'Valid vendorId and rating (1-5) required' });
+      }
 
-    const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
-    if (!vendor) return reply.status(404).send({ error: 'Vendor not found' });
+      const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
+      if (!vendor) return reply.status(404).send({ error: 'Vendor not found' });
 
-    // Check user purchased from this vendor
-    const vendorProductIds = (
-      await prisma.product.findMany({
-        where: { sellerId: vendor.userId },
-        select: { id: true },
-      })
-    ).map((p) => p.id);
+      // Check user purchased from this vendor
+      const vendorProductIds = (
+        await prisma.product.findMany({
+          where: { sellerId: vendor.userId },
+          select: { id: true },
+        })
+      ).map((p) => p.id);
 
-    const purchasedItem = await prisma.orderItem.findFirst({
-      where: {
-        productId: { in: vendorProductIds },
-        order: { userId: dbUser.id, paymentStatus: 'Paid', status: { not: 'Cancelled' } },
-      },
-    });
-    if (!purchasedItem) {
-      return reply.status(403).send({ error: 'You must purchase from this vendor before rating' });
-    }
-
-    // Check for existing rating
-    const existingRating = await prisma.rating.findUnique({
-      where: { userId_vendorId: { userId: dbUser.id, vendorId } },
-    });
-    if (existingRating) {
-      return reply.status(422).send({ error: 'You have already rated this vendor' });
-    }
-
-    await prisma.$transaction(async (tx) => {
-      const currentVendor = await tx.vendor.findUnique({ where: { id: vendorId } });
-      await tx.rating.create({
-        data: { userId: dbUser.id, vendorId, rating },
+      const purchasedItem = await prisma.orderItem.findFirst({
+        where: {
+          productId: { in: vendorProductIds },
+          order: { userId: dbUser.id, paymentStatus: 'Paid', status: { not: 'Cancelled' } },
+        },
       });
-      const prevRating = currentVendor.rating * currentVendor.ratingCount;
-      const newCount = currentVendor.ratingCount + 1;
-      const newRating = (prevRating + rating) / newCount;
-      await tx.vendor.update({
-        where: { id: vendorId },
-        data: { rating: newRating, ratingCount: newCount },
-      });
-    });
+      if (!purchasedItem) {
+        return reply
+          .status(403)
+          .send({ error: 'You must purchase from this vendor before rating' });
+      }
 
-    return { message: 'Rating submitted' };
-  });
+      // Check for existing rating
+      const existingRating = await prisma.rating.findUnique({
+        where: { userId_vendorId: { userId: dbUser.id, vendorId } },
+      });
+      if (existingRating) {
+        return reply.status(422).send({ error: 'You have already rated this vendor' });
+      }
+
+      await prisma.$transaction(async (tx) => {
+        const currentVendor = await tx.vendor.findUnique({ where: { id: vendorId } });
+        await tx.rating.create({
+          data: { userId: dbUser.id, vendorId, rating },
+        });
+        const prevRating = currentVendor.rating * currentVendor.ratingCount;
+        const newCount = currentVendor.ratingCount + 1;
+        const newRating = (prevRating + rating) / newCount;
+        await tx.vendor.update({
+          where: { id: vendorId },
+          data: { rating: newRating, ratingCount: newCount },
+        });
+      });
+
+      return { message: 'Rating submitted' };
+    },
+  );
 
   // Get vendor's sold orders (orders containing vendor's products)
-  fastify.get('/orders', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-    const dbUser = request.dbUser;
-    const productIds = (
-      await prisma.product.findMany({
-        where: { sellerId: dbUser.id },
-        select: { id: true },
-      })
-    ).map((p) => p.id);
+  fastify.get(
+    '/orders',
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
+    async (request, reply) => {
+      const dbUser = request.dbUser;
+      const productIds = (
+        await prisma.product.findMany({
+          where: { sellerId: dbUser.id },
+          select: { id: true },
+        })
+      ).map((p) => p.id);
 
-    const orderItems = await prisma.orderItem.findMany({
-      where: { productId: { in: productIds } },
-      include: {
-        order: { include: { user: { select: { name: true } } } },
-        product: { select: { id: true, title: true, image: true, price: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+      const orderItems = await prisma.orderItem.findMany({
+        where: { productId: { in: productIds } },
+        include: {
+          order: { include: { user: { select: { name: true } } } },
+          product: { select: { id: true, title: true, image: true, price: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
 
-    return orderItems;
-  });
+      return orderItems;
+    },
+  );
 
   // Vendor marks order item as shipped with tracking ID
   fastify.patch(
     '/orders/:orderItemId/ship',
-    { preValidation: [fastify.authenticate] },
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
     async (request, reply) => {
       const { orderItemId } = request.params;
       const { trackingID } = request.body;

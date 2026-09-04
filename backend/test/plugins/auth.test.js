@@ -32,11 +32,42 @@ describe('auth plugin', () => {
   });
 
   describe('authenticate', () => {
-    it('returns 401 with no token', async () => {
+    it('returns 401 with no token, without echoing the internal reason', async () => {
       const app = await buildAuthenticatedApp();
       const res = await app.inject({ method: 'GET', url: '/test-auth' });
       expect(res.statusCode).toBe(401);
-      expect(res.json().error).toBe('No token provided');
+      expect(res.json().error).toBe('Unauthorized');
+      expect(res.body).not.toContain('No token provided');
+    });
+
+    it('does not echo the jose error message to the client', async () => {
+      const { jwtVerify } = await import('jose');
+      jwtVerify.mockRejectedValue(new Error('unexpected "iss" claim value'));
+      const app = await buildAuthenticatedApp();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/test-auth',
+        headers: { authorization: 'Bearer bad-token' },
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.json().error).toBe('Unauthorized');
+      expect(res.body).not.toContain('iss');
+    });
+
+    it('verifies the token against the expected issuer and audience', async () => {
+      const { jwtVerify } = await import('jose');
+      jwtVerify.mockResolvedValue({ payload: { sub: 'sb-123' } });
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      const app = await buildAuthenticatedApp();
+      await app.inject({
+        method: 'GET',
+        url: '/test-auth',
+        headers: { authorization: 'Bearer good-token' },
+      });
+      expect(jwtVerify).toHaveBeenCalledWith('good-token', 'mock-jwks', {
+        issuer: 'https://test.supabase.co/auth/v1',
+        audience: 'authenticated',
+      });
     });
 
     it('returns 401 with invalid token', async () => {

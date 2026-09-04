@@ -8,11 +8,46 @@ function buildApp(mockPrisma) {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return reply.status(401).send({ error: 'No token provided' });
     req.user = { sub: token === 'user2' ? 'sb-456' : 'sb-123' };
-    const dbUser = token === 'admin' ? { id: 'admin-id', role: 'admin', name: 'Admin', email: 'admin@test.com', supabaseId: 'sb-123', kycData: {} }
-      : token === 'curator' ? { id: 'curator-id', role: 'curator', name: 'Curator', email: 'curator@test.com', supabaseId: 'sb-123', kycData: {} }
-      : token === 'user2' ? { id: 'user2-id', role: 'user', name: 'User2', email: 'user2@test.com', supabaseId: 'sb-456', kycData: {} }
-      : { id: 'user-id', role: 'user', name: 'Test User', email: 'test@test.com', supabaseId: 'sb-123', kycData: {} };
+    const dbUser =
+      token === 'admin'
+        ? {
+            id: 'admin-id',
+            role: 'admin',
+            name: 'Admin',
+            email: 'admin@test.com',
+            supabaseId: 'sb-123',
+            kycData: {},
+          }
+        : token === 'curator'
+          ? {
+              id: 'curator-id',
+              role: 'curator',
+              name: 'Curator',
+              email: 'curator@test.com',
+              supabaseId: 'sb-123',
+              kycData: {},
+            }
+          : token === 'user2'
+            ? {
+                id: 'user2-id',
+                role: 'user',
+                name: 'User2',
+                email: 'user2@test.com',
+                supabaseId: 'sb-456',
+                kycData: {},
+              }
+            : {
+                id: 'user-id',
+                role: 'user',
+                name: 'Test User',
+                email: 'test@test.com',
+                supabaseId: 'sb-123',
+                kycData: {},
+              };
     req.dbUser = dbUser;
+  });
+  fastify.decorate('requireDbUser', async (req, reply) => {
+    if (!req.dbUser) return reply.status(401).send({ error: 'User profile not synchronized' });
   });
   return fastify;
 }
@@ -49,17 +84,35 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/register', payload: { email: 'test@test.com' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/register',
+        payload: { email: 'test@test.com' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(201);
     });
 
     it('updates existing user', async () => {
-      mockPrisma.user.findFirst.mockResolvedValue({ id: 'existing-id', email: 'test@test.com', name: 'Old' });
-      mockPrisma.user.update.mockResolvedValue({ id: 'existing-id', email: 'test@test.com', name: 'New' });
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 'existing-id',
+        email: 'test@test.com',
+        name: 'Old',
+      });
+      mockPrisma.user.update.mockResolvedValue({
+        id: 'existing-id',
+        email: 'test@test.com',
+        name: 'New',
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/register', payload: { email: 'test@test.com', name: 'New' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/register',
+        payload: { email: 'test@test.com', name: 'New' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -67,18 +120,34 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/register', payload: { email: 'test@test.com' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/register',
+        payload: { email: 'test@test.com' },
+      });
       expect(res.statusCode).toBe(401);
     });
   });
 
   describe('GET /me', () => {
     it('returns current user', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'test@test.com', products: [], cart: [], wishlist: [], orders: [], vendor: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        email: 'test@test.com',
+        products: [],
+        cart: [],
+        wishlist: [],
+        orders: [],
+        vendor: null,
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/me', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/me',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -87,18 +156,32 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/me', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/me',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
 
   describe('GET /:id', () => {
     it('returns user by id (own)', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'test@test.com', products: [], cart: [], wishlist: [] });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        email: 'test@test.com',
+        products: [],
+        cart: [],
+        wishlist: [],
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/user-id', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/user-id',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -106,16 +189,30 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/other-id', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/other-id',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
     it('allows admin to access any user', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'other-id', email: 'other@test.com', products: [], cart: [], wishlist: [] });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'other-id',
+        email: 'other@test.com',
+        products: [],
+        cart: [],
+        wishlist: [],
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/other-id', headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/other-id',
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -124,7 +221,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/nonexistent', headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/nonexistent',
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
@@ -136,7 +237,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/orders', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/orders',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
@@ -148,7 +253,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/me', payload: { name: 'Updated' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/me',
+        payload: { name: 'Updated' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -157,7 +267,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/me', payload: { name: 'Updated' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/me',
+        payload: { name: 'Updated' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
@@ -169,7 +284,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/notifications', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/notifications',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -179,7 +298,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/notifications/read-all', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/notifications/read-all',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -190,7 +313,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/notifications/n1/read', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/notifications/n1/read',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -200,7 +327,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/notifications/n1/read', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/notifications/n1/read',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(404);
     });
   });
@@ -211,7 +342,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/kyc', payload: { kycData: { pan: 'ABCDE1234F' } }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/kyc',
+        payload: { kycData: { pan: 'ABCDE1234F' } },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -220,7 +356,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/kyc', payload: { kycData: { pan: 'ABCDE1234F' } }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/kyc',
+        payload: { kycData: { pan: 'ABCDE1234F' } },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(500);
     });
   });
@@ -228,11 +369,19 @@ describe('users routes', () => {
   describe('POST /seller-agreement/accept', () => {
     it('accepts seller agreement', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', kycData: {} });
-      mockPrisma.user.update.mockResolvedValue({ id: 'user-id', kycData: { agreementAccepted: true } });
+      mockPrisma.user.update.mockResolvedValue({
+        id: 'user-id',
+        kycData: { agreementAccepted: true },
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/seller-agreement/accept', payload: { signedByName: 'John Doe' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/seller-agreement/accept',
+        payload: { signedByName: 'John Doe' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -240,7 +389,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/seller-agreement/accept', payload: {}, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/seller-agreement/accept',
+        payload: {},
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(400);
     });
   });
@@ -262,7 +416,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/push-subscribe', payload: { endpoint: 'https://endpoint', keys: { p256dh: 'key1', auth: 'auth1' } }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/push-subscribe',
+        payload: { endpoint: 'https://endpoint', keys: { p256dh: 'key1', auth: 'auth1' } },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -271,7 +430,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/push-subscribe', payload: { endpoint: 'https://endpoint', keys: {} }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/push-subscribe',
+        payload: { endpoint: 'https://endpoint', keys: {} },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(400);
     });
 
@@ -281,7 +445,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'DELETE', url: '/push-subscribe', payload: { endpoint: 'https://endpoint' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/push-subscribe',
+        payload: { endpoint: 'https://endpoint' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });
@@ -289,11 +458,20 @@ describe('users routes', () => {
   describe('phone verification', () => {
     it('POST /phone/submit submits phone', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
-      mockPrisma.user.update.mockResolvedValue({ id: 'user-id', phone: '1234567890', phoneVerificationStatus: 'pending' });
+      mockPrisma.user.update.mockResolvedValue({
+        id: 'user-id',
+        phone: '1234567890',
+        phoneVerificationStatus: 'pending',
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/phone/submit', payload: { phone: '1234567890' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/phone/submit',
+        payload: { phone: '1234567890' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -301,7 +479,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/phone/submit', payload: { phone: '123' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/phone/submit',
+        payload: { phone: '123' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(400);
     });
 
@@ -310,7 +493,12 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'POST', url: '/phone/submit', payload: { phone: '1234567890' }, headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/phone/submit',
+        payload: { phone: '1234567890' },
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(409);
     });
 
@@ -319,7 +507,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/phone/verifications', headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/phone/verifications',
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -327,7 +519,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'GET', url: '/phone/verifications', headers: { authorization: 'Bearer user' } });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/phone/verifications',
+        headers: { authorization: 'Bearer user' },
+      });
       expect(res.statusCode).toBe(403);
     });
 
@@ -336,7 +532,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/phone/uid/approve', headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/phone/uid/approve',
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(200);
     });
 
@@ -345,7 +545,11 @@ describe('users routes', () => {
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/users.js')).default);
       await app.ready();
-      const res = await app.inject({ method: 'PATCH', url: '/phone/uid/reject', headers: { authorization: 'Bearer admin' } });
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/phone/uid/reject',
+        headers: { authorization: 'Bearer admin' },
+      });
       expect(res.statusCode).toBe(200);
     });
   });

@@ -439,36 +439,40 @@ export default async function productRoutes(fastify) {
   });
 
   // Mark product as sold (supports quantity decrement for multi-quantity items)
-  fastify.patch('/:id/sold', { preValidation: [fastify.authenticate] }, async (request, reply) => {
-    const { id } = ProductIdParam.parse(request.params);
-    const sellQty = request.body?.quantity || 1;
-    const dbUser = request.dbUser;
-    const existing = await prisma.product.findUnique({ where: { id } });
-    if (!existing) return reply.status(404).send({ error: 'Product not found' });
-    if (existing.sellerId !== dbUser.id)
-      return reply.status(403).send({ error: 'Not your product' });
-    if (existing.status === 'Sold')
-      return reply.status(422).send({ error: 'Product is already sold' });
-    if (existing.status !== 'Approved') {
-      return reply.status(422).send({ error: 'Only approved listings can be marked as sold' });
-    }
-    if (sellQty < 1 || sellQty > existing.quantity) {
-      return reply
-        .status(422)
-        .send({ error: `Quantity must be between 1 and ${existing.quantity}` });
-    }
+  fastify.patch(
+    '/:id/sold',
+    { preValidation: [fastify.authenticate, fastify.requireDbUser] },
+    async (request, reply) => {
+      const { id } = ProductIdParam.parse(request.params);
+      const sellQty = request.body?.quantity || 1;
+      const dbUser = request.dbUser;
+      const existing = await prisma.product.findUnique({ where: { id } });
+      if (!existing) return reply.status(404).send({ error: 'Product not found' });
+      if (existing.sellerId !== dbUser.id)
+        return reply.status(403).send({ error: 'Not your product' });
+      if (existing.status === 'Sold')
+        return reply.status(422).send({ error: 'Product is already sold' });
+      if (existing.status !== 'Approved') {
+        return reply.status(422).send({ error: 'Only approved listings can be marked as sold' });
+      }
+      if (sellQty < 1 || sellQty > existing.quantity) {
+        return reply
+          .status(422)
+          .send({ error: `Quantity must be between 1 and ${existing.quantity}` });
+      }
 
-    const remaining = existing.quantity - sellQty;
-    if (remaining <= 0) {
-      const updated = await prisma.product.update({
-        where: { id },
-        data: { status: 'Sold', quantity: 0 },
-      });
-      syncProductToMetaAsync(updated);
-      syncProductToGoogleAsync(updated);
+      const remaining = existing.quantity - sellQty;
+      if (remaining <= 0) {
+        const updated = await prisma.product.update({
+          where: { id },
+          data: { status: 'Sold', quantity: 0 },
+        });
+        syncProductToMetaAsync(updated);
+        syncProductToGoogleAsync(updated);
+        return withoutAdminNotes(updated);
+      }
+      const updated = await prisma.product.update({ where: { id }, data: { quantity: remaining } });
       return withoutAdminNotes(updated);
-    }
-    const updated = await prisma.product.update({ where: { id }, data: { quantity: remaining } });
-    return withoutAdminNotes(updated);
-  });
+    },
+  );
 }

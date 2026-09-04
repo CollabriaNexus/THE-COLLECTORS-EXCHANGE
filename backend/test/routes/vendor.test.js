@@ -13,6 +13,9 @@ function buildApp(mockPrisma) {
         ? { id: 'admin-id', role: 'admin' }
         : { id: 'vendor-user-id', role: 'user' };
   });
+  fastify.decorate('requireDbUser', async (req, reply) => {
+    if (!req.dbUser) return reply.status(401).send({ error: 'User profile not synchronized' });
+  });
   return fastify;
 }
 
@@ -61,6 +64,9 @@ describe('vendor routes', () => {
       fastify2.decorate('authenticate', async (req, reply) => {
         req.user = { sub: '' };
         req.dbUser = null;
+      });
+      fastify2.decorate('requireDbUser', async (req, reply) => {
+        if (!req.dbUser) return reply.status(401).send({ error: 'User profile not synchronized' });
       });
       await fastify2.register((await import('../../routes/vendor.js')).default);
       await fastify2.ready();
