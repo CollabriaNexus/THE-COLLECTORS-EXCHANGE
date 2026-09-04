@@ -275,3 +275,114 @@ npm run build && npx wrangler pages deploy dist --project-name=tce-user --branch
 - **Vendor Stats Unification**: Refactored `/vendor/stats` in `backend/routes/vendor.js` to query offline-sold products alongside online order items so `/vendor/stats` and `/vendor/analytics/overview` report consistent sales and item numbers.
 - **Revenue Chart Double-Counting Check**: Confirmed admin analytics endpoint (`/admin/stats/analytics` in `backend/routes/admin.js`) filters offline products with `orderItems: { none: {} }`, ensuring newly backfilled orders are correctly excluded from offline merge and counted under regular paid orders without double-counting.
 - **Supabase MCP Configuration**: Confirmed `.env` and Supabase credentials align with current workspace environment settings.
+
+### Session 7 — 2026-08-23
+
+**Objective:** QR scan tracking infrastructure (poster campaigns) + Meta Pixel + Facebook domain verification
+
+**QR Scan Tracking (full stack):**
+
+- Added `QrCode` (slug, title, targetUrl, active) and `QrScan` (visitorId, deviceHash, ipHash, geo, deviceType/os/browser) models — migration `create_qr_codes_and_scans` applied via Supabase MCP
+- Created `backend/lib/userAgent.js` (regex UA parser: deviceType/os/browser), `backend/lib/geo.js` (ip-api.com lookup, 900ms timeout cap, 12h in-memory cache, private-IP skip, IP normalization)
+- Created `backend/routes/qr.js` — public `GET /api/qr/:slug`: records scan then 302-redirects to configurable `targetUrl` (never 301 — retargeting must take effect instantly). Sets 1-year `tce_qid` cookie for unique-user counting. Redirects even if DB insert fails. Route-level rate limit 300/min
+- Created `backend/routes/qrAdmin.js` mounted at `/api/admin/qr`: codes CRUD + `/stats` (totals/timeline/hourly/locations/devices/OS/browsers via `$queryRaw`, day+hour buckets in Asia/Kolkata TZ) + `/filters` (distinct filter values). Zod schemas in `backend/schemas/qr.js`
+- Admin dashboard: new "QR Scans" page (`admin/src/pages/QrScans.jsx`) at `/qr-scans` — stat cards with previous-period comparison, ComposedChart scans-over-time, hourly distribution (IST), devices pie, OS/browser bars, locations table with share bars, country/city/device/OS filters, code manager modal (create/edit/copy endpoint URL/activate/delete). Hooks in `admin/src/hooks/api/useQr.js`
+- Tests: 30 new backend tests (routes/lib), admin page smoke tests. All green; pre-existing failures in Dashboard/Login/etc confirmed unrelated (fail without my changes)
+- Deployed Lambda (URL unchanged: `07u78lzel7...amazonaws.com`) and tce-admin to Cloudflare Pages
+- **Live smoke verified**: scan → 302 → correct geo captured (Coimbatore, IN, lat/long) + parsed Android/Chrome mobile UA
+
+**Gotchas discovered:**
+
+- The homepage served at `/` is NOT Vite's index.html — `scripts/prerender-blogs.mjs` overwrites `dist/index.html` with its own template. Head tags must be added to BOTH source `index.html` AND the prerender script (its `loadViteTemplate()` strips ALL `<meta>` from Vite's head via regex, but passes scripts through so they flow via `VITE_HEAD_EXTRA`)
+- `reply.redirect(url, 302)` — Fastify v5 signature is (url, code); use 302 not 301 so configurable targets apply instantly
+
+**Facebook/Meta integrations (user frontend only):**
+
+- Domain verification meta-tag added (`facebook-domain-verification`) — commit `43af5a3`, deployed, verified live
+- Meta Pixel base code added (ID `1814649636560455`, script + noscript in head) — commit `1f0bf6f`, deployed, verified live on production; propagates to all prerendered pages automatically
+- Both changes committed separately; user's blog/video WIP left untouched in working tree
+
+**Pending:**
+
+- User creates real QR codes via Admin → QR Scans → Manage Codes (paste endpoint URL into any external QR generator; redirect target editable anytime)
+- GitHub remote moved: update with `git remote set-url origin https://github.com/thebigmind-productions/THE-COLLECTORS-EXCHANGE.git`
+
+### Session 8 " 2026-08-23 (later)
+
+**Objective:** UI polish batch on user frontend (all deployed to tce-user, main branch, uncommitted)
+
+**QR poster asset:** Generated `src/assets/qr-codes/products-page-qr.png` (2048px) + `.svg` via `npx --yes qrcode`, encoding `/api/qr/products` (DB record `qr_products_page` " Products Page, target `https://thecollectorsexchange.in/category`). Live-verified 302; test scans cleaned up. Endpoint ~0.9s round-trip.
+
+**Category page (`src/pages/Category.jsx`):**
+
+- Removed long description paragraph under category heading ("Your phone tells the time..."); kept tagline + stock count
+- Mobile top/bottom padding `py-8` " `py-5`; desktop untouched
+- **CRITICAL GOTCHA**: the prerender script has its OWN copy of the description in `scripts/prerender-blogs.mjs` (CATEGORY_LANDING data + template line ~1044 renders tagline+intro). Removing it only from React still shows it in static HTML/SEO shell " must edit BOTH files
+- Authenticity note replaced with icon-only ShieldCheck (title tooltip + sr-only text)
+
+**Sign-in empty states:**
+
+- New reusable `src/components/SignInPrompt.jsx`: inline SVG vault-door keyhole illustration (dashed gold ring, antique key, bronze sparkles), "MEMBERS ONLY" eyebrow, serif title, black CTA w/ gold hover, ShieldCheck microcopy
+- Wired into Wishlist.jsx + Checkout.jsx replacing plain text versions
+
+**Snappier product grids:** removed scroll-reveal stagger (`Reveal delay=i*120`) from Category grid, ProductDetail related items, Wishlist grid (kept hover Tilt). Wishlist now imports only `{ Tilt }`
+
+**Rarest Finds section (`src/pages/Home.jsx`):**
+
+- Featured carousel now fetches ONLY `featured` (was merging most_rare)
+- New `RarestFinds` component below carousel: dark charcoal bg + gold dot pattern, "FROM THE VAULT" eyebrow, crown "Most Rare" badge cards, up to 8 items, sold sorted last, "Explore The Vault" CTA "/category", **auto-hides when zero most_rare products exist**
+- Populate via Admin " Products " Listing Category = Most Rare
+
+**Equal card sizing fix:** FeaturedProductCard had hardcoded widths (`w-[240px] sm:w-[280px] md:w-[320px]`) + no h-full + unclamped titles " unequal boxes in grid. Card is now width-agnostic (`w-full h-full`) + `line-clamp-2` title; carousel wraps cards in fixed-width divs (marquee geometry unchanged); RarestFinds Stagger uses `childClassName="h-full"`
+
+**Navbar FAQ removal:** FAQ removed from `PRIMARY_NAV` (`src/config/seo-pages.js`) AND `DEFAULT_NAV` (`scripts/prerender-blogs.mjs` keeps its own copy of nav for static shells). Footer link kept (Footer.jsx hardcoded). SEO.jsx sitelinks schema follows PRIMARY_NAV automatically
+
+**Test baselines (all pre-existing, verified via stash A/B):** Checkout/Wishlist/Home/ProductDetail tests fail identically before+after (stale useCheckout mock missing useValidateCoupon; jsdom lacks IntersectionObserver). Category tests pass 9/9
+
+**Pending:** user to verify domain in Facebook Business Manager; QR assets not yet committed
+
+### Session 9 — 2026-09-04
+
+**Objective:** Post-audit remediation — security, test/CI health, consent, performance. Site owner handled DB password rotation + `kyc-documents` bucket lockdown separately.
+
+**Standing directive from this session:** the storefront's current stripped-down state (see `docs/TEMPORARY_CHANGES_ROLLBACK.md`) is temporary. Write code for the PERMANENT marketplace state; do not build around, extend, or undo the temporary changes.
+
+**Security:**
+
+- `uploadKycDocument()` (`src/utils/storage.js`) no longer falls back to the **public** `product-images` bucket on error — that branch published Aadhaar/PAN scans at permanent public URLs. Verified the leak never fired: enumerated `product-images` (436 objects), zero matching the fallback's `kyc-<ts>-<rand>` naming.
+- KYC now stores a private path `kyc/<supabase uid>/<crypto.randomUUID()>.<ext>`, not a public URL. Admin previews go through a new service-role signing endpoint `GET /api/admin/kyc/:userId/signed-url` (120s TTL), gated by `authenticateAdmin`.
+- Authorisation there is an **allowlist of the paths that user's own `kycData` actually references** (`collectKycDocumentPaths`), plus a folder-ownership check — not path-prefix matching. This is what lets legacy non-user-scoped objects still resolve.
+- All three shapes (legacy public URL, `/render/image/` URL, bare path) normalise via `kycStoragePathFromReference`, mirrored in `backend/lib/`, `src/utils/`, `admin/src/utils/` — **keep the three in sync.**
+- `backend/plugins/auth.js`: `jwtVerify` now checks `issuer` (confirmed against the project's OIDC discovery doc) and `audience`. **`aud: 'authenticated'` was never confirmed against a real token** — overridable via `SUPABASE_JWT_AUDIENCE`, and `ERR_JWT_CLAIM_VALIDATION_FAILED` is logged distinctly so a misconfig reads as config error, not a mystery 401 storm.
+- `requireDbUser` added to 19 routes that dereferenced a legitimately-null `request.dbUser`.
+- Pino `redact` config added to `backend/server.js`.
+- **Un-applied:** `docs/kyc-documents-storage-rls.sql` — owner runs it.
+
+**CI green for the first time since 2026-08-11.** Was 52 failing / 21 files + 6 lint errors. Now `npm run test:unit` exits 0: root 411, backend 559, admin 329; lint 0 errors.
+
+- Root causes were mostly misdiagnosed at audit time: the "IntersectionObserver" failures were actually `react-helmet-async` with no `HelmetProvider`; the `apiClient` "cannot find module" was a CJS `require()` inside an ESM test, **not** a resolution bug.
+- New shared helpers: `src/test/utils.jsx` (`renderWithProviders`), IO/RO/scrollTo stubs in `src/test/setup.js`.
+- `.wrangler/` added to `.gitignore` + `eslint.config.js` (it was the source of all 6 lint errors).
+
+**Config de-duplication.** `scripts/prerender-blogs.mjs` now imports `SITE_URL`/`PRIMARY_NAV`/`CORE_PAGES` from `src/config/seo-pages.js` and category data from the new `src/config/categories.js`, instead of forking them. **The old comment claiming the build script "can't import the React-side config" was false — that file has zero imports and Node reads it fine.** Refactor proved safe by md5-matching all 20 generated HTML files before/after.
+
+**Consent gate (DPDP/GDPR).** Meta Pixel + GA4 previously fired unconditionally on every page. Now nothing loads until `localStorage['tce_consent_v1'] === 'granted'`; the `<noscript>` `facebook.com/tr` pixel is deleted. `src/utils/consent.js` + `src/components/ConsentBanner.jsx`; withdrawal via Footer (desktop) and Privacy page (mobile — the footer is inside `hidden lg:block`). Verified in `dist/`: gate precedes every tracker reference on all 20 pages.
+
+**Performance.** `src/utils/image.js` wraps Supabase image transforms (which ARE enabled on this project). Real numbers on a live object: 760,558 B original → 40,904 B at `width=400` with WebP negotiation (18.6×), 19,212 B at 200 (39.6×). Wired into 15 React call sites plus the 4 prerender `<img>` sites. og:image/twitter:image and JSON-LD `image` deliberately keep the full-resolution original.
+
+**Bugs found and fixed along the way:**
+
+- `ErrorBoundary` was an **infinite reload loop**: `componentDidCatch` called `window.location.reload()` unconditionally and rendered `null`, so any deterministic error looped forever on a blank page. Now reloads once per 10s window, then shows a real fallback. Instance `handled` guard because `componentDidCatch` can fire more than once per failure.
+- `src/pages/Privacy.jsx` claimed _"We do not use invasive 'pixel' tracking"_ while shipping the Meta Pixel. Rewritten.
+- Cart remove button was an icon-only button with no accessible name.
+- `useMediaQuery` dereferenced `window` unguarded in its effect.
+
+**Open / for the owner:**
+
+- [ ] Confirm `aud === 'authenticated'` on a real session token before deploying the backend.
+- [ ] Apply `docs/kyc-documents-storage-rls.sql`, then lock the bucket (safe now — legacy URLs resolve via signing).
+- [ ] Brand scrub is incomplete: prerendered `/category/timepieces/` still ships "Rolex, Omega, HMT, Seiko" in meta + JSON-LD. One `prerenderMetaDescription` line in `src/config/categories.js`.
+- [ ] Commit `33350ca` (titled as an API-URL fix) silently deleted the category tagline/intro from `buildCategoryHtml` and dropped `/faq` from the nav — category landings are now thin content. Needs new copy; `intro` no longer exists on the entries.
+- [ ] `src/components/ProductCard.jsx` is dead code — only its own test imports it; the live card is `ArchiveProductCard` in `Category.jsx`.
+- [ ] Returning consenting visitors lose their initial GA4 pageview (idle-deferred load races `GATracker` mount in `App.jsx`).
+- [ ] Still deferred: real SSR/`hydrateRoot` (prerender builds HTML from string templates, not React SSR); real E2E flows (`tests/flows/` is empty).
