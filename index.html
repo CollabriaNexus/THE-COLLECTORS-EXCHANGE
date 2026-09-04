@@ -31,26 +31,8 @@
   <!-- Facebook / Meta domain ownership verification -->
   <meta name="facebook-domain-verification" content="pc03600zuo2z6e3bwn0i3vj7nbz6j8" />
 
-  <!-- Meta Pixel Code -->
-  <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1814649636560455');
-    fbq('track', 'PageView');
-  </script>
-  <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1814649636560455&ev=PageView&noscript=1"
-  /></noscript>
-  <!-- End Meta Pixel Code -->
-
   <style>
-    *,*::before,*::after{box-sizing:border-box}:root{--color-primary-bg:#FFFFFF;--color-secondary-bg:#F9F9F9;--color-text-main:#000000;--color-text-inverse:#FFFFFF;--color-obsidian:#0A0A0A;--color-brass:#B8860B;--color-luxury-gold:#D4AF37;--color-heritage-charcoal:#1C1C1C;--color-heritage-dark:#2A2A2A;--color-heritage-brown:#3D3028;--color-heritage-warm:#4A3F35;--color-heritage-beige:#F5F0E8;--color-heritage-cream:#FAF8F5;--color-heritage-bronze:#7A6044;--color-heritage-gold-muted:#9A7C35;--font-family-serif:"Playfair Display",serif;--font-family-sans:"Inter",sans-serif}body{background-color:var(--color-primary-bg);color:var(--color-text-main);font-family:var(--font-family-sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}h1,h2,h3,h4,h5,h6{font-family:var(--font-family-serif)}img,video{aspect-ratio:attr(width)/attr(height)}img[loading=lazy]{background:#f5f5f5}.aspect-4-5{aspect-ratio:4/5}.aspect-square-ph{aspect-ratio:1/1}html{scroll-behavior:smooth}*:focus-visible{outline:2px solid var(--color-luxury-gold);outline-offset:2px}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}@media (hover:none) and (pointer:coarse){button,a,[role=button],input,select,textarea{min-height:44px}a:has(svg:only-child),button:has(svg:only-child){min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}}
+    *,*::before,*::after{box-sizing:border-box}:root{--color-primary-bg:#FFFFFF;--color-secondary-bg:#F9F9F9;--color-text-main:#000000;--color-text-inverse:#FFFFFF;--color-obsidian:#0A0A0A;--color-brass:#B8860B;--color-luxury-gold:#D4AF37;--color-heritage-charcoal:#1C1C1C;--color-heritage-dark:#2A2A2A;--color-heritage-brown:#3D3028;--color-heritage-warm:#4A3F35;--color-heritage-beige:#F5F0E8;--color-heritage-cream:#FAF8F5;--color-heritage-bronze:#7A6044;--color-heritage-gold-muted:#9A7C35;--font-family-serif:"Playfair Display",serif;--font-family-sans:"Inter",sans-serif}body{background-color:var(--color-primary-bg);color:var(--color-text-main);font-family:var(--font-family-sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}h1,h2,h3,h4,h5,h6{font-family:var(--font-family-serif)}img[loading=lazy]{background:#f5f5f5}.aspect-4-5{aspect-ratio:4/5}.aspect-square-ph{aspect-ratio:1/1}html{scroll-behavior:smooth}*:focus-visible{outline:2px solid var(--color-luxury-gold);outline-offset:2px}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}@media (hover:none) and (pointer:coarse){button,a,[role=button],input,select,textarea{min-height:44px}a:has(svg:only-child),button:has(svg:only-child){min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}}
   </style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -60,16 +42,49 @@
   <link rel="preload" href="/src/assets/hero-background.webp" as="image" fetchpriority="high" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" /></noscript>
 
+  <!-- Consent-gated analytics bootstrap. Nothing below reaches Meta or Google
+       unless THIS browser already stored an explicit "granted" decision. See
+       src/utils/consent.js for the full contract, the accept-now path and the
+       storage key/tag IDs this duplicates. scripts/prerender-blogs.mjs copies
+       this block into every static page, so the gate ships everywhere. The old
+       Meta <noscript> pixel is gone: an <img> cannot be consent-gated. -->
   <script>
-    (function(){
-      var d=document,w=window;
-      function loadGA(){
-        var s=d.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-MFQBH0YJ0K';
-        var g=d.createElement('script');g.innerHTML="window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-MFQBH0YJ0K',{send_page_view:false});";
-        d.head.appendChild(s);d.head.appendChild(g);
+    (function () {
+      var stored = null;
+      try {
+        stored = window.localStorage.getItem('tce_consent_v1');
+      } catch (e) {
+        stored = null;
       }
-      if(w.requestIdleCallback)w.requestIdleCallback(loadGA,{timeout:2000});
-      else setTimeout(loadGA,1000);
+      if (stored !== 'granted') return;
+      window.__tceAnalyticsLoaded = true;
+
+      var d = document;
+
+      /* Meta Pixel */
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', '1814649636560455');
+      window.fbq('track', 'PageView');
+
+      /* GA4 — still deferred to idle, but now only for a consenting visitor. */
+      function loadGA() {
+        var s = d.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-MFQBH0YJ0K';
+        var g = d.createElement('script');
+        g.innerHTML = "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-MFQBH0YJ0K',{send_page_view:false});";
+        d.head.appendChild(s);
+        d.head.appendChild(g);
+      }
+      if (window.requestIdleCallback) window.requestIdleCallback(loadGA, { timeout: 2000 });
+      else setTimeout(loadGA, 1000);
     })();
   </script>
 

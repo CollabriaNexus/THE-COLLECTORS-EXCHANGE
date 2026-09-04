@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Linkedin, Mail, Phone, MessageCircle } from 'lucide-react';
+import { openConsentPreferences } from '../utils/consent';
 
 const Footer = () => {
   return (
@@ -128,6 +129,15 @@ const Footer = () => {
                 <Link to="/account" className="hover:text-white transition-colors duration-300">
                   My Account
                 </Link>
+                {/* Withdrawal path for the analytics/advertising consent gate —
+                    reopens ConsentBanner so a visitor can change their mind. */}
+                <button
+                  type="button"
+                  onClick={openConsentPreferences}
+                  className="text-left hover:text-white transition-colors duration-300"
+                >
+                  Cookie Preferences
+                </button>
               </div>
               <div className="flex gap-3 sm:gap-4 pt-1 sm:pt-2">
                 <a

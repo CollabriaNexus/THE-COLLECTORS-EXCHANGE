@@ -3,6 +3,7 @@ import { Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowUp } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
+import ConsentBanner from './ConsentBanner';
 import WhatsAppIcon from './WhatsAppIcon';
 import { ScrollProgress } from './Motion';
 import { OrganizationSchema, SiteNavigationSchema } from './SEO';
@@ -35,6 +36,10 @@ const Layout = () => {
       >
         Skip to main content
       </a>
+      {/* Mounted before the header so a keyboard user reaches Reject/Accept
+          immediately after the skip link, rather than tabbing the whole page.
+          It is position:fixed, so DOM order costs nothing visually. */}
+      <ConsentBanner />
       <Header />
       <main
         id="main-content"

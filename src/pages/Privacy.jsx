@@ -1,6 +1,7 @@
 import React from 'react';
 import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { Reveal } from '../components/Motion';
+import { openConsentPreferences } from '../utils/consent';
 
 const PRIVACY_TITLE = 'Privacy Policy';
 const PRIVACY_DESC =
@@ -128,11 +129,71 @@ const Privacy = () => {
           <p className="mb-3 text-gray-700">
             While we use a digital platform to reach "netizens," we keep our digital footprint lean.
           </p>
-          <p className="mb-2 font-medium text-black">Minimal Tracking:</p>
+
+          <p className="mb-2 font-medium text-black">Nothing Loads Until You Say Yes:</p>
           <p className="mb-3 text-gray-700">
-            We use only essential cookies required for the website to function. We do not use
-            invasive "pixel" tracking to follow you across the internet.
+            Beyond the cookies this site needs to function (your cart, your session, your saved
+            preferences), we use two measurement tools — and neither one is loaded until you have
+            explicitly accepted them on the consent banner. Before you choose, and if you choose
+            Reject, no request is made to Google or Meta at all and nothing about your visit is sent
+            to them.
           </p>
+
+          <p className="mb-2 font-medium text-black">If You Accept, These Two Run:</p>
+          <ul className="space-y-3 text-gray-700 mb-3">
+            <li className="flex items-start gap-3">
+              <span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">
+                •
+              </span>
+              <div>
+                <span className="font-medium text-black">Google Analytics 4:</span>
+                <span className="block text-gray-600">
+                  {' '}
+                  Loads scripts from googletagmanager.com and sets <code>_ga</code> cookies. It
+                  records which pages of this site you open, and sends Google the standard technical
+                  details that come with any web request — your IP address (from which Google
+                  derives an approximate location), your browser and device, and the page that
+                  referred you. We use it to see which pages are worth keeping.
+                </span>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-luxury-gold mt-1.5 font-bold" aria-hidden="true">
+                •
+              </span>
+              <div>
+                <span className="font-medium text-black">Meta (Facebook) Pixel:</span>
+                <span className="block text-gray-600">
+                  {' '}
+                  Loads a script from connect.facebook.net and sets <code>_fbp</code> cookies. It
+                  reports your page views on this site to Meta, along with the same standard request
+                  details. Meta can link that activity to your Facebook or Instagram account, and it
+                  is what lets us measure and target advertising. This is genuinely third-party
+                  tracking, which is exactly why we ask first.
+                </span>
+              </div>
+            </li>
+          </ul>
+
+          <p className="mb-2 font-medium text-black">Changing Your Mind:</p>
+          <p className="mb-3 text-gray-700">
+            Your answer is stored only in your own browser (local storage, under{' '}
+            <code>tce_consent_v1</code>) — we keep no server-side record of it, so clearing your
+            browser data simply means we ask again. Use{' '}
+            <button
+              type="button"
+              onClick={openConsentPreferences}
+              className="font-medium text-black underline decoration-luxury-gold underline-offset-4 transition-colors duration-300 hover:text-luxury-gold"
+            >
+              Cookie preferences
+            </button>{' '}
+            here, or the same link in the site footer, to reopen the banner at any time. Choosing
+            Reject stops both tools immediately — no page reload needed — and we clear the{' '}
+            <code>_ga</code> and <code>_fb</code> cookies your browser will let us reach. Cookies
+            already set by Google or Meta on their own domains are theirs to expire; you can remove
+            them through your browser's site-data settings.
+          </p>
+
           <p className="mb-2 font-medium text-black">Payment Security:</p>
           <p className="text-gray-700">
             We use high-integrity, encrypted payment gateways. We never see and therefore never
