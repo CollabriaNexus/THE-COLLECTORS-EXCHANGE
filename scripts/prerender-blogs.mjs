@@ -3,10 +3,31 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { getProductSchemaCondition } from '../src/utils/productSeo.js';
+// Shared with the React app — these config modules are plain ESM precisely so
+// this build script can import them instead of keeping its own forked copies
+// (which is what used to drift: copy removed from the React side stayed live
+// in the prerendered HTML crawlers read). Do not re-declare any of this here.
+// buildCanonicalPath() is the shared trailing-slash rule: Cloudflare Pages
+// 308-redirects directory-style paths without a trailing slash, so canonical
+// and sitemap URLs must match the URL that actually serves 200.
+import {
+  SITE_URL,
+  DEFAULT_OG_IMAGE,
+  PRIMARY_NAV,
+  CORE_PAGES,
+  buildCanonicalPath,
+  resolveImageUrl,
+} from '../src/config/seo-pages.js';
+import { CATEGORIES } from '../src/config/categories.js';
+// Same Supabase image-transform helper the React components use. It is a pure
+// module with no Vite dependency (its import.meta.env read is guarded), so the
+// static shells can serve the same resized/WebP-negotiated images the app does
+// — which matters more here than anywhere, since this markup IS the first
+// paint Google measures LCP against.
+import { imageProps } from '../src/utils/image.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, '..', 'dist');
-const SITE_URL = 'https://thecollectorsexchange.in';
 const ROOT_URL = `${SITE_URL}/`;
 const ORGANIZATION_ID = `${ROOT_URL}#organization`;
 const WEBSITE_ID = `${ROOT_URL}#website`;
@@ -19,6 +40,13 @@ const API_URL =
 let VITE_HEAD_EXTRA = '';
 let VITE_BODY_EXTRA = '';
 
+// Strips <meta>/<title>/<link rel=canonical|icon> out of Vite's built head
+// (each generated page writes its own) but deliberately passes <script> and
+// <style> through. That pass-through is load-bearing: the consent-gated
+// analytics bootstrap in index.html rides VITE_HEAD_EXTRA into every page
+// generated below, which is the only reason the gate ships on the static
+// shells crawlers and visitors actually receive. If you ever start filtering
+// scripts here, the gate has to be re-injected explicitly.
 function loadViteTemplate() {
   const viteIndex = readFileSync(resolve(DIST, 'index.html'), 'utf-8');
   VITE_HEAD_EXTRA =
@@ -41,19 +69,32 @@ function loadViteTemplate() {
       ?.trim() ?? '';
 }
 
-// Cloudflare Pages 308-redirects directory-style paths without a trailing
-// slash to the slash version. Canonical/sitemap URLs must match what
-// actually serves 200, or Google flags a redirect/canonical mismatch.
-function withTrailingSlash(path) {
-  return path.endsWith('/') ? path : `${path}/`;
-}
-
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/**
+ * Escaped `src`/`srcset`/`sizes` for a *visible* image. Anything that is not a
+ * stored Supabase object URL (external host, bundled asset, empty) is returned
+ * untouched by imageProps, so this is safe to apply everywhere.
+ *
+ * Deliberately NOT used for JSON-LD `image` fields or `og:image`: structured
+ * data and social unfurls should point at the original full-resolution asset,
+ * not a display thumbnail.
+ */
+function responsiveImgAttrs(src, config) {
+  const { src: url, srcSet, sizes } = imageProps(src, config);
+  return [
+    `src="${escapeHtml(url)}"`,
+    srcSet ? `srcset="${escapeHtml(srcSet)}"` : '',
+    sizes ? `sizes="${escapeHtml(sizes)}"` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 function serializeJsonLd(value) {
@@ -86,191 +127,13 @@ function stripHtml(html) {
 /*  CORE PAGE PRERENDER                                                */
 /* ------------------------------------------------------------------ */
 
-// About Us and The Archive are temporarily removed — both pages are
-// hidden/redirected right now. See docs/TEMPORARY_CHANGES_ROLLBACK.md.
-const DEFAULT_NAV = [
-  { name: 'The Exchange', path: '/category' },
-  { name: 'Contact', path: '/contact' },
-  { name: 'Vision', path: '/vision' },
-];
-
-const CORE_PAGES = {
-  // Title/description simplified and the `video` block dropped along with
-  // the hero video — see docs/TEMPORARY_CHANGES_ROLLBACK.md to restore.
-  '/': {
-    title: 'Quality Everyday Products',
-    description: 'Shop quality everyday products at great prices, shipped across India.',
-    ogImage: '/og-image.png',
-    schemaType: null,
-    breadcrumb: null,
-    navLinks: DEFAULT_NAV,
-  },
-  // '/about' entry removed — the page is temporarily hidden/redirected.
-  // See docs/TEMPORARY_CHANGES_ROLLBACK.md to restore.
-  '/category': {
-    title: 'The Exchange',
-    description: 'Shop quality everyday products at great prices, shipped across India.',
-    ogImage: '/og-image.png',
-    schemaType: 'CollectionPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'The Exchange', url: '/category' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-  '/contact': {
-    title: 'Contact Us',
-    description:
-      'Contact The Collectors Exchange for buying, selling, or partnership inquiries. Email support@thecollectorsexchange.in. We respond within 24 to 48 hours.',
-    ogImage: '/og-image.png',
-    schemaType: 'ContactPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'Contact Us', url: '/contact' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-  '/faq': {
-    title: 'FAQ',
-    description:
-      'Answers about buying, selling, shipping, payments, and account security on The Collectors Exchange. Learn how authentication, returns, and payouts work.',
-    ogImage: '/og-image.png',
-    schemaType: 'FAQPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'FAQ', url: '/faq' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-  '/vision': {
-    title: 'Our Vision',
-    description:
-      'The Collectors Exchange vision: a trusted global archive where heritage, authenticity, and expert verification define how collectors buy and sell.',
-    ogImage: '/og-image.png',
-    schemaType: 'AboutPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'Our Vision', url: '/vision' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-  '/returns': {
-    title: 'Returns & Refunds',
-    description:
-      'Return policy for The Collectors Exchange. Items may be returned within 48 hours of delivery if condition does not match the listing description.',
-    ogImage: '/og-image.png',
-    schemaType: 'WebPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'Returns & Refunds', url: '/returns' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-  '/privacy': {
-    title: 'Privacy Policy',
-    description:
-      'Privacy Policy for The Collectors Exchange. How we collect, use, and protect your personal data when you buy, sell, or browse our marketplace.',
-    ogImage: '/og-image.png',
-    schemaType: 'WebPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'Privacy Policy', url: '/privacy' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-  '/terms': {
-    title: 'Terms & Conditions',
-    description:
-      'Terms and Conditions for using The Collectors Exchange marketplace, including buyer inspection periods, seller obligations, and platform fees.',
-    ogImage: '/og-image.png',
-    schemaType: 'WebPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'Terms & Conditions', url: '/terms' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-  '/founders-note': {
-    title: "Founder's Note",
-    description:
-      "A personal note from the founder of The Collectors Exchange on building India's trusted marketplace for authenticated collectibles and vintage watches.",
-    ogImage: '/og-image.png',
-    schemaType: 'WebPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: "Founder's Note", url: '/founders-note' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-  '/seller-agreement': {
-    title: 'Seller Agreement',
-    description:
-      'Seller Agreement for listing on The Collectors Exchange. KYC requirements, listing limits, commission structure, and payout terms for vendors.',
-    ogImage: '/og-image.png',
-    schemaType: 'WebPage',
-    breadcrumb: [
-      { name: 'Home', url: '/' },
-      { name: 'Seller Agreement', url: '/seller-agreement' },
-    ],
-    navLinks: DEFAULT_NAV,
-  },
-};
-
-const CATEGORY_LANDINGS = [
-  {
-    slug: 'timepieces',
-    name: 'Timepieces',
-    tagline: 'The Mechanical Heartbeat',
-    intro:
-      'Your phone tells the time. A mechanical watch tells a story. In a world of flickering screens and disposable tech, we choose the "Mechanical Truth." We don\'t sell battery-powered fashion; we rescue 17-jewel heartbeats that never need a plug or an algorithm to live.',
-    description:
-      'Shop authenticated vintage watches and timepieces at The Collectors Exchange. Rolex, Omega, HMT, Seiko and more — expert-verified, mid-range to rare, with secure transactions across India.',
-  },
-  {
-    slug: 'accessories',
-    name: 'Accessories',
-    tagline: 'The Perfect Finish',
-    intro: 'Everyday accessories at great prices, shipped straight to your door.',
-    description:
-      'Shop accessories at The Collectors Exchange: bags, belts, and everyday finishing pieces at great prices, shipped across India.',
-  },
-  {
-    slug: 'collectibles',
-    name: 'Collectibles',
-    tagline: 'The Curated Pulse',
-    intro:
-      'A trend lasts a season. A collectible lasts a lifetime. In a world of digital clutter and fast consumption, we choose the "Physical Truth." We rescue the rare, nostalgic, and culturally significant objects worth preserving.',
-    description:
-      'Shop rare, curated collectibles at The Collectors Exchange, including nostalgic and culturally significant pieces.',
-  },
-  {
-    slug: 'antiques',
-    name: 'Antiques',
-    tagline: 'The Ancestral Anchor',
-    intro:
-      'A replica fills a space. An antique commands it. In a world of mass-produced vintage-look decor, we choose the "Ancestral Truth." We rescue weathered survivors of history that carry their craft and generations with them.',
-    description:
-      'Shop authenticated antiques at The Collectors Exchange, including heritage furniture, decor, and historical pieces.',
-  },
-  {
-    slug: 'toys-and-pop-culture',
-    name: 'Toys & Pop Culture',
-    tagline: 'The Nostalgic Truth',
-    intro:
-      'A plaything is for a moment. A pop icon is for the ages. We rescue definitive action figures, limited figurines, and media artifacts that shaped childhoods and culture.',
-    description:
-      'Shop vintage toys and pop culture collectibles at The Collectors Exchange, including action figures, limited figurines, and media artifacts.',
-  },
-  {
-    slug: 'jewelry',
-    name: 'Jewelry',
-    tagline: 'The TCE Original',
-    intro:
-      'A brand sells status. A TCE Original is designed as a legacy. After years of studying master artisans, The Collectors Exchange now creates pieces informed by the craftsmanship it preserves.',
-    description:
-      'Shop authenticated vintage jewelry and TCE Original pieces at The Collectors Exchange.',
-  },
-];
+// SITE_URL, PRIMARY_NAV and CORE_PAGES are imported from
+// src/config/seo-pages.js, and the category landing copy from
+// src/config/categories.js. They used to be duplicated here, which is how the
+// static HTML drifted from the React app. Edit the shared modules, not this
+// file — including for the temporary stripped-down copy that is live right now
+// (docs/TEMPORARY_CHANGES_ROLLBACK.md), so putting the real copy back is a
+// single edit.
 
 function buildHomeEntityGraph() {
   return {
@@ -333,7 +196,7 @@ function buildCorePageSchemas(path, page) {
       '@type': page.schemaType,
       name: page.title,
       description: page.description,
-      url: `${SITE_URL}${withTrailingSlash(path)}`,
+      url: `${SITE_URL}${buildCanonicalPath(path)}`,
       isPartOf: {
         '@type': 'WebSite',
         name: 'The Collectors Exchange',
@@ -370,7 +233,7 @@ function buildCorePageSchemas(path, page) {
         '@type': 'ListItem',
         position: i + 1,
         name: item.name,
-        item: item.url ? `${SITE_URL}${withTrailingSlash(item.url)}` : undefined,
+        item: item.url ? `${SITE_URL}${buildCanonicalPath(item.url)}` : undefined,
       })),
     });
   }
@@ -381,8 +244,8 @@ function buildCorePageSchemas(path, page) {
 function buildCorePageMetaTags(path, page) {
   const title = escapeHtml(page.title);
   const desc = escapeHtml(page.description);
-  const image = `${SITE_URL}${page.ogImage}`;
-  const canonical = `${SITE_URL}${withTrailingSlash(path)}`;
+  const image = resolveImageUrl(page.ogImage);
+  const canonical = `${SITE_URL}${buildCanonicalPath(path)}`;
   const schemas = buildCorePageSchemas(path, page);
 
   const schemaTags = schemas
@@ -433,7 +296,7 @@ const PLACEHOLDER_NAV_CSS = `
 
 function buildCorePageHtml(path, page, metaTags) {
   const isHome = path === '/';
-  const navLinks = page.navLinks || [];
+  const navLinks = PRIMARY_NAV;
 
   const navHtml = navLinks
     .map(
@@ -506,7 +369,7 @@ function buildCorePageHtml(path, page, metaTags) {
 /*  SHARED NAV / FOOTER SHELL                                          */
 /* ------------------------------------------------------------------ */
 
-const NAV_HTML = DEFAULT_NAV.map(
+const NAV_HTML = PRIMARY_NAV.map(
   (l) =>
     `<a href="${l.path}" style="color:#1C1C1C;text-decoration:none;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;white-space:nowrap">${escapeHtml(l.name)}</a>`,
 ).join('');
@@ -548,7 +411,7 @@ const SHELL_FOOTER = `
 function buildMetaTags(post) {
   const title = escapeHtml(post.metaTitle || post.title);
   const desc = escapeHtml(post.metaDescription || post.excerpt || '');
-  const image = post.coverImage || `${SITE_URL}/og-image.png`;
+  const image = post.coverImage || DEFAULT_OG_IMAGE;
   const canonical = `${SITE_URL}/archive/${post.slug}/`;
   const published =
     post.publishedAt || post.createdAt
@@ -685,7 +548,11 @@ function buildBlogHtml(post, metaTags) {
     coverImage
       ? `
   <div class="blog-hero">
-    <img src="${escapeHtml(coverImage)}" alt="${escapeHtml(post.title)}" fetchpriority="high" />
+    <img ${responsiveImgAttrs(coverImage, {
+      width: 1200,
+      widths: [400, 800, 1200],
+      sizes: '100vw',
+    })} alt="${escapeHtml(post.title)}" fetchpriority="high" />
     <div class="overlay"></div>
     <div class="content">
       <div class="container">
@@ -818,7 +685,14 @@ function buildArchiveIndexHtml(posts = []) {
       return `<article class="archive-card">
         ${
           post.coverImage
-            ? `<a href="/archive/${encodeURIComponent(post.slug)}/" aria-label="Read ${escapeHtml(post.title)}"><img src="${escapeHtml(post.coverImage)}" alt="" loading="lazy" /></a>`
+            ? `<a href="/archive/${encodeURIComponent(post.slug)}/" aria-label="Read ${escapeHtml(post.title)}"><img ${responsiveImgAttrs(
+                post.coverImage,
+                {
+                  width: 400,
+                  widths: [200, 400, 800],
+                  sizes: '(min-width: 1100px) 340px, (min-width: 640px) 33vw, 100vw',
+                },
+              )} alt="" loading="lazy" /></a>`
             : ''
         }
         <div class="archive-card-content">
@@ -845,7 +719,7 @@ function buildArchiveIndexHtml(posts = []) {
   <meta property="og:site_name" content="The Collectors Exchange" />
   <meta property="og:title" content="The Archive — The Collectors Exchange" />
   <meta property="og:description" content="Explore The Collectors Exchange Archive. Curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
-  <meta property="og:image" content="${SITE_URL}/og-image.png" />
+  <meta property="og:image" content="${DEFAULT_OG_IMAGE}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:type" content="website" />
@@ -855,7 +729,7 @@ function buildArchiveIndexHtml(posts = []) {
   <meta name="twitter:site" content="@TCE_store" />
   <meta name="twitter:title" content="The Archive — The Collectors Exchange" />
   <meta name="twitter:description" content="Explore The Collectors Exchange Archive. Curated articles on horology, gemology, collecting, and the stories behind rare artifacts." />
-  <meta name="twitter:image" content="${SITE_URL}/og-image.png" />
+  <meta name="twitter:image" content="${DEFAULT_OG_IMAGE}" />
   <script type="application/ld+json">${serializeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -921,7 +795,7 @@ function buildArchiveIndexHtml(posts = []) {
 
 function buildCategoryHtml(products = [], categorySlug = null) {
   const hubPage = CORE_PAGES['/category'];
-  const landing = CATEGORY_LANDINGS.find((category) => category.slug === categorySlug) || null;
+  const landing = CATEGORIES.find((category) => category.slug === categorySlug) || null;
   const path = landing ? `/category/${landing.slug}` : '/category';
   const visibleProducts = landing
     ? products.filter((product) => product.category?.toLowerCase() === landing.name.toLowerCase())
@@ -930,7 +804,10 @@ function buildCategoryHtml(products = [], categorySlug = null) {
     ? {
         ...hubPage,
         title: `${landing.name} — The Exchange`,
-        description: landing.description,
+        // prerenderMetaDescription is the pre-existing, drifted copy kept
+        // only so this refactor changed no output; when it is removed from
+        // src/config/categories.js the shared metaDescription takes over.
+        description: landing.prerenderMetaDescription || landing.metaDescription,
         breadcrumb: [
           ...hubPage.breadcrumb,
           { name: landing.name, url: `/category/${landing.slug}` },
@@ -941,7 +818,7 @@ function buildCategoryHtml(products = [], categorySlug = null) {
   const itemListSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    '@id': `${SITE_URL}${withTrailingSlash(path)}#item-list`,
+    '@id': `${SITE_URL}${buildCanonicalPath(path)}#item-list`,
     name: landing ? `${landing.name} listings` : 'The Exchange listings',
     numberOfItems: visibleProducts.length,
     itemListElement: visibleProducts.map((product, index) => ({
@@ -958,7 +835,7 @@ function buildCategoryHtml(products = [], categorySlug = null) {
       },
     })),
   };
-  const categoryLinks = CATEGORY_LANDINGS.map((category) => {
+  const categoryLinks = CATEGORIES.map((category) => {
     const count = products.filter(
       (product) => product.category?.toLowerCase() === category.name.toLowerCase(),
     ).length;
@@ -973,7 +850,14 @@ function buildCategoryHtml(products = [], categorySlug = null) {
       return `<article class="catalogue-card">
         ${
           image
-            ? `<a href="/product/${encodeURIComponent(String(product.id))}/" aria-label="View ${escapeHtml(product.title)}"><img src="${escapeHtml(image)}" alt="${escapeHtml(product.title)}" loading="lazy" /></a>`
+            ? `<a href="/product/${encodeURIComponent(String(product.id))}/" aria-label="View ${escapeHtml(product.title)}"><img ${responsiveImgAttrs(
+                image,
+                {
+                  width: 400,
+                  widths: [200, 400, 800],
+                  sizes: '(min-width: 1100px) 260px, (min-width: 640px) 33vw, 100vw',
+                },
+              )} alt="${escapeHtml(product.title)}" loading="lazy" /></a>`
             : ''
         }
         <div class="catalogue-card-content">
@@ -1058,7 +942,7 @@ function buildProductMetaTags(product) {
     .filter(Boolean)
     .join('. ');
   const desc = escapeHtml((plainDesc || fallbackDescription).slice(0, 160));
-  const image = product.images?.[0] || product.image || `${SITE_URL}/og-image.png`;
+  const image = product.images?.[0] || product.image || DEFAULT_OG_IMAGE;
   const canonical = `${SITE_URL}/product/${product.id}/`;
 
   const offer = {};
@@ -1226,7 +1110,15 @@ function buildProductHtml(product, metaTags = buildProductMetaTags(product)) {
     ${SHELL_NAV}
     <main id="main-content" style="flex:1;padding-top:88px">
       <div class="product-hero">
-        ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product.title)}" fetchpriority="high" />` : ''}
+        ${
+          image
+            ? `<img ${responsiveImgAttrs(image, {
+                width: 800,
+                widths: [400, 800, 1200],
+                sizes: '(min-width: 640px) 420px, 100vw',
+              })} alt="${escapeHtml(product.title)}" fetchpriority="high" />`
+            : ''
+        }
         <div class="product-info">
           ${
             product.category
@@ -1310,7 +1202,9 @@ async function main() {
   // --- Core marketing pages ---
   let coreWritten = 0;
   for (const [path, page] of Object.entries(CORE_PAGES)) {
-    if (path === '/category') continue;
+    // /category gets its own product-aware builder below; skipPrerender marks
+    // pages that are temporarily hidden (see docs/TEMPORARY_CHANGES_ROLLBACK.md).
+    if (path === '/category' || page.skipPrerender) continue;
 
     const dir = resolve(DIST, path === '/' ? '.' : path.slice(1));
     if (!existsSync(dir)) {
@@ -1330,7 +1224,7 @@ async function main() {
   writeFileSync(resolve(categoryDir, 'index.html'), buildCategoryHtml(), 'utf-8');
   coreWritten++;
   console.log('[prerender] Wrote /category/index.html (fallback)');
-  for (const category of CATEGORY_LANDINGS) {
+  for (const category of CATEGORIES) {
     const landingDir = resolve(categoryDir, category.slug);
     if (!existsSync(landingDir)) {
       mkdirSync(landingDir, { recursive: true });
@@ -1396,7 +1290,7 @@ async function main() {
 
   writeFileSync(resolve(categoryDir, 'index.html'), buildCategoryHtml(publishedProducts), 'utf-8');
   console.log('[prerender] Wrote /category/index.html with current product listings');
-  for (const category of CATEGORY_LANDINGS) {
+  for (const category of CATEGORIES) {
     writeFileSync(
       resolve(categoryDir, category.slug, 'index.html'),
       buildCategoryHtml(publishedProducts, category.slug),

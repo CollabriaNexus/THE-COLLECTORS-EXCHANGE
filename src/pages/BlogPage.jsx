@@ -4,6 +4,7 @@ import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { usePublishedBlogs } from '../hooks/api/useBlog';
 import { BookOpen, Clock, User, Search, Loader2, ArrowRight, Tag } from 'lucide-react';
 import { Reveal, Tilt } from '../components/Motion';
+import { imageUrl, imageSrcSet } from '../utils/image';
 
 const scrollHideCss = `
     .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -28,11 +29,14 @@ const BlogCard = ({ post }) => (
     {post.coverImage ? (
       <div className="relative h-40 sm:h-56 overflow-hidden">
         <img
-          src={post.coverImage}
+          src={imageUrl(post.coverImage, 800)}
+          srcSet={imageSrcSet(post.coverImage, [400, 800, 1200])}
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           alt={post.title}
           width="800"
           height="450"
           loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -245,11 +249,14 @@ function BlogPage() {
                           {post.coverImage ? (
                             <div className="relative h-48 sm:h-64 md:h-auto overflow-hidden">
                               <img
-                                src={post.coverImage}
+                                src={imageUrl(post.coverImage, 800)}
+                                srcSet={imageSrcSet(post.coverImage, [400, 800, 1200])}
+                                sizes="(min-width: 768px) 50vw, 100vw"
                                 alt={post.title}
                                 width="800"
                                 height="450"
                                 loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                               />
                             </div>

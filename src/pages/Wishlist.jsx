@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useAddToCart, useCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
+import { imageUrl, imageSrcSet } from '../utils/image';
 import { Tilt } from '../components/Motion';
 import SignInPrompt from '../components/SignInPrompt';
 import EmptyWishlistVisual from '../components/EmptyWishlistVisual';
@@ -106,14 +107,18 @@ const Wishlist = () => {
                     className="block relative aspect-square bg-heritage-beige overflow-hidden shrink-0"
                   >
                     <img
-                      src={
+                      src={imageUrl(
                         product.image ||
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f5f0e8'/%3E%3C/svg%3E"
-                      }
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f5f0e8'/%3E%3C/svg%3E",
+                        400,
+                      )}
+                      srcSet={imageSrcSet(product.image, [200, 400, 800])}
+                      sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
                       alt={product.title}
                       width="400"
                       height="400"
                       loading="lazy"
+                      decoding="async"
                       className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
                     />
 

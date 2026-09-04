@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { getUser } from '../utils/storage';
+import { imageUrl, imageSrcSet } from '../utils/image';
 import { useCart, useAddToCart } from '../hooks/api/useCart';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useToast } from './Toast';
@@ -66,9 +67,12 @@ const ProductCard = ({ product }) => {
       >
         {product.image ? (
           <img
-            src={product.image}
+            src={imageUrl(product.image, 400)}
+            srcSet={imageSrcSet(product.image, [200, 400, 800])}
+            sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
             alt={title}
             loading="lazy"
+            decoding="async"
             width="400"
             height="400"
             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"

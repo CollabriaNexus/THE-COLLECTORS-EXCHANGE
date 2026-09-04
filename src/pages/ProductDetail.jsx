@@ -23,6 +23,7 @@ import { useProduct, useProducts } from '../hooks/api/useProducts';
 import { useAddToWishlist, useRemoveFromWishlist, useWishlist } from '../hooks/api/useWishlist';
 import { useProductReviews } from '../hooks/api/useReviews';
 import { getUser } from '../utils/storage';
+import { imageUrl, imageSrcSet } from '../utils/image';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -179,9 +180,10 @@ const ProductDetail = () => {
                   >
                     <img
                       loading="lazy"
+                      decoding="async"
                       width="80"
                       height="80"
-                      src={img}
+                      src={imageUrl(img, 200)}
                       alt={`View ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -214,16 +216,30 @@ const ProductDetail = () => {
                         <img
                           width="800"
                           height="600"
-                          src={images[activeImageIndex]}
+                          src={imageUrl(images[activeImageIndex], 1200)}
+                          srcSet={imageSrcSet(images[activeImageIndex], [400, 800, 1200])}
+                          sizes="(min-width: 1024px) 60vw, 100vw"
+                          loading="eager"
+                          fetchPriority="high"
+                          decoding="async"
                           alt={product.title}
                           className="w-full h-full object-contain p-2 sm:p-6 md:p-8 transition-transform duration-300 ease-out lg:group-hover:scale-150"
                         />
                       </div>
                       {/* Mobile fallback */}
+                      {/* Same src/srcSet/sizes as the desktop zoom copy above:
+                          both are always in the DOM (only one is displayed) and
+                          browsers still fetch images inside display:none, so
+                          matching candidate lists keeps it to one download. */}
                       <img
                         width="800"
                         height="600"
-                        src={images[activeImageIndex]}
+                        src={imageUrl(images[activeImageIndex], 1200)}
+                        srcSet={imageSrcSet(images[activeImageIndex], [400, 800, 1200])}
+                        sizes="(min-width: 1024px) 60vw, 100vw"
+                        loading="eager"
+                        fetchPriority="high"
+                        decoding="async"
                         alt={product.title}
                         className="w-full h-full object-contain p-2 sm:p-6 md:p-8 block lg:hidden"
                       />
@@ -676,9 +692,12 @@ const SuggestedProducts = ({ category, currentId }) => {
                         {product.image ? (
                           <img
                             loading="lazy"
+                            decoding="async"
                             width="400"
                             height="400"
-                            src={product.image}
+                            src={imageUrl(product.image, 400)}
+                            srcSet={imageSrcSet(product.image, [200, 400, 800])}
+                            sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
                             alt={title}
                             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
                           />

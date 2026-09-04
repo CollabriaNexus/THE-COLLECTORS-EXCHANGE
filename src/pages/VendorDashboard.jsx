@@ -33,6 +33,7 @@ import {
   useVendorPayouts,
 } from '../hooks/api/useVendor';
 import { Reveal, Stagger, Tilt, CountUp } from '../components/Motion';
+import { imageUrl } from '../utils/image';
 
 const PERIODS = [
   { value: '7d', label: '7 Days' },
@@ -455,10 +456,11 @@ export default function VendorDashboard() {
                         {i + 1}
                       </span>
                       <img
-                        src={
+                        src={imageUrl(
                           product.image ||
-                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23e5e7eb'/%3E%3C/svg%3E"
-                        }
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23e5e7eb'/%3E%3C/svg%3E",
+                          200,
+                        )}
                         alt={product.title}
                         width="40"
                         height="40"

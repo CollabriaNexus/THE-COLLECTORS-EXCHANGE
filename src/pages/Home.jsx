@@ -29,6 +29,7 @@ import { useProducts } from '../hooks/api/useProducts';
 import { useTestimonials } from '../hooks/api/useTestimonials';
 import { useCart, useAddToCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
+import { imageUrl, imageSrcSet } from '../utils/image';
 import { useToast } from '../components/Toast';
 import { Reveal, Stagger, Parallax, Magnetic, Tilt, Marquee } from '../components/Motion';
 
@@ -79,9 +80,12 @@ const FeaturedProductCard = ({ product, badge = 'Featured', BadgeIcon = Award })
           {product.image ? (
             <img
               loading="lazy"
+              decoding="async"
               width="400"
               height="500"
-              src={product.image}
+              src={imageUrl(product.image, 400)}
+              srcSet={imageSrcSet(product.image, [200, 400, 800])}
+              sizes="(min-width: 768px) 320px, 50vw"
               alt={title}
               className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
             />
@@ -809,9 +813,10 @@ const TestimonialsSection = () => {
                 <img
                   key={i}
                   loading="lazy"
+                  decoding="async"
                   width="96"
                   height="96"
-                  src={img}
+                  src={imageUrl(img, 200)}
                   alt={`${t.authorName}'s collectible`}
                   className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gray-200 flex-shrink-0"
                 />

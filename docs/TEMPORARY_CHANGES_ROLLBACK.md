@@ -93,9 +93,11 @@ The Archive was hidden at every layer that could otherwise resurface it:
   `SiteNavigationSchema` JSON-LD), from `src/components/Footer.jsx`
   (Company column), and from `src/pages/Links.jsx`.
 - **Build-time prerender:** `scripts/prerender-blogs.mjs` — `/archive` and
-  `/about` links removed from `DEFAULT_NAV` and from the two hardcoded
-  footer link blocks (`buildCorePageHtml`'s inline footer and
-  `SHELL_FOOTER`). The archive-index/post generation logic itself was left
+  `/about` links removed from the nav and from the two hardcoded footer link
+  blocks (`buildCorePageHtml`'s inline footer and `SHELL_FOOTER`). The nav
+  itself is no longer duplicated here: the script now imports `PRIMARY_NAV`
+  from `src/config/seo-pages.js`, so re-adding the link there fixes both the
+  React header and the prerendered shells at once. The archive-index/post generation logic itself was left
   alone — it's already data-driven off `status === 'PUBLISHED'`, so #5
   naturally makes it generate an empty archive and zero post pages.
 - **Sitemap:** `public/sitemap.xml` — the `/archive/` `<url>` entry removed.
@@ -116,9 +118,11 @@ Same treatment as the Archive:
   `src/components/Footer.jsx`, `src/pages/Links.jsx`, and the "Learn More
   About Us" card grid on `src/pages/Home.jsx` (grid dropped from 3 columns
   to 2 — the Contact/FAQ cards stayed).
-- **Build-time prerender:** `scripts/prerender-blogs.mjs` — the `/about`
-  entry removed from the script's own (duplicated) `CORE_PAGES` object, plus
-  the same `DEFAULT_NAV`/footer cleanup noted in #6.
+- **Build-time prerender:** the `/about` entry is still in the shared
+  `CORE_PAGES` (`src/config/seo-pages.js`) but carries `skipPrerender: true`,
+  which is what stops `scripts/prerender-blogs.mjs` writing a `/about/` shell.
+  Plus the same nav/footer cleanup noted in #6. **To undo:** delete that one
+  `skipPrerender: true` line.
 - **Sitemap:** `public/sitemap.xml` — the `/about/` `<url>` entry removed.
 - **To undo:** revert all of the above — the commented-out original route
   and the removed `CORE_PAGES['/about']` entry (restorable from git history
@@ -135,8 +139,15 @@ sellers' ability to enter a brand when listing a product.
 
 - `src/config/seo-pages.js` — `/category` page's `keywords` string (dropped
   "casio", "rolex", "omega" terms).
-- `src/pages/Category.jsx` — the Timepieces category's `metaDescription`
-  and `metaKeywords` (dropped "Rolex, Omega, HMT, Seiko").
+- `src/config/categories.js` (was `src/pages/Category.jsx`) — the Timepieces
+  category's `metaDescription` and `metaKeywords` (dropped "Rolex, Omega,
+  HMT, Seiko"). **Known leftover:** the scrub was never applied to the
+  prerender script's forked copy, so `/category/timepieces/index.html` still
+  ships those brand names. That forked string survived the de-duplication as
+  `prerenderMetaDescription` on the Timepieces entry, kept only so the
+  refactor changed no output. Deleting that one field makes the static HTML
+  use the scrubbed `metaDescription` — do it whenever a visible SEO-copy
+  change is acceptable.
 - `src/pages/Home.jsx` — hero video `aria-label` changed from "Westar
   automatic watch..." to "Vintage automatic watch...".
 - **To undo:** these are plain string edits — check git history on each
@@ -181,18 +192,22 @@ JSON-LD descriptions).
   it only here would have made those links inconsistent. Only the identity
   _claims_ ("authenticated", "expert-verified", "marketplace") were removed,
   not the "Exchange" name itself.
-- **The same duplicated config in `scripts/prerender-blogs.mjs`** (this
-  build script can't import the React-side config, so it keeps its own
-  copies) was updated to match: `CORE_PAGES['/']` (title/description, and
+- **`scripts/prerender-blogs.mjs`** used to keep its own forked copies of
+  this config and was updated to match by hand. It no longer does — it now
+  imports `SITE_URL`, `PRIMARY_NAV` and `CORE_PAGES` from
+  `src/config/seo-pages.js` and the category copy from
+  `src/config/categories.js`, so the edits below only need making once. The
+  script-side edits at the time were: `CORE_PAGES['/']` (title/description, and
   the `video` block removed entirely), `CORE_PAGES['/category']`
   description, the static home-page hero markup inside `buildCorePageHtml`
   (the `isHome ? ... : ...` branch), the `buildHomeEntityGraph()`
   Organization/WebSite JSON-LD descriptions (two occurrences), the 404
-  page's meta description, and the Accessories entry in `CATEGORY_LANDINGS`
-  (tagline kept, intro/description simplified) to match the same edit made
-  in `Category.jsx`.
-- **`src/pages/Category.jsx`:** the Accessories category's `description`/
-  `metaDescription`/`metaKeywords` simplified (it's the one category
+  page's meta description, and the Accessories category copy (which now lives
+  once, in `src/config/categories.js`).
+- **`src/config/categories.js`** (the category copy, extracted out of
+  `src/pages/Category.jsx` and now shared with the prerender script): the
+  Accessories category's `description`/`metaDescription`/`metaKeywords`
+  simplified (it's the one category
   actually shown right now). The other five categories' rich narrative
   copy (Timepieces, Collectibles, Antiques, Toys, Jewelry) was **left
   alone** — reachable only by typing a direct URL, not linked from

@@ -9,6 +9,7 @@ import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { Reveal, Magnetic } from '../components/Motion';
 import SignInPrompt from '../components/SignInPrompt';
+import { imageUrl } from '../utils/image';
 
 const Checkout = () => {
   const currentUser = getUser();
@@ -346,10 +347,11 @@ const Checkout = () => {
               {confirmedItems.map((item) => (
                 <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                   <img
-                    src={
+                    src={imageUrl(
                       item.product?.image ||
-                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23f5f0e8'/%3E%3C/svg%3E"
-                    }
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23f5f0e8'/%3E%3C/svg%3E",
+                      200,
+                    )}
                     alt={item.product?.title ? `${item.product.title}` : 'Item from your order'}
                     width="80"
                     height="80"
@@ -844,10 +846,11 @@ const Checkout = () => {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-4 items-center">
                     <img
-                      src={
+                      src={imageUrl(
                         item.product?.image ||
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23f5f0e8'/%3E%3C/svg%3E"
-                      }
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23f5f0e8'/%3E%3C/svg%3E",
+                        200,
+                      )}
                       alt={item.product?.title}
                       width="56"
                       height="56"

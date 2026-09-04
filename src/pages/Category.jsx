@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { CORE_PAGES } from '../config/seo-pages';
+import { CATEGORIES as SHARED_CATEGORIES } from '../config/categories';
 import {
   Watch,
   Gem,
@@ -20,6 +21,7 @@ import {
 import { useProducts } from '../hooks/api/useProducts';
 import { useCategoryCounts } from '../hooks/api/useCategoryCounts';
 import { getUser } from '../utils/storage';
+import { imageUrl, imageSrcSet } from '../utils/image';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '../hooks/api/useWishlist';
 import { useCart, useAddToCart } from '../hooks/api/useCart';
 import apiClient from '../hooks/api/apiClient';
@@ -27,82 +29,23 @@ import { useToast } from '../components/Toast';
 import Bullet from '../components/Bullet';
 import { Reveal, Tilt } from '../components/Motion';
 
-const CATEGORIES = [
-  {
-    id: 'timepieces',
-    slug: 'timepieces',
-    name: 'Timepieces',
-    icon: Watch,
-    tagline: 'The Mechanical Heartbeat',
-    description:
-      'Your phone tells the time. A mechanical watch tells a story. In a world of flickering screens and disposable tech, we choose the "Mechanical Truth." We don\'t sell battery-powered fashion; we rescue 17-jewel heartbeats that never need a plug or an algorithm to live.',
-    metaDescription:
-      'Shop authenticated vintage watches and timepieces at The Collectors Exchange. Expert-verified, mid-range to rare, secure transactions across India.',
-    metaKeywords:
-      'vintage watches for men, vintage watches india, mechanical watches, pre-owned watches india',
-  },
-  {
-    id: 'accessories',
-    slug: 'accessories',
-    name: 'Accessories',
-    icon: Sparkles,
-    tagline: 'The Perfect Finish',
-    description: 'Everyday accessories at great prices, shipped straight to your door.',
-    metaDescription:
-      'Shop accessories at The Collectors Exchange: bags, belts, and everyday finishing pieces at great prices, shipped across India.',
-    metaKeywords: 'accessories india, bags, belts, everyday accessories india',
-  },
-  {
-    id: 'collectibles',
-    slug: 'collectibles',
-    name: 'Collectibles',
-    icon: Box,
-    tagline: 'The Curated Pulse',
-    description:
-      'A trend lasts a season. A collectible lasts a lifetime. In a world of digital clutter and "fast-consumption," we choose the "Physical Truth." We don\'t deal in landfill-ready trinkets; we rescue the rare, the nostalgic, and the culturally significant.',
-    metaDescription:
-      'Shop rare, curated collectibles at The Collectors Exchange: nostalgic and culturally significant pieces, expert-verified. Secure transactions across India.',
-    metaKeywords:
-      'rare collectibles india, curated collectibles, vintage collectibles, pre-owned collectibles india',
-  },
-  {
-    id: 'antiques',
-    slug: 'antiques',
-    name: 'Antiques',
-    icon: Landmark,
-    tagline: 'The Ancestral Anchor',
-    description:
-      'A replica fills a space. An antique commands it. In a world of flat-pack furniture and mass-produced "vintage-look" decor, we choose the "Ancestral Truth." We rescue the weathered survivors of our history, solid objects that carry the craftsman\'s soul and the weight of the generations before us.',
-    metaDescription:
-      'Shop authenticated antiques at The Collectors Exchange: heritage furniture, decor, and historical pieces, expert-verified. Secure transactions across India.',
-    metaKeywords: 'antiques india, vintage antiques, heritage antiques, pre-owned antiques india',
-  },
-  {
-    id: 'toys',
-    slug: 'toys-and-pop-culture',
-    name: 'Toys & Pop Culture',
-    icon: Gamepad2,
-    tagline: 'The Nostalgic Truth',
-    description:
-      'A plaything is for a moment. A pop icon is for the ages. In a world of disposable plastic and "over-hyped" trends, we choose the "Cultural Truth." We rescue the definitive pieces: the action figures, the limited figurines, and the media artifacts that shaped our childhoods.',
-    metaDescription:
-      'Shop vintage toys and pop culture collectibles at The Collectors Exchange: action figures, limited figurines, and media artifacts, expert-verified.',
-    metaKeywords:
-      'vintage toys india, pop culture collectibles, vintage action figures, collectible figurines india',
-  },
-  {
-    id: 'jewelry',
-    slug: 'jewelry',
-    name: 'Jewelry',
-    icon: Gem,
-    tagline: 'The TCE Original',
-    description:
-      'A brand sells you a status. A TCE Original gives you a legacy. In a world of hollow "luxury" and gold-plated illusions, we choose the "Absolute Truth." After years of studying the ancestors and master artisans, we have moved from protecting history to creating it.',
-    metaDescription:
-      'Shop authenticated vintage jewelry at The Collectors Exchange: expert-verified craftsmanship, secure transactions across India.',
-    metaKeywords: 'vintage jewelry india, pre-owned jewelry, antique jewelry india',
-  },
-];
+// Category copy/SEO strings live in src/config/categories.js — a plain-ESM
+// module shared with the Node build script (scripts/prerender-blogs.mjs), so
+// the prerendered static HTML and this page can't drift apart again. Only the
+// lucide icon component is React-side, so it's mapped on here by id.
+const CATEGORY_ICONS = {
+  timepieces: Watch,
+  accessories: Sparkles,
+  collectibles: Box,
+  antiques: Landmark,
+  toys: Gamepad2,
+  jewelry: Gem,
+};
+
+const CATEGORIES = SHARED_CATEGORIES.map((category) => ({
+  ...category,
+  icon: CATEGORY_ICONS[category.id],
+}));
 
 // Temporary: only Accessories is being showcased for now (Timepieces hidden)
 // — the other category tabs are hidden from the rail below (routes/data
@@ -200,9 +143,12 @@ const ArchiveProductCard = ({ product }) => {
       >
         {product.image ? (
           <img
-            src={product.image}
+            src={imageUrl(product.image, 400)}
+            srcSet={imageSrcSet(product.image, [200, 400, 800])}
+            sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
             alt={title}
             loading="lazy"
+            decoding="async"
             width="400"
             height="400"
             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"

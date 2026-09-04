@@ -77,11 +77,13 @@ h6 {
   }
 }
 
-/* CLS prevention: default aspect-ratio on image containers */
-img,
-video {
-  aspect-ratio: attr(width) / attr(height);
-}
+/* Removed: `img, video { aspect-ratio: attr(width) / attr(height) }`.
+   Bare attr() resolves as a <string> even in Chrome's advanced-attr()
+   implementation, so it was invalid for aspect-ratio and dropped by every
+   browser - it never did anything. It is also redundant for <img>: the UA
+   stylesheet has derived `aspect-ratio: auto w/h` from the width/height
+   attributes since 2021, and those attributes are present on our images.
+   The same dead rule was also deleted from index.html's critical CSS. */
 
 img[loading='lazy'] {
   background: #f5f5f5;

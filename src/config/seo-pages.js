@@ -1,3 +1,22 @@
+/**
+ * Site-wide SEO config — imported by BOTH the React app (src/components/SEO.jsx,
+ * src/components/Header.jsx, the page components) and the Node build script
+ * (`scripts/prerender-blogs.mjs`, which generates the static SEO shells in
+ * `dist/` that crawlers and social scrapers actually read).
+ *
+ * Keep this module plain ESM: no React, no JSX, no imports, no `import.meta` —
+ * the build script loads it directly with Node, so anything Node can't parse
+ * breaks `npm run build`.
+ *
+ * The prerender script used to keep its own forked copies of `SITE_URL`,
+ * the nav, and `CORE_PAGES`, and they drifted — copy removed here stayed live
+ * in the prerendered HTML. Do not re-fork them.
+ *
+ * A lot of the copy below is deliberately TEMPORARY (the storefront is in a
+ * stripped-down state right now — see docs/TEMPORARY_CHANGES_ROLLBACK.md).
+ * That's exactly why it's shared: restoring the permanent copy later should be
+ * one edit here, not the same edit in two files that are easy to miss.
+ */
 export const SITE_NAME = 'The Collectors Exchange';
 export const SITE_URL = 'https://thecollectorsexchange.in';
 export const TITLE_SEP = ' | ';
@@ -9,6 +28,9 @@ export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 export const DEFAULT_DESC = 'Shop quality everyday products at great prices, shipped across India.';
 
 /** Primary header navigation – keep labels aligned with sitelink targets.
+ * Single source for the React header, the SiteNavigationSchema JSON-LD, and
+ * the nav rendered into every prerendered static shell (the build script used
+ * to keep a fork of this called DEFAULT_NAV).
  * "About Us" and "The Archive" are temporarily removed (both pages are
  * hidden/redirected right now — see docs/TEMPORARY_CHANGES_ROLLBACK.md). */
 export const PRIMARY_NAV = [
@@ -44,7 +66,16 @@ export function resolveImageUrl(image) {
   return `${SITE_URL}/${image}`;
 }
 
-/** Core marketing pages prerendered at build time with full meta + schema. */
+/** Core marketing pages prerendered at build time with full meta + schema.
+ *
+ * Consumed by the page components for their <SEO>/schema props AND iterated by
+ * scripts/prerender-blogs.mjs to emit one static shell per entry. Entries the
+ * build script must NOT emit a shell for are marked `skipPrerender: true`
+ * rather than being deleted from one copy and not the other.
+ *
+ * `h1`, `intro` and `keywords` are React-only; the prerender script derives its
+ * og:image from DEFAULT_OG_IMAGE and its nav from PRIMARY_NAV.
+ */
 export const CORE_PAGES = {
   '/': {
     title: 'Quality Everyday Products',
@@ -55,6 +86,10 @@ export const CORE_PAGES = {
     breadcrumb: null,
   },
   '/about': {
+    // Temporarily hidden/redirected, so the build script must not prerender a
+    // /about/ shell for it — see docs/TEMPORARY_CHANGES_ROLLBACK.md (#7).
+    // Delete this flag when the page comes back.
+    skipPrerender: true,
     title: 'About Us',
     description:
       'The story behind The Collectors Exchange: how we source, verify, and authenticate vintage watches and heritage collectibles across India.',

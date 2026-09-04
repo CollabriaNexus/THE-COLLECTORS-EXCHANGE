@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart, useRemoveFromCart } from '../hooks/api/useCart';
 import { useProducts } from '../hooks/api/useProducts';
 import { getUser } from '../utils/storage';
+import { imageUrl, imageSrcSet } from '../utils/image';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -72,14 +73,16 @@ const Cart = () => {
                   className="flex gap-3 sm:gap-6 p-3 sm:p-6 border-b border-gray-100 last:border-0 items-center"
                 >
                   <img
-                    src={
+                    src={imageUrl(
                       item.product?.image ||
-                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='96' height='96' fill='%23f5f0e8'/%3E%3C/svg%3E"
-                    }
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='96' height='96' fill='%23f5f0e8'/%3E%3C/svg%3E",
+                      200,
+                    )}
                     alt={item.product?.title || 'Product'}
                     width="96"
                     height="96"
                     loading="lazy"
+                    decoding="async"
                     className="w-16 sm:w-24 h-16 sm:h-24 object-cover shrink-0 rounded-lg"
                   />
                   <div className="flex-grow min-w-0">
@@ -98,10 +101,12 @@ const Cart = () => {
                       ₹{item.product?.price?.toLocaleString() || '0'}
                     </p>
                     <button
+                      type="button"
                       onClick={() => handleRemove(item.product?.id || item.productId)}
+                      aria-label={`Remove ${item.product?.title || 'item'} from cart`}
                       className="text-red-500 hover:text-red-700 transition-colors p-2"
                     >
-                      <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Trash2 size={16} aria-hidden="true" className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                   </div>
                 </div>
@@ -177,9 +182,12 @@ const Cart = () => {
                     <div className="relative aspect-square bg-heritage-beige overflow-hidden shrink-0">
                       {product.image ? (
                         <img
-                          src={product.image}
+                          src={imageUrl(product.image, 400)}
+                          srcSet={imageSrcSet(product.image, [200, 400])}
+                          sizes="(min-width: 640px) 25vw, 50vw"
                           alt={product.title}
                           loading="lazy"
+                          decoding="async"
                           width="200"
                           height="200"
                           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"

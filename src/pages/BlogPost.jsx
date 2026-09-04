@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Reveal, Parallax, Tilt, Magnetic } from '../components/Motion';
+import { imageUrl, imageSrcSet } from '../utils/image';
 
 function BlogPost() {
   const { slug } = useParams();
@@ -165,9 +166,13 @@ function BlogPost() {
           <Reveal direction="scale" className="absolute inset-0">
             <Parallax speed={0.12} className="w-full h-full">
               <img
-                src={post.coverImage}
+                src={imageUrl(post.coverImage, 1200)}
+                srcSet={imageSrcSet(post.coverImage, [400, 800, 1200])}
+                sizes="100vw"
                 alt={post.title}
+                loading="eager"
                 fetchPriority="high"
+                decoding="async"
                 className="w-full h-full object-cover scale-110"
               />
             </Parallax>
@@ -389,11 +394,14 @@ function BlogPost() {
                       {r.coverImage ? (
                         <div className="relative h-40 overflow-hidden">
                           <img
-                            src={r.coverImage}
+                            src={imageUrl(r.coverImage, 800)}
+                            srcSet={imageSrcSet(r.coverImage, [400, 800])}
+                            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                             alt={r.title}
                             width="800"
                             height="450"
                             loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                           />
                         </div>
