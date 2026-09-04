@@ -35,8 +35,25 @@ const TIERS = [
 const CommissionSlider = ({ value, price, onChange, disabled }) => {
   const priceNum = parseFloat(price) || 0;
   const platformFee = (priceNum * value) / 100;
-  const gstAmount = Math.round(platformFee * 0.18);
-  const yourEarnings = priceNum - platformFee - gstAmount;
+  // Must mirror `payoutFromItems` in backend/lib/money.js: payout = price - platformFee.
+  // No GST is deducted from the seller's payout anywhere in the backend, so none is
+  // shown here — this figure has to equal what the payout actually creates.
+  //
+  // OPEN QUESTION - 18% GST on commission (parked 2026-09-04, owner undecided).
+  // This used to read `price - platformFee - (platformFee * 0.18)`, and SUMMARY.md
+  // records that as deliberate: "Vendor's 'Your Earnings' must reflect true take-home
+  // after both commission and GST deduction". But the backend half was never built —
+  // checkout stores only `platformFee`, and payouts pay `price - platformFee`. So the
+  // slider was under-quoting every seller (₹8,230 shown vs ₹8,500 paid on ₹10,000 at
+  // 15%) and the platform could not reconcile the two numbers.
+  //
+  // The display was corrected to match reality so nothing misleads a seller today.
+  // That is NOT a ruling on the tax question. If GST on commission is genuinely owed
+  // and meant to come out of the seller's side, the fix belongs in the BACKEND
+  // (checkout fee computation + payoutFromItems), not here — and it would mean past
+  // payouts were over-generous by 18% of commission. Settle with an accountant before
+  // changing either side. See MEMORY.md, Session 9.
+  const yourEarnings = priceNum - platformFee;
 
   const activeTier = TIERS.reduce(
     (prev, curr) => (value >= curr.threshold ? curr : prev),
@@ -110,7 +127,7 @@ const CommissionSlider = ({ value, price, onChange, disabled }) => {
               })}
             </p>
             <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest">
-              Your Earnings
+              You receive on payout
             </p>
           </div>
           <div className="bg-white border border-gray-100 p-3 text-center rounded-xl">
@@ -127,12 +144,6 @@ const CommissionSlider = ({ value, price, onChange, disabled }) => {
           </div>
         </div>
       )}
-      {priceNum > 0 && (
-        <p className="text-[10px] text-gray-400 text-center -mt-3 mb-4">
-          + ₹{gstAmount.toLocaleString('en-IN')} GST @ 18% on platform contribution
-        </p>
-      )}
-
       {/* Boost meter */}
       <div className="bg-white border border-gray-100 p-3 rounded-xl">
         <div className="flex items-center justify-between mb-2">

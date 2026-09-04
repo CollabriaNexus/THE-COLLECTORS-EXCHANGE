@@ -11,34 +11,29 @@ describe('CommissionSlider', () => {
     expect(screen.getByRole('button', { name: 'Standard' })).toBeInTheDocument();
   });
 
+  // The displayed payout figure MUST equal the backend's `payoutFromItems`
+  // (backend/lib/money.js): price - platformFee, with no GST deducted.
   it('renders correct earnings breakdown at 10%', () => {
     render(<CommissionSlider {...defaultProps} />);
-    expect(screen.getByText('₹882')).toBeInTheDocument();
+    expect(screen.getByText('₹900')).toBeInTheDocument();
     expect(screen.getByText('₹100')).toBeInTheDocument();
   });
 
   it('renders correct earnings breakdown at 20%', () => {
     render(<CommissionSlider {...defaultProps} value={20} />);
-    expect(screen.getByText('₹764')).toBeInTheDocument();
+    expect(screen.getByText('₹800')).toBeInTheDocument();
     expect(screen.getByText('₹200')).toBeInTheDocument();
   });
 
-  it('shows GST amount at 10%', () => {
-    render(<CommissionSlider {...defaultProps} />);
-    expect(screen.getByText(/GST @ 18%/)).toBeInTheDocument();
-    expect(screen.getByText(/18/)).toBeInTheDocument();
-  });
-
-  it('shows GST amount at 20%', () => {
-    render(<CommissionSlider {...defaultProps} value={20} />);
-    expect(screen.getByText(/GST @ 18%/)).toBeInTheDocument();
-    expect(screen.getByText(/36/)).toBeInTheDocument();
-  });
-
-  it('shows GST amount at 25%', () => {
+  it('does not deduct a GST line the backend never charges', () => {
     render(<CommissionSlider {...defaultProps} value={25} />);
-    expect(screen.getByText(/GST @ 18%/)).toBeInTheDocument();
-    expect(screen.getByText(/45/)).toBeInTheDocument();
+    expect(screen.queryByText(/GST/i)).not.toBeInTheDocument();
+    expect(screen.getByText('₹750')).toBeInTheDocument();
+  });
+
+  it('labels the seller tile as the payout amount', () => {
+    render(<CommissionSlider {...defaultProps} />);
+    expect(screen.getByText(/You receive on payout/i)).toBeInTheDocument();
   });
 
   // Tier names appear in several places at once (the header readout, the tier

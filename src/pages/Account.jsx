@@ -26,6 +26,7 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
+  AlertCircle,
 } from 'lucide-react';
 import CommissionSlider from '../components/account/CommissionSlider';
 import { LoginVisualPanel, LoginVisualBand } from '../components/account/LoginVisual';
@@ -69,6 +70,12 @@ const CATEGORIES = [
 ];
 const CONDITIONS = ['Mint', 'Like New', 'Excellent', 'Good', 'Fair'];
 const WhatsAppNumber = '+916362771355';
+
+// A listing only occupies one of a single seller's slots while it is awaiting or
+// holding a live spot in the catalogue. Sold and Rejected listings free the slot.
+// Mirrors the `status: { in: [...] }` filter used by backend/routes/products.js
+// (create) and backend/routes/vendor.js (`activeCount`).
+const ACTIVE_LISTING_STATUSES = ['Pending', 'In_Review', 'Approved'];
 
 // The account sections are addressable as /account?tab=<id>. Only ids listed here
 // are honoured from the URL — anything else (including the legacy, contentless
@@ -212,7 +219,40 @@ const Account = () => {
   const { data: userQuery } = useMe();
   const user = userQuery || localUser;
   const { data: vendorProfile } = useVendorProfile();
-  const { data: vendorStats } = useVendorStats();
+  // /vendor/stats 404s without a vendor profile, so only ask once we know there is one.
+  const { data: vendorStats } = useVendorStats({ enabled: Boolean(vendorProfile) });
+
+  // An admin rejection resets kycStatus to 'none' but keeps the submitted kycData
+  // (see the reject handler in backend/routes/admin.js), so the presence of a
+  // rejectionReason on a 'none' status is what marks a seller as rejected rather
+  // than never-applied.
+  const kycRejection =
+    user?.kycStatus === 'none' && user?.kycData?.rejectionReason ? user.kycData : null;
+
+  // Prefill the KYC form from whatever was already submitted, so a rejected seller
+  // sees their previous entries and their already-uploaded documents (DocUploadField
+  // renders an uploaded state from `docUrl`) and only has to replace the failing one.
+  // Runs once; never clobbers edits in progress.
+  const kycPrefilled = useRef(false);
+  useEffect(() => {
+    const kycData = user?.kycData;
+    if (kycPrefilled.current || !kycData || typeof kycData !== 'object') return;
+    if (user?.kycStatus === 'verified') return;
+    kycPrefilled.current = true;
+    setKycForm((prev) => ({
+      ...prev,
+      aadhaar: kycData.aadhaar || prev.aadhaar,
+      pan: kycData.pan || prev.pan,
+      companyName: kycData.companyName || prev.companyName,
+      gst: kycData.gst || prev.gst,
+      founderName: kycData.founderName || prev.founderName,
+      aadhaarDoc: kycData.aadhaarDoc || prev.aadhaarDoc,
+      panDoc: kycData.panDoc || prev.panDoc,
+      gstDoc: kycData.gstDoc || prev.gstDoc,
+      incorporationDoc: kycData.incorporationDoc || prev.incorporationDoc,
+      signedByName: kycData.agreementSignedByName || prev.signedByName,
+    }));
+  }, [user?.kycData, user?.kycStatus]);
   const submitTestimonial = useSubmitTestimonial();
   const [testimonialForm, setTestimonialForm] = useState({
     content: '',
@@ -276,8 +316,8 @@ const Account = () => {
       showToast('Pickup address saved successfully!', 'success');
       setEditingPickup(false);
       queryClient.invalidateQueries({ queryKey: ['vendor', 'profile'] });
-    } catch {
-      showToast('Failed to save pickup address.', 'error');
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to save pickup address.', 'error');
     } finally {
       setPickupSaving(false);
     }
@@ -384,6 +424,22 @@ const Account = () => {
   };
 
   const userProducts = user?.products || [];
+
+  // Slot accounting. `activeCount` from /vendor/profile is authoritative; the local
+  // filter is the identical rule and only covers the window before that request
+  // resolves. Both the submit guard and the usage bar must read these, never
+  // `userProducts.length` (which includes Sold and Rejected items).
+  const maxListings = vendorProfile?.maxListings || 5;
+  const activeListingCount =
+    vendorProfile?.activeCount ??
+    userProducts.filter((p) => ACTIVE_LISTING_STATUSES.includes(p.status)).length;
+
+  // Listings the seller marked Sold themselves (no order behind them). Anything
+  // Sold that is NOT in this set was bought by a real buyer.
+  const offlineSoldIds = useMemo(
+    () => new Set(vendorProfile?.offlineSoldIds || []),
+    [vendorProfile?.offlineSoldIds],
+  );
 
   // Single source of truth for the section navigation — consumed by the mobile
   // index list, the mobile section header and the desktop sidebar alike.
@@ -500,8 +556,8 @@ const Account = () => {
     try {
       await kycMutation.mutateAsync({ kycData });
       showToast('Verification documents submitted successfully!', 'success');
-    } catch {
-      showToast('KYC submission failed.', 'error');
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'KYC submission failed.', 'error');
     }
   };
 
@@ -613,13 +669,15 @@ const Account = () => {
   const handleProductSubmit = async (e) => {
     e.preventDefault();
 
-    // 1. Validate User Type Limit
-    if (
-      vendorProfile?.type !== 'BULK' &&
-      userProducts.length >= (vendorProfile?.maxListings || 5)
-    ) {
+    // 1. Validate User Type Limit. Only ACTIVE listings occupy a slot — a Sold or
+    // Rejected item does not, which is exactly how the backend counts
+    // (backend/routes/products.js). Counting every product ever created locked
+    // out sellers who had successfully sold their allowance.
+    if (vendorProfile?.type !== 'BULK' && activeListingCount >= maxListings) {
       showToast(
-        'Listing limit reached. Upgrade to a Company account for unlimited listings.',
+        `You already have ${activeListingCount} active listing${
+          activeListingCount === 1 ? '' : 's'
+        }, the maximum for a single seller. Sell or remove one to list something new.`,
         'error',
       );
       return;
@@ -672,9 +730,12 @@ const Account = () => {
         specs: [{ key: '', value: '' }],
         commissionPercent: 10,
       });
-      showToast('Product listed successfully! Your item is now live in The Exchange.', 'success');
-    } catch {
-      showToast('Failed to list product.', 'error');
+      showToast(
+        'Listing submitted for review. We will notify you as soon as it goes live in The Exchange.',
+        'success',
+      );
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to list product.', 'error');
     }
   };
 
@@ -782,8 +843,8 @@ const Account = () => {
     try {
       await markAsSoldMutation.mutateAsync(productId);
       showToast('Item marked as sold.', 'success');
-    } catch {
-      showToast('Failed to mark item as sold.', 'error');
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to mark item as sold.', 'error');
     }
   };
 
@@ -793,8 +854,8 @@ const Account = () => {
       await deleteProductMutation.mutateAsync(productId);
       showToast('Product deleted.', 'success');
       queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-    } catch {
-      showToast('Failed to delete product.', 'error');
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to delete product.', 'error');
     }
   };
 
@@ -855,8 +916,8 @@ const Account = () => {
       showToast('Product updated! It will be re-reviewed.', 'success');
       handleCancelEdit();
       queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-    } catch {
-      showToast('Failed to update product.', 'error');
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to update product.', 'error');
     }
   };
 
@@ -1184,13 +1245,14 @@ const Account = () => {
                           <p className="text-gray-800 mt-1">{vendorProfile.pickupPhone || '—'}</p>
                         </div>
                       </div>
-                      {vendorProfile.pickupVerified ? (
+                      {/* Only the positive badge is rendered. Nothing in the codebase
+                          ever sets `pickupVerified` (no route writes it), so the old
+                          `else` branch showed a permanent amber "Pending Verification"
+                          on every correct address. Restore the negative branch once an
+                          admin toggle actually sets this field. */}
+                      {vendorProfile.pickupVerified && (
                         <span className="inline-flex items-center gap-1 mt-4 text-xs text-green-700 bg-green-50 px-3 py-1 rounded-full font-medium">
                           <ShieldCheck size={12} /> Verified by Delivery Partner
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 mt-4 text-xs text-amber-700 bg-amber-50 px-3 py-1 rounded-full font-medium">
-                          Pending Verification
                         </span>
                       )}
                       <button
@@ -1331,6 +1393,34 @@ const Account = () => {
               </div>
             ) : (
               <div className="max-w-2xl">
+                {kycRejection && (
+                  <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-6 flex items-start gap-4">
+                    <AlertCircle size={28} className="text-red-600 mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="font-serif text-base sm:text-lg font-medium text-red-800 mb-1">
+                        Verification not approved
+                      </h4>
+                      <p className="text-sm text-red-700 leading-relaxed">
+                        <span className="font-medium">Reason: </span>
+                        {kycRejection.rejectionReason}
+                      </p>
+                      <p className="text-sm text-red-700 leading-relaxed mt-3">
+                        Fix the items below and resubmit. Your previous details and documents have
+                        been kept — replace only what needs correcting.
+                      </p>
+                      {kycRejection.rejectedAt && (
+                        <p className="text-xs text-red-500 mt-3">
+                          Reviewed on{' '}
+                          {new Date(kycRejection.rejectedAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <p className="text-gray-500 mb-8 font-light">
                   To maintain the integrity of our marketplace, all sellers must complete identity
                   verification and accept the Seller Agreement. Your data is encrypted and handled
@@ -2016,14 +2106,13 @@ const Account = () => {
                         </span>
                       ) : (
                         <span>
-                          {vendorProfile.activeCount ?? userProducts.length} of{' '}
-                          {vendorProfile.maxListings || 5} listings used
+                          {activeListingCount} of {maxListings} active listings used
                         </span>
                       )}
                     </p>
                   ) : (
                     <p className="text-sm text-gray-500 mt-1">
-                      {userProducts.length} of {vendorProfile?.maxListings || 5} listings used
+                      {activeListingCount} of {maxListings} active listings used
                     </p>
                   )}
                 </div>
@@ -2064,7 +2153,7 @@ const Account = () => {
                   <div
                     className="h-full bg-luxury-gold transition-all rounded-full"
                     style={{
-                      width: `${Math.min((userProducts.length / (vendorProfile?.maxListings || 5)) * 100, 100)}%`,
+                      width: `${Math.min((activeListingCount / maxListings) * 100, 100)}%`,
                     }}
                   />
                 </div>
@@ -2128,10 +2217,13 @@ const Account = () => {
                   </div>
                   <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
                     <p className="text-lg sm:text-2xl font-serif font-bold text-heritage-charcoal">
+                      {/* Rejected listings are NOT in review — they are counted
+                          separately under "Needs Attention" below. */}
                       <CountUp
                         end={
-                          userProducts.filter((p) => p.status !== 'Approved' && p.status !== 'Sold')
-                            .length
+                          userProducts.filter(
+                            (p) => p.status === 'Pending' || p.status === 'In_Review',
+                          ).length
                         }
                       />
                     </p>
@@ -2139,6 +2231,16 @@ const Account = () => {
                       In Review
                     </p>
                   </div>
+                  {userProducts.some((p) => p.status === 'Rejected') && (
+                    <div className="bg-red-50 p-3 sm:p-4 border border-red-100">
+                      <p className="text-lg sm:text-2xl font-serif font-bold text-red-700">
+                        <CountUp end={userProducts.filter((p) => p.status === 'Rejected').length} />
+                      </p>
+                      <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 sm:mt-1">
+                        Needs Attention
+                      </p>
+                    </div>
+                  )}
                   <div className="bg-gray-50 p-3 sm:p-4 border border-gray-100">
                     <p className="text-lg sm:text-2xl font-serif font-bold text-luxury-gold">
                       {vendorStats ? (
@@ -2479,19 +2581,23 @@ const Account = () => {
                                   >
                                     <Edit3 size={12} />
                                   </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMarkAsSold(product.id)}
-                                    disabled={markAsSoldMutation.isPending}
-                                    className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30"
-                                    title="Mark as sold"
-                                  >
-                                    {markAsSoldMutation.isPending ? (
-                                      <Loader2 size={12} className="animate-spin" />
-                                    ) : (
-                                      <Tag size={12} />
-                                    )}
-                                  </button>
+                                  {/* Same rule as the desktop card: the backend only
+                                      accepts Approved listings. */}
+                                  {product.status === 'Approved' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMarkAsSold(product.id)}
+                                      disabled={markAsSoldMutation.isPending}
+                                      className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30"
+                                      title="Mark as sold"
+                                    >
+                                      {markAsSoldMutation.isPending ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                      ) : (
+                                        <Tag size={12} />
+                                      )}
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteProduct(product.id)}
@@ -2507,18 +2613,23 @@ const Account = () => {
                                   </button>
                                 </div>
                               </div>
-                              {product.status === 'Sold' && (
-                                <p className="text-[10px] text-gray-500 leading-snug mt-1.5">
-                                  Marked by mistake? Contact{' '}
-                                  <a
-                                    href="mailto:support@thecollectorsexchange.in"
-                                    className="underline font-medium text-gray-600"
-                                  >
-                                    support@thecollectorsexchange.in
-                                  </a>{' '}
-                                  to restore.
-                                </p>
-                              )}
+                              {product.status === 'Sold' &&
+                                (offlineSoldIds.has(product.id) ? (
+                                  <p className="text-[10px] text-gray-500 leading-snug mt-1.5">
+                                    You marked this sold. By mistake? Contact{' '}
+                                    <a
+                                      href="mailto:support@thecollectorsexchange.in"
+                                      className="underline font-medium text-gray-600"
+                                    >
+                                      support@thecollectorsexchange.in
+                                    </a>{' '}
+                                    to relist.
+                                  </p>
+                                ) : (
+                                  <p className="text-[10px] text-green-700 leading-snug mt-1.5">
+                                    Sold to a buyer. Payout is released after delivery.
+                                  </p>
+                                ))}
                             </div>
                           </div>
                           {/* Desktop: vertical card */}
@@ -2577,24 +2688,40 @@ const Account = () => {
                               <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">
                                 {product.description}
                               </p>
-                              {product.status === 'Sold' && (
-                                <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
-                                  <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                    Marked Sold
-                                  </p>
-                                  <p className="text-xs text-gray-600 leading-relaxed">
-                                    This listing is hidden from buyers. Marked it by mistake?
-                                    Contact{' '}
-                                    <a
-                                      href="mailto:support@thecollectorsexchange.in"
-                                      className="underline font-medium"
-                                    >
-                                      support@thecollectorsexchange.in
-                                    </a>{' '}
-                                    to restore it.
-                                  </p>
-                                </div>
-                              )}
+                              {product.status === 'Sold' &&
+                                (offlineSoldIds.has(product.id) ? (
+                                  // Self-marked sold with no order behind it — this is the
+                                  // only case where "undo" is a sensible offer.
+                                  <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
+                                    <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                      Marked Sold
+                                    </p>
+                                    <p className="text-xs text-gray-600 leading-relaxed">
+                                      You marked this item as sold, so it is hidden from buyers.
+                                      Marked it by mistake? Contact{' '}
+                                      <a
+                                        href="mailto:support@thecollectorsexchange.in"
+                                        className="underline font-medium"
+                                      >
+                                        support@thecollectorsexchange.in
+                                      </a>{' '}
+                                      to relist it.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  // A real buyer purchased this. Never invite the seller to
+                                  // undo it — point them at the order and the payout instead.
+                                  <div className="mt-3 p-3 bg-green-50 border border-green-100 rounded">
+                                    <p className="text-[10px] font-bold text-green-700 uppercase tracking-wider mb-1">
+                                      Sold
+                                    </p>
+                                    <p className="text-xs text-green-800 leading-relaxed">
+                                      This item found a buyer and is no longer shown in The
+                                      Exchange. Your payout is released after delivery — track it in
+                                      your seller dashboard.
+                                    </p>
+                                  </div>
+                                ))}
                               {product.status === 'Rejected' && product.rejectionReason && (
                                 <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded">
                                   <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1">
@@ -2629,19 +2756,25 @@ const Account = () => {
                                   >
                                     <Edit3 size={14} />
                                   </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMarkAsSold(product.id)}
-                                    disabled={markAsSoldMutation.isPending}
-                                    className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30"
-                                    title="Mark as sold"
-                                  >
-                                    {markAsSoldMutation.isPending ? (
-                                      <Loader2 size={14} className="animate-spin" />
-                                    ) : (
-                                      <Tag size={14} />
-                                    )}
-                                  </button>
+                                  {/* The backend only accepts Approved listings
+                                      (backend/routes/products.js), so offering the
+                                      action on Pending/Rejected/Sold cards could only
+                                      ever produce an error. */}
+                                  {product.status === 'Approved' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMarkAsSold(product.id)}
+                                      disabled={markAsSoldMutation.isPending}
+                                      className="text-gray-400 hover:text-green-600 transition-colors p-1 disabled:opacity-30"
+                                      title="Mark as sold"
+                                    >
+                                      {markAsSoldMutation.isPending ? (
+                                        <Loader2 size={14} className="animate-spin" />
+                                      ) : (
+                                        <Tag size={14} />
+                                      )}
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteProduct(product.id)}

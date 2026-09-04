@@ -564,11 +564,27 @@ export default async function adminRoutes(fastify) {
       const { id } = KYCRequestIdParam.parse(request.params);
       const { reason } = KYCRejectionSchema.parse(request.body);
 
+      const existingUser = await prisma.user.findUnique({
+        where: { id },
+      });
+      if (!existingUser) {
+        return reply.status(404).send({ error: 'User not found' });
+      }
+
+      // Preserve previously submitted KYC data (documents, aadhaar/pan, company
+      // details) so a rejected seller can correct only the failing item instead
+      // of re-uploading everything.
+      const currentKycData =
+        typeof existingUser.kycData === 'object' && existingUser.kycData !== null
+          ? existingUser.kycData
+          : {};
+
       const updatedUser = await prisma.user.update({
         where: { id },
         data: {
           kycStatus: 'none',
           kycData: {
+            ...currentKycData,
             rejectionReason: reason,
             rejectedAt: new Date().toISOString(),
           },

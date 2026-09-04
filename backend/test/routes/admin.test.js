@@ -238,6 +238,7 @@ describe('admin routes', () => {
 
   describe('PATCH /kyc/requests/:id/reject', () => {
     it('rejects KYC request', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'uid', kycData: {} });
       mockPrisma.user.update.mockResolvedValue({ id: 'uid', kycStatus: 'none' });
       mockPrisma.notification.create.mockResolvedValue({});
       const app = buildApp(mockPrisma);
@@ -250,6 +251,72 @@ describe('admin routes', () => {
         headers: { authorization: 'Bearer admin' },
       });
       expect(res.statusCode).toBe(200);
+    });
+
+    // Regression: the reject handler used to write a fresh kycData object, wiping
+    // every document path and identity field the seller had uploaded. They were
+    // then shown a pristine empty form with nothing to correct.
+    it('preserves the previously submitted kycData', async () => {
+      const submitted = {
+        aadhaar: '1234',
+        pan: 'ABCDE1234F',
+        companyName: 'Test Corp',
+        gst: '29ABCDE1234F1Z5',
+        founderName: 'A Founder',
+        aadhaarDoc: 'kyc/sb-123/aadhaar.pdf',
+        panDoc: 'kyc/sb-123/pan.pdf',
+      };
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'uid', kycData: submitted });
+      mockPrisma.user.update.mockResolvedValue({ id: 'uid', kycStatus: 'none' });
+      mockPrisma.notification.create.mockResolvedValue({});
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/kyc/requests/uid/reject',
+        payload: { reason: 'Aadhaar scan unreadable' },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      const { data } = mockPrisma.user.update.mock.calls[0][0];
+      expect(data.kycStatus).toBe('none');
+      expect(data.kycData).toMatchObject(submitted);
+      expect(data.kycData.rejectionReason).toBe('Aadhaar scan unreadable');
+      expect(typeof data.kycData.rejectedAt).toBe('string');
+    });
+
+    it('tolerates a null kycData', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'uid', kycData: null });
+      mockPrisma.user.update.mockResolvedValue({ id: 'uid', kycStatus: 'none' });
+      mockPrisma.notification.create.mockResolvedValue({});
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/kyc/requests/uid/reject',
+        payload: { reason: 'Missing documents' },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      const { data } = mockPrisma.user.update.mock.calls[0][0];
+      expect(data.kycData.rejectionReason).toBe('Missing documents');
+    });
+
+    it('returns 404 when user not found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/kyc/requests/nonexistent/reject',
+        payload: { reason: 'Bad docs' },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(404);
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
     });
 
     it('returns 400 without reason', async () => {

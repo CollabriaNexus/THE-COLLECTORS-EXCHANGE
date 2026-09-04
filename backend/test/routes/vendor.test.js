@@ -46,6 +46,7 @@ describe('vendor routes', () => {
         status: 'APPROVED',
       });
       mockPrisma.product.count.mockResolvedValue(3);
+      mockPrisma.product.findMany.mockResolvedValue([]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/vendor.js')).default);
       await app.ready();
@@ -56,6 +57,58 @@ describe('vendor routes', () => {
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().activeCount).toBe(3);
+    });
+
+    // The seller UI must not offer to "restore" a listing a real buyer bought, so
+    // the profile reports which Sold listings have no order behind them.
+    it('returns the ids of Sold listings that have no order items', async () => {
+      mockPrisma.vendor.findUnique.mockResolvedValue({
+        id: 'v1',
+        type: 'SINGLE',
+        status: 'APPROVED',
+      });
+      mockPrisma.product.count.mockResolvedValue(2);
+      mockPrisma.product.findMany.mockResolvedValue([{ id: 'p-offline-1' }, { id: 'p-offline-2' }]);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/vendor.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/profile',
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().offlineSoldIds).toEqual(['p-offline-1', 'p-offline-2']);
+      expect(mockPrisma.product.findMany).toHaveBeenCalledWith({
+        where: { sellerId: 'vendor-user-id', status: 'Sold', orderItems: { none: {} } },
+        select: { id: true },
+      });
+    });
+
+    // activeCount is what the seller UI gates new listings on, so the filter has
+    // to match backend/routes/products.js exactly: Sold and Rejected free the slot.
+    it('counts only Pending / In_Review / Approved listings as active', async () => {
+      mockPrisma.vendor.findUnique.mockResolvedValue({
+        id: 'v1',
+        type: 'SINGLE',
+        status: 'APPROVED',
+      });
+      mockPrisma.product.count.mockResolvedValue(0);
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/vendor.js')).default);
+      await app.ready();
+      await app.inject({
+        method: 'GET',
+        url: '/profile',
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(mockPrisma.product.count).toHaveBeenCalledWith({
+        where: {
+          sellerId: 'vendor-user-id',
+          status: { in: ['Pending', 'In_Review', 'Approved'] },
+        },
+      });
     });
 
     it('returns 401 without dbUser', async () => {

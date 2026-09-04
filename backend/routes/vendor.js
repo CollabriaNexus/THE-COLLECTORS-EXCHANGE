@@ -31,7 +31,8 @@ export default async function vendorRoutes(fastify) {
         .send({ error: 'Vendor profile not found. You must complete KYC first.' });
     }
 
-    // Fetch active listing count
+    // Fetch active listing count. Must stay in step with the same filter in
+    // products.js (create) — a Sold or Rejected listing no longer occupies a slot.
     const activeCount = await prisma.product.count({
       where: {
         sellerId: dbUser.id,
@@ -39,9 +40,19 @@ export default async function vendorRoutes(fastify) {
       },
     });
 
+    // Which of this seller's Sold listings were self-marked offline rather than
+    // bought through the Exchange (same rule as `getOfflineSold` below). The
+    // seller UI needs the distinction so it never invites someone to "restore" a
+    // listing that a paying buyer actually purchased.
+    const offlineSold = await prisma.product.findMany({
+      where: { sellerId: dbUser.id, status: 'Sold', orderItems: { none: {} } },
+      select: { id: true },
+    });
+
     return {
       ...vendor,
       activeCount,
+      offlineSoldIds: offlineSold.map((p) => p.id),
     };
   });
 
