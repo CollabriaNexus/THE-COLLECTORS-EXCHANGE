@@ -386,3 +386,47 @@ npm run build && npx wrangler pages deploy dist --project-name=tce-user --branch
 - [ ] `src/components/ProductCard.jsx` is dead code — only its own test imports it; the live card is `ArchiveProductCard` in `Category.jsx`.
 - [ ] Returning consenting visitors lose their initial GA4 pageview (idle-deferred load races `GATracker` mount in `App.jsx`).
 - [ ] Still deferred: real SSR/`hydrateRoot` (prerender builds HTML from string templates, not React SSR); real E2E flows (`tests/flows/` is empty).
+
+### Session 9 (continued) — 2026-09-04, post-audit fixes
+
+Three flow audits (buyer purchase, vendor lifecycle, cross-cutting UI/UX) produced 51 findings. Fixes below all landed on `fix/security-ci-consent-perf`.
+
+**⚠️ OPEN QUESTION — 18% GST on platform commission. Owner undecided; needs an accountant, not a developer.**
+
+`CommissionSlider.jsx` showed sellers `price - platformFee - (platformFee * 0.18)`. The backend has never charged that GST: checkout stores only `platformFee`, and `payoutFromItems` pays `price - platformFee`. On ₹10,000 at 15% the seller saw **₹8,230** and was paid **₹8,500**.
+
+`SUMMARY.md` (root) records the deduction as deliberate — _"Vendor's 'Your Earnings' must reflect true take-home after both commission and GST deduction"_ — but only the display half ever shipped. So either:
+
+- the plan was abandoned → the display was stale, and matching it to the payout (what we did) is correct; or
+- the plan still stands → the **backend** is incomplete, and every seller has been over-paid by 18% of commission since it shipped.
+
+Display now matches actual payouts so nothing misleads a seller today. **This is not a ruling on the tax question.** If GST is owed from the seller's side, fix `backend/routes/checkout.js` fee computation + `backend/lib/money.js` `payoutFromItems` — not the slider — and deal with reconciliation of past payouts. Full context in the comment at `src/components/account/CommissionSlider.jsx`.
+
+**Payment integrity (was the top severity — a captured payment could vanish):**
+
+- Added `POST /api/checkout/razorpay-webhook`. There was previously **no webhook at all** — the buyer's browser was the only thing that finalized a paid order, so a dropped connection left the money taken, the order `Pending` forever, and the one-of-a-kind item still on sale. Signature is the auth (HMAC-SHA256 over the **raw** body via a route-scoped `preParsing` hook; verified byte-exact under the Lambda adapter). Fails closed with 503 if `RAZORPAY_WEBHOOK_SECRET` is unset.
+- Extracted the finalize block into a shared exported `finalizeOrder()` called by both the webhook and `/verify-payment`. Idempotency is unchanged and now shared: the guarded `order.updateMany` means exactly one of N racers does the work, and the unique `Order.paymentId` means one payment can never apply to two orders.
+- **Behaviour change worth remembering:** the finalize gate is now `paymentStatus: { in: ['Pending','Failed'] }`. With `'Pending'` alone, a `payment.failed` stamp permanently blocked a later successful retry — and the gate matching 0 rows would have reported success while claiming nothing.
+- Buyer-facing failure screens replaced a bare `catch {}` that showed "Payment verification failed. Please contact support." for **every** case, including the sold-out race where the backend had already issued a real refund. Now: sold-out+refunded, sold-out+refund-pending, sold-out COD, unconfirmed online ("do not pay again"), unconfirmed COD — each naming the order reference.
+- Dismissed/failed payments now surface Razorpay's own `error.description`, and retry reuses the created order (keyed on a form+cart+coupon fingerprint) instead of creating a duplicate.
+- `recipientName` was collected, required, echoed back on the confirmation screen — and silently stripped by Zod, so parcels shipped with no name. Now persisted to `Order.buyerName` and shown as the ship-to name in admin. `country` dropped entirely (no such column).
+
+**Seller correctness:**
+
+- KYC rejection was **destroying uploaded documents** — the reject path wrote a fresh `kycData` with no `...currentKycData` spread while approve spread correctly. Rejected sellers then saw a pristine empty form with no reason shown. Fixed at both ends, plus a rejection banner and form prefill.
+- The listing-slot guard counted **every** product ever created, including `Sold` and `Rejected`, while the backend counts only active ones. A seller who had successfully sold 5 items was locked out and told to buy a Company account. Now uses `activeCount`.
+- `/vendor/profile` returns `offlineSoldIds` so a genuine sale no longer shows "Marked it by mistake? Contact support to restore it."
+- "Your item is now live" was false (created `Pending`, needs admin approval). Six bare `catch {}` toasts now surface the server's actual reason. Mark-sold hidden unless `Approved`.
+- `pickupVerified` badge removed — **nothing in the codebase ever sets that field**, so every seller saw a permanent "Pending Verification" on a correct address. The admin toggle still needs building.
+
+**Cross-cutting UX:**
+
+- `isError` appeared **once** in the whole app against 102 `isLoading` checks, so a failed request rendered the empty state — a flaky connection told shoppers the shop was empty. Added a shared `QueryError` with working retry across Category, Cart, Wishlist and both Home sections.
+- `<Suspense>` was outside `<Routes>`, so the first tap on any lazy route unmounted the entire tree — header and bottom nav included — behind a full-viewport spinner reading "Loading the archive…". Moved inside `Layout` around `<Outlet>`.
+- `ScrollToTop` fired on POP, destroying back-button scroll position on every return to a browse grid. Now skipped for POP via `useNavigationType()` (`<ScrollRestoration>` would require migrating to a data router).
+- `--font-family-serif` → `--font-serif`: Tailwind v4's namespace is `--font-*`, so **268 `font-serif` call sites including the header wordmark were rendering Georgia**, not Playfair. Verified against built CSS before and after.
+- Footer was `hidden lg:block` — address, phone, WhatsApp, policy links and the consent-withdrawal control were invisible to every mobile visitor, while ConsentBanner and Privacy both told them to use "the link in the footer".
+- WhatsApp FAB and scroll-to-top had byte-identical positioning; past 300px of scroll the latter covered the former completely.
+- Header cart/wishlist `aria-label` replaced the badge contents, so counts were never announced.
+
+**Deferred (answers recorded, not yet built):** Add to Cart as the primary ProductDetail CTA (owner chose this over WhatsApp-only); consolidate on **+91 97407 99109** as the single number (currently two are live, and Terms still lists the other one).
