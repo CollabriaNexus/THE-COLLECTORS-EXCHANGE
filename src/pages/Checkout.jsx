@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { ShieldCheck, Loader2, Check, Percent, X, MapPin, Package, Truck } from 'lucide-react';
+import {
+  ShieldCheck,
+  Loader2,
+  Check,
+  Percent,
+  X,
+  MapPin,
+  Package,
+  Truck,
+  AlertCircle,
+  Info,
+  RefreshCw,
+} from 'lucide-react';
 import { useCart } from '../hooks/api/useCart';
 import { useCreateOrder, useVerifyPayment, useValidateCoupon } from '../hooks/api/useCheckout';
 import { getUser } from '../utils/storage';
@@ -10,6 +22,10 @@ import { useToast } from '../components/Toast';
 import { Reveal, Magnetic } from '../components/Motion';
 import SignInPrompt from '../components/SignInPrompt';
 import { imageUrl } from '../utils/image';
+
+const SUPPORT_EMAIL = 'support@thecollectorsexchange.in';
+
+const rupees = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
 const Checkout = () => {
   const currentUser = getUser();
@@ -30,7 +46,6 @@ const Checkout = () => {
     city: '',
     state: '',
     zipCode: '',
-    country: 'India',
     phone: currentUser?.phone || '',
   });
   const [paymentMethod, setPaymentMethod] = useState('online');
@@ -38,6 +53,20 @@ const Checkout = () => {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [errors, setErrors] = useState({});
+
+  // A checkout that ends badly gets a screen of its own, never a toast: the
+  // buyer may have been charged, and a message that disappears after four
+  // seconds is the worst possible way to tell someone about their money.
+  const [paymentIssue, setPaymentIssue] = useState(null);
+  // Softer failures — the modal was closed, or an attempt was declined — stay
+  // on the form as a banner so the buyer can simply try again.
+  const [paymentNotice, setPaymentNotice] = useState(null);
+  // An order row already exists the moment create-order returns, BEFORE the
+  // Razorpay modal opens. Pressing pay again must reuse it, or every abandoned
+  // attempt leaves another orphan Pending order in the buyer's history. Keyed
+  // on everything the order was priced from, so changing the cart, the coupon,
+  // the address or the payment method correctly starts a fresh one.
+  const [pendingOrder, setPendingOrder] = useState(null);
 
   // Load Razorpay script
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
@@ -63,16 +92,36 @@ const Checkout = () => {
     if (!form.city.trim()) newErrors.city = 'City is required';
     if (!form.state.trim()) newErrors.state = 'State is required';
     if (!form.zipCode.trim()) newErrors.zipCode = 'PIN code is required';
-    if (!form.country.trim()) newErrors.country = 'Country is required';
     if (!form.phone.trim() || form.phone.length < 10)
       newErrors.phone = 'Valid phone number is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Everything the backend prices the order from. If any of it changes, the
+  // cached order no longer describes what the buyer is about to pay for.
+  const orderFingerprint = () =>
+    JSON.stringify({
+      ...form,
+      paymentMethod,
+      couponCode: couponCode.trim(),
+      items: cartItems.map((i) => i.productId).sort(),
+    });
+
+  // The backend answers a sold-out race with product IDs; the buyer needs names.
+  const namesForProductIds = (ids = [], snapshot = []) =>
+    ids.map((id) => {
+      const match =
+        snapshot.find((s) => s.productId === id) || cartItems.find((c) => c.productId === id);
+      const product = match?.product;
+      if (!product) return 'One of the pieces in your order';
+      return [product.brand, product.title].filter(Boolean).join(' ');
+    });
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+    setPaymentNotice(null);
 
     // Captured before the cart query is invalidated by verification.
     const productSnapshot = cartItems.map((item) => ({
@@ -80,64 +129,115 @@ const Checkout = () => {
       product: item.product,
     }));
     const finalizeSuccess = (verifyData) => {
+      setPendingOrder(null);
       setPurchasedItems(productSnapshot);
       setOrderSuccess(verifyData.order);
     };
 
-    try {
-      const orderPayload = {
-        ...form,
-        paymentMethod,
-        items: cartItems.map((item) => ({
-          productId: item.productId,
-          quantity: 1,
-        })),
-      };
-      if (couponCode.trim()) {
-        orderPayload.couponCode = couponCode.trim();
+    /**
+     * Everything that can go wrong AFTER an order row exists. The buyer may have
+     * been charged by this point, so none of these are toasts: each one names
+     * the order, says whether money moved, and says what to do next.
+     */
+    const handleVerifyFailure = (err, orderData, isCODOrder) => {
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      const reference = data?.displayId || orderData.displayId || orderData.orderId;
+
+      if (status === 409 && Array.isArray(data?.soldOut)) {
+        setPaymentIssue({
+          kind: 'sold_out',
+          reference,
+          items: namesForProductIds(data.soldOut, productSnapshot),
+          amount: data.amount ?? orderData.amount,
+          refundRequired: !!data.refundRequired,
+          refundPending: !!data.refundPending,
+        });
+        return;
       }
 
-      const orderData = await createOrderMutation.mutateAsync(orderPayload);
+      setPaymentIssue({
+        kind: isCODOrder ? 'unconfirmed_cod' : 'unconfirmed_online',
+        reference,
+        amount: orderData.amount,
+        detail: data?.error || null,
+      });
+    };
 
-      // Set applied coupon state if coupon was applied
-      if (orderData.couponApplied) {
-        setAppliedCoupon({
-          discountPercent: orderData.discountPercent,
-          discountAmount: orderData.discountAmount,
+    try {
+      const fingerprint = orderFingerprint();
+      let orderData = pendingOrder?.fingerprint === fingerprint ? pendingOrder.data : null;
+      const isReusedOrder = !!orderData;
+
+      if (!orderData) {
+        const orderPayload = {
+          ...form,
+          paymentMethod,
+          items: cartItems.map((item) => ({
+            productId: item.productId,
+            quantity: 1,
+          })),
+        };
+        if (couponCode.trim()) {
+          orderPayload.couponCode = couponCode.trim();
+        }
+
+        orderData = await createOrderMutation.mutateAsync(orderPayload);
+        setPendingOrder({ fingerprint, data: orderData });
+
+        // Set applied coupon state if coupon was applied
+        if (orderData.couponApplied) {
+          setAppliedCoupon({
+            discountPercent: orderData.discountPercent,
+            discountAmount: orderData.discountAmount,
+          });
+        }
+      }
+
+      // Track checkout events for each product — once per order, not once per
+      // abandoned attempt.
+      if (!isReusedOrder) {
+        cartItems.forEach((item) => {
+          apiClient
+            .post('/analytics/checkout', {
+              productId: item.productId,
+              orderId: orderData.orderId,
+            })
+            .catch(() => {});
         });
       }
-
-      // Track checkout events for each product
-      cartItems.forEach((item) => {
-        apiClient
-          .post('/analytics/checkout', {
-            productId: item.productId,
-            orderId: orderData.orderId,
-          })
-          .catch(() => {});
-      });
 
       // COD: skip Razorpay, verify directly
       if (orderData.isCOD) {
-        const verifyData = await verifyPaymentMutation.mutateAsync({
-          orderId: orderData.orderId,
-          razorpayOrderId: `cod_${orderData.orderId}`,
-          razorpayPaymentId: `cod_${orderData.orderId}`,
-          razorpaySignature: `cod_${orderData.orderId}`,
-        });
-        finalizeSuccess(verifyData);
+        try {
+          const verifyData = await verifyPaymentMutation.mutateAsync({
+            orderId: orderData.orderId,
+            razorpayOrderId: `cod_${orderData.orderId}`,
+            razorpayPaymentId: `cod_${orderData.orderId}`,
+            razorpaySignature: `cod_${orderData.orderId}`,
+          });
+          finalizeSuccess(verifyData);
+        } catch (err) {
+          // The order EXISTS at this point. "Failed to create order" was a lie
+          // that sent people off to place a second one.
+          handleVerifyFailure(err, orderData, true);
+        }
         return;
       }
 
       // Mock mode: skip Razorpay, directly verify
       if (orderData.isMock) {
-        const verifyData = await verifyPaymentMutation.mutateAsync({
-          orderId: orderData.orderId,
-          razorpayOrderId: orderData.razorpayOrderId,
-          razorpayPaymentId: `pay_mock_${orderData.orderId}`,
-          razorpaySignature: `sig_mock_${orderData.orderId}`,
-        });
-        finalizeSuccess(verifyData);
+        try {
+          const verifyData = await verifyPaymentMutation.mutateAsync({
+            orderId: orderData.orderId,
+            razorpayOrderId: orderData.razorpayOrderId,
+            razorpayPaymentId: `pay_mock_${orderData.orderId}`,
+            razorpaySignature: `sig_mock_${orderData.orderId}`,
+          });
+          finalizeSuccess(verifyData);
+        } catch (err) {
+          handleVerifyFailure(err, orderData, false);
+        }
         return;
       }
 
@@ -172,20 +272,37 @@ const Checkout = () => {
               razorpaySignature: response.razorpay_signature,
             });
             finalizeSuccess(verifyData);
-          } catch {
-            showToast('Payment verification failed. Please contact support.', 'error');
+          } catch (err) {
+            handleVerifyFailure(err, orderData, false);
           }
         },
         modal: {
           ondismiss: () => {
-            // User closed the modal — order stays Pending
+            // Nothing was charged, but an order row exists and pressing pay
+            // again must reuse it — say so rather than leaving silence.
+            setPaymentNotice({
+              tone: 'info',
+              title: 'Payment window closed',
+              body: `Nothing has been charged. Your order ${orderData.displayId || orderData.orderId} is saved — finish paying below, or any time from My Orders.`,
+            });
           },
         },
       };
 
       const rzp = new window.Razorpay(options);
+      // Razorpay's own message ("card declined by issuing bank", "UPI request
+      // timed out") is better than anything we could write, so pass it through.
+      rzp.on('payment.failed', (response) => {
+        const description = response?.error?.description;
+        setPaymentNotice({
+          tone: 'error',
+          title: 'That payment did not go through',
+          body: `${description ? `${description} ` : ''}You have not been charged. Your order ${orderData.displayId || orderData.orderId} is saved — try again below, or pay later from My Orders.`,
+        });
+      });
       rzp.open();
     } catch (err) {
+      // Reached only if create-order itself failed, so no order and no charge.
       showToast(err?.response?.data?.error || err.message || 'Failed to create order', 'error');
     }
   };
@@ -219,6 +336,230 @@ const Checkout = () => {
         />
         <Loader2 className="animate-spin text-luxury-gold mb-4" size={48} />
         <p className="text-gray-500 font-serif text-xl italic">Preparing Checkout...</p>
+      </div>
+    );
+  }
+
+  // A checkout that failed after money was (or may have been) taken. Deliberately
+  // a full screen: it has to survive a page's worth of reading, be screenshot-able,
+  // and always carry the order reference support will ask for.
+  if (paymentIssue) {
+    const isSoldOut = paymentIssue.kind === 'sold_out';
+    const isCODIssue = paymentIssue.kind === 'unconfirmed_cod';
+
+    const eyebrow = isSoldOut
+      ? paymentIssue.refundPending
+        ? 'Refund Being Processed'
+        : paymentIssue.refundRequired
+          ? 'Payment Refunded'
+          : 'Order Cancelled'
+      : isCODIssue
+        ? 'Order Saved'
+        : 'Please Do Not Pay Again';
+
+    const heading = isSoldOut
+      ? 'Someone Was Faster'
+      : isCODIssue
+        ? 'We Could Not Confirm Your Order'
+        : 'We Could Not Confirm Your Payment';
+
+    return (
+      <div className="container mx-auto py-8 sm:py-12 px-4 sm:px-6 max-w-3xl">
+        <SEO
+          title="Order Could Not Be Completed"
+          description="There was a problem completing your order on The Collectors Exchange."
+          canonical="/checkout"
+          noindex
+        />
+
+        <Reveal as="header" direction="up" className="text-center mb-8 sm:mb-10">
+          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-5">
+            <AlertCircle size={20} className="text-amber-600" aria-hidden="true" />
+          </div>
+          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-heritage-bronze mb-3">
+            {eyebrow}
+          </p>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-heritage-charcoal mb-4">
+            {heading}
+          </h1>
+          <div className="w-16 h-px bg-luxury-gold mx-auto mb-5" aria-hidden="true" />
+          <p className="text-sm sm:text-base text-gray-600 font-serif leading-relaxed max-w-xl mx-auto">
+            {isSoldOut
+              ? 'Every piece here is one of a kind, and this one was bought by another collector in the moments before your payment cleared. We could not complete your order.'
+              : isCODIssue
+                ? 'Your order was created, but we could not finish confirming it. Nothing has been charged — cash on delivery means nothing is due until it arrives.'
+                : 'Your payment may well have gone through. We simply could not get confirmation back in time to show you.'}
+          </p>
+        </Reveal>
+
+        {/* Order reference — the one thing support will ask for */}
+        <Reveal
+          as="section"
+          direction="up"
+          delay={60}
+          aria-labelledby="issue-reference-heading"
+          className="bg-heritage-cream border border-luxury-gold/20 p-5 sm:p-6 mb-6 text-center rounded-2xl"
+        >
+          <h2
+            id="issue-reference-heading"
+            className="text-[10px] font-bold uppercase tracking-[0.2em] text-heritage-bronze mb-2"
+          >
+            Your Order Reference
+          </h2>
+          <p className="font-mono text-xl sm:text-2xl font-semibold text-heritage-charcoal tracking-wider break-all">
+            {paymentIssue.reference}
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Quote this in any correspondence about this order
+          </p>
+        </Reveal>
+
+        {/* The items that were lost */}
+        {isSoldOut && paymentIssue.items.length > 0 && (
+          <Reveal
+            as="section"
+            direction="up"
+            delay={100}
+            aria-labelledby="soldout-heading"
+            className="bg-white border border-gray-100 shadow-heritage p-5 sm:p-8 mb-6 rounded-2xl"
+          >
+            <h2
+              id="soldout-heading"
+              className="flex items-center gap-2.5 text-lg sm:text-xl font-serif font-bold text-heritage-charcoal mb-4"
+            >
+              <Package size={18} className="text-luxury-gold shrink-0" aria-hidden="true" />
+              {paymentIssue.items.length === 1 ? 'The piece you missed' : 'The pieces you missed'}
+            </h2>
+            <ul className="space-y-2 text-sm text-gray-700">
+              {paymentIssue.items.map((name) => (
+                <li key={name} className="font-serif">
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        )}
+
+        {/* Money */}
+        <Reveal
+          as="section"
+          direction="up"
+          delay={140}
+          aria-labelledby="money-heading"
+          className="bg-white border border-gray-100 shadow-heritage p-5 sm:p-8 mb-6 rounded-2xl"
+        >
+          <h2
+            id="money-heading"
+            className="flex items-center gap-2.5 text-lg sm:text-xl font-serif font-bold text-heritage-charcoal mb-4"
+          >
+            <RefreshCw size={18} className="text-luxury-gold shrink-0" aria-hidden="true" />
+            {isSoldOut ? 'About your money' : 'What happens next'}
+          </h2>
+
+          {isSoldOut && paymentIssue.refundRequired && !paymentIssue.refundPending && (
+            <p className="text-sm text-gray-700 leading-relaxed">
+              <span className="font-semibold text-heritage-charcoal">
+                {rupees(paymentIssue.amount)} has already been refunded
+              </span>{' '}
+              to the card, account or UPI ID you paid from. You do not need to do anything. Banks
+              usually post a refund within 5-7 working days — a little longer over a weekend or a
+              bank holiday.
+            </p>
+          )}
+
+          {isSoldOut && paymentIssue.refundRequired && paymentIssue.refundPending && (
+            <p className="text-sm text-gray-700 leading-relaxed">
+              <span className="font-semibold text-heritage-charcoal">
+                Your refund of {rupees(paymentIssue.amount)} needs a person to release it.
+              </span>{' '}
+              Our team has already been alerted and will send it back to your original payment
+              method, then confirm by email. It will reach you within 5-7 working days of being
+              issued. If you would rather chase it yourself, email{' '}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-luxury-gold hover:underline">
+                {SUPPORT_EMAIL}
+              </a>{' '}
+              quoting {paymentIssue.reference}.
+            </p>
+          )}
+
+          {isSoldOut && !paymentIssue.refundRequired && (
+            <p className="text-sm text-gray-700 leading-relaxed">
+              This was a cash-on-delivery order, so no money changed hands and there is nothing to
+              refund. The order has been cancelled.
+            </p>
+          )}
+
+          {!isSoldOut && !isCODIssue && (
+            <div className="space-y-3 text-sm text-gray-700 leading-relaxed">
+              <p className="font-semibold text-heritage-charcoal">
+                Please do not pay again — you could be charged twice.
+              </p>
+              <p>
+                Our payment provider tells us directly when a payment has been captured, so an order
+                that went through will be confirmed on its own, usually within a few minutes. You
+                will get a confirmation email and it will appear under My Orders.
+              </p>
+              <p>
+                If the payment did not go through, nothing was taken and the order stays unpaid —
+                you can pay for it from My Orders whenever you like.
+              </p>
+              <p>
+                If neither has happened within an hour, email{' '}
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-luxury-gold hover:underline">
+                  {SUPPORT_EMAIL}
+                </a>{' '}
+                quoting {paymentIssue.reference} and we will sort it out.
+              </p>
+            </div>
+          )}
+
+          {isCODIssue && (
+            <div className="space-y-3 text-sm text-gray-700 leading-relaxed">
+              <p className="font-semibold text-heritage-charcoal">
+                Please do not place the order again.
+              </p>
+              <p>
+                Order {paymentIssue.reference} is saved. Check My Orders in a few minutes — if it is
+                there, it is being prepared and you pay the courier on delivery.
+              </p>
+              <p>
+                If it has not appeared within an hour, email{' '}
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-luxury-gold hover:underline">
+                  {SUPPORT_EMAIL}
+                </a>{' '}
+                quoting {paymentIssue.reference}.
+              </p>
+            </div>
+          )}
+
+          {paymentIssue.detail && (
+            <p className="text-xs text-gray-400 mt-4 pt-4 border-t border-gray-100">
+              Technical detail for support: {paymentIssue.detail}
+            </p>
+          )}
+        </Reveal>
+
+        <Reveal as="div" direction="up" delay={180} className="flex flex-col sm:flex-row gap-3">
+          <Link
+            to="/account?tab=orders"
+            className="flex-1 bg-black text-white px-6 py-4 text-sm uppercase tracking-widest text-center hover:bg-luxury-gold transition-colors rounded-full"
+          >
+            View My Orders
+          </Link>
+          <Link
+            to="/category"
+            className="flex-1 border border-heritage-charcoal text-heritage-charcoal px-6 py-4 text-sm uppercase tracking-widest text-center hover:bg-heritage-charcoal hover:text-white transition-colors rounded-full"
+          >
+            Continue Browsing
+          </Link>
+        </Reveal>
+
+        <p className="text-center text-xs text-gray-500 mt-8">
+          Need a hand?{' '}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-luxury-gold hover:underline">
+            {SUPPORT_EMAIL}
+          </a>
+        </p>
       </div>
     );
   }
@@ -432,8 +773,13 @@ const Checkout = () => {
             Delivering To
           </h2>
           <address className="not-italic text-sm text-gray-700 leading-relaxed">
-            {form.recipientName && (
-              <span className="block font-medium text-heritage-charcoal">{form.recipientName}</span>
+            {/* Read back off the ORDER, not local state. This line used to be
+                the only place the recipient name existed — it was never
+                persisted, so the label ops printed carried a different name. */}
+            {(orderSuccess.buyerName || form.recipientName) && (
+              <span className="block font-medium text-heritage-charcoal">
+                {orderSuccess.buyerName || form.recipientName}
+              </span>
             )}
             <span className="block">{orderSuccess.shippingAddress}</span>
             <span className="block">
@@ -608,9 +954,42 @@ const Checkout = () => {
         ))}
       </div>
 
-      <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-10 text-heritage-charcoal">
+      <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif mb-6 text-heritage-charcoal">
         Secure Checkout
       </h1>
+
+      {/* A closed modal or a declined attempt: no money moved and the order is
+          already saved, so the buyer stays on the form and can simply retry. */}
+      {paymentNotice && (
+        <div
+          role="status"
+          className={`flex items-start gap-3 p-4 mb-8 rounded-2xl border ${
+            paymentNotice.tone === 'error'
+              ? 'bg-red-50 border-red-200'
+              : 'bg-heritage-cream border-luxury-gold/30'
+          }`}
+        >
+          {paymentNotice.tone === 'error' ? (
+            <AlertCircle size={18} className="text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
+          ) : (
+            <Info size={18} className="text-luxury-gold shrink-0 mt-0.5" aria-hidden="true" />
+          )}
+          <div className="min-w-0 flex-grow">
+            <p className="text-sm font-semibold text-heritage-charcoal">{paymentNotice.title}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1 leading-relaxed">
+              {paymentNotice.body}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPaymentNotice(null)}
+            aria-label="Dismiss message"
+            className="text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handlePlaceOrder}>
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
@@ -700,7 +1079,10 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Country is deliberately absent: the Order table has no
+                      country column, so the field only ever looked like it was
+                      being collected. Everything ships within India. */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label
                         htmlFor="zipCode"
@@ -718,25 +1100,6 @@ const Checkout = () => {
                       />
                       {errors.zipCode && (
                         <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="country"
-                        className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-2"
-                      >
-                        Country
-                      </label>
-                      <input
-                        id="country"
-                        type="text"
-                        value={form.country}
-                        onChange={(e) => setForm({ ...form, country: e.target.value })}
-                        placeholder="India"
-                        className={`w-full p-4 bg-gray-50 border focus:outline-none focus:border-luxury-gold transition-colors ${errors.country ? 'border-red-400' : 'border-gray-200'}`}
-                      />
-                      {errors.country && (
-                        <p className="text-red-500 text-xs mt-1">{errors.country}</p>
                       )}
                     </div>
                     <div>

@@ -146,6 +146,89 @@ describe('checkout routes', () => {
       expect(res.json().success).toBe(true);
     });
 
+    // The recipient is not necessarily the account holder — gifts and office
+    // deliveries are exactly why checkout asks for a name. It used to be
+    // stripped by Zod and never reach the shipping label.
+    it('writes the recipient name to buyerName so it reaches the shipping label', async () => {
+      const orderCreate = vi
+        .fn()
+        .mockResolvedValue({ id: 'order-1', displayId: 'HOR00001', items: [] });
+      mockPrisma.cartItem.findMany.mockResolvedValue([
+        {
+          productId: 'p1',
+          product: { id: 'p1', title: 'Test', price: 100, sellerId: 'seller-id' },
+        },
+      ]);
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb({
+          product: {
+            findUnique: vi.fn().mockResolvedValue({
+              id: 'p1',
+              title: 'Test',
+              price: 100,
+              sellerId: 'seller-id',
+              status: 'Approved',
+            }),
+          },
+          order: { findFirst: vi.fn().mockResolvedValue(null), create: orderCreate },
+        }),
+      );
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/checkout.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/create-order',
+        payload: { ...validBody, recipientName: 'Priya Sharma' },
+        headers: { authorization: 'Bearer buyer' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(orderCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ buyerName: 'Priya Sharma' }),
+        }),
+      );
+    });
+
+    it('falls back to the account holder when no recipient name is sent', async () => {
+      const orderCreate = vi
+        .fn()
+        .mockResolvedValue({ id: 'order-1', displayId: 'HOR00001', items: [] });
+      mockPrisma.cartItem.findMany.mockResolvedValue([
+        {
+          productId: 'p1',
+          product: { id: 'p1', title: 'Test', price: 100, sellerId: 'seller-id' },
+        },
+      ]);
+      mockPrisma.$transaction.mockImplementation(async (cb) =>
+        cb({
+          product: {
+            findUnique: vi.fn().mockResolvedValue({
+              id: 'p1',
+              title: 'Test',
+              price: 100,
+              sellerId: 'seller-id',
+              status: 'Approved',
+            }),
+          },
+          order: { findFirst: vi.fn().mockResolvedValue(null), create: orderCreate },
+        }),
+      );
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/checkout.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/create-order',
+        payload: validBody,
+        headers: { authorization: 'Bearer buyer' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(orderCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ buyerName: 'Buyer' }) }),
+      );
+    });
+
     it('calculates platformFee from commissionPercent in the order response', async () => {
       mockPrisma.cartItem.findMany.mockResolvedValue([
         {
@@ -1017,10 +1100,17 @@ describe('checkout routes', () => {
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().success).toBe(true);
-      // Finalize is gated on the order still being Pending/Pending
+      // Finalize is gated on the order not having been finalized yet. 'Failed'
+      // is in the gate because it is an ATTEMPT that failed, not the order: a
+      // declined or dismissed attempt stamps Failed, and the retry that
+      // succeeds must still be able to finalize the same order.
       expect(mockPrisma.order.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'order-1', status: 'Pending', paymentStatus: 'Pending' },
+          where: {
+            id: 'order-1',
+            status: 'Pending',
+            paymentStatus: { in: ['Pending', 'Failed'] },
+          },
           data: expect.objectContaining({ paymentStatus: 'Paid', paymentId: 'pay_1' }),
         }),
       );
@@ -1244,6 +1334,317 @@ describe('checkout routes', () => {
       expect(res.json().error).toBe('This payment has already been used');
       // The unique constraint fires before any product is touched
       expect(mockPrisma.product.updateMany).not.toHaveBeenCalled();
+    });
+  });
+
+  // The webhook is the safety net for the case the buyer's browser can never
+  // cover: money captured, then the tab closes / the phone loses signal before
+  // /verify-payment is reached.
+  describe('POST /razorpay-webhook', () => {
+    const WEBHOOK_SECRET = 'whsec_test';
+
+    // Deliberately hand-written rather than JSON.stringify'd: the odd spacing
+    // and the non-ASCII rupee sign only survive if the route hashes the exact
+    // bytes it received. Re-serialising request.body would change both.
+    const capturedBody =
+      '{"event":"payment.captured",  "payload":{"payment":{"entity":' +
+      '{"id":"pay_hook_1","order_id":"rp_order_own","amount":100000,' +
+      '"currency":"INR","status":"captured","notes":{"memo":"Café ₹1,000"}}}}}';
+
+    const failedBody = JSON.stringify({
+      event: 'payment.failed',
+      payload: {
+        payment: {
+          entity: {
+            id: 'pay_hook_2',
+            order_id: 'rp_order_own',
+            amount: 100000,
+            currency: 'INR',
+            status: 'failed',
+            error_description: 'Your card was declined by the issuing bank.',
+          },
+        },
+      },
+    });
+
+    const webhookSign = (body, secret = WEBHOOK_SECRET) =>
+      crypto.createHmac('sha256', secret).update(body).digest('hex');
+
+    const pendingOrder = {
+      id: 'order-1',
+      displayId: 'HOR00001',
+      userId: 'buyer-id',
+      status: 'Pending',
+      paymentStatus: 'Pending',
+      paymentMethod: 'online',
+      paymentOrderId: 'rp_order_own',
+      totalAmount: 1000,
+      items: [{ productId: 'p1' }],
+      user: { id: 'buyer-id', email: 'buyer@test.com', phone: '9876543210' },
+    };
+
+    const finalizedOrder = {
+      id: 'order-1',
+      displayId: 'HOR00001',
+      status: 'Processing',
+      paymentStatus: 'Paid',
+      totalAmount: 1000,
+      items: [{ productId: 'p1' }],
+    };
+
+    beforeEach(() => {
+      process.env.RAZORPAY_WEBHOOK_SECRET = WEBHOOK_SECRET;
+    });
+
+    async function buildWebhookApp() {
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/checkout.js')).default);
+      await app.ready();
+      return app;
+    }
+
+    const post = (app, body, signature) =>
+      app.inject({
+        method: 'POST',
+        url: '/razorpay-webhook',
+        payload: body,
+        headers: {
+          'content-type': 'application/json',
+          ...(signature === null ? {} : { 'x-razorpay-signature': signature }),
+        },
+      });
+
+    it('fails closed with 503 when no webhook secret is configured', async () => {
+      delete process.env.RAZORPAY_WEBHOOK_SECRET;
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+      expect(res.statusCode).toBe(503);
+      // Nothing was looked up, let alone finalized
+      expect(mockPrisma.order.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.order.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('rejects a request with no signature header', async () => {
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, null);
+      expect(res.statusCode).toBe(400);
+      expect(res.json().error).toBe('Missing webhook signature');
+      expect(mockPrisma.order.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('rejects a forged signature', async () => {
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, 'deadbeef');
+      expect(res.statusCode).toBe(400);
+      expect(res.json().error).toBe('Invalid webhook signature');
+      expect(mockPrisma.order.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('rejects a signature made with the wrong secret', async () => {
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody, 'not_the_secret'));
+      expect(res.statusCode).toBe(400);
+      expect(res.json().error).toBe('Invalid webhook signature');
+    });
+
+    it('rejects a body that was tampered with after signing', async () => {
+      const app = await buildWebhookApp();
+      const signature = webhookSign(capturedBody);
+      const tampered = capturedBody.replace('"amount":100000', '"amount":1');
+      const res = await post(app, tampered, signature);
+      expect(res.statusCode).toBe(400);
+      expect(res.json().error).toBe('Invalid webhook signature');
+      expect(mockPrisma.order.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('verifies against the RAW bytes, not a re-serialised body', async () => {
+      // capturedBody has spacing and unicode that JSON.stringify(request.body)
+      // would not reproduce, so this only passes if the raw stream was kept.
+      expect(JSON.stringify(JSON.parse(capturedBody))).not.toBe(capturedBody);
+      mockPrisma.order.findFirst.mockResolvedValue(pendingOrder);
+      mockPrisma.order.findUnique.mockResolvedValue(finalizedOrder);
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+      expect(res.statusCode).toBe(200);
+      expect(res.json().handled).toBe('finalized');
+    });
+
+    it('finalizes a captured payment the browser never reported', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue(pendingOrder);
+      mockPrisma.order.findUnique.mockResolvedValue(finalizedOrder);
+      mockPrisma.product.findMany.mockResolvedValue([
+        { id: 'p1', status: 'Sold', title: 'Item', price: 1000 },
+      ]);
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({
+        received: true,
+        orderId: 'order-1',
+        handled: 'finalized',
+      });
+      expect(mockPrisma.order.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { paymentOrderId: 'rp_order_own' } }),
+      );
+      expect(mockPrisma.order.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            paymentStatus: 'Paid',
+            status: 'Processing',
+            paymentId: 'pay_hook_1',
+          }),
+        }),
+      );
+      // The item is claimed and pulled out of everyone's cart, exactly as the
+      // browser path would have done.
+      expect(mockPrisma.product.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'p1', status: 'Approved' } }),
+      );
+      expect(mockPrisma.cartItem.deleteMany).toHaveBeenCalledWith({ where: { productId: 'p1' } });
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ userId: 'buyer-id', title: 'Order Confirmed' }),
+        }),
+      );
+    });
+
+    it('IDEMPOTENCY: a webhook delivered after the browser already verified changes nothing', async () => {
+      // The guarded gate matches 0 rows because the order is no longer Pending.
+      mockPrisma.order.findFirst.mockResolvedValue(pendingOrder);
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.order.findUnique.mockResolvedValue(finalizedOrder);
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json().handled).toBe('already_finalized');
+      // No second claim, no second notification, no cancel/refund
+      expect(mockPrisma.product.updateMany).not.toHaveBeenCalled();
+      expect(mockPrisma.notification.create).not.toHaveBeenCalled();
+      expect(mockPrisma.order.update).not.toHaveBeenCalled();
+      expect(razorpayMock.payments.refund).not.toHaveBeenCalled();
+    });
+
+    it('IDEMPOTENCY: two deliveries of the same webhook finalize only once', async () => {
+      mockPrisma.order.findFirst
+        .mockResolvedValueOnce(pendingOrder)
+        .mockResolvedValue({ ...pendingOrder, status: 'Processing', paymentStatus: 'Paid' });
+      mockPrisma.order.updateMany
+        .mockResolvedValueOnce({ count: 1 })
+        .mockResolvedValue({ count: 0 });
+      mockPrisma.order.findUnique.mockResolvedValue(finalizedOrder);
+      const app = await buildWebhookApp();
+      const signature = webhookSign(capturedBody);
+
+      const first = await post(app, capturedBody, signature);
+      const second = await post(app, capturedBody, signature);
+
+      expect(first.json().handled).toBe('finalized');
+      expect(second.json().handled).toBe('already_finalized');
+      // Claimed once, announced once.
+      expect(mockPrisma.product.updateMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.notification.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('refunds through the gateway when the webhook loses the race for the item', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue(pendingOrder);
+      mockPrisma.product.updateMany.mockResolvedValue({ count: 0 }); // already Sold
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ handled: 'sold_out_refunded', refundPending: false });
+      expect(razorpayMock.payments.refund).toHaveBeenCalledWith(
+        'pay_hook_1',
+        expect.objectContaining({ notes: expect.objectContaining({ orderId: 'order-1' }) }),
+      );
+      expect(mockPrisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'Cancelled', paymentStatus: 'Refunded' }),
+        }),
+      );
+    });
+
+    it('refuses to mark an order paid when the captured amount does not match', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue({ ...pendingOrder, totalAmount: 5000 });
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+      expect(res.statusCode).toBe(200);
+      expect(res.json().ignored).toBe('payment does not match order');
+      expect(mockPrisma.order.updateMany).not.toHaveBeenCalled();
+      expect(mockPrisma.product.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('asks for a retry when no order carries the gateway order id', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue(null);
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+      expect(res.statusCode).toBe(404);
+      expect(mockPrisma.order.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('marks a failed attempt and tells the buyer why, once', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue(pendingOrder);
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 1 });
+      const app = await buildWebhookApp();
+      const res = await post(app, failedBody, webhookSign(failedBody));
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json().handled).toBe('marked_failed');
+      expect(mockPrisma.order.updateMany).toHaveBeenCalledWith({
+        where: { id: 'order-1', status: 'Pending', paymentStatus: 'Pending' },
+        data: { paymentStatus: 'Failed' },
+      });
+      const notification = mockPrisma.notification.create.mock.calls[0][0].data;
+      expect(notification.userId).toBe('buyer-id');
+      expect(notification.message).toContain('HOR00001');
+      expect(notification.message).toContain('you have not been charged');
+      expect(notification.message).toContain('declined by the issuing bank');
+      // A failed attempt never claims stock or touches the ledger's totals
+      expect(mockPrisma.product.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('does not re-notify when a payment.failed is delivered twice', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue(pendingOrder);
+      mockPrisma.order.updateMany.mockResolvedValue({ count: 0 }); // nothing left to change
+      const app = await buildWebhookApp();
+      const res = await post(app, failedBody, webhookSign(failedBody));
+      expect(res.statusCode).toBe(200);
+      expect(res.json().handled).toBe('no_change');
+      expect(mockPrisma.notification.create).not.toHaveBeenCalled();
+    });
+
+    it('a retry that succeeds still finalizes an order a failed attempt stamped Failed', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue({ ...pendingOrder, paymentStatus: 'Failed' });
+      mockPrisma.order.findUnique.mockResolvedValue(finalizedOrder);
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+      expect(res.statusCode).toBe(200);
+      expect(res.json().handled).toBe('finalized');
+      expect(mockPrisma.order.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ paymentStatus: { in: ['Pending', 'Failed'] } }),
+        }),
+      );
+    });
+
+    it('acknowledges an event it does not handle without touching the order', async () => {
+      const body = JSON.stringify({ event: 'refund.processed', payload: {} });
+      const app = await buildWebhookApp();
+      const res = await post(app, body, webhookSign(body));
+      expect(res.statusCode).toBe(200);
+      expect(res.json().ignored).toBe('unhandled event');
+      expect(mockPrisma.order.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('never finalizes a cash-on-delivery order from a gateway capture', async () => {
+      mockPrisma.order.findFirst.mockResolvedValue({ ...pendingOrder, paymentMethod: 'cod' });
+      const app = await buildWebhookApp();
+      const res = await post(app, capturedBody, webhookSign(capturedBody));
+      expect(res.statusCode).toBe(200);
+      expect(res.json().ignored).toBe('cod order');
+      expect(mockPrisma.order.updateMany).not.toHaveBeenCalled();
     });
   });
 });

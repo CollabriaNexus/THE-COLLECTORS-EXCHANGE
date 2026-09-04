@@ -174,8 +174,11 @@ function OrderDetail() {
               </h3>
             </div>
             <div className="space-y-1">
+              {/* buyerName FIRST: it is the recipient the buyer typed at
+                  checkout, which is not always the account holder (gifts,
+                  office deliveries). The account name is only the fallback. */}
               <p className="font-bold text-heritage-charcoal">
-                {order.user?.name || order.buyerName || 'Walk-in'}
+                {order.buyerName || order.user?.name || 'Walk-in'}
               </p>
               <p className="text-gray-700">{order.shippingAddress}</p>
               <p className="text-gray-700">

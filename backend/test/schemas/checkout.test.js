@@ -54,6 +54,28 @@ describe('CreateOrderSchema', () => {
     expect(() => CreateOrderSchema.parse(valid)).not.toThrow();
   });
 
+  // Zod strips unknown keys, so an unlisted recipientName was silently dropped
+  // on its way to Order.buyerName — the confirmation screen showed a name that
+  // never reached the shipping label.
+  it('keeps recipientName instead of stripping it', () => {
+    const result = CreateOrderSchema.parse({ ...valid, recipientName: 'Priya Sharma' });
+    expect(result.recipientName).toBe('Priya Sharma');
+  });
+
+  it('trims recipientName', () => {
+    const result = CreateOrderSchema.parse({ ...valid, recipientName: '  Priya Sharma  ' });
+    expect(result.recipientName).toBe('Priya Sharma');
+  });
+
+  it('rejects a blank recipientName rather than putting whitespace on the label', () => {
+    expect(() => CreateOrderSchema.parse({ ...valid, recipientName: '   ' })).toThrow();
+  });
+
+  it('still accepts an order with no recipientName (older clients)', () => {
+    const result = CreateOrderSchema.parse(valid);
+    expect(result.recipientName).toBeUndefined();
+  });
+
   it('fails without shippingAddress', () => {
     const { shippingAddress: _omit, ...rest } = valid;
     expect(() => CreateOrderSchema.parse(rest)).toThrow();

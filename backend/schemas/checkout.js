@@ -7,6 +7,15 @@ export const CreateOrderItemSchema = z.object({
 });
 
 export const CreateOrderSchema = z.object({
+  // Who the parcel is addressed to, which is not necessarily the account
+  // holder — gifts and office deliveries are the whole reason it is collected.
+  // Zod strips unknown keys, so leaving this out silently dropped it: checkout
+  // asked for it, the confirmation screen echoed it back from local state, and
+  // ops only ever saw the account name on the label.
+  // Optional rather than required only so a browser still running the previous
+  // bundle cannot be 400'd mid-checkout; the route falls back to the account
+  // holder's name, which is what ops saw before this existed.
+  recipientName: z.string().trim().min(1, 'Recipient name cannot be blank').optional(),
   shippingAddress: z.string().min(1, 'Shipping address is required'),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
