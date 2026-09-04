@@ -264,6 +264,30 @@ const ArchiveProductCard = ({ product }) => {
 
 const CONDITION_OPTIONS = ['Excellent', 'Good', 'Fair', 'Like New'];
 
+// Values must match the whitelist in backend/schemas/product.js. An empty
+// value means "server default" — deliberately not relabelled here, because
+// what the default ordering *is* is the site owner's call, not this page's.
+const SORT_OPTIONS = [
+  { value: '', label: 'Featured' },
+  { value: 'newest', label: 'Newest first' },
+  { value: 'price_asc', label: 'Price: low to high' },
+  { value: 'price_desc', label: 'Price: high to low' },
+];
+
+// Shared control styling so the four filter controls line up as one row.
+const SELECT_CLASS =
+  "px-2.5 py-2 md:px-3 md:py-2.5 rounded-full border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal focus:outline-none focus:border-heritage-bronze transition-colors appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394826e%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_8px_center] bg-no-repeat pr-7";
+
+const INPUT_CLASS =
+  'px-3 py-2 md:px-4 md:py-2.5 rounded-full border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors';
+
+// Blank means "no bound". Anything else has to be a plain non-negative number
+// before it is worth sending — the server rejects the rest with a 400, and a
+// half-typed "12" shouldn't be treated as a filter error while it is being typed.
+const isUsablePrice = (value) =>
+  value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0;
+const priceParam = (value) => (isUsablePrice(value) ? value : undefined);
+
 const Category = () => {
   // Filter state is mirrored to the URL (?cat=&q=&condition=&page=) so views
   // remain shareable. Query views are noindex and canonicalize to the matching
@@ -284,9 +308,27 @@ const Category = () => {
   // never overrides an explicit choice, only the un-parameterized default.
   const hadExplicitCategory = useRef(Boolean(routeCategory || requestedQueryCategory));
   const [selectedCategory, setSelectedCategory] = useState(() => initialCategory || 'Accessories');
+  // The box the shopper types into and the value the query actually runs on are
+  // separate: every keystroke used to be part of the react-query key, so typing
+  // "submariner" fired ten requests. `searchInput` is what the field shows,
+  // `searchQuery` is what gets fetched, and the debounce below joins them.
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('q') || '');
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
   const [condition, setCondition] = useState(() => searchParams.get('condition') || '');
+  // The raw URL value is kept even when it is not one of SORT_OPTIONS, so an
+  // unrecognized ?sort= stays in the URL as an explicit noindex query view
+  // (see the URL-sync effect below) instead of silently becoming a clean URL.
+  const [sort, setSort] = useState(() => searchParams.get('sort') || '');
+  const [minPrice, setMinPrice] = useState(() => searchParams.get('minPrice') || '');
+  const [maxPrice, setMaxPrice] = useState(() => searchParams.get('maxPrice') || '');
   const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1);
+
+  useEffect(() => {
+    if (searchInput === searchQuery) return;
+    const timer = setTimeout(() => setSearchQuery(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput, searchQuery]);
+
   const { data, isLoading, isError, isFetching, refetch } = useProducts(
     selectedCategory,
     searchQuery,
@@ -294,8 +336,27 @@ const Category = () => {
     20,
     null,
     condition,
+    { sort, minPrice: priceParam(minPrice), maxPrice: priceParam(maxPrice) },
   );
   const { data: categoryCounts } = useCategoryCounts();
+
+  const sortSelectValue = SORT_OPTIONS.some((option) => option.value === sort) ? sort : '';
+  const hasActiveFilters = Boolean(searchInput || condition || sort || minPrice || maxPrice);
+  const activeFilterSummary = [
+    condition ? `Condition: ${condition}` : null,
+    minPrice || maxPrice
+      ? `Price: ${minPrice ? `₹${minPrice}` : 'any'} – ${maxPrice ? `₹${maxPrice}` : 'any'}`
+      : null,
+  ].filter(Boolean);
+  const clearFilters = () => {
+    setSearchInput('');
+    setSearchQuery('');
+    setCondition('');
+    setSort('');
+    setMinPrice('');
+    setMaxPrice('');
+    setPage(1);
+  };
 
   useEffect(() => {
     // Keep unknown facets/sort keys in place so they remain explicit
@@ -314,6 +375,12 @@ const Category = () => {
     else params.delete('q');
     if (condition) params.set('condition', condition);
     else params.delete('condition');
+    if (sort) params.set('sort', sort);
+    else params.delete('sort');
+    if (minPrice) params.set('minPrice', minPrice);
+    else params.delete('minPrice');
+    if (maxPrice) params.set('maxPrice', maxPrice);
+    else params.delete('maxPrice');
     if (page > 1) params.set('page', String(page));
     else params.delete('page');
 
@@ -321,7 +388,7 @@ const Category = () => {
       setSearchParams(params, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, searchQuery, condition, page]);
+  }, [selectedCategory, searchQuery, condition, sort, minPrice, maxPrice, page]);
 
   const products = data?.products || [];
   const totalPages = data?.totalPages || 1;
@@ -343,23 +410,33 @@ const Category = () => {
     }
   }, [categoryCounts, selectedCategory]);
 
-  const prevCategory = useRef(selectedCategory);
-  const prevSearch = useRef(searchQuery);
-  const prevCondition = useRef(condition);
+  const prevFilters = useRef({
+    selectedCategory,
+    searchQuery,
+    condition,
+    sort,
+    minPrice,
+    maxPrice,
+  });
   useEffect(() => {
-    if (
-      prevCategory.current !== selectedCategory ||
-      prevSearch.current !== searchQuery ||
-      prevCondition.current !== condition
-    ) {
+    const next = { selectedCategory, searchQuery, condition, sort, minPrice, maxPrice };
+    const changed = Object.keys(next).some((key) => prevFilters.current[key] !== next[key]);
+    if (changed) {
       setPage(1);
-      prevCategory.current = selectedCategory;
-      prevSearch.current = searchQuery;
-      prevCondition.current = condition;
+      prevFilters.current = next;
     }
-  }, [selectedCategory, searchQuery, condition]);
+  }, [selectedCategory, searchQuery, condition, sort, minPrice, maxPrice]);
 
   const productsRef = useRef(null);
+
+  // Paginating on a phone used to leave the shopper at the bottom of the page
+  // staring at the footer while a fresh grid rendered off-screen above them.
+  const prevPage = useRef(page);
+  useEffect(() => {
+    if (prevPage.current === page) return;
+    prevPage.current = page;
+    productsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  }, [page]);
 
   const categorySeo = CORE_PAGES['/category'];
   const canonicalCategory = routeCategory || (!categorySlug ? queryCategory : null);
@@ -440,11 +517,12 @@ const Category = () => {
               </div>
             </Reveal>
 
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end">
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
-                className="w-28 sm:w-32 shrink-0 px-2.5 py-2 md:px-3 md:py-2.5 rounded-full border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal focus:outline-none focus:border-heritage-bronze transition-colors appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394826e%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_8px_center] bg-no-repeat pr-7"
+                aria-label="Filter by condition"
+                className={`w-28 sm:w-32 shrink-0 ${SELECT_CLASS}`}
               >
                 <option value="">All</option>
                 {CONDITION_OPTIONS.map((opt) => (
@@ -453,15 +531,60 @@ const Category = () => {
                   </option>
                 ))}
               </select>
-              <div className="flex-1 sm:w-40 md:w-48">
+              <select
+                value={sortSelectValue}
+                onChange={(e) => setSort(e.target.value)}
+                aria-label="Sort listings"
+                className={`w-32 sm:w-40 shrink-0 ${SELECT_CLASS}`}
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value || 'default'} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center gap-1.5 shrink-0">
                 <input
-                  type="text"
-                  placeholder="Search listings..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 md:px-4 md:py-2.5 rounded-full border border-heritage-beige bg-white text-[11px] md:text-sm text-heritage-charcoal placeholder-heritage-bronze/40 focus:outline-none focus:border-heritage-bronze transition-colors"
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  placeholder="Min ₹"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  aria-label="Minimum price in rupees"
+                  className={`w-20 sm:w-24 ${INPUT_CLASS}`}
+                />
+                <span className="text-heritage-bronze/50 text-xs">–</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  placeholder="Max ₹"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  aria-label="Maximum price in rupees"
+                  className={`w-20 sm:w-24 ${INPUT_CLASS}`}
                 />
               </div>
+              <div className="flex-1 min-w-[8rem] sm:flex-none sm:w-40 md:w-48">
+                <input
+                  type="search"
+                  placeholder="Search listings..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  aria-label="Search listings"
+                  className={`w-full ${INPUT_CLASS}`}
+                />
+              </div>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="shrink-0 px-3 py-2 md:py-2.5 rounded-full border border-heritage-charcoal/20 text-heritage-charcoal/70 text-[11px] md:text-sm hover:bg-heritage-cream transition-colors"
+                >
+                  Clear
+                </button>
+              )}
             </div>
           </div>
 
@@ -570,18 +693,44 @@ const Category = () => {
               )}
             </>
           ) : (
-            <div className="text-center py-16 md:py-24 rounded-2xl bg-heritage-cream border border-heritage-beige">
+            /* A dead end otherwise: the old copy never said what had been
+               searched for, never mentioned that a condition or price filter was
+               narrowing the result, and gave no way out of either. */
+            <div className="text-center py-16 md:py-24 px-4 rounded-2xl bg-heritage-cream border border-heritage-beige">
               <Gem
                 size={32}
                 strokeWidth={1}
                 className="md:w-12 md:h-12 mx-auto text-heritage-bronze/30 mb-3 md:mb-4"
               />
               <p className="text-heritage-charcoal/60 font-serif text-sm sm:text-base lg:text-lg">
-                No items found in this collection.
+                {searchQuery ? (
+                  <>
+                    No matches for <span className="text-heritage-charcoal">“{searchQuery}”</span>
+                    {selectedCategory ? ` in ${selectedCategory}` : ''}.
+                  </>
+                ) : (
+                  'No items found in this collection.'
+                )}
               </p>
+              {activeFilterSummary.length > 0 && (
+                <p className="text-heritage-bronze/70 font-sans text-xs sm:text-sm mt-2">
+                  Filters applied: {activeFilterSummary.join(' · ')}
+                </p>
+              )}
               <p className="text-heritage-bronze/50 font-sans text-xs sm:text-sm mt-1 md:mt-2">
-                Check back soon for new additions.
+                {hasActiveFilters
+                  ? 'Try a broader search, or clear the filters to see everything in this collection.'
+                  : 'Check back soon for new additions.'}
               </p>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="mt-4 md:mt-5 px-5 py-2.5 rounded-full bg-heritage-charcoal text-white text-xs uppercase tracking-[0.15em] hover:bg-heritage-brown transition-colors"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           )}
         </div>

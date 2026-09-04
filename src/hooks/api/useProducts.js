@@ -3,12 +3,16 @@ import apiClient from './apiClient';
 
 /**
  * Hook to fetch all products
+ *
+ * `options` is a trailing bag rather than three more positional arguments so
+ * the existing call sites (Home, Cart, ProductDetail) keep working unchanged.
  * @param {string} category
  * @param {string} search
  * @param {number} page
  * @param {number} pageSize
  * @param {string} listingCategory
  * @param {string} condition
+ * @param {{ sort?: string, minPrice?: string|number, maxPrice?: string|number }} [options]
  */
 export const useProducts = (
   category,
@@ -17,15 +21,34 @@ export const useProducts = (
   pageSize = 12,
   listingCategory,
   condition,
+  options = {},
 ) => {
+  const { sort, minPrice, maxPrice } = options;
   return useQuery({
-    queryKey: ['products', category, search, page, pageSize, listingCategory, condition],
+    queryKey: [
+      'products',
+      category,
+      search,
+      page,
+      pageSize,
+      listingCategory,
+      condition,
+      sort ?? null,
+      minPrice ?? null,
+      maxPrice ?? null,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (category && category !== 'all') params.append('category', category);
       if (search) params.append('search', search);
       if (listingCategory) params.append('listingCategory', listingCategory);
       if (condition) params.append('condition', condition);
+      if (sort) params.append('sort', sort);
+      // '' and null mean "no bound" — only send a bound the shopper actually set.
+      if (minPrice !== undefined && minPrice !== null && minPrice !== '')
+        params.append('minPrice', minPrice);
+      if (maxPrice !== undefined && maxPrice !== null && maxPrice !== '')
+        params.append('maxPrice', maxPrice);
       params.append('page', page);
       params.append('limit', pageSize);
       const { data } = await apiClient.get(`/products?${params.toString()}`);

@@ -4,6 +4,10 @@ import {
   ProductIdParam,
   AdminProductUpdateSchema,
   CATEGORIES,
+  PRODUCT_SORT_OPTIONS,
+  PriceRangeSchema,
+  resolveProductSort,
+  searchKeywordTokens,
 } from '../../schemas/product.js';
 
 describe('CATEGORIES', () => {
@@ -217,5 +221,97 @@ describe('AdminProductUpdateSchema — adminNotes (custom columns)', () => {
 
   it('is optional', () => {
     expect(AdminProductUpdateSchema.parse({ brand: 'Rolex' }).adminNotes).toBeUndefined();
+  });
+});
+
+describe('resolveProductSort', () => {
+  it('maps every whitelisted key to a Prisma orderBy array', () => {
+    expect(resolveProductSort('newest')).toEqual([{ createdAt: 'desc' }]);
+    expect(resolveProductSort('price_asc')).toEqual([{ price: 'asc' }, { createdAt: 'desc' }]);
+    expect(resolveProductSort('price_desc')).toEqual([{ price: 'desc' }, { createdAt: 'desc' }]);
+  });
+
+  it('exposes exactly the three public sort options', () => {
+    expect([...PRODUCT_SORT_OPTIONS]).toEqual(['newest', 'price_asc', 'price_desc']);
+  });
+
+  // The whole point of the whitelist: nothing the caller types can ever become
+  // a Prisma ordering, including prototype keys that `in` would have accepted.
+  it.each(['price', 'createdAt', 'commissionPercent', '', 'constructor', '__proto__', 'toString'])(
+    'returns null for the non-whitelisted key %s',
+    (key) => {
+      expect(resolveProductSort(key)).toBeNull();
+    },
+  );
+
+  it.each([undefined, null, 42, {}, ['newest']])('returns null for the non-string %s', (value) => {
+    expect(resolveProductSort(value)).toBeNull();
+  });
+});
+
+describe('PriceRangeSchema', () => {
+  it('coerces query-string numbers', () => {
+    expect(PriceRangeSchema.parse({ minPrice: '2000', maxPrice: '500000' })).toEqual({
+      minPrice: 2000,
+      maxPrice: 500000,
+    });
+  });
+
+  it('treats absent and blank bounds as no bound', () => {
+    expect(PriceRangeSchema.parse({})).toEqual({});
+    expect(PriceRangeSchema.parse({ minPrice: '', maxPrice: '' })).toEqual({});
+  });
+
+  it('accepts a one-sided bound', () => {
+    expect(PriceRangeSchema.parse({ minPrice: '2000' })).toEqual({ minPrice: 2000 });
+    expect(PriceRangeSchema.parse({ maxPrice: '2000' })).toEqual({ maxPrice: 2000 });
+  });
+
+  it('accepts zero as a lower bound', () => {
+    expect(PriceRangeSchema.parse({ minPrice: '0' })).toEqual({ minPrice: 0 });
+  });
+
+  it.each(['abc', '-1', 'NaN', 'Infinity'])('rejects the bad bound %s', (value) => {
+    expect(() => PriceRangeSchema.parse({ minPrice: value })).toThrow();
+  });
+
+  it('rejects an inverted range', () => {
+    expect(() => PriceRangeSchema.parse({ minPrice: '9000', maxPrice: '100' })).toThrow(
+      /minPrice must not be greater than maxPrice/,
+    );
+  });
+
+  it('accepts an equal range', () => {
+    expect(PriceRangeSchema.parse({ minPrice: '100', maxPrice: '100' })).toEqual({
+      minPrice: 100,
+      maxPrice: 100,
+    });
+  });
+});
+
+describe('searchKeywordTokens', () => {
+  // `{ has: search }` was an exact, case-sensitive whole-array-element match,
+  // so typed input essentially never matched a keyword.
+  it('lowercases and includes the whole phrase plus each token', () => {
+    const tokens = searchKeywordTokens('Rolex Submariner');
+    expect(tokens).toContain('rolex');
+    expect(tokens).toContain('submariner');
+    expect(tokens).toContain('rolex submariner');
+    expect(tokens).toContain('Rolex Submariner');
+  });
+
+  it('splits on commas as well as whitespace and drops empties', () => {
+    expect(searchKeywordTokens('rolex,  ,submariner')).toEqual(
+      expect.arrayContaining(['rolex', 'submariner']),
+    );
+    expect(searchKeywordTokens('rolex,  ,submariner')).not.toContain('');
+  });
+
+  it('deduplicates an already-lowercase single token', () => {
+    expect(searchKeywordTokens('rolex')).toEqual(['rolex']);
+  });
+
+  it.each(['', '   ', null, undefined, 42])('returns [] for %s', (value) => {
+    expect(searchKeywordTokens(value)).toEqual([]);
   });
 });

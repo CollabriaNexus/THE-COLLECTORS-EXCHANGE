@@ -14,7 +14,10 @@ export default async function auctionRoutes(fastify) {
   // Get all auctions
   fastify.get('/', async (request, reply) => {
     const { status } = request.query;
-    const where = {};
+    // Auctions join Product, so an unfiltered listing exposes title/image/
+    // category for products the storefront deliberately does not publish.
+    // Gate on the same visibility rule the public catalogue uses.
+    const where = { product: { isPublished: true, status: { in: ['Approved', 'Sold'] } } };
     if (status) where.status = status;
 
     const auctions = await prisma.auction.findMany({
@@ -35,7 +38,15 @@ export default async function auctionRoutes(fastify) {
       where: { id },
       include: {
         product: {
-          select: { id: true, title: true, image: true, category: true, description: true },
+          select: {
+            id: true,
+            title: true,
+            image: true,
+            category: true,
+            description: true,
+            status: true,
+            isPublished: true,
+          },
         },
         bids: {
           orderBy: { amount: 'desc' },
@@ -44,7 +55,13 @@ export default async function auctionRoutes(fastify) {
       },
     });
 
-    if (!auction) {
+    // Same visibility rule as the listing above. 404 rather than 403: an
+    // unpublished product's existence is not something to confirm to a caller.
+    if (
+      !auction ||
+      !auction.product?.isPublished ||
+      !['Approved', 'Sold'].includes(auction.product?.status)
+    ) {
       return reply.status(404).send({ error: 'Auction not found' });
     }
 

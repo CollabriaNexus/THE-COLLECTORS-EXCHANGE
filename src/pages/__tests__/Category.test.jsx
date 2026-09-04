@@ -232,3 +232,144 @@ describe('Category — failed products query', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
+
+// Search used to write every keystroke straight into the react-query key, add
+// nothing but title/description/keywords to the server-side OR, offer no sort
+// or price control, and dead-end on zero results.
+describe('Category — search, sort and price filters', () => {
+  const defaultUseProducts = vi.mocked(useProducts).getMockImplementation();
+
+  afterEach(() => {
+    vi.mocked(useProducts).mockImplementation(defaultUseProducts);
+  });
+
+  const lastCall = () => vi.mocked(useProducts).mock.calls.at(-1);
+
+  it('debounces the search box instead of querying on every keystroke', async () => {
+    renderCategory();
+    const input = screen.getByLabelText('Search listings');
+    vi.mocked(useProducts).mockClear();
+
+    fireEvent.change(input, { target: { value: 's' } });
+    fireEvent.change(input, { target: { value: 'su' } });
+    fireEvent.change(input, { target: { value: 'sub' } });
+
+    // The field has re-rendered three times, but the value the query runs on
+    // has not moved off '' yet.
+    expect(input).toHaveValue('sub');
+    expect(vi.mocked(useProducts).mock.calls.every((call) => call[1] === '')).toBe(true);
+
+    await waitFor(() => expect(lastCall()[1]).toBe('sub'));
+  });
+
+  it('passes the chosen sort key through to the query', async () => {
+    renderCategory();
+    fireEvent.change(screen.getByLabelText('Sort listings'), { target: { value: 'price_asc' } });
+    await waitFor(() => expect(lastCall()[6].sort).toBe('price_asc'));
+  });
+
+  it('offers exactly the whitelisted sort options', () => {
+    renderCategory();
+    const options = [...screen.getByLabelText('Sort listings').options].map((o) => o.value);
+    expect(options).toEqual(['', 'newest', 'price_asc', 'price_desc']);
+  });
+
+  it('passes price bounds through to the query', async () => {
+    renderCategory();
+    fireEvent.change(screen.getByLabelText('Minimum price in rupees'), {
+      target: { value: '2000' },
+    });
+    fireEvent.change(screen.getByLabelText('Maximum price in rupees'), {
+      target: { value: '500000' },
+    });
+    await waitFor(() => {
+      expect(lastCall()[6].minPrice).toBe('2000');
+      expect(lastCall()[6].maxPrice).toBe('500000');
+    });
+  });
+
+  it('does not send a half-typed or negative price bound to the server', async () => {
+    renderCategory();
+    fireEvent.change(screen.getByLabelText('Minimum price in rupees'), { target: { value: '-' } });
+    await waitFor(() => expect(lastCall()[6].minPrice).toBeUndefined());
+  });
+
+  it('echoes the query and the active filters on zero results', () => {
+    vi.mocked(useProducts).mockReturnValue({
+      data: { products: [] },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+    renderCategory('/category?q=submariner&condition=Good&minPrice=2000');
+
+    expect(screen.getByText(/no matches for/i)).toBeInTheDocument();
+    expect(screen.getByText(/submariner/)).toBeInTheDocument();
+    expect(screen.getByText(/Condition: Good/)).toBeInTheDocument();
+    expect(screen.getByText(/₹2000/)).toBeInTheDocument();
+  });
+
+  it('clears every filter from the zero-results state', async () => {
+    vi.mocked(useProducts).mockReturnValue({
+      data: { products: [] },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+    renderCategory('/category?q=submariner&condition=Good&minPrice=2000&sort=price_asc');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    await waitFor(() => {
+      const call = lastCall();
+      expect(call[1]).toBe('');
+      expect(call[5]).toBe('');
+      expect(call[6]).toEqual({ sort: '', minPrice: undefined, maxPrice: undefined });
+    });
+  });
+
+  it('offers no Clear action when nothing is filtered', () => {
+    vi.mocked(useProducts).mockReturnValue({
+      data: { products: [] },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+    renderCategory('/category');
+
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+    expect(screen.getByText(/no items found in this collection/i)).toBeInTheDocument();
+  });
+
+  // Tapping "Next" on a phone used to leave the shopper at the bottom of the
+  // page, looking at the footer while a fresh grid rendered off-screen above.
+  it('scrolls back to the grid when the page changes', async () => {
+    const scrollIntoView = vi.fn();
+    const original = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      vi.mocked(useProducts).mockReturnValue({
+        data: {
+          products: [{ id: '1', title: 'Paged Product', price: 100, condition: 'Good' }],
+          totalPages: 3,
+        },
+        isLoading: false,
+        isError: false,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+      renderCategory('/category');
+
+      expect(scrollIntoView).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+      await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+      await waitFor(() => expect(lastCall()[2]).toBe(2));
+    } finally {
+      Element.prototype.scrollIntoView = original;
+    }
+  });
+});

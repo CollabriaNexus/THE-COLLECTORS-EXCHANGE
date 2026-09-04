@@ -75,6 +75,7 @@ describe('products routes', () => {
         findMany: vi.fn(),
         findFirst: vi.fn(),
         findUnique: vi.fn(),
+        groupBy: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
@@ -83,6 +84,8 @@ describe('products routes', () => {
         findUnique: vi.fn(),
         create: vi.fn(),
       },
+      cartItem: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+      wishlistItem: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
     };
   });
 
@@ -158,6 +161,201 @@ describe('products routes', () => {
       const res = await app.inject({ method: 'GET', url: '/' });
       expect(res.statusCode).toBe(500);
     });
+
+    // Regression: the public catalogue served every Approved product, including
+    // the 28 the owner had explicitly unpublished on 2026-08-30. Only the Meta
+    // and Google feeds honoured isPublished, so nothing surfaced it.
+    it('serves only published products to the public catalogue', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: '/' });
+      expect(mockPrisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ['Approved', 'Sold'] },
+            isPublished: true,
+          }),
+        }),
+      );
+      expect(mockPrisma.product.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({ isPublished: true }),
+      });
+    });
+
+    it("applies the publish gate to another seller's public storefront", async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: '/?sellerId=someone-else' });
+      expect(mockPrisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ sellerId: 'someone-else', isPublished: true }),
+        }),
+      );
+    });
+
+    it('lets a seller see their own unpublished listings', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({
+        method: 'GET',
+        url: '/?sellerId=vendor-id',
+        headers: { authorization: 'Bearer vendor' },
+      });
+      const { where } = mockPrisma.product.findMany.mock.calls[0][0];
+      expect(where).toEqual({ sellerId: 'vendor-id' });
+    });
+
+    it('searches brand as well as title, description and keywords', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: '/?search=Submariner' });
+      const { where } = mockPrisma.product.findMany.mock.calls[0][0];
+      expect(where.OR).toEqual([
+        { title: { contains: 'Submariner', mode: 'insensitive' } },
+        { description: { contains: 'Submariner', mode: 'insensitive' } },
+        { brand: { contains: 'Submariner', mode: 'insensitive' } },
+        { keywords: { hasSome: ['Submariner', 'submariner'] } },
+      ]);
+    });
+
+    it('matches keywords on lowercased tokens rather than the whole raw phrase', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: '/?search=Rolex%20Submariner' });
+      const { where } = mockPrisma.product.findMany.mock.calls[0][0];
+      const tokens = where.OR.at(-1).keywords.hasSome;
+      expect(tokens).toContain('rolex');
+      expect(tokens).toContain('submariner');
+      expect(tokens).toContain('rolex submariner');
+    });
+
+    it('keeps the default commission ordering when no sort is given', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: '/' });
+      expect(mockPrisma.product.findMany.mock.calls[0][0].orderBy).toEqual([
+        { status: 'asc' },
+        { commissionPercent: 'desc' },
+        { createdAt: 'desc' },
+      ]);
+    });
+
+    it.each([
+      ['newest', [{ status: 'asc' }, { createdAt: 'desc' }]],
+      ['price_asc', [{ status: 'asc' }, { price: 'asc' }, { createdAt: 'desc' }]],
+      ['price_desc', [{ status: 'asc' }, { price: 'desc' }, { createdAt: 'desc' }]],
+    ])('maps sort=%s to its whitelisted orderBy', async (sort, expected) => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: `/?sort=${sort}` });
+      expect(mockPrisma.product.findMany.mock.calls[0][0].orderBy).toEqual(expected);
+    });
+
+    it.each(['price', 'commissionPercent desc', 'constructor', '__proto__'])(
+      'ignores the non-whitelisted sort key %s and falls back to the default',
+      async (sort) => {
+        mockPrisma.product.findMany.mockResolvedValue([]);
+        mockPrisma.product.count.mockResolvedValue(0);
+        const app = buildApp(mockPrisma);
+        await app.register((await import('../../routes/products.js')).default);
+        await app.ready();
+        const res = await app.inject({
+          method: 'GET',
+          url: `/?sort=${encodeURIComponent(sort)}`,
+        });
+        expect(res.statusCode).toBe(200);
+        expect(mockPrisma.product.findMany.mock.calls[0][0].orderBy).toEqual([
+          { status: 'asc' },
+          { commissionPercent: 'desc' },
+          { createdAt: 'desc' },
+        ]);
+      },
+    );
+
+    it('filters by minPrice and maxPrice', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: '/?minPrice=2000&maxPrice=500000' });
+      expect(mockPrisma.product.findMany.mock.calls[0][0].where.price).toEqual({
+        gte: 2000,
+        lte: 500000,
+      });
+    });
+
+    it('accepts a one-sided price bound', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: '/?minPrice=2000' });
+      expect(mockPrisma.product.findMany.mock.calls[0][0].where.price).toEqual({ gte: 2000 });
+    });
+
+    it('does not add a price filter when no bound is given', async () => {
+      mockPrisma.product.findMany.mockResolvedValue([]);
+      mockPrisma.product.count.mockResolvedValue(0);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      await app.inject({ method: 'GET', url: '/' });
+      expect(mockPrisma.product.findMany.mock.calls[0][0].where.price).toBeUndefined();
+    });
+
+    it.each(['minPrice=abc', 'minPrice=-5', 'minPrice=9000&maxPrice=100'])(
+      'returns 400 for the invalid price filter %s',
+      async (qs) => {
+        const app = buildApp(mockPrisma);
+        await app.register((await import('../../routes/products.js')).default);
+        await app.ready();
+        const res = await app.inject({ method: 'GET', url: `/?${qs}` });
+        expect(res.statusCode).toBe(400);
+        expect(mockPrisma.product.findMany).not.toHaveBeenCalled();
+      },
+    );
+  });
+
+  describe('GET /category-counts', () => {
+    it('counts only published products', async () => {
+      mockPrisma.product.groupBy.mockResolvedValue([
+        { category: 'Accessories', _count: { id: 2 } },
+      ]);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/category-counts' });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({ Accessories: 2 });
+      expect(mockPrisma.product.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: { in: ['Approved', 'Sold'] }, isPublished: true },
+        }),
+      );
+    });
   });
 
   describe('GET /:id', () => {
@@ -182,6 +380,22 @@ describe('products routes', () => {
       await app.ready();
       const res = await app.inject({ method: 'GET', url: '/nonexistent' });
       expect(res.statusCode).toBe(404);
+    });
+
+    // A direct /product/:id link must not be a back door into an unpublished
+    // listing that the catalogue itself refuses to list.
+    it('requires isPublished on the public detail lookup', async () => {
+      mockPrisma.product.findFirst.mockResolvedValue(null);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({ method: 'GET', url: '/p1' });
+      expect(res.statusCode).toBe(404);
+      expect(mockPrisma.product.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'p1', status: { in: ['Approved', 'Sold'] }, isPublished: true },
+        }),
+      );
     });
   });
 
@@ -694,6 +908,54 @@ describe('products routes', () => {
         where: { id: 'p1' },
         data: { status: 'Sold', quantity: 0 },
       });
+    });
+
+    // Regression: the listing used to stay in every shopper's cart after the
+    // seller marked it sold — still priced into the total, and checkout then
+    // failed with the raw "Product not available: <title>".
+    it('purges the sold-out product from every cart and wishlist', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Approved',
+        quantity: 1,
+      });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', status: 'Sold', quantity: 0 });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.cartItem.deleteMany).toHaveBeenCalledWith({ where: { productId: 'p1' } });
+      expect(mockPrisma.wishlistItem.deleteMany).toHaveBeenCalledWith({
+        where: { productId: 'p1' },
+      });
+    });
+
+    it('leaves carts alone when stock remains after a partial sale', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        sellerId: 'vendor-id',
+        status: 'Approved',
+        quantity: 5,
+      });
+      mockPrisma.product.update.mockResolvedValue({ id: 'p1', quantity: 4 });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/products.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/p1/sold',
+        headers: { authorization: 'Bearer vendor' },
+        body: { quantity: 1 },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.cartItem.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrisma.wishlistItem.deleteMany).not.toHaveBeenCalled();
     });
 
     it('decrements quantity when selling qty=1 from multi-qty product', async () => {

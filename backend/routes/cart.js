@@ -51,6 +51,13 @@ export default async function cartRoutes(fastify) {
     if (product.status !== 'Approved') {
       return reply.status(422).send({ error: 'Product is not available for purchase' });
     }
+    // `status` and `isPublished` are set independently, so an Approved product
+    // can still be deliberately pulled from the storefront. Without this check a
+    // known id could be added straight to a cart/wishlist even though the public
+    // catalogue no longer lists it.
+    if (!product.isPublished) {
+      return reply.status(422).send({ error: 'Product is not available for purchase' });
+    }
 
     const cartItem = await prisma.cartItem.upsert({
       where: {

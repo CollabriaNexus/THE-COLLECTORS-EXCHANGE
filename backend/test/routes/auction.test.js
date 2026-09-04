@@ -52,7 +52,7 @@ describe('auction routes', () => {
   describe('GET /', () => {
     it('returns all auctions', async () => {
       mockPrisma.auction.findMany.mockResolvedValue([
-        { id: 'a1', product: {}, _count: { bids: 0 } },
+        { id: 'a1', product: { isPublished: true, status: 'Approved' }, _count: { bids: 0 } },
       ]);
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/auction.js')).default);
@@ -73,7 +73,11 @@ describe('auction routes', () => {
 
   describe('GET /:id', () => {
     it('returns single auction', async () => {
-      mockPrisma.auction.findUnique.mockResolvedValue({ id: 'a1', product: {}, bids: [] });
+      mockPrisma.auction.findUnique.mockResolvedValue({
+        id: 'a1',
+        product: { isPublished: true, status: 'Approved' },
+        bids: [],
+      });
       const app = buildApp(mockPrisma);
       await app.register((await import('../../routes/auction.js')).default);
       await app.ready();

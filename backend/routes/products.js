@@ -1,4 +1,10 @@
-import { ProductSchema, ProductIdParam } from '../schemas/product.js';
+import {
+  ProductSchema,
+  ProductIdParam,
+  PriceRangeSchema,
+  resolveProductSort,
+  searchKeywordTokens,
+} from '../schemas/product.js';
 import { syncProductToMetaAsync } from '../lib/metaCatalog.js';
 import { syncProductToGoogleAsync } from '../lib/googleMerchant.js';
 
@@ -30,7 +36,20 @@ export default async function productRoutes(fastify) {
 
   // Get all products (Public catalog)
   fastify.get('/', async (request, reply) => {
-    const { category, search, condition, sellerId, page, limit, listingCategory } = request.query;
+    const { category, search, condition, sellerId, page, limit, listingCategory, sort } =
+      request.query;
+
+    let priceRange;
+    try {
+      priceRange = PriceRangeSchema.parse({
+        minPrice: request.query.minPrice,
+        maxPrice: request.query.maxPrice,
+      });
+    } catch (err) {
+      return reply.status(400).send({
+        error: err?.issues?.[0]?.message || 'Invalid price filter',
+      });
+    }
 
     const where = {};
 
@@ -54,9 +73,18 @@ export default async function productRoutes(fastify) {
 
       if (!isOwner) {
         where.status = { in: ['Approved', 'Sold'] };
+        // A seller's public storefront is still the public catalogue — it must
+        // obey the same publish gate as the un-scoped listing below.
+        where.isPublished = true;
       }
     } else {
       where.status = { in: ['Approved', 'Sold'] };
+      // `isPublished` is the owner's explicit "this may be shown publicly"
+      // switch. Without it the catalogue served every Approved product,
+      // including the ones deliberately taken down — the Meta and Google feeds
+      // (lib/metaCatalog.js, lib/googleMerchant.js) always honoured it, so the
+      // storefront was the only surface leaking them.
+      where.isPublished = true;
     }
 
     if (category && category !== 'all') {
@@ -71,11 +99,22 @@ export default async function productRoutes(fastify) {
       where.condition = { equals: condition, mode: 'insensitive' };
     }
 
+    if (priceRange.minPrice !== undefined || priceRange.maxPrice !== undefined) {
+      where.price = {
+        ...(priceRange.minPrice !== undefined ? { gte: priceRange.minPrice } : {}),
+        ...(priceRange.maxPrice !== undefined ? { lte: priceRange.maxPrice } : {}),
+      };
+    }
+
     if (search) {
+      const keywordTokens = searchKeywordTokens(search);
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
-        { keywords: { has: search } },
+        // `brand` is shown on the product page and is what shoppers actually
+        // type ("rolex", "omega"), so it has to be searchable.
+        { brand: { contains: search, mode: 'insensitive' } },
+        ...(keywordTokens.length > 0 ? [{ keywords: { hasSome: keywordTokens } }] : []),
       ];
     }
 
@@ -88,9 +127,17 @@ export default async function productRoutes(fastify) {
       // this has to happen in the query, not client-side per-page — the where
       // clause above only ever admits 'Approved' or 'Sold' here, and those
       // sort correctly in that order alphabetically.
+      //
+      // An explicit ?sort= replaces the tie-breakers but never the status
+      // grouping, and is resolved through the whitelist in schemas/product.js —
+      // an unknown key falls back to the default rather than erroring, so an
+      // old or hand-edited URL still renders a catalogue.
+      const sortOrderBy = resolveProductSort(sort);
       const orderBy = sellerId
-        ? { createdAt: 'desc' }
-        : [{ status: 'asc' }, { commissionPercent: 'desc' }, { createdAt: 'desc' }];
+        ? (sortOrderBy ?? { createdAt: 'desc' })
+        : sortOrderBy
+          ? [{ status: 'asc' }, ...sortOrderBy]
+          : [{ status: 'asc' }, { commissionPercent: 'desc' }, { createdAt: 'desc' }];
 
       const [products, total] = await Promise.all([
         prisma.product.findMany({
@@ -121,9 +168,11 @@ export default async function productRoutes(fastify) {
   // Get product counts per category
   fastify.get('/category-counts', async (request, reply) => {
     try {
+      // Must use the same visibility rule as GET / above, or the "N in stock"
+      // badge counts listings the catalogue refuses to show.
       const counts = await prisma.product.groupBy({
         by: ['category'],
-        where: { status: { in: ['Approved', 'Sold'] } },
+        where: { status: { in: ['Approved', 'Sold'] }, isPublished: true },
         _count: { id: true },
       });
       const result = {};
@@ -141,7 +190,9 @@ export default async function productRoutes(fastify) {
   fastify.get('/:id', async (request, reply) => {
     const { id } = ProductIdParam.parse(request.params);
     const product = await prisma.product.findFirst({
-      where: { id, status: { in: ['Approved', 'Sold'] } },
+      // Same publish gate as the listing route — a direct /product/:id link must
+      // not be a back door into a listing the owner unpublished.
+      where: { id, status: { in: ['Approved', 'Sold'] }, isPublished: true },
       include: {
         seller: {
           select: {
@@ -467,6 +518,13 @@ export default async function productRoutes(fastify) {
           where: { id },
           data: { status: 'Sold', quantity: 0 },
         });
+        // A sold-out listing has to leave every shopper's cart and wishlist,
+        // exactly as the admin mark-as-sold (routes/admin.js) and the checkout
+        // finalisation (routes/checkout.js) already do. Left behind, it stays
+        // priced into the cart total and checkout dies on
+        // "Product not available: <title>".
+        await prisma.cartItem.deleteMany({ where: { productId: id } });
+        await prisma.wishlistItem.deleteMany({ where: { productId: id } });
         syncProductToMetaAsync(updated);
         syncProductToGoogleAsync(updated);
         return withoutAdminNotes(updated);

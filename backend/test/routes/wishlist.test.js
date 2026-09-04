@@ -59,7 +59,11 @@ describe('wishlist routes', () => {
   describe('POST /', () => {
     it('adds item to wishlist', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', supabaseId: 'sb-123' });
-      mockPrisma.product.findUnique.mockResolvedValue({ id: 'p1', status: 'Approved' });
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        status: 'Approved',
+        isPublished: true,
+      });
       mockPrisma.wishlistItem.upsert.mockResolvedValue({
         id: 'w1',
         userId: 'user-id',
@@ -75,6 +79,30 @@ describe('wishlist routes', () => {
         headers: { authorization: 'Bearer token' },
       });
       expect(res.statusCode).toBe(201);
+    });
+
+    // `status` and `isPublished` are set independently, so an Approved product
+    // can still be deliberately pulled from the storefront. Before this guard a
+    // known id could be added straight to a wishlist even though the public
+    // catalogue no longer listed it.
+    it('refuses a product that is Approved but not published', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', supabaseId: 'sb-123' });
+      mockPrisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        status: 'Approved',
+        isPublished: false,
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/wishlist.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/',
+        payload: { userId: 'user-id', productId: 'p1' },
+        headers: { authorization: 'Bearer token' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(mockPrisma.wishlistItem.upsert).not.toHaveBeenCalled();
     });
 
     it('returns 404 when product not found', async () => {
