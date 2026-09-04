@@ -34,8 +34,33 @@ import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
 import ManualOrderModal from '../components/ManualOrderModal';
 import { useConfirm } from '../components/ConfirmDialog';
+import ErrorState from '../components/ui/ErrorState';
 import { useProductCoupon, useGenerateCoupon, useDeleteCoupon } from '../hooks/api/useCoupons';
 import { getUser } from '../utils/storage';
+import { getErrorMessage } from '../utils/apiError';
+
+/**
+ * Values are AuthenticityStatus enum members from prisma/schema.prisma; the
+ * admin route validates against exactly these four strings.
+ */
+const AUTHENTICITY_OPTIONS = [
+  { value: 'Pending', label: 'Pending', note: 'Not yet assessed. Does not change the listing.' },
+  {
+    value: 'Under_Review',
+    label: 'Under Review',
+    note: 'Being assessed. Does not change the listing.',
+  },
+  {
+    value: 'Verified',
+    label: 'Verified',
+    note: 'Also sets the listing to Approved and publishes it.',
+  },
+  {
+    value: 'Rejected',
+    label: 'Rejected',
+    note: 'Also sets the listing to Rejected and unpublishes it.',
+  },
+];
 
 function ProductDetail() {
   const { id } = useParams();
@@ -70,7 +95,14 @@ function ProductDetail() {
   const [showManualOrderModal, setShowManualOrderModal] = useState(false);
   const [isBackfill, setIsBackfill] = useState(false);
 
-  const { data: product, isLoading } = useProductDetail(id);
+  const {
+    data: product,
+    isLoading,
+    isError,
+    error: productError,
+    refetch,
+    isFetching,
+  } = useProductDetail(id);
   const { data: brands = [] } = useBrands();
   const approveMutation = useApproveProduct();
   const rejectMutation = useRejectProduct();
@@ -97,7 +129,7 @@ function ProductDetail() {
       setSuccess('Product marked as sold');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to mark as sold');
+      setError(getErrorMessage(err, 'Failed to mark as sold'));
     }
   };
 
@@ -109,12 +141,7 @@ function ProductDetail() {
       setShowManualOrderModal(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      const msg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message ||
-        'Failed to create order';
-      setError(msg);
+      setError(getErrorMessage(err, 'Failed to create order'));
     }
   };
 
@@ -135,7 +162,7 @@ function ProductDetail() {
       setSuccess('Product is now under review');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to start review');
+      setError(getErrorMessage(err, 'Failed to start review'));
     }
   };
 
@@ -146,7 +173,7 @@ function ProductDetail() {
       setSuccess('Product approved and published successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to approve product');
+      setError(getErrorMessage(err, 'Failed to approve product'));
     }
   };
 
@@ -183,7 +210,7 @@ function ProductDetail() {
       setRejectionReason('');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to reject product');
+      setError(getErrorMessage(err, 'Failed to reject product'));
     }
   };
 
@@ -194,7 +221,7 @@ function ProductDetail() {
       setSuccess('Product deleted');
       setTimeout(() => navigate('/products'), 1500);
     } catch (err) {
-      setError(err.message || 'Failed to delete product');
+      setError(getErrorMessage(err, 'Failed to delete product'));
     }
   };
 
@@ -233,7 +260,7 @@ function ProductDetail() {
       setShowEditModal(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to update product');
+      setError(getErrorMessage(err, 'Failed to update product'));
     }
   };
 
@@ -247,7 +274,7 @@ function ProductDetail() {
       setShowStatusModal(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to update status');
+      setError(getErrorMessage(err, 'Failed to update status'));
     }
   };
 
@@ -255,6 +282,21 @@ function ProductDetail() {
     return (
       <div className="flex items-center justify-center h-96">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  // A failed fetch is NOT the same as a missing product — saying "not found"
+  // when the request 500'd sends the operator hunting for a deleted listing.
+  if (isError) {
+    return (
+      <div className="max-w-2xl mx-auto py-10">
+        <ErrorState
+          error={productError}
+          title="Could not load this product"
+          onRetry={refetch}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }
@@ -757,7 +799,7 @@ function ProductDetail() {
                         setSuccess('New coupon generated! Old one expired.');
                         setTimeout(() => setSuccess(''), 3000);
                       } catch (err) {
-                        setError(err.message || 'Failed to generate coupon');
+                        setError(getErrorMessage(err, 'Failed to generate coupon'));
                       }
                     }}
                     disabled={generateCouponMutation.isPending}
@@ -780,7 +822,7 @@ function ProductDetail() {
                         setSuccess('Coupon deleted');
                         setTimeout(() => setSuccess(''), 3000);
                       } catch (err) {
-                        setError(err.message || 'Failed to delete coupon');
+                        setError(getErrorMessage(err, 'Failed to delete coupon'));
                       }
                     }}
                     disabled={deleteCouponMutation.isPending}
@@ -801,7 +843,7 @@ function ProductDetail() {
                     setSuccess('Coupon generated!');
                     setTimeout(() => setSuccess(''), 3000);
                   } catch (err) {
-                    setError(err.message || 'Failed to generate coupon');
+                    setError(getErrorMessage(err, 'Failed to generate coupon'));
                   }
                 }}
                 disabled={generateCouponMutation.isPending}
@@ -1387,11 +1429,14 @@ function ProductDetail() {
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            {['Pending', 'Verified', 'Rejected', 'Under Review'].map((status) => (
+            {/* `value` must be the AuthenticityStatus enum member — the backend
+                rejects anything outside this list with a 400, and "Under Review"
+                (with a space) is not a member. The label is the pretty form. */}
+            {AUTHENTICITY_OPTIONS.map(({ value, label, note }) => (
               <label
-                key={status}
-                className={`flex items-center gap-3 p-3 border rounded-md cursor-pointer ${
-                  selectedStatus === status
+                key={value}
+                className={`flex items-start gap-3 p-3 border rounded-md cursor-pointer ${
+                  selectedStatus === value
                     ? 'border-luxury-gold bg-luxury-gold/5'
                     : 'border-gray-300 hover:bg-gray-50'
                 }`}
@@ -1399,15 +1444,33 @@ function ProductDetail() {
                 <input
                   type="radio"
                   name="status"
-                  value={status}
-                  checked={selectedStatus === status}
+                  value={value}
+                  checked={selectedStatus === value}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="accent-luxury-gold"
+                  className="accent-luxury-gold mt-0.5"
                 />
-                <span className="font-medium">{status}</span>
+                <span>
+                  <span className="font-medium block">{label}</span>
+                  <span className="text-xs text-gray-500">{note}</span>
+                </span>
               </label>
             ))}
           </div>
+
+          {/* Guard the one combination that leaves the storefront inconsistent:
+              a listing that is still live and flagged Verified, but whose
+              authenticity has been walked back to Pending/Under Review. */}
+          {product.isPublished &&
+            (selectedStatus === 'Pending' || selectedStatus === 'Under_Review') && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded p-3">
+                This listing is currently live on the storefront. Setting authenticity back to{' '}
+                <strong>
+                  {AUTHENTICITY_OPTIONS.find((o) => o.value === selectedStatus)?.label}
+                </strong>{' '}
+                does not unpublish it — it will stay public while showing as unverified. Use{' '}
+                <strong>Reject Product</strong> if you want it taken down.
+              </div>
+            )}
 
           <div className="flex gap-3 justify-end pt-4">
             <button

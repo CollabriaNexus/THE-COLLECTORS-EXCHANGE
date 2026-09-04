@@ -5,13 +5,21 @@ import { useOrders } from '../hooks/api/useOrders';
 import Table from '../components/ui/Table';
 import StatusBadge from '../components/ui/StatusBadge';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ErrorState from '../components/ui/ErrorState';
 
 function Orders() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: orders, isLoading } = useOrders({
+  const {
+    data: orders,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useOrders({
     status: statusFilter,
     search: searchQuery,
   });
@@ -144,22 +152,36 @@ function Orders() {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-heritage overflow-hidden">
-        {orders?.length > 0 ? (
-          <Table
-            columns={columns}
-            data={orders}
-            onRowClick={(order) => navigate(`/orders/${order.id}`)}
-          />
-        ) : (
-          <div className="text-center py-20 bg-gray-50">
-            <ShoppingBag size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No orders found</h3>
-            <p className="text-gray-500">When customers buy products, they will appear here.</p>
-          </div>
-        )}
-      </div>
+      {/* Orders Table. A failed fetch used to fall through to the empty state,
+          so a 500 read as "you have no orders". */}
+      {isError ? (
+        <ErrorState
+          error={error}
+          title="Could not load orders"
+          onRetry={refetch}
+          isRetrying={isFetching}
+        />
+      ) : (
+        <div className="bg-white rounded-lg shadow-heritage overflow-hidden">
+          {orders?.length > 0 ? (
+            <Table
+              columns={columns}
+              data={orders}
+              onRowClick={(order) => navigate(`/orders/${order.id}`)}
+            />
+          ) : (
+            <div className="text-center py-20 bg-gray-50">
+              <ShoppingBag size={48} className="mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">No orders found</h3>
+              <p className="text-gray-500">
+                {statusFilter !== 'all' || searchQuery
+                  ? 'No orders match the current filters.'
+                  : 'When customers buy products, they will appear here.'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

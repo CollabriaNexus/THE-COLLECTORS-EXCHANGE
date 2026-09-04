@@ -155,4 +155,50 @@ describe('OrderDetail', () => {
       expect(screen.getByText('TRACK123')).toBeInTheDocument();
     });
   });
+
+  it('offers a Cancel Order action for an order that is still in flight', async () => {
+    // The dashboard had no cancel path at all, even though the API supports it
+    // from Pending / Processing / Shipped.
+    mockGet.mockResolvedValue({ data: { ...mockOrder, status: 'Processing' } });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    expect(await screen.findByText('Cancel Order')).toBeInTheDocument();
+  });
+
+  it('does not offer Cancel Order once the order is Delivered', async () => {
+    mockGet.mockResolvedValue({ data: { ...mockOrder, status: 'Delivered' } });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    await screen.findByText('Order Fulfillment');
+    expect(screen.queryByText('Cancel Order')).not.toBeInTheDocument();
+  });
+
+  it('lets an operator correct a tracking ID on a shipped order', async () => {
+    mockGet.mockResolvedValue({
+      data: { ...mockOrder, status: 'Shipped', trackingID: 'WRONG123' },
+    });
+    mockPatch.mockResolvedValue({ data: {} });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    fireEvent.click(await screen.findByText('Correct Tracking ID'));
+    // Prefilled, so fixing a typo does not mean retyping the whole AWB.
+    const input = await screen.findByDisplayValue('WRONG123');
+    fireEvent.change(input, { target: { value: 'RIGHT456' } });
+    fireEvent.click(screen.getByText('Save Tracking ID'));
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/ship', {
+        trackingID: 'RIGHT456',
+      });
+    });
+  });
+
+  it('surfaces the server reason when a status change is refused', async () => {
+    mockGet.mockResolvedValue({ data: { ...mockOrder, status: 'Pending' } });
+    mockPatch.mockRejectedValue({
+      message: 'Request failed with status code 422',
+      response: { data: { error: 'Cannot change order from Pending to Delivered' } },
+    });
+    render(<OrderDetail />, { wrapper: createWrapper() });
+    fireEvent.click(await screen.findByText('Mark as Processing'));
+    expect(
+      await screen.findByText('Cannot change order from Pending to Delivered'),
+    ).toBeInTheDocument();
+  });
 });

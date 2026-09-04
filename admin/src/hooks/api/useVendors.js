@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from './apiClient';
 
@@ -76,19 +77,28 @@ export const useContactMessages = (filters = {}) => {
 
 export const useContactMessageDetail = (id) => {
   const queryClient = useQueryClient();
-  return useQuery({
+  const query = useQuery({
     queryKey: ['contact-message', id],
     queryFn: async () => {
       const { data } = await apiClient.get(`/admin/contact-messages/${id}`);
       return data;
     },
     enabled: !!id,
-    onSuccess: () => {
-      // Marking read on server invalidates list counts
-      queryClient.invalidateQueries({ queryKey: ['contact-messages'] });
-      queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
-    },
   });
+
+  // GET /admin/contact-messages/:id marks the message read as a SIDE EFFECT,
+  // so the inbox list and the dashboard's unread counter go stale the moment a
+  // message is opened. `onSuccess` on useQuery was removed in TanStack Query
+  // v5 — it never fired here — so the invalidation runs from an effect keyed on
+  // the fetched row instead.
+  const fetchedId = query.data?.id;
+  useEffect(() => {
+    if (!fetchedId) return;
+    queryClient.invalidateQueries({ queryKey: ['contact-messages'] });
+    queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
+  }, [fetchedId, queryClient]);
+
+  return query;
 };
 
 export const useUpdateContactMessage = () => {

@@ -204,4 +204,49 @@ describe('ProductDetail', () => {
       expect(screen.getByText('Product approved and published successfully!')).toBeInTheDocument();
     });
   });
+
+  it('sends the AuthenticityStatus enum member for Under Review', async () => {
+    // The radio value was "Under Review" (a space), which the API rejects with
+    // a 400 — the option could never be applied.
+    mockPatch.mockResolvedValue({ data: {} });
+    render(<ProductDetail />, { wrapper: createWrapper() });
+    fireEvent.click(await screen.findByText('Change Authenticity Status Manually'));
+
+    const radio = await screen.findByDisplayValue('Under_Review');
+    fireEvent.click(radio);
+    fireEvent.click(screen.getByText('Update Status'));
+
+    await waitFor(() => {
+      expect(mockPatch).toHaveBeenCalledWith('/admin/products/123/authenticity', {
+        status: 'Under_Review',
+      });
+    });
+  });
+
+  it('preselects the current authenticity status in the modal', async () => {
+    mockGet.mockImplementation((url) =>
+      url === '/admin/products/123'
+        ? Promise.resolve({ data: { ...mockProduct, authenticityStatus: 'Under_Review' } })
+        : Promise.resolve({ data: url === '/admin/brands' ? [] : {} }),
+    );
+    render(<ProductDetail />, { wrapper: createWrapper() });
+    fireEvent.click(await screen.findByText('Change Authenticity Status Manually'));
+    expect(await screen.findByDisplayValue('Under_Review')).toBeChecked();
+  });
+
+  it('surfaces the server message rather than the axios status line', async () => {
+    mockGet.mockImplementation((url) =>
+      url === '/admin/products/123'
+        ? Promise.resolve({ data: { ...mockProduct, status: 'Sold' } })
+        : Promise.resolve({ data: url === '/admin/brands' ? [] : {} }),
+    );
+    mockPatch.mockRejectedValue({
+      message: 'Request failed with status code 422',
+      response: { data: { error: 'Cannot approve a sold product' } },
+    });
+    render(<ProductDetail />, { wrapper: createWrapper() });
+    fireEvent.click(await screen.findByText('Approve & Publish'));
+    expect(await screen.findByText('Cannot approve a sold product')).toBeInTheDocument();
+    expect(screen.queryByText('Request failed with status code 422')).not.toBeInTheDocument();
+  });
 });

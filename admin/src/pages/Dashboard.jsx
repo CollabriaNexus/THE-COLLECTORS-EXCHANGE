@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
+  AlertTriangle,
   Users,
   FileText,
   Package,
@@ -18,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAdminStats, useAdminAnalytics } from '../hooks/api/useUsers';
 import { useVendorRankings } from '../hooks/api/useVendors';
+import { getErrorMessage } from '../utils/apiError';
 import {
   BarChart,
   Bar,
@@ -55,34 +58,54 @@ const rankTrophy = (idx) => {
 };
 
 function Dashboard() {
-  const { data: statsData, isLoading } = useAdminStats();
-  const { data: analyticsData, isLoading: analyticsLoading } = useAdminAnalytics();
+  const {
+    data: statsData,
+    isLoading,
+    isError: statsError,
+    error: statsErrorObj,
+    refetch: refetchStats,
+    isFetching: statsFetching,
+  } = useAdminStats();
+  const {
+    data: analyticsData,
+    isLoading: analyticsLoading,
+    isError: analyticsError,
+  } = useAdminAnalytics();
 
   const [vendorSort, setVendorSort] = useState('listings');
-  const { data: vendorData, isLoading: vendorsLoading } = useVendorRankings(vendorSort);
+  const {
+    data: vendorData,
+    isLoading: vendorsLoading,
+    isError: vendorsError,
+  } = useVendorRankings(vendorSort);
+
+  // Every stat card falls back to 0 / ₹0 when `statsData` is missing. On a
+  // failed request that reads as "the business has nothing", which is a far
+  // worse lie than showing no numbers at all — so bail out loudly instead.
+  const statValue = (raw) => (isLoading ? '...' : statsError ? '—' : raw);
 
   const originalStats = [
     {
       title: 'Total Users',
-      value: isLoading ? '...' : (statsData?.totalUsers ?? 0).toString(),
+      value: statValue((statsData?.totalUsers ?? 0).toString()),
       icon: Users,
       color: 'bg-blue-500',
     },
     {
       title: 'Pending KYC',
-      value: isLoading ? '...' : (statsData?.pendingKyc ?? 0).toString(),
+      value: statValue((statsData?.pendingKyc ?? 0).toString()),
       icon: FileText,
       color: 'bg-yellow-500',
     },
     {
       title: 'Total Products',
-      value: isLoading ? '...' : (statsData?.totalProducts ?? 0).toString(),
+      value: statValue((statsData?.totalProducts ?? 0).toString()),
       icon: Package,
       color: 'bg-green-500',
     },
     {
       title: 'Orders',
-      value: isLoading ? '...' : (statsData?.totalOrders ?? 0).toString(),
+      value: statValue((statsData?.totalOrders ?? 0).toString()),
       icon: TrendingUp,
       color: 'bg-purple-500',
     },
@@ -91,21 +114,21 @@ function Dashboard() {
   const inventoryStats = [
     {
       title: 'Total Inventory',
-      value: isLoading ? '...' : (statsData?.totalInventoryCount ?? 0).toString(),
+      value: statValue((statsData?.totalInventoryCount ?? 0).toString()),
       icon: Warehouse,
       color: 'bg-heritage-charcoal',
       hint: 'All products',
     },
     {
       title: 'Sold',
-      value: isLoading ? '...' : (statsData?.totalSoldInventoryCount ?? 0).toString(),
+      value: statValue((statsData?.totalSoldInventoryCount ?? 0).toString()),
       icon: ShoppingBag,
       color: 'bg-luxury-gold',
       hint: 'Status = Sold',
     },
     {
       title: 'Available',
-      value: isLoading ? '...' : (statsData?.totalAvailableInventoryCount ?? 0).toString(),
+      value: statValue((statsData?.totalAvailableInventoryCount ?? 0).toString()),
       icon: CheckCircle2,
       color: 'bg-emerald-600',
       hint: 'Approved + Pending + In_Review',
@@ -115,21 +138,21 @@ function Dashboard() {
   const revenueStats = [
     {
       title: 'Total Inventory Value',
-      value: isLoading ? '...' : INR.format(statsData?.totalInventoryRevenue ?? 0),
+      value: statValue(INR.format(statsData?.totalInventoryRevenue ?? 0)),
       icon: IndianRupee,
       color: 'bg-heritage-charcoal',
       hint: 'Sum of all list prices',
     },
     {
       title: 'Sold Revenue',
-      value: isLoading ? '...' : INR.format(statsData?.totalSoldRevenue ?? 0),
+      value: statValue(INR.format(statsData?.totalSoldRevenue ?? 0)),
       icon: BadgeDollarSign,
       color: 'bg-luxury-gold',
       hint: 'Paid orders + offline sales',
     },
     {
       title: 'Available Value',
-      value: isLoading ? '...' : INR.format(statsData?.totalAvailableRevenue ?? 0),
+      value: statValue(INR.format(statsData?.totalAvailableRevenue ?? 0)),
       icon: HandCoins,
       color: 'bg-emerald-600',
       hint: 'Inventory value minus sold list price',
@@ -139,7 +162,7 @@ function Dashboard() {
   const extraStatCards = [
     {
       title: 'Unread Messages',
-      value: isLoading ? '...' : (statsData?.unreadContactMessages ?? 0).toString(),
+      value: statValue((statsData?.unreadContactMessages ?? 0).toString()),
       icon: MessageSquare,
       color: 'bg-rose-500',
       hint: 'Contact form submissions',
@@ -190,6 +213,30 @@ function Dashboard() {
         <h2 className="text-3xl font-serif font-bold text-heritage-charcoal">Dashboard Overview</h2>
         <p className="text-gray-600 mt-2">Monitor and manage your platform</p>
       </div>
+
+      {statsError && (
+        <div
+          role="alert"
+          className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6 flex items-start gap-3"
+        >
+          <AlertTriangle size={18} className="mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold">Platform figures could not be loaded.</p>
+            <p className="text-sm mt-0.5">
+              {getErrorMessage(statsErrorObj, 'The stats request failed.')} The cards below show
+              &ldquo;—&rdquo; instead of numbers — they are unknown, not zero.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={refetchStats}
+            disabled={statsFetching}
+            className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+          >
+            {statsFetching ? 'Retrying...' : 'Retry'}
+          </button>
+        </div>
+      )}
 
       {/* ============== ORIGINAL STATS ============== */}
       <h3 className="text-sm uppercase tracking-[0.2em] text-luxury-gold font-bold mb-3">
@@ -292,9 +339,11 @@ function Dashboard() {
             );
             if (stat.linkTo) {
               return (
-                <a key={stat.title} href={stat.linkTo} className="block">
+                // A plain <a> reloads the whole SPA (and re-runs the auth
+                // bootstrap) just to move between two admin screens.
+                <Link key={stat.title} to={stat.linkTo} className="block">
                   {content}
-                </a>
+                </Link>
               );
             }
             return <div key={stat.title}>{content}</div>;
@@ -310,6 +359,10 @@ function Dashboard() {
           </h3>
           {analyticsLoading ? (
             <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>
+          ) : analyticsError ? (
+            <div className="h-64 flex items-center justify-center text-red-600 text-sm">
+              Analytics failed to load
+            </div>
           ) : revenueChart.length === 0 ? (
             <div className="h-64 flex items-center justify-center text-gray-400">
               No revenue data yet
@@ -338,6 +391,10 @@ function Dashboard() {
           </h3>
           {analyticsLoading ? (
             <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>
+          ) : analyticsError ? (
+            <div className="h-64 flex items-center justify-center text-red-600 text-sm">
+              Analytics failed to load
+            </div>
           ) : userGrowthChart.length === 0 ? (
             <div className="h-64 flex items-center justify-center text-gray-400">
               No user data yet
@@ -360,6 +417,10 @@ function Dashboard() {
           </h3>
           {analyticsLoading ? (
             <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>
+          ) : analyticsError ? (
+            <div className="h-64 flex items-center justify-center text-red-600 text-sm">
+              Analytics failed to load
+            </div>
           ) : ordersByStatus.length === 0 ? (
             <div className="h-64 flex items-center justify-center text-gray-400">No orders yet</div>
           ) : (
@@ -391,6 +452,10 @@ function Dashboard() {
           </h3>
           {analyticsLoading ? (
             <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>
+          ) : analyticsError ? (
+            <div className="h-64 flex items-center justify-center text-red-600 text-sm">
+              Analytics failed to load
+            </div>
           ) : productsByCategory.length === 0 ? (
             <div className="h-64 flex items-center justify-center text-gray-400">
               No products yet
@@ -444,6 +509,10 @@ function Dashboard() {
           {vendorsLoading ? (
             <div className="h-40 flex items-center justify-center text-gray-400">
               Loading vendor rankings...
+            </div>
+          ) : vendorsError ? (
+            <div className="h-40 flex items-center justify-center text-red-600 text-sm">
+              Vendor rankings failed to load — this is not an empty leaderboard.
             </div>
           ) : vendorRows.length === 0 ? (
             <div className="h-40 flex items-center justify-center text-gray-400">
@@ -508,9 +577,17 @@ function Dashboard() {
                               : 'bg-gray-100 text-gray-600'
                           }`}
                         >
-                          {row.vendor.vendorType === 'BULK'
-                            ? `Bulk Lister ${(<Store size={10} className="inline ml-1" />)}`
-                            : 'Normal'}
+                          {/* A React element interpolated into a template
+                              string stringifies to "[object Object]" — render
+                              the icon as a sibling node instead. */}
+                          {row.vendor.vendorType === 'BULK' ? (
+                            <>
+                              Bulk Lister
+                              <Store size={10} className="inline ml-1" />
+                            </>
+                          ) : (
+                            'Normal'
+                          )}
                         </span>
                       </td>
                       <td className="py-3 px-2 text-right font-bold text-heritage-charcoal">

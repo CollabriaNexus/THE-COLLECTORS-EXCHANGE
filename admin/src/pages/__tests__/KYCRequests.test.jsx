@@ -28,7 +28,9 @@ const createWrapper = () => {
 };
 
 describe('KYCRequests', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders the page title', () => {
     mockGet.mockResolvedValue({ data: [] });
@@ -42,17 +44,48 @@ describe('KYCRequests', () => {
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
+  it('defaults to the pending queue rather than every user', async () => {
+    mockGet.mockResolvedValue({ data: [] });
+    render(<KYCRequests />, { wrapper: createWrapper() });
+    expect(screen.getByDisplayValue('Pending')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('status=pending'));
+    });
+  });
+
   it('shows empty message when no requests', async () => {
     mockGet.mockResolvedValue({ data: [] });
     render(<KYCRequests />, { wrapper: createWrapper() });
     await waitFor(() => {
-      expect(screen.getByText('No KYC requests found')).toBeInTheDocument();
+      expect(
+        screen.getByText('No pending KYC requests — nothing is waiting on you.'),
+      ).toBeInTheDocument();
     });
+  });
+
+  it('shows an error state, not an empty list, when the request fails', async () => {
+    mockGet.mockRejectedValue({ response: { data: { error: 'Database unavailable' } } });
+    render(<KYCRequests />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText('Could not load KYC requests')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Database unavailable')).toBeInTheDocument();
+    expect(screen.queryByText(/nothing is waiting on you/)).not.toBeInTheDocument();
   });
 
   it('renders KYC requests in table', async () => {
     mockGet.mockResolvedValue({
-      data: [{ id: 'u1', name: 'Alice', email: 'alice@test.com', phone: '1234567890', type: 'Individual', kycStatus: 'pending', createdAt: '2024-01-01' }],
+      data: [
+        {
+          id: 'u1',
+          name: 'Alice',
+          email: 'alice@test.com',
+          phone: '1234567890',
+          type: 'Individual',
+          kycStatus: 'pending',
+          createdAt: '2024-01-01',
+        },
+      ],
     });
     render(<KYCRequests />, { wrapper: createWrapper() });
     await waitFor(() => {
@@ -62,7 +95,17 @@ describe('KYCRequests', () => {
   });
 
   it('navigates to KYC detail on row click', async () => {
-    mockGet.mockResolvedValue({ data: [{ id: 'kyc1', name: 'Bob', email: 'bob@test.com', kycStatus: 'pending', createdAt: '2024-01-01' }] });
+    mockGet.mockResolvedValue({
+      data: [
+        {
+          id: 'kyc1',
+          name: 'Bob',
+          email: 'bob@test.com',
+          kycStatus: 'pending',
+          createdAt: '2024-01-01',
+        },
+      ],
+    });
     render(<KYCRequests />, { wrapper: createWrapper() });
     await waitFor(() => {
       fireEvent.click(screen.getByText('Bob'));
@@ -73,7 +116,7 @@ describe('KYCRequests', () => {
   it('changes status filter', async () => {
     mockGet.mockResolvedValue({ data: [] });
     render(<KYCRequests />, { wrapper: createWrapper() });
-    const select = screen.getByDisplayValue('All Statuses');
+    const select = screen.getByDisplayValue('Pending');
     fireEvent.change(select, { target: { value: 'verified' } });
     await waitFor(() => {
       expect(screen.getByDisplayValue('Verified')).toBeInTheDocument();

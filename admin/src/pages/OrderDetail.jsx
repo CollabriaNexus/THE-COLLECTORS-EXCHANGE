@@ -10,21 +10,34 @@ import {
   MapPin,
   CreditCard,
   ExternalLink,
+  XCircle,
+  Pencil,
 } from 'lucide-react';
 import { useOrderDetail, useUpdateOrderStatus, useShipOrder } from '../hooks/api/useOrders';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
+import ErrorState from '../components/ui/ErrorState';
+import { useConfirm } from '../components/ConfirmDialog';
+import { getErrorMessage } from '../utils/apiError';
 
 function OrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [trackingID, setTrackingID] = useState('');
   const [showShipModal, setShowShipModal] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const { data: order, isLoading } = useOrderDetail(id);
+  const {
+    data: order,
+    isLoading,
+    isError,
+    error: orderError,
+    refetch,
+    isFetching,
+  } = useOrderDetail(id);
   const updateStatusMutation = useUpdateOrderStatus();
   const shipOrderMutation = useShipOrder();
 
@@ -35,8 +48,31 @@ function OrderDetail() {
       setSuccess(`Order marked as ${status}`);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || `Failed to update status to ${status}`);
+      setError(getErrorMessage(err, `Failed to update status to ${status}`));
     }
+  };
+
+  /**
+   * Cancelling is the one order action whose side effects the operator cannot
+   * reverse from this screen: every item goes back to Approved (re-listed on
+   * the storefront) and a captured online payment is refunded via Razorpay.
+   * There was previously no way to cancel an order from the dashboard at all,
+   * even though the API supports it from Pending / Processing / Shipped.
+   */
+  const handleCancelOrder = async () => {
+    const willRefund = order.paymentStatus === 'Paid';
+    const itemCount = order.items?.length ?? 0;
+    const label = order.displayId || `#${order.id.slice(-8).toUpperCase()}`;
+    const confirmed = await confirm(
+      `Cancel order ${label}? ${itemCount} item${itemCount === 1 ? '' : 's'} will go back on sale ` +
+        'on the storefront, ' +
+        (willRefund
+          ? 'and the captured payment will be marked Refunded with a Razorpay refund attempted. '
+          : 'and the unpaid order will be voided. ') +
+        'The buyer is notified. This cannot be undone: Cancelled is a final status.',
+    );
+    if (!confirmed) return;
+    await handleUpdateStatus('Cancelled');
   };
 
   const handleShipOrder = async () => {
@@ -47,19 +83,40 @@ function OrderDetail() {
 
     setError('');
     try {
-      await shipOrderMutation.mutateAsync({ id, trackingID });
-      setSuccess('Order shipped successfully!');
+      await shipOrderMutation.mutateAsync({ id, trackingID: trackingID.trim() });
+      setSuccess(
+        order.status === 'Shipped' ? 'Tracking ID updated.' : 'Order shipped successfully!',
+      );
       setShowShipModal(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to ship order');
+      setError(getErrorMessage(err, 'Failed to ship order'));
     }
+  };
+
+  const openShipModal = () => {
+    // Prefill so correcting a mistyped AWB does not mean retyping all of it.
+    setTrackingID(order?.trackingID || '');
+    setShowShipModal(true);
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-2xl mx-auto py-10">
+        <ErrorState
+          error={orderError}
+          title="Could not load this order"
+          onRetry={refetch}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }
@@ -71,6 +128,8 @@ function OrderDetail() {
       </div>
     );
   }
+
+  const isCancellable = ['Pending', 'Processing', 'Shipped'].includes(order.status);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -236,11 +295,23 @@ function OrderDetail() {
 
                 {order.status === 'Processing' && (
                   <button
-                    onClick={() => setShowShipModal(true)}
+                    onClick={openShipModal}
                     className="w-full bg-amber-50 text-amber-700 py-2 rounded font-medium text-sm hover:bg-amber-100 transition-colors flex items-center justify-center gap-2"
                   >
                     <Truck size={16} />
                     Confirm Shipment
+                  </button>
+                )}
+
+                {/* The API accepts /ship again while the order is Shipped, so a
+                    mistyped AWB is fixable instead of permanent. */}
+                {order.status === 'Shipped' && (
+                  <button
+                    onClick={openShipModal}
+                    className="w-full border border-gray-200 text-gray-600 py-2 rounded font-medium text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Pencil size={14} />
+                    Correct Tracking ID
                   </button>
                 )}
 
@@ -276,17 +347,33 @@ function OrderDetail() {
                 <h4 className="font-bold text-sm text-heritage-charcoal">3. Completion</h4>
                 <p className="text-xs text-gray-500 mt-1 mb-3">Ensure customer received items.</p>
 
-                {order.status === 'Shipped' && (
+                {['Processing', 'Shipped'].includes(order.status) && (
                   <button
                     onClick={() => handleUpdateStatus('Delivered')}
                     disabled={updateStatusMutation.isPending}
-                    className="w-full bg-green-50 text-green-700 py-2 rounded font-medium text-sm hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-green-50 text-green-700 py-2 rounded font-medium text-sm hover:bg-green-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <CheckCircle size={16} />
-                    Mark as Delivered
+                    {updateStatusMutation.isPending ? 'Updating...' : 'Mark as Delivered'}
                   </button>
                 )}
               </div>
+
+              {isCancellable && (
+                <div className="pt-4 mt-2 border-t border-gray-100">
+                  <button
+                    onClick={handleCancelOrder}
+                    disabled={updateStatusMutation.isPending}
+                    className="w-full bg-red-50 text-red-700 py-2 rounded font-medium text-sm hover:bg-red-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <XCircle size={16} />
+                    {updateStatusMutation.isPending ? 'Working...' : 'Cancel Order'}
+                  </button>
+                  <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
+                    Re-lists the items and refunds a captured payment. Final once done.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -361,7 +448,7 @@ function OrderDetail() {
       <Modal
         isOpen={showShipModal}
         onClose={() => setShowShipModal(false)}
-        title="Confirm Shipment"
+        title={order.status === 'Shipped' ? 'Correct Tracking ID' : 'Confirm Shipment'}
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
@@ -395,7 +482,11 @@ function OrderDetail() {
               className="px-6 py-2 bg-luxury-gold text-white rounded-md hover:bg-luxury-gold/90 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               <Truck size={18} />
-              {shipOrderMutation.isPending ? 'Processing...' : 'Confirm Dispatch'}
+              {shipOrderMutation.isPending
+                ? 'Processing...'
+                : order.status === 'Shipped'
+                  ? 'Save Tracking ID'
+                  : 'Confirm Dispatch'}
             </button>
           </div>
         </div>

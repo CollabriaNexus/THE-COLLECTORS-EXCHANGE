@@ -166,15 +166,24 @@ function CodeManager({ codes, onClose }) {
   const submitCreate = async (event) => {
     event.preventDefault();
     if (!form.title.trim() || !form.targetUrl.trim()) return;
-    await createMutation.mutateAsync(form);
-    setForm({ title: '', targetUrl: '' });
+    try {
+      await createMutation.mutateAsync(form);
+      setForm({ title: '', targetUrl: '' });
+    } catch {
+      // Rendered from createMutation.isError below; caught so the rejection is
+      // not an unhandled promise and the typed values survive for a retry.
+    }
   };
 
   const saveEdit = async () => {
     if (!editingId) return;
-    await updateMutation.mutateAsync({ id: editingId, ...draft });
-    setEditingId(null);
-    setDraft({});
+    try {
+      await updateMutation.mutateAsync({ id: editingId, ...draft });
+      setEditingId(null);
+      setDraft({});
+    } catch {
+      // Keep the row in edit mode so the operator can retry or cancel.
+    }
   };
 
   return (

@@ -5,6 +5,7 @@ import { useProducts, useUpdateProduct } from '../hooks/api/useProducts';
 import { useCreateManualOrder } from '../hooks/api/useOrders';
 import Table from '../components/ui/Table';
 import StatusBadge from '../components/ui/StatusBadge';
+import ErrorState from '../components/ui/ErrorState';
 import ManualOrderModal from '../components/ManualOrderModal';
 import ListingCategorySelect from '../components/ListingCategorySelect';
 import CustomNoteCell from '../components/CustomNoteCell';
@@ -29,7 +30,14 @@ function Products() {
   const updateProductMutation = useUpdateProduct();
   const { columns: customColumns, addColumn, renameColumn, removeColumn } = useCustomColumns();
 
-  const { data: products, isLoading } = useProducts({
+  const {
+    data: products,
+    isLoading,
+    isError,
+    error: productsError,
+    refetch,
+    isFetching,
+  } = useProducts({
     category: categoryFilter !== 'all' ? categoryFilter : undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
     search: searchQuery || undefined,
@@ -260,11 +268,15 @@ function Products() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-luxury-gold focus:border-transparent outline-none"
             >
+              {/* Values must match the ProductStatus enum in the Prisma schema
+                  exactly — "In Review" (with a space) is not a member, so the
+                  filter used to blow the whole product list up server-side. */}
               <option value="all">All Statuses</option>
               <option value="Pending">Pending</option>
-              <option value="In Review">In Review</option>
+              <option value="In_Review">In Review</option>
               <option value="Approved">Approved</option>
               <option value="Rejected">Rejected</option>
+              <option value="Sold">Sold</option>
             </select>
           </div>
 
@@ -328,13 +340,22 @@ function Products() {
       </div>
 
       {/* Table */}
-      <Table
-        columns={tableColumns}
-        data={products}
-        loading={isLoading}
-        onRowClick={handleRowClick}
-        emptyMessage="No products found"
-      />
+      {isError ? (
+        <ErrorState
+          error={productsError}
+          title="Could not load products"
+          onRetry={refetch}
+          isRetrying={isFetching}
+        />
+      ) : (
+        <Table
+          columns={tableColumns}
+          data={products}
+          loading={isLoading}
+          onRowClick={handleRowClick}
+          emptyMessage="No products found"
+        />
+      )}
 
       {/* Punch Order Success/Error */}
       {punchSuccess && (

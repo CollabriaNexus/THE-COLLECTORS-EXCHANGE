@@ -37,7 +37,9 @@ const createWrapper = () => {
 };
 
 describe('TCEStore', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders page title', () => {
     mockGet.mockResolvedValue({ data: { products: [] } });
@@ -61,7 +63,21 @@ describe('TCEStore', () => {
 
   it('renders product cards', async () => {
     mockGet.mockResolvedValue({
-      data: { products: [{ id: 'p1', title: 'Vintage Watch', category: 'Timepieces', price: 50000, image: 'img.jpg', images: ['img.jpg'], keywords: ['vintage'], condition: 'Excellent', description: 'A fine watch' }] },
+      data: {
+        products: [
+          {
+            id: 'p1',
+            title: 'Vintage Watch',
+            category: 'Timepieces',
+            price: 50000,
+            image: 'img.jpg',
+            images: ['img.jpg'],
+            keywords: ['vintage'],
+            condition: 'Excellent',
+            description: 'A fine watch',
+          },
+        ],
+      },
     });
     render(<TCEStore />, { wrapper: createWrapper() });
     await waitFor(() => {
@@ -86,8 +102,12 @@ describe('TCEStore', () => {
     await waitFor(() => {
       fireEvent.click(screen.getByText('Add Product'));
     });
-    fireEvent.change(screen.getByPlaceholderText(/e\.g\., 1950s Hans Wegner/), { target: { value: 'New Product' } });
-    fireEvent.change(screen.getByPlaceholderText(/Separate with commas/), { target: { value: 'tag1, tag2' } });
+    fireEvent.change(screen.getByPlaceholderText(/e\.g\., 1950s Hans Wegner/), {
+      target: { value: 'New Product' },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Separate with commas/), {
+      target: { value: 'tag1, tag2' },
+    });
     const imageInput = screen.getByPlaceholderText('Primary image URL...');
     fireEvent.change(imageInput, { target: { value: 'https://example.com/img.jpg' } });
     fireEvent.change(screen.getAllByDisplayValue('')[0], { target: { value: '1000' } });
@@ -103,7 +123,21 @@ describe('TCEStore', () => {
   it('starts edit when edit button is clicked on a product card', async () => {
     mockPatch.mockResolvedValue({ data: {} });
     mockGet.mockResolvedValue({
-      data: { products: [{ id: 'p1', title: 'Vintage Watch', category: 'Timepieces', price: 50000, image: 'img.jpg', images: ['img.jpg'], keywords: ['vintage'], condition: 'Excellent', description: 'Desc' }] },
+      data: {
+        products: [
+          {
+            id: 'p1',
+            title: 'Vintage Watch',
+            category: 'Timepieces',
+            price: 50000,
+            image: 'img.jpg',
+            images: ['img.jpg'],
+            keywords: ['vintage'],
+            condition: 'Excellent',
+            description: 'Desc',
+          },
+        ],
+      },
     });
     render(<TCEStore />, { wrapper: createWrapper() });
     await waitFor(() => {
@@ -123,13 +157,58 @@ describe('TCEStore', () => {
     expect(screen.queryByText('New TCE Listing')).not.toBeInTheDocument();
   });
 
-  it('shows Verified badge on product cards', async () => {
+  it('shows a Live badge on a published, approved product', async () => {
     mockGet.mockResolvedValue({
-      data: { products: [{ id: 'p1', title: 'Test Item', category: 'Collectibles', price: 100, image: 'img.jpg', images: ['img.jpg'], keywords: ['test'], condition: 'Mint', description: 'Desc' }] },
+      data: {
+        products: [
+          {
+            id: 'p1',
+            title: 'Test Item',
+            category: 'Collectibles',
+            price: 100,
+            image: 'img.jpg',
+            images: ['img.jpg'],
+            keywords: ['test'],
+            condition: 'Mint',
+            description: 'Desc',
+            status: 'Approved',
+            isPublished: true,
+          },
+        ],
+      },
     });
     render(<TCEStore />, { wrapper: createWrapper() });
     await waitFor(() => {
-      expect(screen.getByText('Verified')).toBeInTheDocument();
+      expect(screen.getByText('Live')).toBeInTheDocument();
     });
+  });
+
+  it('does not claim a sold product is live', async () => {
+    // The badge was hard-coded to "Verified" for every card, so a Sold or
+    // unpublished TCE listing still advertised itself as live and verified.
+    mockGet.mockResolvedValue({
+      data: {
+        products: [
+          {
+            id: 'p1',
+            title: 'Test Item',
+            category: 'Collectibles',
+            price: 100,
+            image: 'img.jpg',
+            images: ['img.jpg'],
+            keywords: ['test'],
+            condition: 'Mint',
+            description: 'Desc',
+            status: 'Sold',
+            isPublished: false,
+          },
+        ],
+      },
+    });
+    render(<TCEStore />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText('Sold')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Live')).not.toBeInTheDocument();
   });
 });

@@ -6,8 +6,10 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
 import KYCDataDisplay from '../components/KYCDataDisplay';
+import ErrorState from '../components/ui/ErrorState';
 import apiClient from '../hooks/api/apiClient';
 import { createKycDocumentResolver } from '../utils/kycDocuments';
+import { getErrorMessage } from '../utils/apiError';
 
 function KYCDetail() {
   const { id } = useParams();
@@ -19,7 +21,7 @@ function KYCDetail() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const { data: user, isLoading } = useKYCDetail(id);
+  const { data: user, isLoading, isError, error: kycError, refetch, isFetching } = useKYCDetail(id);
 
   // `kyc-documents` is private: a stored path has to be exchanged for a
   // short-lived, service-role-signed URL before it can be rendered. Legacy
@@ -40,7 +42,7 @@ function KYCDetail() {
       setNotes('');
       setTimeout(() => navigate('/kyc'), 2000);
     } catch (err) {
-      setError(err.message || 'Failed to approve KYC request');
+      setError(getErrorMessage(err, 'Failed to approve KYC request'));
     }
   };
 
@@ -58,7 +60,7 @@ function KYCDetail() {
       setReason('');
       setTimeout(() => navigate('/kyc'), 2000);
     } catch (err) {
-      setError(err.message || 'Failed to reject KYC request');
+      setError(getErrorMessage(err, 'Failed to reject KYC request'));
     }
   };
 
@@ -66,6 +68,19 @@ function KYCDetail() {
     return (
       <div className="flex items-center justify-center h-96">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-2xl mx-auto py-10">
+        <ErrorState
+          error={kycError}
+          title="Could not load this KYC request"
+          onRetry={refetch}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

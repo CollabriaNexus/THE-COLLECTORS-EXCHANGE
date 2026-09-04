@@ -94,4 +94,19 @@ describe('StatusBadge', () => {
     render(<StatusBadge status="Verified" className="extra-class" />);
     expect(screen.getByText('Verified').className).toContain('extra-class');
   });
+
+  it('renders overrideLabel while keeping the status colour', () => {
+    // ContactMessages passes a colour-carrying status ("Approved") with a
+    // domain label ("REPLIED"). The prop was ignored, so every inbox row was
+    // labelled Approved / Pending / Under_Review instead.
+    const { container } = render(<StatusBadge status="Approved" overrideLabel="REPLIED" />);
+    expect(screen.getByText('REPLIED')).toBeInTheDocument();
+    expect(screen.queryByText('Approved')).not.toBeInTheDocument();
+    expect(container.firstChild.className).toContain('bg-green-100');
+  });
+
+  it('colours the underscored enum members the same as their spaced forms', () => {
+    const { container } = render(<StatusBadge status="In_Review" />);
+    expect(container.firstChild.className).toContain('bg-blue-100');
+  });
 });

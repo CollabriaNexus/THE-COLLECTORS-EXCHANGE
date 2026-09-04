@@ -21,6 +21,8 @@ import {
 } from '../hooks/api/useVendors';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
+import ErrorState from '../components/ui/ErrorState';
+import { getErrorMessage } from '../utils/apiError';
 
 const STATUS_FILTERS = [
   { key: 'ALL', label: 'All', Icon: Inbox },
@@ -48,28 +50,47 @@ function ContactMessages() {
     return f;
   }, [search, statusFilter]);
 
-  const { data: inbox, isLoading } = useContactMessages(queryFilters);
-  const { data: detail, isLoading: detailLoading } = useContactMessageDetail(selectedId);
+  const {
+    data: inbox,
+    isLoading,
+    isError,
+    error: inboxError,
+    refetch,
+    isFetching,
+  } = useContactMessages(queryFilters);
+  const {
+    data: detail,
+    isLoading: detailLoading,
+    isError: detailIsError,
+    error: detailError,
+  } = useContactMessageDetail(selectedId);
   const updateMutation = useUpdateContactMessage();
 
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const rows = inbox?.data ?? [];
   const total = inbox?.total ?? rows.length;
 
   const handleMarkAsRead = async (id, isRead) => {
+    setErrorMsg('');
     try {
       await updateMutation.mutateAsync({ id, read: isRead });
-    } catch {
-      // Swallow notification
+    } catch (err) {
+      // Was a bare `catch {}` — a failed read/unread toggle looked identical to
+      // a successful one, so the operator had no idea the flag never changed.
+      setErrorMsg(
+        getErrorMessage(err, `Could not mark this message as ${isRead ? 'read' : 'unread'}.`),
+      );
     }
   };
 
   const handleSendReply = async () => {
     if (!replyText.trim() || !selectedId) return;
     setSending(true);
+    setErrorMsg('');
     try {
       await updateMutation.mutateAsync({
         id: selectedId,
@@ -78,9 +99,12 @@ function ContactMessages() {
       setSuccessMsg('Reply saved. Wire up email delivery (SMTP/SES) for live sends.');
       setReplyText('');
       setTimeout(() => setSuccessMsg(''), 6000);
-    } catch {
-      setSuccessMsg('Failed to send reply.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      // A failure used to be written into successMsg, i.e. rendered inside the
+      // GREEN success banner — "Failed to send reply." styled as a success.
+      setErrorMsg(
+        getErrorMessage(err, 'Failed to save the reply. Your draft is still in the box below.'),
+      );
     } finally {
       setSending(false);
     }
@@ -105,8 +129,20 @@ function ContactMessages() {
       </div>
 
       {successMsg && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md text-sm">
+        <div
+          role="status"
+          className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md text-sm"
+        >
           {successMsg}
+        </div>
+      )}
+
+      {errorMsg && (
+        <div
+          role="alert"
+          className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm"
+        >
+          {errorMsg}
         </div>
       )}
 
@@ -150,6 +186,13 @@ function ContactMessages() {
             <div className="py-20 flex items-center justify-center">
               <LoadingSpinner />
             </div>
+          ) : isError ? (
+            <ErrorState
+              error={inboxError}
+              title="Could not load the inbox"
+              onRetry={refetch}
+              isRetrying={isFetching}
+            />
           ) : rows.length === 0 ? (
             <div className="text-center py-20 bg-gray-50">
               <Mail className="mx-auto text-gray-300 mb-4" size={48} />
@@ -209,6 +252,8 @@ function ContactMessages() {
             <div className="py-20 flex items-center justify-center">
               <LoadingSpinner />
             </div>
+          ) : detailIsError ? (
+            <ErrorState error={detailError} title="Could not load this message" />
           ) : !detail ? (
             <div className="py-20 text-center text-gray-500">Message not found</div>
           ) : (
