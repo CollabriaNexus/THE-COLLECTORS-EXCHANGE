@@ -9,7 +9,10 @@ export function useMediaQuery(query) {
   });
 
   useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
+    // Guarded the same way as the lazy initializer above. Unreachable today
+    // (effects need a DOM), but the deferred SSR/hydrateRoot work would make an
+    // unguarded `window` here a crash rather than a graceful no-op.
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
     const mq = window.matchMedia(query);
     const handler = (e) => setMatches(e.matches);
     mq.addEventListener('change', handler);
