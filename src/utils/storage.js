@@ -1,33 +1,31 @@
-// localStorage utility functions for The Collectors' Exchange
-import { supabase } from './supabase';
+// Image/document upload helpers for The Collectors' Exchange.
+//
+// The Supabase client is loaded with a DYNAMIC import inside each upload
+// function rather than at module scope. Every upload here is already async, so
+// awaiting the chunk costs nothing behaviourally — but it keeps
+// `@supabase/supabase-js` (GoTrue + realtime + postgrest, ~hundreds of KB) out
+// of the entry bundle. Anonymous visitors reach this module only through the
+// re-exported session helpers below, and they never upload anything.
+//
+// Do NOT reintroduce `import { supabase } from './supabase'` at module scope.
 
-const STORAGE_KEYS = {
-  USER: 'tce_user',
-};
-
-// ============== USER ==============
-export const getUser = () => {
-  const user = localStorage.getItem(STORAGE_KEYS.USER);
-  return user ? JSON.parse(user) : null;
-};
-
-export const setUser = (userData) => {
-  localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
-};
-
-export const clearUser = () => {
-  localStorage.removeItem(STORAGE_KEYS.USER);
-};
+// Session helpers live in ./session.js, which has zero imports on purpose.
+// Re-exported here so long-standing importers (`import { getUser } from
+// '../utils/storage'`) keep working untouched.
+export { STORAGE_KEYS, getUser, setUser, clearUser } from './session';
 
 // ============== STORAGE / IMAGES ==============
 
 // Private bucket - no public URLs, reads only via short-lived signed URLs.
 export const KYC_BUCKET = 'kyc-documents';
 
+const getSupabase = async () => (await import('./supabase')).supabase;
+
 export const uploadProductImage = async (file) => {
   try {
     if (!file) throw new Error('No file selected');
 
+    const supabase = await getSupabase();
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${fileName}`;
@@ -71,6 +69,7 @@ export const uploadKycDocument = async (file, docType) => {
   try {
     if (!file) throw new Error('No file selected');
 
+    const supabase = await getSupabase();
     const {
       data: { user },
       error: userError,
@@ -99,6 +98,7 @@ export const uploadKycDocument = async (file, docType) => {
 export const uploadBlogImage = async (file) => {
   try {
     if (!file) throw new Error('No file selected');
+    const supabase = await getSupabase();
     const fileExt = file.name.split('.').pop();
     const fileName = `blog/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const { error } = await supabase.storage.from('product-images').upload(fileName, file);
@@ -117,6 +117,7 @@ export const uploadTestimonialImage = async (file) => {
   try {
     if (!file) throw new Error('No file selected');
 
+    const supabase = await getSupabase();
     const fileExt = file.name.split('.').pop();
     const fileName = `testimonials/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${fileName}`;

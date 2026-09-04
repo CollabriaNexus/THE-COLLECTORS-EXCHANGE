@@ -379,8 +379,21 @@ Products by Category (horizontal bar)
 
 ## 10. File Organization
 
+> **There is no `tailwind.config.js`.** This project is on Tailwind v4, which is
+> configured in CSS. `src/index.css` opens with `@import 'tailwindcss'` and has
+> no `@config` directive, so a JS config file would never be read even if one
+> existed — the one that used to sit here was dead weight and had silently
+> drifted from the real values (it still claimed `heritage.bronze` `#8B7355`
+> against the live `#7a6044`, and `gold-muted` `#C9A962` against `#9a7c35`), so
+> it has been deleted. **All design tokens — colors, fonts, shadows, keyframes,
+> animations — live in the `@theme` block at the top of `src/index.css`.** Edit
+> them there. Anything that is not in that file does not exist at runtime; the
+> same goes for Tailwind plugins, which v4 loads with `@plugin` in CSS rather
+> than a `plugins:` array.
+
 ```
-tailwind.config.js          — Custom colors (luxury-gold, heritage), fonts, shadows
+src/index.css               — Tailwind v4 entry + @theme tokens (colors, fonts,
+                              shadows, keyframes) — the single source of truth
 src/
 ├── components/
 │   ├── ui/                 — Reusable: Button, Card, Badge, Toast, Modal

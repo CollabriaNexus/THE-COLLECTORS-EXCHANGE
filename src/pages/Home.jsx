@@ -26,6 +26,7 @@ import Bullet from '../components/Bullet';
 // temporarily removed along with the sections that used them. See
 // docs/TEMPORARY_CHANGES_ROLLBACK.md to restore.
 import { useProducts } from '../hooks/api/useProducts';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useTestimonials } from '../hooks/api/useTestimonials';
 import { useCart, useAddToCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
@@ -169,6 +170,12 @@ const FeaturedProductCard = ({ product, badge = 'Featured', BadgeIcon = Award })
 const FeaturedProductsCarousel = () => {
   const trackRef = useRef(null);
   const [paused, setPaused] = React.useState(false);
+  // The second copy of the rail exists ONLY to make the CSS marquee loop
+  // seamless, and the CSS below kills that animation under
+  // `(hover: none), (pointer: coarse)` — on a phone the rail is a plain
+  // swipeable scroller, so a duplicate there just makes every shopper swipe the
+  // whole catalogue twice. Gate it on the same capability the animation uses.
+  const hoverCapable = useMediaQuery('(hover: hover) and (pointer: fine)');
   // Query featured directly on the server. The old approach fetched only the
   // top-10 by commission and filtered client-side, so featured items that
   // happened to rank below the top 10 never appeared at all. most_rare items
@@ -219,9 +226,24 @@ const FeaturedProductsCarousel = () => {
     </div>
   ));
   // Second copy for the seamless marquee loop — must use distinct keys or React
-  // warns about duplicate keys and mis-reconciles the two halves.
+  // warns about duplicate keys and mis-reconciles the two halves. It is purely
+  // decorative and gets hidden from assistive tech at the wrapper below, the
+  // same way <Marquee> in Motion.jsx already does it.
+  // `aria-hidden` stops a screen reader announcing the whole featured list
+  // twice; `inert` (string form — React 18 rejects the boolean) takes the
+  // duplicated product links out of the tab order so keyboard users don't walk
+  // the same rail a second time. `tabIndex={-1}` is belt-and-braces for
+  // browsers that don't support `inert` yet. Attributes go on each wrapper
+  // rather than a shared parent so the flex/gap geometry of the two halves
+  // stays identical — the marquee's translateX(-50%) depends on it.
   const cardsDuplicate = products.map((product) => (
-    <div key={`dup-${product.id}`} className={CARD_WRAPPER}>
+    <div
+      key={`dup-${product.id}`}
+      className={CARD_WRAPPER}
+      aria-hidden="true"
+      inert=""
+      tabIndex={-1}
+    >
       <FeaturedProductCard product={product} />
     </div>
   ));
@@ -272,7 +294,7 @@ const FeaturedProductsCarousel = () => {
               onMouseLeave={() => setPaused(false)}
             >
               {cards}
-              {cards.length >= 2 && cardsDuplicate}
+              {hoverCapable && cards.length >= 2 && cardsDuplicate}
             </div>
           </div>
         </div>
@@ -393,32 +415,41 @@ const Home = () => {
           the mismatched generic layout background. */}
       <section className="hero-bleed relative overflow-hidden bg-cream">
         <div className="container mx-auto max-w-3xl px-6 md:px-10 py-20 sm:py-28 lg:py-32 text-center">
-          <Reveal delay={100}>
-            <h1
-              className="animate-heritage-clip text-balance text-heritage-charcoal font-serif font-extrabold tracking-tight leading-[1.08] text-[clamp(2.2rem,4.6vw,3.4rem)]"
-              style={{ animationDelay: '0.25s' }}
-            >
-              Great Products, Great Prices
-            </h1>
-          </Reveal>
-          <Reveal delay={500}>
-            <p className="mt-6 mx-auto text-heritage-charcoal/60 text-sm sm:text-base leading-relaxed max-w-md">
-              Browse our collection of everyday products, shipped straight to your door.
-            </p>
-          </Reveal>
-          <Reveal delay={650}>
-            <div className="mt-9 flex justify-center">
-              <Magnetic>
-                <Link
-                  to="/category"
-                  className="inline-flex items-center gap-3 rounded-full bg-heritage-charcoal text-white px-8 py-4 font-sans text-xs tracking-[0.22em] uppercase transition-transform duration-300 hover:scale-[1.02] active:scale-[0.97]"
-                >
-                  Shop Now
-                  <ArrowRight size={16} />
-                </Link>
-              </Magnetic>
-            </div>
-          </Reveal>
+          {/* NOTHING above the fold animates in. This block used to be three
+              stacked <Reveal> wrappers (delay 100 / 500 / 650, each a 950ms
+              transition from opacity:0 + a 64px translate) plus a 1s
+              `animate-heritage-clip` on the h1 — so the CTA was not fully
+              painted until ~1.6s after React mounted. Worse, Reveal is driven
+              by an IntersectionObserver: the hero stayed at opacity:0 until the
+              entry bundle had downloaded, parsed, hydrated AND the observer had
+              fired, and LCP is recorded when the element becomes VISIBLE, not
+              when it is in the DOM. That put a full JS round-trip in front of
+              the largest paint on the most-visited page.
+
+              DESIGN.md §5.4: "Page load: Avoid animate-in. Content should
+              appear immediately." Reveal is still used below the fold, where
+              it is a scroll reward rather than a load-time tax.
+
+              Keep this un-wrapped when the real hero copy is restored (see
+              docs/TEMPORARY_CHANGES_ROLLBACK.md) — the words changed, the
+              performance defect did not. */}
+          <h1 className="text-balance text-heritage-charcoal font-serif font-extrabold tracking-tight leading-[1.08] text-[clamp(2.2rem,4.6vw,3.4rem)]">
+            Great Products, Great Prices
+          </h1>
+          <p className="mt-6 mx-auto text-heritage-charcoal/60 text-sm sm:text-base leading-relaxed max-w-md">
+            Browse our collection of everyday products, shipped straight to your door.
+          </p>
+          <div className="mt-9 flex justify-center">
+            <Magnetic>
+              <Link
+                to="/category"
+                className="inline-flex items-center gap-3 rounded-full bg-heritage-charcoal text-white px-8 py-4 font-sans text-xs tracking-[0.22em] uppercase transition-transform duration-300 hover:scale-[1.02] active:scale-[0.97]"
+              >
+                Shop Now
+                <ArrowRight size={16} />
+              </Link>
+            </Magnetic>
+          </div>
         </div>
       </section>
 

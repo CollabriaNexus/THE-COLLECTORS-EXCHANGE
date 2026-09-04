@@ -77,6 +77,17 @@ export function Reveal({
   ...rest
 }) {
   const [ref, inView] = useReveal({ threshold });
+  // `settled` = the one-shot reveal has finished painting, so the compositor
+  // layer hint can be dropped. Cleared on a timer rather than `transitionend`
+  // because three properties transition here (and none fire at all under
+  // reduced-motion, where `inView` starts true).
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!inView || settled) return;
+    const t = setTimeout(() => setSettled(true), delay + duration + 50);
+    return () => clearTimeout(t);
+  }, [inView, settled, delay, duration]);
+
   const merged = {
     transitionProperty: 'opacity, transform, filter',
     transitionDuration: `${duration}ms`,
@@ -85,7 +96,16 @@ export function Reveal({
     opacity: inView ? 1 : 0,
     transform: inView ? 'translate3d(0,0,0) scale(1)' : hiddenTransform(direction, distance),
     filter: inView || !blur ? 'blur(0px)' : 'blur(12px)',
-    willChange: 'opacity, transform, filter',
+    // `will-change` is a hint to promote the element to its own compositor
+    // layer BEFORE an animation runs — it is not a property to leave on. Reveal
+    // is one-shot, so once the transition has finished the layer is pure cost:
+    // with Stagger wrapping every child in its own Reveal, one page ends up
+    // holding dozens of promoted layers for its entire lifetime. Dropping the
+    // hint at `settled` (rather than at `inView`, which would de-promote
+    // mid-transition and force a repaint) lets the compositor reclaim them.
+    // `undefined` (not 'auto') so React removes the inline declaration
+    // entirely and a caller-supplied `style.willChange` below still wins.
+    willChange: settled ? undefined : 'opacity, transform, filter',
     ...style,
   };
   return (
@@ -218,9 +238,16 @@ export function Magnetic({ children, strength = 0.4, className = '' }) {
  */
 export function Tilt({ children, max = 8, className = '', style = {} }) {
   const ref = useRef(null);
+  // Tilt is mouse-only, and it wraps every card in the product grid. The
+  // unconditional `will-change-transform` it used to carry promoted ~20
+  // never-animated compositor layers on touch devices — real memory pressure on
+  // a mid-range Android for an effect that cannot fire there. Track whether the
+  // listeners actually got attached and only hint the compositor in that case.
+  const [active, setActive] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el || reduceMotion() || !hoverCapable()) return;
+    setActive(true);
     const onMove = (e) => {
       const r = el.getBoundingClientRect();
       const px = (e.clientX - r.left) / r.width - 0.5;
@@ -235,12 +262,13 @@ export function Tilt({ children, max = 8, className = '', style = {} }) {
     return () => {
       el.removeEventListener('mousemove', onMove);
       el.removeEventListener('mouseleave', onLeave);
+      setActive(false);
     };
   }, [max]);
   return (
     <div
       ref={ref}
-      className={`transition-transform duration-300 ease-out will-change-transform ${className}`}
+      className={`transition-transform duration-300 ease-out ${active ? 'will-change-transform' : ''} ${className}`}
       style={style}
     >
       {children}

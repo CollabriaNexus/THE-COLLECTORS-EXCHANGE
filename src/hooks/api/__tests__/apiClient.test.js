@@ -83,7 +83,13 @@ describe('apiClient', () => {
       return null;
     }
 
+    // supabase-js persists its session under `sb-<project-ref>-auth-token`.
+    // The interceptor probes localStorage for that key so a guest never has to
+    // download the auth SDK at all.
+    const SB_SESSION_KEY = 'sb-abcdefgh-auth-token';
+
     it('attaches auth token from session to request headers', async () => {
+      localStorage.setItem(SB_SESSION_KEY, '{"access_token":"test-token"}');
       mockGetSession.mockResolvedValue({ data: { session: { access_token: 'test-token' } } });
       const handler = getRequestSuccessHandler();
       const config = { headers: {} };
@@ -92,6 +98,7 @@ describe('apiClient', () => {
     });
 
     it('does NOT force a session refresh for guests (no wasteful round-trip)', async () => {
+      localStorage.setItem(SB_SESSION_KEY, '{"access_token":"test-token"}');
       mockGetSession.mockResolvedValue({ data: { session: null } });
       const handler = getRequestSuccessHandler();
       const config = { headers: {} };
@@ -103,11 +110,34 @@ describe('apiClient', () => {
     });
 
     it('does not attach auth header when no session or refreshed session', async () => {
+      localStorage.setItem(SB_SESSION_KEY, '{"access_token":"test-token"}');
       mockGetSession.mockResolvedValue({ data: { session: null } });
       mockRefreshSession.mockResolvedValue({ data: { session: null } });
       const handler = getRequestSuccessHandler();
       const config = { headers: {} };
       const result = await handler(config);
+      expect(result.headers.Authorization).toBeUndefined();
+    });
+
+    it('never touches the Supabase client when no session is persisted', async () => {
+      // No `sb-*-auth-token` in localStorage => anonymous visitor => the whole
+      // auth SDK chunk must stay unfetched. This is the entry-bundle saving.
+      mockGetSession.mockResolvedValue({ data: { session: { access_token: 'test-token' } } });
+      const handler = getRequestSuccessHandler();
+      const config = { headers: {} };
+      const result = await handler(config);
+      expect(mockGetSession).not.toHaveBeenCalled();
+      expect(result.headers.Authorization).toBeUndefined();
+      expect(result).toBe(config);
+    });
+
+    it('ignores unrelated localStorage keys when deciding to load Supabase', async () => {
+      localStorage.setItem('tce_user', JSON.stringify({ id: 1 }));
+      localStorage.setItem('sb-something-else', 'x');
+      mockGetSession.mockResolvedValue({ data: { session: { access_token: 'test-token' } } });
+      const handler = getRequestSuccessHandler();
+      const result = await handler({ headers: {} });
+      expect(mockGetSession).not.toHaveBeenCalled();
       expect(result.headers.Authorization).toBeUndefined();
     });
 
