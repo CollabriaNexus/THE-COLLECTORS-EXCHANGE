@@ -163,7 +163,10 @@ describe('Category', () => {
     });
   });
 
-  it('links category navigation to clean landing URLs', () => {
+  // TEMPORARY: the category selector rail is hidden and VISIBLE_CATEGORIES is
+  // filtered down to Accessories only, so none of these landing links render.
+  // Re-enable together with items #2/#4 in docs/TEMPORARY_CHANGES_ROLLBACK.md.
+  it.skip('links category navigation to clean landing URLs', () => {
     renderCategory('/category');
 
     expect(document.querySelector('a[href="/category/timepieces/"]')).toBeInTheDocument();

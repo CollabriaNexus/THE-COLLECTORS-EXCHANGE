@@ -1,8 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { HelmetProvider } from 'react-helmet-async';
-import { MemoryRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { describe, it, expect, vi } from 'vitest';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '../../test/utils';
 import Account from '../Account';
 
 vi.mock('../../hooks/api/useUser', () => ({
@@ -90,49 +88,29 @@ vi.mock('../../hooks/api/apiClient', () => ({
   default: { post: vi.fn(), get: vi.fn() },
 }));
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const renderAccount = () => renderWithProviders(<Account />, { route: '/account' });
 
 describe('Account', () => {
-  beforeEach(() => {
-    queryClient.clear();
+  // Account gates its UI behind an async Supabase session check
+  // ("Authenticating Profile..."), so every assertion has to wait for it.
+  it('renders the account shell once the session check resolves', async () => {
+    renderAccount();
+    expect(await screen.findByRole('heading', { name: /collector profile/i })).toBeInTheDocument();
   });
 
-  it('renders profile tab as default', () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <MemoryRouter>
-            <Account />
-          </MemoryRouter>
-        </HelmetProvider>
-      </QueryClientProvider>,
-    );
-    expect(screen.getByText(/profile/i)).toBeInTheDocument();
+  it('renders tab navigation', async () => {
+    renderAccount();
+    // Section labels come from the `sections` list in Account.jsx. They are
+    // rendered twice (desktop sidebar + mobile section index), so match all.
+    expect((await screen.findAllByText('My Orders')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Listings').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Notifications').length).toBeGreaterThan(0);
   });
 
-  it('renders tab navigation', () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <MemoryRouter>
-            <Account />
-          </MemoryRouter>
-        </HelmetProvider>
-      </QueryClientProvider>,
-    );
-    expect(screen.getByText(/orders/i)).toBeInTheDocument();
-  });
-
-  it('renders edit profile section', () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <MemoryRouter>
-            <Account />
-          </MemoryRouter>
-        </HelmetProvider>
-      </QueryClientProvider>,
-    );
-    expect(screen.getByText(/personal information/i)).toBeInTheDocument();
+  it('renders edit profile section', async () => {
+    renderAccount();
+    // The profile card is headed "Collector Profile" (there is no
+    // "Personal Information" heading in the current markup).
+    expect(await screen.findByRole('heading', { name: /collector profile/i })).toBeInTheDocument();
   });
 });

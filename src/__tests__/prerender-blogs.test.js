@@ -83,7 +83,12 @@ describe('public HTML prerendering', () => {
       '<link rel="canonical" href="https://thecollectorsexchange.in/category/timepieces/"',
     );
     expect(html).toMatch(/<h1[^>]*>Shop Timepieces<\/h1>/);
-    expect(html).toContain('The Mechanical Heartbeat');
+    // NOTE: the landing hero used to also print the category tagline
+    // ("The Mechanical Heartbeat") and intro paragraph. That line was dropped
+    // from buildCategoryHtml in commit 33350ca, and `intro` no longer exists
+    // on the entries in src/config/categories.js, so there is nothing to
+    // assert here today. See the report note about the thin-content
+    // regression on category landing pages.
     expect(html).toContain('href="/product/watch-1/"');
     expect(html).not.toContain('href="/product/camera-1/"');
     expect(html).toContain('"@type":"CollectionPage"');

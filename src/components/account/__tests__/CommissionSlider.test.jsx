@@ -41,14 +41,17 @@ describe('CommissionSlider', () => {
     expect(screen.getByText(/45/)).toBeInTheDocument();
   });
 
+  // Tier names appear in several places at once (the header readout, the tier
+  // quick-pick buttons, the progress-bar end labels), so assert on the header
+  // readout next to the percentage — that is the one showing the ACTIVE tier.
   it('shows Promoted badge at 20%', () => {
     render(<CommissionSlider {...defaultProps} value={20} />);
-    expect(screen.getByText('Promoted')).toBeInTheDocument();
+    expect(screen.getByText('20%').parentElement).toHaveTextContent('Promoted');
   });
 
   it('shows Premium badge at 25%', () => {
     render(<CommissionSlider {...defaultProps} value={25} />);
-    expect(screen.getByText('Premium')).toBeInTheDocument();
+    expect(screen.getByText('25%').parentElement).toHaveTextContent('Premium');
   });
 
   it('shows Maximum Boost at 25%', () => {

@@ -1,16 +1,29 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-vi.mock('../../../utils/storage', () => ({
-  getAuthToken: vi.fn(),
+// apiClient now reads the LIVE Supabase session on every request instead of a
+// static token from localStorage, and clears only the admin session state on a
+// 401. Mock every export it actually imports.
+const mockGetSession = vi.fn();
+
+vi.mock('../../../utils/supabase', () => ({
+  supabase: { auth: { getSession: mockGetSession } },
 }));
 
-import { getAuthToken } from '../../../utils/storage';
+vi.mock('../../../utils/storage', () => ({
+  getAuthToken: vi.fn(),
+  clearUser: vi.fn(),
+  clearAuthToken: vi.fn(),
+}));
+
+import { clearUser, clearAuthToken } from '../../../utils/storage';
 
 describe('apiClient', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetSession.mockResolvedValue({ data: { session: null } });
     delete window.location;
-    window.location = { href: '' };
+    // The 401 handler reads location.pathname to avoid a redirect loop.
+    window.location = { href: '', pathname: '/orders' };
     localStorage.clear();
   });
 
@@ -21,21 +34,19 @@ describe('apiClient', () => {
     vi.unstubAllEnvs();
   });
 
-  it('attaches Authorization header when token exists', async () => {
-    getAuthToken.mockReturnValue('test-token');
+  it('attaches Authorization header when a supabase session exists', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'test-token' } } });
     const mod = await import('../apiClient');
     const interceptor = mod.default.interceptors.request.handlers[0];
-    const config = { headers: {} };
-    const result = interceptor.fulfilled(config);
+    const result = await interceptor.fulfilled({ headers: {} });
     expect(result.headers.Authorization).toBe('Bearer test-token');
   });
 
-  it('does not attach Authorization header when no token', async () => {
-    getAuthToken.mockReturnValue(null);
+  it('does not attach Authorization header when there is no session', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: null } });
     const mod = await import('../apiClient');
     const interceptor = mod.default.interceptors.request.handlers[0];
-    const config = { headers: {} };
-    const result = interceptor.fulfilled(config);
+    const result = await interceptor.fulfilled({ headers: {} });
     expect(result.headers.Authorization).toBeUndefined();
   });
 
@@ -46,14 +57,24 @@ describe('apiClient', () => {
     await expect(interceptor.rejected(err)).rejects.toThrow('Request error');
   });
 
-  it('response interceptor clears storage and redirects on 401', async () => {
+  it('response interceptor clears session state and redirects on 401', async () => {
     const mod = await import('../apiClient');
     const interceptor = mod.default.interceptors.response.handlers[0];
-    localStorage.setItem('tce_admin_user', 'test');
     const err = { response: { status: 401 } };
     await expect(interceptor.rejected(err)).rejects.toEqual(err);
-    expect(localStorage.getItem('tce_admin_user')).toBeNull();
+    expect(clearUser).toHaveBeenCalled();
+    expect(clearAuthToken).toHaveBeenCalled();
     expect(window.location.href).toBe('/login');
+  });
+
+  it('response interceptor does not redirect when already on /login', async () => {
+    window.location = { href: '', pathname: '/login' };
+    const mod = await import('../apiClient');
+    const interceptor = mod.default.interceptors.response.handlers[0];
+    const err = { response: { status: 401 } };
+    await expect(interceptor.rejected(err)).rejects.toEqual(err);
+    expect(clearUser).toHaveBeenCalled();
+    expect(window.location.href).toBe('');
   });
 
   it('response interceptor passes through successful responses', async () => {
@@ -68,5 +89,6 @@ describe('apiClient', () => {
     const interceptor = mod.default.interceptors.response.handlers[0];
     const err = { response: { status: 500 } };
     await expect(interceptor.rejected(err)).rejects.toEqual(err);
+    expect(clearUser).not.toHaveBeenCalled();
   });
 });

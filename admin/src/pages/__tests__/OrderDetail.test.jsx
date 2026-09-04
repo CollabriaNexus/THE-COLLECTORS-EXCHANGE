@@ -32,11 +32,28 @@ const createWrapper = () => {
 };
 
 const mockOrder = {
-  id: 'order123', status: 'Pending', createdAt: '2024-01-01T00:00:00Z',
-  totalAmount: 2500, shippingAddress: '123 Main St', city: 'Mumbai', state: 'MH', zipCode: '400001',
-  phone: '9999999999', trackingID: null,
+  id: 'order123',
+  status: 'Pending',
+  createdAt: '2024-01-01T00:00:00Z',
+  totalAmount: 2500,
+  shippingAddress: '123 Main St',
+  city: 'Mumbai',
+  state: 'MH',
+  zipCode: '400001',
+  phone: '9999999999',
+  trackingID: null,
+  // The "View Customer History" link is gated on the order's own userId
+  // column (not order.user.id), which is what the API returns.
+  userId: 'u1',
   user: { id: 'u1', name: 'John Doe', email: 'john@test.com' },
-  items: [{ id: 'item1', product: { image: 'img.jpg', title: 'Product A', category: 'Timepieces' }, price: 2500, quantity: 1 }],
+  items: [
+    {
+      id: 'item1',
+      product: { image: 'img.jpg', title: 'Product A', category: 'Timepieces' },
+      price: 2500,
+      quantity: 1,
+    },
+  ],
 };
 
 describe('OrderDetail', () => {
@@ -75,7 +92,9 @@ describe('OrderDetail', () => {
     await waitFor(() => {
       fireEvent.click(screen.getByText('Mark as Processing'));
     });
-    expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/status', { status: 'Processing' });
+    expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/status', {
+      status: 'Processing',
+    });
   });
 
   it('opens ship modal and ships order', async () => {
@@ -89,7 +108,9 @@ describe('OrderDetail', () => {
     fireEvent.change(awbInput, { target: { value: 'AWB123' } });
     fireEvent.click(screen.getByText('Confirm Dispatch'));
     await waitFor(() => {
-      expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/ship', { trackingID: 'AWB123' });
+      expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/ship', {
+        trackingID: 'AWB123',
+      });
     });
   });
 
@@ -112,7 +133,9 @@ describe('OrderDetail', () => {
     await waitFor(() => {
       fireEvent.click(screen.getByText('Mark as Delivered'));
     });
-    expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/status', { status: 'Delivered' });
+    expect(mockPatch).toHaveBeenCalledWith('/admin/orders/order123/status', {
+      status: 'Delivered',
+    });
   });
 
   it('shows customer profile section with link', async () => {
@@ -124,7 +147,9 @@ describe('OrderDetail', () => {
   });
 
   it('shows tracking info when trackingID exists', async () => {
-    mockGet.mockResolvedValue({ data: { ...mockOrder, status: 'Shipped', trackingID: 'TRACK123' } });
+    mockGet.mockResolvedValue({
+      data: { ...mockOrder, status: 'Shipped', trackingID: 'TRACK123' },
+    });
     render(<OrderDetail />, { wrapper: createWrapper() });
     await waitFor(() => {
       expect(screen.getByText('TRACK123')).toBeInTheDocument();

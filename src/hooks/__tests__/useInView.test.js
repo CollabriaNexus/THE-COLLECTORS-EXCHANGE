@@ -1,5 +1,30 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import React from 'react';
+import { render, renderHook, act } from '@testing-library/react';
+
+/**
+ * useInView only wires up the IntersectionObserver when its ref is actually
+ * attached to a DOM node — the effect runs once on mount and bails out if
+ * `ref.current` is null. `renderHook` never attaches the ref to anything, and
+ * assigning `result.current[0].current` afterwards + `rerender()` does not
+ * re-run a `[]`-dep effect, so nothing was ever observed.
+ *
+ * This probe component attaches the ref during the commit phase, before
+ * effects run, which is how the hook is used in real components.
+ */
+function makeProbe(useInView) {
+  return function Probe({ options }) {
+    const [ref, inView] = useInView(options);
+    return React.createElement('div', {
+      ref,
+      'data-testid': 'probe',
+      'data-inview': String(inView),
+    });
+  };
+}
+
+const inView = () =>
+  document.querySelector('[data-testid="probe"]').getAttribute('data-inview') === 'true';
 
 describe('useInView', () => {
   it('returns [ref, false] initially', async () => {
@@ -17,23 +42,16 @@ describe('useInView', () => {
 
   it('calls observe with the ref element', async () => {
     const observe = vi.fn();
-    const unobserve = vi.fn();
-    const disconnect = vi.fn();
     global.IntersectionObserver = vi.fn(() => ({
-      observe: (el) => {
-        observe(el);
-      },
-      unobserve,
-      disconnect,
+      observe,
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
     }));
 
     const { useInView } = await import('../useInView');
-    const { result, rerender } = renderHook(() => useInView());
-    const ref = result.current[0];
-    const div = document.createElement('div');
-    ref.current = div;
-    rerender();
-    expect(observe).toHaveBeenCalledWith(div);
+    const Probe = makeProbe(useInView);
+    const { getByTestId } = render(React.createElement(Probe));
+    expect(observe).toHaveBeenCalledWith(getByTestId('probe'));
   });
 
   it('sets inView to true when element becomes intersecting', async () => {
@@ -44,15 +62,12 @@ describe('useInView', () => {
     });
 
     const { useInView } = await import('../useInView');
-    const { result, rerender } = renderHook(() => useInView());
-    const ref = result.current[0];
-    const div = document.createElement('div');
-    ref.current = div;
-    rerender();
+    const Probe = makeProbe(useInView);
+    render(React.createElement(Probe));
     act(() => {
       callback([{ isIntersecting: true }]);
     });
-    expect(result.current[1]).toBe(true);
+    expect(inView()).toBe(true);
   });
 
   it('does not set inView when element is not intersecting', async () => {
@@ -63,15 +78,12 @@ describe('useInView', () => {
     });
 
     const { useInView } = await import('../useInView');
-    const { result, rerender } = renderHook(() => useInView());
-    const ref = result.current[0];
-    const div = document.createElement('div');
-    ref.current = div;
-    rerender();
+    const Probe = makeProbe(useInView);
+    render(React.createElement(Probe));
     act(() => {
       callback([{ isIntersecting: false }]);
     });
-    expect(result.current[1]).toBe(false);
+    expect(inView()).toBe(false);
   });
 
   it('disconnects observer on unmount', async () => {
@@ -83,7 +95,8 @@ describe('useInView', () => {
     }));
 
     const { useInView } = await import('../useInView');
-    const { unmount } = renderHook(() => useInView());
+    const Probe = makeProbe(useInView);
+    const { unmount } = render(React.createElement(Probe));
     unmount();
     expect(disconnect).toHaveBeenCalled();
   });
@@ -96,7 +109,8 @@ describe('useInView', () => {
     }));
 
     const { useInView } = await import('../useInView');
-    renderHook(() => useInView());
+    const Probe = makeProbe(useInView);
+    render(React.createElement(Probe));
     expect(IntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
       threshold: 0.15,
     });
@@ -110,7 +124,8 @@ describe('useInView', () => {
     }));
 
     const { useInView } = await import('../useInView');
-    renderHook(() => useInView({ rootMargin: '10px' }));
+    const Probe = makeProbe(useInView);
+    render(React.createElement(Probe, { options: { rootMargin: '10px' } }));
     expect(IntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
       threshold: 0.15,
       rootMargin: '10px',
@@ -125,7 +140,8 @@ describe('useInView', () => {
     }));
 
     const { useInView } = await import('../useInView');
-    renderHook(() => useInView({ threshold: 0.5 }));
+    const Probe = makeProbe(useInView);
+    render(React.createElement(Probe, { options: { threshold: 0.5 } }));
     expect(IntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
       threshold: 0.5,
     });

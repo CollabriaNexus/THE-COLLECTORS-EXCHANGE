@@ -28,7 +28,9 @@ const createWrapper = () => {
 };
 
 describe('Orders', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders the page title', async () => {
     mockGet.mockResolvedValue({ data: [] });
@@ -54,7 +56,15 @@ describe('Orders', () => {
 
   it('renders orders table with data', async () => {
     mockGet.mockResolvedValue({
-      data: [{ id: 'order123', user: { name: 'John', email: 'john@test.com' }, createdAt: '2024-01-01T00:00:00Z', totalAmount: 1500.50, status: 'Pending' }],
+      data: [
+        {
+          id: 'order123',
+          user: { name: 'John', email: 'john@test.com' },
+          createdAt: '2024-01-01T00:00:00Z',
+          totalAmount: 1500.5,
+          status: 'Pending',
+        },
+      ],
     });
     render(<Orders />, { wrapper: createWrapper() });
     await waitFor(() => {
@@ -65,7 +75,15 @@ describe('Orders', () => {
 
   it('navigates to order detail on row click', async () => {
     mockGet.mockResolvedValue({
-      data: [{ id: 'order456', user: { name: 'Jane', email: 'jane@test.com' }, createdAt: '2024-01-01T00:00:00Z', totalAmount: 500, status: 'Shipped' }],
+      data: [
+        {
+          id: 'order456',
+          user: { name: 'Jane', email: 'jane@test.com' },
+          createdAt: '2024-01-01T00:00:00Z',
+          totalAmount: 500,
+          status: 'Shipped',
+        },
+      ],
     });
     render(<Orders />, { wrapper: createWrapper() });
     await waitFor(() => {
@@ -87,7 +105,7 @@ describe('Orders', () => {
   it('searches by query', async () => {
     mockGet.mockResolvedValue({ data: [] });
     render(<Orders />, { wrapper: createWrapper() });
-    const searchInput = await screen.findByPlaceholderText('Search by Order ID or customer...');
+    const searchInput = await screen.findByPlaceholderText(/^Search by Order ID/);
     fireEvent.change(searchInput, { target: { value: 'John' } });
     expect(searchInput.value).toBe('John');
   });

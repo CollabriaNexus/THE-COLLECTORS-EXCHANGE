@@ -3,8 +3,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Login from '../Login';
 
+// The admin login is Google-OAuth only — the email/password form was removed,
+// so the old placeholder-based tests ('admin@example.com', '••••••••',
+// 'Sign In') no longer describe the page. It also gates its whole UI behind an
+// async session check ("Verifying session..."), so assertions must await it.
+
 const mockNavigate = vi.fn();
-const mockSignInWithPassword = vi.fn();
 const mockGetSession = vi.fn();
 const mockOnAuthStateChange = vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }));
 const mockSignOut = vi.fn();
@@ -18,7 +22,6 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../../utils/supabase', () => ({
   supabase: {
     auth: {
-      signInWithPassword: (...args) => mockSignInWithPassword(...args),
       getSession: (...args) => mockGetSession(...args),
       onAuthStateChange: (...args) => mockOnAuthStateChange(...args),
       signOut: (...args) => mockSignOut(...args),
@@ -45,87 +48,80 @@ vi.mock('../../hooks/api/apiClient', () => ({
 
 import { getUser, setUser, setAuthToken } from '../../utils/storage';
 
+const renderLogin = () =>
+  render(
+    <MemoryRouter>
+      <Login />
+    </MemoryRouter>,
+  );
+
+const activeSession = {
+  access_token: 'token123',
+  user: { email: 'admin@test.com' },
+};
+
 describe('Login', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getUser.mockReturnValue(null);
     mockGetSession.mockResolvedValue({ data: { session: null } });
     mockOnAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
+    mockSignOut.mockResolvedValue({ error: null });
     delete window.location;
     window.location = { href: '', origin: 'http://localhost' };
   });
 
-  it('renders the login form', () => {
-    render(<MemoryRouter><Login /></MemoryRouter>);
-    expect(screen.getByText('THE COLLECTORS EXCHANGE')).toBeInTheDocument();
+  it('shows the session-check state before rendering the form', () => {
+    renderLogin();
+    expect(screen.getByText(/verifying session/i)).toBeInTheDocument();
+  });
+
+  it('renders the login form', async () => {
+    renderLogin();
+    expect(await screen.findByText('THE COLLECTORS EXCHANGE')).toBeInTheDocument();
     expect(screen.getByText('Admin Login')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('admin@example.com')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument();
-    expect(screen.getByText('Sign In')).toBeInTheDocument();
-    expect(screen.getByText('Sign in with Google')).toBeInTheDocument();
-  });
-
-  it('updates email and password fields', () => {
-    render(<MemoryRouter><Login /></MemoryRouter>);
-    const emailInput = screen.getByPlaceholderText('admin@example.com');
-    const passInput = screen.getByPlaceholderText('••••••••');
-    fireEvent.change(emailInput, { target: { value: 'admin@test.com' } });
-    fireEvent.change(passInput, { target: { value: 'secret' } });
-    expect(emailInput.value).toBe('admin@test.com');
-    expect(passInput.value).toBe('secret');
-  });
-
-  it('shows error when login fails', async () => {
-    mockSignInWithPassword.mockRejectedValue(new Error('Invalid credentials'));
-    render(<MemoryRouter><Login /></MemoryRouter>);
-    fireEvent.change(screen.getByPlaceholderText('admin@example.com'), { target: { value: 'admin@test.com' } });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'wrong' } });
-    fireEvent.click(screen.getByText('Sign In'));
-    await waitFor(() => {
-      expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
-    });
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
   });
 
   it('shows error for non-admin role after auto-register', async () => {
-    mockSignInWithPassword.mockResolvedValue({
-      data: { session: { access_token: 'token123' } },
-      error: null,
-    });
+    mockGetSession.mockResolvedValue({ data: { session: activeSession } });
     mockGet.mockRejectedValue({ response: { status: 404 } });
     mockPost.mockResolvedValue({ data: { role: 'user' } });
-    render(<MemoryRouter><Login /></MemoryRouter>);
-    fireEvent.change(screen.getByPlaceholderText('admin@example.com'), { target: { value: 'admin@test.com' } });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password' } });
-    fireEvent.click(screen.getByText('Sign In'));
-    await waitFor(() => {
-      expect(screen.getByText('Access denied. Admin privileges required.')).toBeInTheDocument();
-    });
+    renderLogin();
+    expect(
+      await screen.findByText('Access denied. Admin privileges required.'),
+    ).toBeInTheDocument();
+    expect(mockSignOut).toHaveBeenCalled();
   });
 
-  it('successfully logs in admin user', async () => {
-    mockSignInWithPassword.mockResolvedValue({
-      data: { session: { access_token: 'token123' } },
-      error: null,
-    });
-    mockGet.mockResolvedValue({ data: { role: 'admin', name: 'Admin' } });
+  it('shows error for a non-admin existing account', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: activeSession } });
+    mockGet.mockResolvedValue({ data: { role: 'user', name: 'Someone' } });
+    renderLogin();
+    expect(
+      await screen.findByText('Access denied. Admin privileges required.'),
+    ).toBeInTheDocument();
+    expect(setUser).not.toHaveBeenCalled();
+  });
 
-    render(<MemoryRouter><Login /></MemoryRouter>);
-    fireEvent.change(screen.getByPlaceholderText('admin@example.com'), { target: { value: 'admin@test.com' } });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password' } });
-    fireEvent.click(screen.getByText('Sign In'));
+  it('successfully logs in an admin user from an existing session', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: activeSession } });
+    mockGet.mockResolvedValue({ data: { role: 'admin', name: 'Admin' } });
+    renderLogin();
     await waitFor(() => {
       expect(setAuthToken).toHaveBeenCalledWith('token123');
       expect(setUser).toHaveBeenCalledWith({ role: 'admin', name: 'Admin' });
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
     });
   });
 
-  it('disables button while loading', () => {
-    mockSignInWithPassword.mockReturnValue(new Promise(() => {}));
-    render(<MemoryRouter><Login /></MemoryRouter>);
-    fireEvent.change(screen.getByPlaceholderText('admin@example.com'), { target: { value: 'admin@test.com' } });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'p' } });
-    fireEvent.click(screen.getByText('Sign In'));
-    expect(screen.getByText('Signing in...')).toBeInTheDocument();
+  it('redirects straight to the dashboard for an already-stored admin', async () => {
+    getUser.mockReturnValue({ role: 'admin', name: 'Admin' });
+    renderLogin();
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    });
+    expect(mockGetSession).not.toHaveBeenCalled();
   });
 
   it('handles Google login', async () => {
@@ -133,10 +129,21 @@ describe('Login', () => {
       data: { url: 'https://accounts.google.com/o/oauth2/auth' },
       error: null,
     });
-    render(<MemoryRouter><Login /></MemoryRouter>);
-    fireEvent.click(screen.getByText('Sign in with Google'));
+    renderLogin();
+    fireEvent.click(await screen.findByRole('button', { name: /sign in with google/i }));
     await waitFor(() => {
-      expect(mockSignInWithOAuth).toHaveBeenCalled();
+      expect(mockSignInWithOAuth).toHaveBeenCalledWith({
+        provider: 'google',
+        options: { redirectTo: 'http://localhost/login' },
+      });
     });
+    expect(window.location.href).toBe('https://accounts.google.com/o/oauth2/auth');
+  });
+
+  it('shows an error when Google login fails', async () => {
+    mockSignInWithOAuth.mockResolvedValue({ data: null, error: new Error('OAuth blew up') });
+    renderLogin();
+    fireEvent.click(await screen.findByRole('button', { name: /sign in with google/i }));
+    expect(await screen.findByText('OAuth blew up')).toBeInTheDocument();
   });
 });

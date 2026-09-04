@@ -42,8 +42,10 @@ vi.mock('../../components/ConfirmDialog', () => ({
   useConfirm: vi.fn(() => vi.fn(() => Promise.resolve(true))),
 }));
 
+// The page fires an analytics view-track POST and chains .catch() onto it, so
+// the mock must return a promise, not undefined.
 vi.mock('../../hooks/api/apiClient', () => ({
-  default: { post: vi.fn() },
+  default: { post: vi.fn(() => Promise.resolve({ data: {} })) },
 }));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -107,6 +109,7 @@ describe('ProductDetail', () => {
         </HelmetProvider>
       </QueryClientProvider>,
     );
-    expect(screen.getByText(/inquire/i)).toBeInTheDocument();
+    // The primary CTA is a WhatsApp reserve link, not an "Inquire" button.
+    expect(screen.getByRole('link', { name: /reserve via whatsapp/i })).toBeInTheDocument();
   });
 });

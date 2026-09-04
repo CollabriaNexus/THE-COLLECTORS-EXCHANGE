@@ -1,64 +1,55 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import Layout from '../Layout'
+import { describe, it, expect, vi } from 'vitest';
+import { screen, fireEvent } from '@testing-library/react';
+import { Routes, Route } from 'react-router-dom';
+import { renderWithProviders } from '../../test/utils';
+import Layout from '../Layout';
+
+// Layout renders <Header/>, which reads the cart/wishlist via react-query.
+vi.mock('../../hooks/api/useCart', () => ({
+  useCart: vi.fn(() => ({ data: [], isLoading: false })),
+}));
+vi.mock('../../hooks/api/useWishlist', () => ({
+  useWishlist: vi.fn(() => ({ data: [], isLoading: false })),
+}));
+vi.mock('../../utils/storage', () => ({
+  getUser: vi.fn(() => null),
+}));
+
+// The test supplies its own <Routes>, so let renderWithProviders own the
+// router (Helmet + QueryClient come from the same wrapper).
+const renderLayout = (child = <div>page content</div>) =>
+  renderWithProviders(
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={child} />
+      </Route>
+    </Routes>,
+  );
 
 describe('Layout', () => {
   it('renders Header, Outlet and Footer', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<div>page content</div>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    )
-    expect(screen.getByText('page content')).toBeInTheDocument()
-  })
+    renderLayout();
+    expect(screen.getByText('page content')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument();
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument();
+  });
 
   it('renders skip-to-content link', () => {
-    render(
-      <MemoryRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<div />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    )
-    const skipLink = screen.getByText(/skip to content/i)
-    expect(skipLink).toBeInTheDocument()
-  })
+    renderLayout(<div />);
+    expect(screen.getByRole('link', { name: /skip to main content/i })).toBeInTheDocument();
+  });
 
   it('shows scroll-to-top button when scrolled', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<div style={{ height: '2000px' }} />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    )
-    fireEvent.scroll(window, { target: { scrollY: 500 } })
-    const topBtn = screen.getByLabelText(/scroll to top/i)
-    expect(topBtn).toBeInTheDocument()
-  })
+    renderLayout(<div style={{ height: '2000px' }} />);
+    fireEvent.scroll(window, { target: { scrollY: 500 } });
+    expect(screen.getByLabelText(/scroll to top/i)).toBeInTheDocument();
+  });
 
   it('scrolls to top on button click', () => {
-    window.scrollTo = vi.fn()
-    render(
-      <MemoryRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<div />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    )
-    fireEvent.scroll(window, { target: { scrollY: 500 } })
-    fireEvent.click(screen.getByLabelText(/scroll to top/i))
-    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
-  })
-})
+    // window.scrollTo is stubbed in src/test/setup.js (jsdom has no impl).
+    renderLayout(<div />);
+    fireEvent.scroll(window, { target: { scrollY: 500 } });
+    fireEvent.click(screen.getByLabelText(/scroll to top/i));
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+  });
+});

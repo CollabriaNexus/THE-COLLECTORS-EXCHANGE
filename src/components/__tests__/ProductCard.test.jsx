@@ -84,8 +84,10 @@ describe('ProductCard', () => {
 
   it('navigates to product detail on click', () => {
     renderProductCard();
-    const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/product/1');
+    // The card wraps both the image and the title in their own <Link>.
+    const links = screen.getAllByRole('link');
+    expect(links.length).toBeGreaterThan(0);
+    links.forEach((link) => expect(link).toHaveAttribute('href', '/product/1'));
   });
 
   it('renders add to cart button', () => {
