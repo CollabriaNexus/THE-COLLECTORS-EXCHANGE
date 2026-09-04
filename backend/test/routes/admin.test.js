@@ -84,6 +84,7 @@ describe('admin routes', () => {
       payout: {
         findMany: vi.fn(),
         findFirst: vi.fn(),
+        findUnique: vi.fn(),
         count: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
@@ -148,6 +149,99 @@ describe('admin routes', () => {
         headers: { authorization: 'Bearer admin' },
       });
       expect(res.statusCode).toBe(200);
+    });
+
+    // A payout is money. Walking PAID back to PENDING would re-queue an
+    // already-disbursed payout and notify the vendor a second time.
+    it('refuses to move a PAID payout back to PENDING', async () => {
+      mockPrisma.payout.findUnique.mockResolvedValue({
+        id: 'po1',
+        status: 'PAID',
+        paidAt: new Date(),
+      });
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/payouts/po1/status',
+        payload: { status: 'PENDING' },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(409);
+      expect(mockPrisma.payout.update).not.toHaveBeenCalled();
+    });
+
+    // FAILED is recoverable on purpose: a bounced transfer should be retryable
+    // without creating a duplicate payout record.
+    it('allows retrying a FAILED payout', async () => {
+      mockPrisma.payout.findUnique.mockResolvedValue({
+        id: 'po1',
+        status: 'FAILED',
+        paidAt: null,
+      });
+      mockPrisma.payout.update.mockResolvedValue({
+        id: 'po1',
+        amount: 5000,
+        status: 'PROCESSING',
+        vendor: { userId: 'uid' },
+      });
+      mockPrisma.auditLog.create.mockResolvedValue({});
+      mockPrisma.notification.create.mockResolvedValue({});
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/payouts/po1/status',
+        payload: { status: 'PROCESSING' },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+    });
+
+    it('404s when the payout does not exist', async () => {
+      mockPrisma.payout.findUnique.mockResolvedValue(null);
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/payouts/nope/status',
+        payload: { status: 'PAID' },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+
+    // Re-saving PAID must not keep moving the disbursement date forward.
+    it('does not re-stamp paidAt when already PAID', async () => {
+      const originalPaidAt = new Date('2026-01-01T00:00:00.000Z');
+      mockPrisma.payout.findUnique.mockResolvedValue({
+        id: 'po1',
+        status: 'PAID',
+        paidAt: originalPaidAt,
+      });
+      mockPrisma.payout.update.mockResolvedValue({
+        id: 'po1',
+        amount: 5000,
+        status: 'PAID',
+        paidAt: originalPaidAt,
+        vendor: { userId: 'uid' },
+      });
+      mockPrisma.auditLog.create.mockResolvedValue({});
+      mockPrisma.notification.create.mockResolvedValue({});
+      const app = buildApp(mockPrisma);
+      await app.register((await import('../../routes/admin.js')).default);
+      await app.ready();
+      const res = await app.inject({
+        method: 'PATCH',
+        url: '/payouts/po1/status',
+        payload: { status: 'PAID' },
+        headers: { authorization: 'Bearer admin' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mockPrisma.payout.update.mock.calls[0][0].data.paidAt).toBeUndefined();
     });
   });
 
@@ -1042,6 +1136,11 @@ describe('admin routes', () => {
 
   describe('PATCH /payouts/:id/status', () => {
     it('updates payout status', async () => {
+      mockPrisma.payout.findUnique.mockResolvedValue({
+        id: 'po1',
+        status: 'PENDING',
+        paidAt: null,
+      });
       mockPrisma.payout.update.mockResolvedValue({
         id: 'po1',
         amount: 5000,

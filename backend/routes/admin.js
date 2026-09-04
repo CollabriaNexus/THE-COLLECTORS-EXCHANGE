@@ -365,23 +365,23 @@ export default async function adminRoutes(fastify) {
 
       const data = {};
       if (typeof request.body.read === 'boolean') data.read = request.body.read;
-      // NOTE: replyText / repliedAt / repliedBy / status fields come alive
-      //  once the additive migration for ContactMessage is applied. Until then,
-      //  these fields are silently ignored by Prisma (unknown fields in data
-      //  throw only when strict mode; in production the migration should be
-      //  applied before relying on replies).
+      // This used to run `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` via
+      // $executeRawUnsafe on every reply, as self-healing scaffolding from when
+      // the ContactMessage columns were still being rolled out. Removed:
+      //
+      //  - schema.prisma already declares replyText/repliedAt/repliedBy/status,
+      //    and reads of `status` work in production, so the columns exist.
+      //  - It made a routine operator action take an ACCESS EXCLUSIVE lock on
+      //    the table, and swallowed every error, so a genuine failure was
+      //    indistinguishable from the no-op case.
+      //  - Worst of it: it required the application's database role to hold
+      //    ALTER TABLE. An app that can reshape its own schema turns any future
+      //    SQL flaw into a schema-modification flaw. Least privilege says the
+      //    runtime role should not be able to do this at all.
+      //
+      // Schema changes belong in a migration (see docs/migrations/), applied
+      // deliberately before the code that depends on them ships.
       if (typeof request.body.replyText === 'string') {
-        try {
-          await prisma.$executeRawUnsafe(`
-            ALTER TABLE IF EXISTS "ContactMessage"
-              ADD COLUMN IF NOT EXISTS "replyText" TEXT,
-              ADD COLUMN IF NOT EXISTS "repliedAt" TIMESTAMP(3),
-              ADD COLUMN IF NOT EXISTS "repliedBy" TEXT,
-              ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'UNREAD'
-          `);
-        } catch {
-          // Columns may already exist — swallow, proceed with update
-        }
         data.replyText = request.body.replyText;
         data.repliedAt = new Date();
         data.repliedBy = adminId;
@@ -888,6 +888,13 @@ export default async function adminRoutes(fastify) {
             select: {
               id: true,
               name: true,
+              // The admin product page renders a Seller Information card with a
+              // mailto: link and a phone number. Without these it showed an
+              // empty link and "Not provided" on every listing, so an operator
+              // could not contact a seller about their own product without
+              // going hunting through Users. /orders/:id already selects both.
+              email: true,
+              phone: true,
             },
           },
           orderItems: {
@@ -1761,8 +1768,39 @@ export default async function adminRoutes(fastify) {
       const { status } = UpdatePayoutStatusSchema.parse(request.body);
       const adminUser = request.dbUser;
 
+      // A payout is money. The UI treats PAID and FAILED as final, but the API
+      // accepted any status from any other, including walking PAID back to
+      // PENDING - which would re-queue an already-disbursed payout and notify
+      // the vendor a second time. FAILED is recoverable on purpose: a transfer
+      // that bounced should be retryable without creating a duplicate record.
+      const ALLOWED_PAYOUT_TRANSITIONS = {
+        PENDING: ['PROCESSING', 'PAID', 'FAILED'],
+        PROCESSING: ['PAID', 'FAILED'],
+        PAID: [],
+        FAILED: ['PENDING', 'PROCESSING'],
+      };
+
+      const existing = await prisma.payout.findUnique({ where: { id } });
+      if (!existing) {
+        return reply.status(404).send({ error: 'Payout not found' });
+      }
+
+      if (existing.status !== status) {
+        const allowed = ALLOWED_PAYOUT_TRANSITIONS[existing.status] || [];
+        if (!allowed.includes(status)) {
+          return reply.status(409).send({
+            error:
+              existing.status === 'PAID'
+                ? 'This payout is already marked paid and cannot be changed. Create a new payout instead.'
+                : `Cannot change payout from ${existing.status} to ${status}.`,
+          });
+        }
+      }
+
       const data = { status };
-      if (status === 'PAID') {
+      // Stamp paidAt only on the transition into PAID, so re-saving PAID does
+      // not keep moving the disbursement date forward.
+      if (status === 'PAID' && !existing.paidAt) {
         data.paidAt = new Date();
       }
 

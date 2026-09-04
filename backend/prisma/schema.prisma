@@ -367,6 +367,7 @@ model Order {
   items           OrderItem[]
   couponUsages    CouponUsage[]
   reviews         Review[]
+  outboundMessages OutboundMessage[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -430,6 +431,15 @@ model Vendor {
   pickupVerified    Boolean  @default(false)
   pickupVerifiedAt  DateTime?
   pickupVerifiedBy  String?
+
+  // Where the seller's payout actually goes. Deliberately UPI-only: a UPI ID is
+  // far less sensitive than an account number + IFSC, so it keeps this out of
+  // "financial PII needing encryption at rest" territory while still covering
+  // most Indian sellers. Before this existed, sellers saw PENDING payouts for
+  // money that had no destination on file at all.
+  payoutUpi          String?
+  payoutUpiName      String?
+  payoutUpiUpdatedAt DateTime?
 
   rating       Float    @default(0)
   ratingCount  Int      @default(0)
@@ -675,3 +685,59 @@ model QrScan {
   @@index([os])
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin outbox — drafted customer messages the operator sends by hand.
+//
+// There is no transactional email provider wired into this project, and that is
+// a deliberate choice: adding one costs money and would send customer name,
+// address and email to a third-party processor. Instead, order events draft a
+// message here and the admin dashboard renders it with copy-to-clipboard, so
+// the operator sends it from their own mail client. No customer data leaves our
+// infrastructure, and the buyer still gets a receipt.
+//
+// If a provider is ever adopted, this table becomes the send queue rather than
+// being thrown away — status/sentAt/sentBy already model that.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum OutboundMessageType {
+  ORDER_CONFIRMED
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+}
+
+enum OutboundMessageStatus {
+  PENDING
+  SENT
+  SKIPPED
+}
+
+model OutboundMessage {
+  id     String                @id @default(cuid())
+  type   OutboundMessageType
+  status OutboundMessageStatus @default(PENDING)
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Snapshotted at draft time, not joined at read time: the message must still
+  // render exactly as drafted even if the user later edits their profile.
+  recipientEmail String
+  recipientName  String?
+
+  subject  String
+  bodyText String  @db.Text
+  bodyHtml String? @db.Text
+
+  sentAt DateTime?
+  sentBy String?
+  note   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([orderId])
+  @@index([createdAt])
+}
