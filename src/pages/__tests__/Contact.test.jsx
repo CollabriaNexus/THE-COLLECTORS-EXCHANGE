@@ -83,3 +83,44 @@ describe('Contact', () => {
     });
   });
 });
+
+describe('Contact accessibility', () => {
+  it('associates every form control with a label', () => {
+    renderContact();
+    expect(screen.getByLabelText('Name')).toHaveAttribute('id', 'contact-name');
+    expect(screen.getByLabelText('Email')).toHaveAttribute('id', 'contact-email');
+    expect(screen.getByLabelText('Subject')).toHaveAttribute('id', 'contact-subject');
+    expect(screen.getByLabelText('Message')).toHaveAttribute('id', 'contact-message');
+  });
+
+  it('sets autocomplete and input mode on the identity fields', () => {
+    renderContact();
+    expect(screen.getByLabelText('Name')).toHaveAttribute('autocomplete', 'name');
+    const email = screen.getByLabelText('Email');
+    expect(email).toHaveAttribute('autocomplete', 'email');
+    expect(email).toHaveAttribute('inputmode', 'email');
+  });
+
+  // The three info cards used to be <h3>s sitting between the page <h1> and
+  // the form's <h2>, so the outline read h1 -> h3 -> h2.
+  it('keeps the heading outline in order', () => {
+    renderContact();
+    const levels = screen.getAllByRole('heading').map((h) => Number(h.tagName.replace('H', '')));
+    expect(levels[0]).toBe(1);
+    levels.slice(1).forEach((level, i) => {
+      expect(level).toBeLessThanOrEqual(levels[i] + 1);
+    });
+  });
+
+  it('returns home through the router rather than a full page load', async () => {
+    const apiClient = (await import('../../hooks/api/apiClient')).default;
+    apiClient.post.mockResolvedValue({ data: { success: true } });
+    renderContact();
+    fireEvent.submit(fillForm());
+
+    await waitFor(() => {
+      expect(screen.getByText('Message Sent')).toBeInTheDocument();
+    });
+    expect(screen.getByRole('link', { name: /return home/i })).toHaveAttribute('href', '/');
+  });
+});

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { ShoppingBag, User, Heart, Menu, X, Store } from 'lucide-react';
 import { getUser } from '../utils/storage';
@@ -7,10 +7,29 @@ import { useWishlist } from '../hooks/api/useWishlist';
 import { PRIMARY_NAV } from '../config/seo-pages';
 import crestMark from '../assets/brand/crest-mark-160.webp';
 
+// Everything focusable we ever render inside the drawer. Kept in one place so
+// the "move focus in" step and the Tab-cycle trap can never disagree about
+// what counts as focusable.
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// How long the exit animation runs — must match .animate-drawer-out in index.css.
+const DRAWER_EXIT_MS = 300;
+
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // 'closed' | 'open' | 'closing'. The drawer is mounted only for the last
+  // two. A permanently-mounted drawer moved off-screen by a transform keeps
+  // its four links and its close button in the tab order on every page below
+  // 1024px — i.e. for the entire mobile audience — with the focus ring landing
+  // on nothing.
+  const [menuState, setMenuState] = useState('closed');
+  const isMenuOpen = menuState === 'open';
+  const isDrawerMounted = menuState !== 'closed';
+
   const [headerHeight, setHeaderHeight] = useState(0);
   const headerRef = useRef(null);
+  const drawerRef = useRef(null);
+  const menuButtonRef = useRef(null);
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const user = getUser();
@@ -29,6 +48,12 @@ const Header = () => {
   // Nav is always visible — the old hide-until-scroll-or-video-ends behavior
   // existed for the full-bleed video hero, which the homepage no longer has.
   const showNav = true;
+
+  const openMenu = useCallback(() => setMenuState('open'), []);
+  const closeMenu = useCallback(
+    () => setMenuState((prev) => (prev === 'open' ? 'closing' : prev)),
+    [],
+  );
 
   // Keep the reserved spacer height (and the --header-h custom property that
   // pages use to bleed their hero background up behind the floating nav) in
@@ -58,6 +83,79 @@ const Header = () => {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // Unmount the drawer once its exit animation has played out.
+  useEffect(() => {
+    if (menuState !== 'closing') return;
+    const timer = setTimeout(() => setMenuState('closed'), DRAWER_EXIT_MS);
+    return () => clearTimeout(timer);
+  }, [menuState]);
+
+  // Modal behaviour for the open drawer: focus moves in, Tab cycles inside it,
+  // Escape closes it, the page behind it can't scroll, and focus returns to
+  // the hamburger that opened it.
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const panel = drawerRef.current;
+    if (!panel) return;
+    // Captured now so the cleanup below doesn't read a ref that may already
+    // point somewhere else by the time it runs.
+    const opener = menuButtonRef.current;
+
+    const focusables = () => Array.from(panel.querySelectorAll(FOCUSABLE));
+
+    // Move focus into the drawer. The close button is first in DOM order, so
+    // the first thing a keyboard user lands on is the way back out.
+    const first = focusables()[0];
+    (first || panel).focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMenu();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const items = focusables();
+      if (items.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const firstEl = items[0];
+      const lastEl = items[items.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey) {
+        if (active === firstEl || !panel.contains(active)) {
+          event.preventDefault();
+          lastEl.focus();
+        }
+      } else if (active === lastEl || !panel.contains(active)) {
+        event.preventDefault();
+        firstEl.focus();
+      }
+    };
+
+    // Each drawer link closes the drawer itself, but a hardware/gesture Back
+    // while it is open would otherwise leave it hanging over the new page.
+    const handlePopState = () => closeMenu();
+
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('popstate', handlePopState);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('popstate', handlePopState);
+      document.body.style.overflow = previousOverflow;
+      // Return focus to the control that opened the drawer, so keyboard users
+      // resume where they left off instead of at the top of the document.
+      opener?.focus();
+    };
+  }, [isMenuOpen, closeMenu]);
 
   const navItems = PRIMARY_NAV;
 
@@ -89,7 +187,15 @@ const Header = () => {
           <div className="px-3 sm:px-6 lg:mx-auto lg:max-w-7xl lg:px-8 xl:px-10 pt-2 pb-2 md:py-3.5">
             {/* Mobile layout */}
             <div className="flex items-center justify-between lg:hidden min-h-[40px]">
-              <Link to="/" className="flex items-center gap-2 shrink-0">
+              {/* The crest is decorative (alt=""), so the link needs its own
+                  accessible name — otherwise this is an unnamed link at the
+                  very top of the tab order. The desktop version below gets its
+                  name from the wordmark span inside the same Link. */}
+              <Link
+                to="/"
+                aria-label="The Collectors Exchange — home"
+                className="flex items-center gap-2 shrink-0"
+              >
                 <img src={crestMark} alt="" className="h-8 w-auto" />
               </Link>
               <Link
@@ -100,7 +206,8 @@ const Header = () => {
                 <br className="hidden xs:block sm:hidden" /> EXCHANGE
               </Link>
               <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                ref={menuButtonRef}
+                onClick={() => (isMenuOpen ? closeMenu() : openMenu())}
                 aria-label="Toggle menu"
                 aria-expanded={isMenuOpen}
                 className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors shrink-0"
@@ -180,86 +287,101 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Mobile Menu — slide-in drawer (outside header for correct z-stacking) */}
-      <>
-        {/* Backdrop overlay */}
-        <div
-          className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] transition-opacity duration-500 lg:hidden ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-          onClick={() => setIsMenuOpen(false)}
-          aria-hidden="true"
-        />
-        {/* Drawer panel */}
-        <div
-          className={`fixed top-0 right-0 h-full w-[280px] max-w-[80vw] rounded-l-3xl bg-white shadow-2xl z-[70] lg:hidden transition-transform duration-500 ease-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
-          aria-modal="true"
-          aria-label="Navigation menu"
-        >
-          <div className="flex flex-col h-full pt-12">
-            {/* Drawer header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <span className="text-xs uppercase tracking-[0.25em] text-heritage-bronze/60 font-sans font-medium">
-                Navigation
-              </span>
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                aria-label="Close menu"
-                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            {/* Nav items */}
-            <nav className="flex-1 overflow-y-auto py-4 px-5">
-              <div className="flex flex-col space-y-1">
-                {navItems.map((item, index) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.path}
-                      onClick={() => setIsMenuOpen(false)}
-                      style={{ transitionDelay: `${index * 60}ms` }}
-                      className={`group relative text-sm font-medium uppercase tracking-[0.2em] py-3.5 px-4 rounded-sm transition-all duration-400 ease-out ${
-                        isActive
-                          ? 'text-luxury-gold bg-luxury-gold/5'
-                          : 'text-heritage-charcoal hover:text-luxury-gold hover:bg-heritage-cream'
-                      } ${isMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`}
-                    >
-                      <span className="relative z-10">{item.name}</span>
-                      {/* Left gold accent line on hover/active */}
-                      <span
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-0 transition-all duration-300 rounded-full ${isActive ? 'bg-luxury-gold h-3/5' : 'group-hover:bg-luxury-gold/50 group-hover:h-2/5'}`}
-                      />
-                    </Link>
-                  );
-                })}
+      {/* Mobile Menu — slide-in drawer (outside the header for correct
+          z-stacking). Mounted only while open or animating out. */}
+      {isDrawerMounted && (
+        <>
+          {/* Backdrop overlay */}
+          <div
+            className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] transition-opacity duration-300 lg:hidden ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+            onClick={closeMenu}
+            aria-hidden="true"
+          />
+          {/* Drawer panel */}
+          <div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+            tabIndex={-1}
+            // During the ~300ms exit the panel is still painted but must not
+            // be reachable — focus has already gone back to the hamburger.
+            inert={isMenuOpen ? undefined : ''}
+            aria-hidden={isMenuOpen ? undefined : 'true'}
+            className={`fixed top-0 right-0 h-full w-[280px] max-w-[80vw] rounded-l-3xl bg-white shadow-2xl z-[70] lg:hidden focus:outline-none ${
+              isMenuOpen ? 'animate-drawer-in' : 'animate-drawer-out pointer-events-none'
+            }`}
+          >
+            <div className="flex flex-col h-full pt-12">
+              {/* Drawer header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <span className="text-xs uppercase tracking-[0.25em] text-heritage-bronze font-sans font-medium">
+                  Navigation
+                </span>
+                <button
+                  onClick={closeMenu}
+                  aria-label="Close menu"
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X size={18} aria-hidden="true" />
+                </button>
               </div>
-              <div className="border-t border-luxury-gold/20 my-5" />
-              {/* Links entry */}
-              <Link
-                to="/links"
-                onClick={() => setIsMenuOpen(false)}
-                className={`group relative flex items-center text-sm font-medium uppercase tracking-[0.2em] py-3.5 px-4 rounded-sm transition-all duration-400 ease-out ${
-                  location.pathname === '/links'
-                    ? 'text-luxury-gold bg-luxury-gold/5'
-                    : 'text-heritage-charcoal hover:text-luxury-gold hover:bg-heritage-cream'
-                } ${isMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`}
-              >
-                <span className="relative z-10">Links</span>
-                <span
-                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-0 transition-all duration-300 rounded-full ${location.pathname === '/links' ? 'bg-luxury-gold h-3/5' : 'group-hover:bg-luxury-gold/50 group-hover:h-2/5'}`}
-                />
-              </Link>
-            </nav>
-            {/* Drawer footer */}
-            <div className="px-5 py-4 border-t border-gray-100">
-              <p className="text-[10px] text-heritage-bronze/40 uppercase tracking-[0.15em] font-sans text-center">
-                The Collectors Exchange
-              </p>
+              {/* Nav items */}
+              <nav aria-label="Mobile menu" className="flex-1 overflow-y-auto py-4 px-5">
+                <div className="flex flex-col space-y-1">
+                  {navItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.path}
+                        onClick={closeMenu}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={`group relative text-sm font-medium uppercase tracking-[0.2em] py-3.5 px-4 rounded-sm transition-colors duration-300 ease-out ${
+                          isActive
+                            ? 'text-luxury-gold bg-luxury-gold/5'
+                            : 'text-heritage-charcoal hover:text-luxury-gold hover:bg-heritage-cream'
+                        }`}
+                      >
+                        <span className="relative z-10">{item.name}</span>
+                        {/* Left gold accent line on hover/active */}
+                        <span
+                          aria-hidden="true"
+                          className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-0 transition-all duration-300 rounded-full ${isActive ? 'bg-luxury-gold h-3/5' : 'group-hover:bg-luxury-gold/50 group-hover:h-2/5'}`}
+                        />
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="border-t border-luxury-gold/20 my-5" />
+                {/* Links entry */}
+                <Link
+                  to="/links"
+                  onClick={closeMenu}
+                  aria-current={location.pathname === '/links' ? 'page' : undefined}
+                  className={`group relative flex items-center text-sm font-medium uppercase tracking-[0.2em] py-3.5 px-4 rounded-sm transition-colors duration-300 ease-out ${
+                    location.pathname === '/links'
+                      ? 'text-luxury-gold bg-luxury-gold/5'
+                      : 'text-heritage-charcoal hover:text-luxury-gold hover:bg-heritage-cream'
+                  }`}
+                >
+                  <span className="relative z-10">Links</span>
+                  <span
+                    aria-hidden="true"
+                    className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-0 transition-all duration-300 rounded-full ${location.pathname === '/links' ? 'bg-luxury-gold h-3/5' : 'group-hover:bg-luxury-gold/50 group-hover:h-2/5'}`}
+                  />
+                </Link>
+              </nav>
+              {/* Drawer footer */}
+              <div className="px-5 py-4 border-t border-gray-100">
+                <p className="text-[10px] text-heritage-bronze uppercase tracking-[0.15em] font-sans text-center">
+                  The Collectors Exchange
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </>
+        </>
+      )}
 
       {/* Mobile Bottom Navigation Bar */}
       <nav
@@ -279,10 +401,16 @@ const Header = () => {
             <Link
               key={item.name}
               to={item.path}
-              className={`group relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-1 transition-all duration-300 ease-out ${isActive ? 'text-luxury-gold' : 'text-cream/50 hover:text-luxury-gold'}`}
+              aria-current={isActive ? 'page' : undefined}
+              // Inactive tabs used to be text-cream/50 with a further
+              // opacity-60 on the label span; the two compounded to ~30%
+              // effective alpha (2.60:1 on the bar). One step of transparency
+              // only, and enough of it to pass.
+              className={`group relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-1 transition-all duration-300 ease-out ${isActive ? 'text-luxury-gold' : 'text-cream/70 hover:text-luxury-gold'}`}
             >
               {/* Active indicator dot */}
               <span
+                aria-hidden="true"
                 className={`absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-300 ${isActive ? 'bg-luxury-gold opacity-100 scale-100' : 'opacity-0 scale-0'}`}
               />
               <div className="relative transition-transform duration-300 ease-out group-hover:scale-110">
@@ -299,9 +427,7 @@ const Header = () => {
                   </span>
                 )}
               </div>
-              <span
-                className={`text-[10px] uppercase tracking-wider font-medium leading-none transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-60 group-hover:opacity-100'}`}
-              >
+              <span className="text-[10px] uppercase tracking-wider font-medium leading-none">
                 {item.name}
               </span>
             </Link>

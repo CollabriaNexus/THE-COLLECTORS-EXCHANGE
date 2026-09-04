@@ -39,7 +39,10 @@ const ReviewForm = ({ orderId, productId, productName, onSuccess }) => {
       <p className="text-xs uppercase tracking-widest text-gray-500 font-medium mb-3">
         Review: {productName}
       </p>
-      <div className="flex items-center gap-1 mb-3">
+      {/* Each star is an icon-only button. Without a name and a pressed state a
+          screen reader reads this row as "button, button, button, button,
+          button" with no way to tell which rating is selected. */}
+      <div className="flex items-center gap-1 mb-3" role="group" aria-label="Rating">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
@@ -47,10 +50,13 @@ const ReviewForm = ({ orderId, productId, productName, onSuccess }) => {
             onClick={() => setRating(star)}
             onMouseEnter={() => setHoverRating(star)}
             onMouseLeave={() => setHoverRating(0)}
+            aria-label={star === 1 ? '1 star' : `${star} stars`}
+            aria-pressed={rating === star}
             className="p-0.5 transition-colors"
           >
             <Star
               size={20}
+              aria-hidden="true"
               className={
                 star <= (hoverRating || rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'
               }
@@ -71,12 +77,13 @@ const ReviewForm = ({ orderId, productId, productName, onSuccess }) => {
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Share your experience (optional)"
+        aria-label="Your review (optional)"
         rows={3}
         maxLength={1000}
         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:border-luxury-gold resize-none"
       />
       <div className="flex justify-between items-center mt-3">
-        <span className="text-[10px] text-gray-400">{comment.length}/1000</span>
+        <span className="text-[10px] text-gray-500">{comment.length}/1000</span>
         <button
           type="submit"
           disabled={rating === 0 || createReview.isPending}
@@ -91,7 +98,7 @@ const ReviewForm = ({ orderId, productId, productName, onSuccess }) => {
         </button>
       </div>
       {createReview.isError && (
-        <p className="text-xs text-red-500 mt-2">
+        <p className="text-xs text-red-600 mt-2">
           {createReview.error?.message || 'Failed to submit review'}
         </p>
       )}

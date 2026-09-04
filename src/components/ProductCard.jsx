@@ -78,14 +78,14 @@ const ProductCard = ({ product }) => {
             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-200">
+          <div className="absolute inset-0 flex items-center justify-center text-gray-600 bg-gray-200">
             No Image
           </div>
         )}
 
         <button
           onClick={handleWishlistToggle}
-          className={`absolute top-4 right-4 p-2 bg-white rounded-full shadow-sm transition-all duration-200 z-10 cursor-pointer ${inWishlist ? 'text-red-500' : 'text-gray-400 hover:text-red-500'} ${wishPulse ? 'scale-125' : 'scale-100'}`}
+          className={`absolute top-4 right-4 p-2 bg-white rounded-full shadow-sm transition-all duration-200 z-10 cursor-pointer ${inWishlist ? 'text-red-600' : 'text-gray-500 hover:text-red-600'} ${wishPulse ? 'scale-125' : 'scale-100'}`}
         >
           <Heart size={16} fill={inWishlist ? 'currentColor' : 'none'} />
         </button>

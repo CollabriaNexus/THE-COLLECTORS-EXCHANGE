@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import SEO, { FAQSchema, PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { CORE_PAGES } from '../config/seo-pages';
@@ -105,8 +106,17 @@ const FAQ = () => {
   const [search, setSearch] = useState('');
   const [openItems, setOpenItems] = useState({});
 
-  const toggleItem = (catIdx, qIdx) => {
-    const key = `${catIdx}-${qIdx}`;
+  // Keyed by category slug, not by the index into `filtered` — that index
+  // shifts as soon as a search removes a category, which would silently move
+  // the open/closed state onto a different question.
+  const slug = (value) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+  const toggleItem = (catSlug, qIdx) => {
+    const key = `${catSlug}-${qIdx}`;
     setOpenItems((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -138,9 +148,20 @@ const FAQ = () => {
             Exchange.
           </p>
           <div className="relative max-w-md mx-auto">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <label htmlFor="faq-search" className="sr-only">
+              Search frequently asked questions
+            </label>
+            <Search
+              size={18}
+              aria-hidden="true"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+            />
             <input
-              type="text"
+              id="faq-search"
+              name="faq-search"
+              type="search"
+              inputMode="search"
+              autoComplete="off"
               placeholder="Search FAQs..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -149,8 +170,31 @@ const FAQ = () => {
           </div>
         </Reveal>
 
+        {/* `filtered` drops empty categories, so a search with no matches used
+            to render literally nothing: no message, no way back. */}
+        {search && filtered.length === 0 && (
+          <div
+            role="status"
+            className="bg-white border border-gray-100 shadow-sm rounded-2xl p-10 text-center"
+          >
+            <p className="font-serif text-lg text-heritage-charcoal mb-2">
+              No answers matched &ldquo;{search}&rdquo;
+            </p>
+            <p className="text-gray-600 text-sm mb-6">
+              Try a different word, or clear the search to see every question.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="inline-block bg-black text-white px-8 py-3 text-xs uppercase tracking-widest hover:bg-luxury-gold hover:text-black transition-colors rounded-full"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
+
         <div className="space-y-8">
-          {filtered.map((category, catIdx) => (
+          {filtered.map((category) => (
             <Reveal key={category.category} as="div">
               <h2 className="text-xl sm:text-2xl font-serif mb-3 text-heritage-charcoal">
                 {category.category}
@@ -158,27 +202,48 @@ const FAQ = () => {
               <div className="w-12 h-px bg-luxury-gold/50 mb-4" />
               <Stagger className="space-y-2" step={70} distance={28}>
                 {category.questions.map((item, qIdx) => {
-                  const key = `${catIdx}-${qIdx}`;
+                  const catSlug = slug(category.category);
+                  const key = `${catSlug}-${qIdx}`;
                   const isOpen = openItems[key];
+                  const panelId = `faq-answer-${key}`;
                   return (
                     <div
                       key={qIdx}
                       className="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden"
                     >
+                      {/* aria-expanded/aria-controls: without them the
+                          trigger is announced as a plain button and a screen
+                          reader user has no way to know it reveals an answer,
+                          or whether that answer is already showing. */}
                       <button
-                        onClick={() => toggleItem(catIdx, qIdx)}
+                        type="button"
+                        onClick={() => toggleItem(catSlug, qIdx)}
+                        aria-expanded={Boolean(isOpen)}
+                        aria-controls={panelId}
+                        id={`${panelId}-trigger`}
                         className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
                       >
                         <span className="font-medium text-heritage-charcoal pr-4">{item.q}</span>
                         {isOpen ? (
-                          <ChevronUp size={18} className="text-luxury-gold flex-shrink-0" />
+                          <ChevronUp
+                            size={18}
+                            aria-hidden="true"
+                            className="text-luxury-gold flex-shrink-0"
+                          />
                         ) : (
-                          <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />
+                          <ChevronDown
+                            size={18}
+                            aria-hidden="true"
+                            className="text-gray-500 flex-shrink-0"
+                          />
                         )}
                       </button>
                       <div
+                        id={panelId}
+                        role="region"
+                        aria-labelledby={`${panelId}-trigger`}
                         className={`px-5 text-gray-600 leading-relaxed text-sm border-t border-gray-100 ${isOpen ? 'pb-5 pt-4' : 'h-0 overflow-hidden p-0 border-t-0'}`}
-                        aria-hidden={!isOpen}
+                        hidden={!isOpen}
                       >
                         {item.a}
                       </div>
@@ -194,12 +259,14 @@ const FAQ = () => {
           <h2 className="text-xl sm:text-2xl font-serif mb-4">Still have questions?</h2>
           <p className="text-gray-500 mb-6">We're here to help you.</p>
           <Magnetic>
-            <a
-              href="/contact"
+            {/* <Link>, not <a href>: a raw anchor forces a full document
+                reload and a fresh bundle download mid-session. */}
+            <Link
+              to="/contact"
               className="inline-block bg-black text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-luxury-gold transition-colors rounded-full"
             >
               Contact Us
-            </a>
+            </Link>
           </Magnetic>
         </Reveal>
       </div>

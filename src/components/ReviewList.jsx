@@ -2,7 +2,7 @@ import { Star, User } from 'lucide-react';
 
 const ReviewList = ({ reviews = [], total = 0 }) => {
   if (total === 0 && reviews.length === 0) {
-    return <div className="text-center py-8 text-gray-400 text-sm">No reviews yet</div>;
+    return <div className="text-center py-8 text-gray-500 text-sm">No reviews yet</div>;
   }
 
   return (
@@ -31,7 +31,7 @@ const ReviewList = ({ reviews = [], total = 0 }) => {
                 </div>
               </div>
             </div>
-            <span className="text-[10px] text-gray-400 shrink-0">
+            <span className="text-[10px] text-gray-500 shrink-0">
               {new Date(review.createdAt).toLocaleDateString('en-IN', {
                 day: 'numeric',
                 month: 'short',
@@ -40,7 +40,7 @@ const ReviewList = ({ reviews = [], total = 0 }) => {
             </span>
           </div>
           {review.product?.title && (
-            <p className="text-[10px] text-gray-400 mt-1 ml-11">on {review.product.title}</p>
+            <p className="text-[10px] text-gray-500 mt-1 ml-11">on {review.product.title}</p>
           )}
           {review.comment && (
             <p className="text-sm text-gray-600 mt-2 ml-11 leading-relaxed">{review.comment}</p>

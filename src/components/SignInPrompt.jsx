@@ -93,7 +93,7 @@ const SignInPrompt = ({ title = 'Please Sign In', description, cta = 'Sign In' }
       {title}
     </h1>
     {description && (
-      <p className="text-sm sm:text-base text-heritage-charcoal/50 leading-relaxed max-w-sm mb-8">
+      <p className="text-sm sm:text-base text-heritage-charcoal/70 leading-relaxed max-w-sm mb-8">
         {description}
       </p>
     )}

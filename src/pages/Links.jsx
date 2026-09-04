@@ -12,10 +12,18 @@ const Links = () => {
         noindex
       />
       <Stagger className="max-w-md mx-auto space-y-8" step={110}>
+        {/* The page previously started at h3, so it had no h1 at all and its
+            outline began two levels down. */}
+        <header className="text-center">
+          <h1 className="font-serif text-2xl sm:text-3xl text-heritage-charcoal">
+            The Collectors Exchange
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">Quick access to every page.</p>
+        </header>
         <div className="flex flex-col space-y-4">
-          <h3 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
+          <h2 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
             Company
-          </h3>
+          </h2>
           <div className="flex flex-col space-y-3 font-light text-gray-500 text-sm">
             {/* About Us / Archive links temporarily removed — both pages
                 are hidden. See docs/TEMPORARY_CHANGES_ROLLBACK.md. */}
@@ -29,9 +37,9 @@ const Links = () => {
         </div>
         <div className="w-12 h-px bg-luxury-gold/50 mx-auto" />
         <div className="flex flex-col space-y-4">
-          <h3 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
+          <h2 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
             Support
-          </h3>
+          </h2>
           <div className="flex flex-col space-y-3 font-light text-gray-500 text-sm">
             <Link to="/contact" className="hover:text-luxury-gold transition-colors">
               Contact Us
@@ -49,9 +57,9 @@ const Links = () => {
         </div>
         <div className="w-12 h-px bg-luxury-gold/50 mx-auto" />
         <div className="flex flex-col space-y-4">
-          <h3 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
+          <h2 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
             Legal
-          </h3>
+          </h2>
           <div className="flex flex-col space-y-3 font-light text-gray-500 text-sm">
             <Link to="/terms" className="hover:text-luxury-gold transition-colors">
               Terms & Conditions
@@ -66,9 +74,9 @@ const Links = () => {
         </div>
         <div className="w-12 h-px bg-luxury-gold/50 mx-auto" />
         <div className="flex flex-col space-y-4">
-          <h3 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
+          <h2 className="text-sm font-serif font-semibold text-luxury-gold uppercase tracking-wider">
             Connect
-          </h3>
+          </h2>
           <div className="flex gap-4">
             <a
               href="https://www.instagram.com/the_collectors_exchange/?utm_source=ig_web_button_share_sheet"

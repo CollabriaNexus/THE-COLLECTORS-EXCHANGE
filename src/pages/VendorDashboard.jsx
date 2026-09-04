@@ -59,7 +59,7 @@ function StatCard({ title, value, icon: Icon, color, prefix, loading, error, onR
             <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
               {title}
             </p>
-            <p className="text-xs sm:text-sm text-red-500">Failed to load</p>
+            <p className="text-xs sm:text-sm text-red-600">Failed to load</p>
           </div>
           <button onClick={onRetry} className="text-red-400 hover:text-red-600 p-2">
             <RefreshCw size={18} />
@@ -354,7 +354,7 @@ export default function VendorDashboard() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-48 sm:h-64 text-gray-400">
+                <div className="flex items-center justify-center h-48 sm:h-64 text-gray-500">
                   <p className="font-serif text-sm sm:text-lg">No sales data yet for this period</p>
                 </div>
               )}
@@ -452,7 +452,7 @@ export default function VendorDashboard() {
                       key={product.id}
                       className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded"
                     >
-                      <span className="text-[10px] sm:text-xs font-bold text-gray-400 w-4 sm:w-6">
+                      <span className="text-[10px] sm:text-xs font-bold text-gray-500 w-4 sm:w-6">
                         {i + 1}
                       </span>
                       <img
@@ -484,7 +484,7 @@ export default function VendorDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-32 sm:h-48 text-gray-400">
+                <div className="flex items-center justify-center h-32 sm:h-48 text-gray-500">
                   <p className="font-serif text-sm sm:text-lg">No products sold yet</p>
                 </div>
               )}
@@ -588,7 +588,7 @@ export default function VendorDashboard() {
                   )}
                 </>
               ) : (
-                <div className="flex items-center justify-center h-24 sm:h-32 text-gray-400">
+                <div className="flex items-center justify-center h-24 sm:h-32 text-gray-500">
                   <p className="font-serif text-sm sm:text-lg">No payouts yet</p>
                 </div>
               )}

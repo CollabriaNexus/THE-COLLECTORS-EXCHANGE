@@ -81,7 +81,7 @@ function BlogPost() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-luxury-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400 font-serif italic">Opening the archive...</p>
+          <p className="text-gray-500 font-serif italic">Opening the archive...</p>
         </div>
       </div>
     );
@@ -92,7 +92,7 @@ function BlogPost() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <BookOpen size={56} className="mx-auto text-gray-200 mb-4" strokeWidth={1} />
-          <h2 className="text-2xl font-serif text-gray-400 mb-4">Article Not Found</h2>
+          <h2 className="text-2xl font-serif text-gray-500 mb-4">Article Not Found</h2>
           <Link
             to="/archive"
             className="inline-flex items-center gap-2 text-sm uppercase tracking-widest text-luxury-gold hover:text-heritage-brown transition-colors"
@@ -283,7 +283,7 @@ function BlogPost() {
             </div>
             <button
               onClick={handleShare}
-              className="relative flex items-center gap-1.5 text-xs uppercase tracking-widest text-gray-400 hover:text-luxury-gold transition-colors self-start sm:self-auto"
+              className="relative flex items-center gap-1.5 text-xs uppercase tracking-widest text-gray-500 hover:text-luxury-gold transition-colors self-start sm:self-auto"
             >
               {copied ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
               {copied ? 'Copied' : 'Share'}
@@ -302,7 +302,7 @@ function BlogPost() {
               <div className="sticky top-24">
                 <div className="flex items-center gap-2 mb-4">
                   <BookMarked size={14} className="text-luxury-gold" />
-                  <span className="text-xs uppercase tracking-widest font-bold text-gray-400">
+                  <span className="text-xs uppercase tracking-widest font-bold text-gray-500">
                     Contents
                   </span>
                 </div>
@@ -318,7 +318,7 @@ function BlogPost() {
                       className={`block text-xs py-1.5 border-l-2 pl-3 transition-all duration-200 ${
                         activeHeading === h.id
                           ? 'border-luxury-gold text-heritage-charcoal font-medium'
-                          : 'border-gray-100 text-gray-400 hover:text-heritage-charcoal hover:border-gray-300'
+                          : 'border-gray-100 text-gray-500 hover:text-heritage-charcoal hover:border-gray-300'
                       }`}
                     >
                       {h.text}
@@ -417,7 +417,7 @@ function BlogPost() {
                         <h3 className="font-serif font-bold text-heritage-charcoal group-hover:text-luxury-gold transition-colors mt-2 mb-2 line-clamp-2">
                           {r.title}
                         </h3>
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
                           <Clock size={10} /> {r.readingTime} min read
                         </span>
                       </div>

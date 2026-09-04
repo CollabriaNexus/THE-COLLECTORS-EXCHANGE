@@ -1,6 +1,15 @@
 @import 'tailwindcss';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
 
+/* Tailwind v4 registers plugins here, in CSS — NOT in a `plugins: []` array in
+   tailwind.config.js. That array is only read when a `@config` directive points
+   at the file, which this project does not have, so @tailwindcss/typography was
+   installed but never loaded and every `prose*` class in the app (BlogPost's
+   article body, Account's rich-text areas) compiled to nothing. Do not "fix"
+   this by re-adding a tailwind.config.js plugins array — it will silently do
+   nothing again. */
+@plugin '@tailwindcss/typography';
+
 @theme {
   --color-primary-bg: #ffffff;
   --color-secondary-bg: #f9f9f9;
@@ -275,10 +284,68 @@ html {
   }
 }
 
-/* Focus ring — visible only on keyboard nav */
+/* Toast enter animation — the toast stack sits top-right (DESIGN.md §5.3),
+   so it slides in from the right rather than up from the bottom. */
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-slide-in 300ms var(--ease-heritage) both;
+}
+
+/* ── Mobile nav drawer ──────────────────────────────────────────────
+   The drawer is mounted only while it is open or animating out (see
+   Header.jsx), so its enter/exit motion is keyframed rather than a
+   transition between two permanently-mounted states. The old approach
+   (always mounted, toggled with translate-x-full) left four links and a
+   close button in the tab order on every page below 1024px. */
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.animate-drawer-in {
+  animation: drawer-slide-in 400ms var(--ease-heritage) both;
+}
+
+.animate-drawer-out {
+  animation: drawer-slide-out 300ms var(--ease-heritage) both;
+}
+
+/* Focus ring — visible only on keyboard nav.
+   Two-tone on purpose. The old single gold ring (#D4AF37) is only 2.10:1 on
+   white and 1.98:1 on heritage-cream, so it failed WCAG 2.4.11 (3:1) on every
+   light surface — i.e. on essentially every control in the app. The charcoal
+   outline carries the ring on light backgrounds (17.04:1 on white), and the
+   cream box-shadow sits in the 2px offset gap so the ring is still visible on
+   the app's dark chrome (the nav pill / bottom tab bar / footer), where the
+   charcoal outline alone would vanish (1.38:1). box-shadow hugs the border
+   box and the outline sits at +2px, so the two rings are exactly adjacent. */
 *:focus-visible {
-  outline: 2px solid var(--color-luxury-gold);
+  outline: 2px solid var(--color-heritage-charcoal);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--color-cream);
 }
 
 /* Respect reduced motion preferences */

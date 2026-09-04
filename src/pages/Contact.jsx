@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Mail, MessageSquare, Clock, Send, Loader2, CheckCircle } from 'lucide-react';
 import SEO, { PageSchema, BreadcrumbSchema } from '../components/SEO';
 import { CORE_PAGES } from '../config/seo-pages';
@@ -75,9 +76,11 @@ const Contact = () => {
           <p className="text-gray-500 mb-8 text-sm sm:text-base">
             Thank you for reaching out. Our team will respond within 24–48 hours.
           </p>
-          <a href="/" className="text-luxury-gold hover:underline font-medium">
+          {/* <Link>, not <a href="/">: a raw anchor tears down the SPA and
+              re-downloads the whole bundle mid-session. */}
+          <Link to="/" className="text-luxury-gold hover:underline font-medium">
             Return Home
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -111,9 +114,12 @@ const Contact = () => {
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-luxury-gold/10 flex items-center justify-center mb-4 sm:mb-5 shrink-0">
                       <Icon size={22} className="text-luxury-gold sm:w-7 sm:h-7" />
                     </div>
-                    <h3 className="font-serif text-base sm:text-lg font-medium mb-2">
+                    {/* h2, not h3: these cards sit between the page h1 and
+                        the form's h2, so an h3 here made the heading outline
+                        read h1 -> h3 -> h2. */}
+                    <h2 className="font-serif text-base sm:text-lg font-medium mb-2">
                       {card.title}
-                    </h3>
+                    </h2>
                     <div className="max-w-full">{card.content}</div>
                   </div>
                 </Tilt>
@@ -132,24 +138,37 @@ const Contact = () => {
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
               <div>
-                <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">
+                <label
+                  htmlFor="contact-name"
+                  className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2"
+                >
                   Name
                 </label>
                 <input
+                  id="contact-name"
+                  name="name"
                   type="text"
                   required
+                  autoComplete="name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors rounded text-sm sm:text-base"
                 />
               </div>
               <div>
-                <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">
+                <label
+                  htmlFor="contact-email"
+                  className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2"
+                >
                   Email
                 </label>
                 <input
+                  id="contact-email"
+                  name="email"
                   type="email"
                   required
+                  autoComplete="email"
+                  inputMode="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors rounded text-sm sm:text-base"
@@ -157,22 +176,33 @@ const Contact = () => {
               </div>
             </div>
             <div>
-              <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">
+              <label
+                htmlFor="contact-subject"
+                className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2"
+              >
                 Subject
               </label>
               <input
+                id="contact-subject"
+                name="subject"
                 type="text"
                 required
+                autoComplete="off"
                 value={form.subject}
                 onChange={(e) => setForm({ ...form, subject: e.target.value })}
                 className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 focus:outline-none focus:border-luxury-gold transition-colors rounded text-sm sm:text-base"
               />
             </div>
             <div>
-              <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2">
+              <label
+                htmlFor="contact-message"
+                className="block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5 sm:mb-2"
+              >
                 Message
               </label>
               <textarea
+                id="contact-message"
+                name="message"
                 required
                 rows={5}
                 value={form.message}

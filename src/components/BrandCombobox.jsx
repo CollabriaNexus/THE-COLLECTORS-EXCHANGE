@@ -173,7 +173,7 @@ export default function BrandCombobox({
               inputRef.current?.focus();
             }}
             aria-label="Clear brand"
-            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-heritage-charcoal transition-colors"
+            className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-heritage-charcoal transition-colors"
           >
             <X size={16} />
           </button>
@@ -188,7 +188,7 @@ export default function BrandCombobox({
             setHighlight(-1);
             inputRef.current?.focus();
           }}
-          className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-heritage-charcoal transition-colors"
+          className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-heritage-charcoal transition-colors"
         >
           <ChevronDown size={16} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
@@ -203,7 +203,7 @@ export default function BrandCombobox({
           className="absolute z-40 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-2xl bg-white border border-gray-200 shadow-lg"
         >
           {items.length === 0 && (
-            <li className="px-4 py-3 text-sm text-gray-400 italic">No matching brands</li>
+            <li className="px-4 py-3 text-sm text-gray-500 italic">No matching brands</li>
           )}
           {items.map((item, index) => {
             const isHighlighted = index === highlight;

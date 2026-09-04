@@ -64,7 +64,7 @@ const BlogCard = ({ post }) => (
         {post.excerpt}
       </p>
       <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-        <div className="flex items-center gap-3 text-xs text-gray-400">
+        <div className="flex items-center gap-3 text-xs text-gray-500">
           <span className="flex items-center gap-1">
             <User size={12} /> {post.author}
           </span>
@@ -179,7 +179,7 @@ function BlogPage() {
                     className={`text-[10px] sm:text-[11px] uppercase tracking-widest font-semibold px-3 sm:px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap ${
                       (c === 'All' && !category) || category === c
                         ? 'bg-heritage-charcoal text-white border-heritage-charcoal'
-                        : 'text-gray-400 border-gray-200 hover:text-heritage-charcoal hover:border-gray-300'
+                        : 'text-gray-500 border-gray-200 hover:text-heritage-charcoal hover:border-gray-300'
                     }`}
                   >
                     {c === 'All' ? 'All Articles' : c}
@@ -209,7 +209,7 @@ function BlogPage() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 sm:py-32">
               <Loader2 className="animate-spin text-luxury-gold/40 mb-4" size={32} />
-              <p className="text-gray-400 font-serif italic text-sm sm:text-base">
+              <p className="text-gray-500 font-serif italic text-sm sm:text-base">
                 Opening the archive...
               </p>
             </div>
@@ -220,8 +220,8 @@ function BlogPage() {
                 className="mx-auto text-gray-200 mb-4 sm:w-14 sm:h-14"
                 strokeWidth={1}
               />
-              <p className="text-lg sm:text-xl font-serif text-gray-400 mb-2">No articles found</p>
-              <p className="text-sm text-gray-400">
+              <p className="text-lg sm:text-xl font-serif text-gray-500 mb-2">No articles found</p>
+              <p className="text-sm text-gray-500">
                 {search || category
                   ? 'Try adjusting your search or filter.'
                   : 'New articles will appear here.'}
@@ -299,7 +299,7 @@ function BlogPage() {
                   {displayFeatured && featured.length > 0 && (
                     <div className="flex items-center gap-3 mb-8">
                       <div className="h-px flex-1 bg-gradient-to-l from-gray-200 to-transparent" />
-                      <h2 className="text-sm uppercase tracking-[0.2em] font-bold text-gray-400">
+                      <h2 className="text-sm uppercase tracking-[0.2em] font-bold text-gray-500">
                         More Articles
                       </h2>
                       <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
@@ -320,7 +320,7 @@ function BlogPage() {
               {/* If only featured matches */}
               {regular.length === 0 && featured.length > 0 && displayFeatured && (
                 <div className="text-center py-12">
-                  <p className="text-gray-400">More articles coming soon.</p>
+                  <p className="text-gray-500">More articles coming soon.</p>
                 </div>
               )}
             </>
