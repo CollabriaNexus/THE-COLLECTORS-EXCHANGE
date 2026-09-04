@@ -20,8 +20,8 @@
   --color-heritage-bronze: #7a6044;
   --color-heritage-gold-muted: #9a7c35;
 
-  --font-family-serif: 'Playfair Display', serif;
-  --font-family-sans: 'Inter', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
 
   --shadow-heritage: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-heritage-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
@@ -30,7 +30,7 @@
 body {
   background-color: var(--color-primary-bg);
   color: var(--color-text-main);
-  font-family: var(--font-family-sans);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -41,7 +41,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-family-serif);
+  font-family: var(--font-serif);
 }
 
 /* ── Typography Scale ──

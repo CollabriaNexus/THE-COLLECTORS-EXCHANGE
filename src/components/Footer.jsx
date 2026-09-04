@@ -5,7 +5,7 @@ import { openConsentPreferences } from '../utils/consent';
 
 const Footer = () => {
   return (
-    <footer className="bg-black text-white pt-12 sm:pt-20 pb-12 md:pb-16 lg:pb-10 border-t border-gray-900">
+    <footer className="bg-black text-white pt-12 sm:pt-20 pb-28 md:pb-28 lg:pb-10 border-t border-gray-900">
       <div className="px-3 sm:px-6 md:px-12 lg:px-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 md:gap-12">
           {/* Left: Brand */}
