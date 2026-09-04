@@ -27,6 +27,7 @@ import { useCart, useAddToCart } from '../hooks/api/useCart';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import Bullet from '../components/Bullet';
+import QueryError from '../components/QueryError';
 import { Reveal, Tilt } from '../components/Motion';
 
 // Category copy/SEO strings live in src/config/categories.js — a plain-ESM
@@ -286,7 +287,14 @@ const Category = () => {
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
   const [condition, setCondition] = useState(() => searchParams.get('condition') || '');
   const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1);
-  const { data, isLoading } = useProducts(selectedCategory, searchQuery, page, 20, null, condition);
+  const { data, isLoading, isError, isFetching, refetch } = useProducts(
+    selectedCategory,
+    searchQuery,
+    page,
+    20,
+    null,
+    condition,
+  );
   const { data: categoryCounts } = useCategoryCounts();
 
   useEffect(() => {
@@ -474,6 +482,16 @@ const Category = () => {
                 </div>
               ))}
             </div>
+          ) : isError && products.length === 0 ? (
+            /* Before the empty-state branch on purpose: a rejected request
+               leaves `data` undefined, so without this the shopper is told
+               the collection is empty when the request simply never arrived. */
+            <QueryError
+              title="We couldn't load these listings"
+              message="The connection dropped before the collection came through. Give it another try."
+              onRetry={refetch}
+              isRetrying={isFetching}
+            />
           ) : products.length > 0 ? (
             <>
               {(() => {

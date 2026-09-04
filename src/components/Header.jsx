@@ -143,11 +143,14 @@ const Header = () => {
                 <Link
                   to="/wishlist"
                   className="relative hover:text-luxury-gold transition-colors"
-                  aria-label="Wishlist"
+                  aria-label={wishlistCount > 0 ? `Wishlist, ${wishlistCount} items` : 'Wishlist'}
                 >
                   <Heart size={20} />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-luxury-gold text-obsidian text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-2 -right-2 bg-luxury-gold text-obsidian text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold"
+                    >
                       {wishlistCount}
                     </span>
                   )}
@@ -162,7 +165,7 @@ const Header = () => {
                 <Link
                   to="/cart"
                   className="relative hover:text-luxury-gold transition-colors"
-                  aria-label="Cart"
+                  aria-label={cartItems.length > 0 ? `Cart, ${cartItems.length} items` : 'Cart'}
                 >
                   <ShoppingBag size={20} />
                   {cartItems.length > 0 && (

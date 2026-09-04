@@ -8,11 +8,18 @@ import { getUser } from '../utils/storage';
 import { imageUrl, imageSrcSet } from '../utils/image';
 import { Tilt } from '../components/Motion';
 import SignInPrompt from '../components/SignInPrompt';
+import QueryError from '../components/QueryError';
 import EmptyWishlistVisual from '../components/EmptyWishlistVisual';
 
 const Wishlist = () => {
   const user = getUser();
-  const { data: wishlistData = [], isLoading } = useWishlist(user?.id);
+  const {
+    data: wishlistData = [],
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useWishlist(user?.id);
   const removeFromWishlistMutation = useRemoveFromWishlist();
   const addToCartMutation = useAddToCart();
   const { data: cartItems = [] } = useCart(user?.id);
@@ -88,7 +95,18 @@ const Wishlist = () => {
         My Wishlist
       </h1>
 
-      {wishlistItems.length > 0 ? (
+      {/* Error before empty: a rejected /wishlist read leaves wishlistData at
+          its [] default, which would tell the shopper they have saved nothing
+          when in fact the request never came back. */}
+      {isError ? (
+        <QueryError
+          title="We couldn't load your wishlist"
+          message="Your saved pieces are still there — the request just didn't get through. Please try again."
+          onRetry={refetch}
+          isRetrying={isFetching}
+          className="max-w-2xl mx-auto"
+        />
+      ) : wishlistItems.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {[...wishlistItems]
             .sort((a, b) => {

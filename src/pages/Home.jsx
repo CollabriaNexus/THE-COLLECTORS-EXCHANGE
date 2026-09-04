@@ -31,6 +31,7 @@ import { useCart, useAddToCart } from '../hooks/api/useCart';
 import { getUser } from '../utils/storage';
 import { imageUrl, imageSrcSet } from '../utils/image';
 import { useToast } from '../components/Toast';
+import QueryError from '../components/QueryError';
 import { Reveal, Stagger, Parallax, Magnetic, Tilt, Marquee } from '../components/Motion';
 
 const FeaturedProductCard = ({ product, badge = 'Featured', BadgeIcon = Award }) => {
@@ -172,8 +173,32 @@ const FeaturedProductsCarousel = () => {
   // top-10 by commission and filtered client-side, so featured items that
   // happened to rank below the top 10 never appeared at all. most_rare items
   // live in their own RarestFinds section below.
-  const { data: featuredData, isLoading } = useProducts(null, '', 1, 20, 'featured');
+  const {
+    data: featuredData,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useProducts(null, '', 1, 20, 'featured');
   let products = featuredData?.products || [];
+
+  // A failed request used to be indistinguishable from "no featured products",
+  // so the whole section silently vanished from the home page. Nothing to show
+  // is still a legitimate reason to render nothing; a failed fetch is not.
+  if (isError) {
+    return (
+      <section className="py-12 sm:py-20 px-6 bg-heritage-cream">
+        <div className="container mx-auto max-w-3xl">
+          <QueryError
+            title="We couldn't load the featured products"
+            message="This section needs a connection we didn't get. Try again in a moment."
+            onRetry={refetch}
+            isRetrying={isFetching}
+          />
+        </div>
+      </section>
+    );
+  }
 
   if (isLoading || products.length === 0) return null;
 
@@ -257,8 +282,32 @@ const FeaturedProductsCarousel = () => {
 };
 
 const RarestFinds = () => {
-  const { data, isLoading } = useProducts(null, '', 1, 8, 'most_rare');
+  const { data, isLoading, isError, isFetching, refetch } = useProducts(
+    null,
+    '',
+    1,
+    8,
+    'most_rare',
+  );
   let products = data?.products || [];
+
+  // Same reasoning as FeaturedProductsCarousel above: only an empty result
+  // gets to delete the section, a failed request gets a retry.
+  if (isError) {
+    return (
+      <section className="py-14 sm:py-20 lg:py-24 px-4 sm:px-6 bg-heritage-charcoal">
+        <div className="container mx-auto max-w-3xl">
+          <QueryError
+            tone="dark"
+            title="We couldn't load the Rarest Finds"
+            message="This section needs a connection we didn't get. Try again in a moment."
+            onRetry={refetch}
+            isRetrying={isFetching}
+          />
+        </div>
+      </section>
+    );
+  }
 
   if (isLoading || products.length === 0) return null;
 

@@ -1,4 +1,11 @@
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigationType,
+  Navigate,
+} from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -36,9 +43,24 @@ const Links = lazy(() => import('./pages/Links'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
+  const navigationType = useNavigationType();
   useEffect(() => {
+    // Only jump to the top when the user is going somewhere NEW (PUSH) or a
+    // route replaced itself (REPLACE). On POP — Back/Forward, including the
+    // Android hardware back button — the browser has its own saved scroll
+    // offset for that history entry and restores it; scrolling to 0 here
+    // fought that and dumped the shopper back at the top of a grid they had
+    // scrolled halfway through. Product data is still in the react-query
+    // cache (gcTime 10min, see main.jsx), so the restored position lands on
+    // real content rather than an empty page.
+    //
+    // react-router's <ScrollRestoration> would do this too, but it is
+    // data-router-only (createBrowserRouter); this app mounts <BrowserRouter>
+    // with a <Routes> tree, so it is not available without a full router
+    // rewrite. useNavigationType gets the same behaviour in three lines.
+    if (navigationType === 'POP') return;
     window.scrollTo(0, 0);
-  }, [pathname]);
+  }, [pathname, navigationType]);
   return null;
 }
 
@@ -59,15 +81,25 @@ function App() {
         <ErrorBoundary>
           <ToastProvider>
             <ConfirmProvider>
+              {/* Safety net only. The boundary that actually catches lazy
+                  ROUTE chunks now lives in Layout.jsx, wrapped around
+                  <Outlet/> — when it sat out here it was the nearest boundary
+                  to every suspending route, so React unmounted Layout, the
+                  header and the bottom tab bar along with the page, and the
+                  first tap on Cart/Account/a product white-screened the whole
+                  app. Nothing rendered above <Outlet/> is lazy today, so this
+                  fallback should never be visible; it exists so a future
+                  suspension in the chrome degrades to a spinner instead of
+                  React's hard "no fallback UI was specified" crash. */}
               <Suspense
                 fallback={
-                  <div className="min-h-screen flex items-center justify-center bg-white">
-                    <div className="text-center">
-                      <div className="w-10 h-10 border-2 border-luxury-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-400 font-serif text-lg italic">
-                        Loading the archive...
-                      </p>
-                    </div>
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="min-h-screen flex items-center justify-center bg-secondary-bg"
+                  >
+                    <div className="w-10 h-10 border-2 border-luxury-gold border-t-transparent rounded-full animate-spin"></div>
+                    <span className="sr-only">Loading</span>
                   </div>
                 }
               >

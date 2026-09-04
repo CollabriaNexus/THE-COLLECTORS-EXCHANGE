@@ -1,12 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Outlet, useLocation, useSearchParams } from 'react-router-dom';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Loader2 } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
 import ConsentBanner from './ConsentBanner';
 import WhatsAppIcon from './WhatsAppIcon';
 import { ScrollProgress } from './Motion';
 import { OrganizationSchema, SiteNavigationSchema } from './SEO';
+
+// Shown only for the few hundred ms it takes to fetch a route's JS chunk the
+// first time it is opened. It sits INSIDE <main>, so the header, the bottom
+// tab bar and the footer stay on screen and the navigation reads as instant.
+const PageFallback = () => (
+  <div
+    role="status"
+    aria-live="polite"
+    className="min-h-[50vh] flex flex-col items-center justify-center gap-3 px-6"
+  >
+    <Loader2
+      size={28}
+      strokeWidth={1.5}
+      aria-hidden="true"
+      className="animate-spin text-luxury-gold"
+    />
+    <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-heritage-bronze/70">
+      Loading
+    </p>
+  </div>
+);
 
 const Layout = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -45,9 +66,18 @@ const Layout = () => {
         id="main-content"
         className={`flex-grow ${isAccountSectionOpen ? 'pb-4' : 'pb-24'} lg:pb-0`}
       >
-        <div key={location.pathname} className="animate-page-enter">
-          <Outlet />
-        </div>
+        {/* The Suspense boundary for lazy routes belongs HERE, not around
+            <Layout/> in App.jsx. React unmounts the nearest boundary's whole
+            subtree while a child suspends — with the boundary outside
+            <Routes> that subtree was the entire app, so opening any
+            code-split route (Cart, Account, ProductDetail, Checkout…) blanked
+            the header and tab bar into a full-viewport spinner. Scoped to
+            <main>, only the page area swaps. */}
+        <Suspense fallback={<PageFallback />}>
+          <div key={location.pathname} className="animate-page-enter">
+            <Outlet />
+          </div>
+        </Suspense>
       </main>
       <Footer />
       <a

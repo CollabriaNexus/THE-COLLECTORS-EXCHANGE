@@ -8,13 +8,14 @@ import { imageUrl, imageSrcSet } from '../utils/image';
 import apiClient from '../hooks/api/apiClient';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
+import QueryError from '../components/QueryError';
 import { Reveal, Magnetic } from '../components/Motion';
 
 const Cart = () => {
   const user = getUser();
   const navigate = useNavigate();
   const showToast = useToast();
-  const { data: cartItems = [], isLoading } = useCart(user?.id);
+  const { data: cartItems = [], isLoading, isError, isFetching, refetch } = useCart(user?.id);
   const removeMutation = useRemoveFromCart();
   const confirm = useConfirm();
   const { data: featuredData } = useProducts(null, '', 1, 6);
@@ -62,7 +63,18 @@ const Cart = () => {
         Shopping Cart
       </h1>
 
-      {cartItems.length > 0 ? (
+      {/* The error branch has to come first: a failed /cart read leaves
+          cartItems as the [] default, which would otherwise render "Your cart
+          is empty" over a cart that may well have items in it. */}
+      {isError ? (
+        <QueryError
+          title="We couldn't load your cart"
+          message="Your items are safe — we just couldn't reach them. Check your connection and try again."
+          onRetry={refetch}
+          isRetrying={isFetching}
+          className="max-w-2xl mx-auto"
+        />
+      ) : cartItems.length > 0 ? (
         <div className="flex flex-col lg:flex-row gap-8 sm:gap-12">
           {/* Cart Items */}
           <Reveal as="div" direction="up" className="w-full lg:w-2/3">

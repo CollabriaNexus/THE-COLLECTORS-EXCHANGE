@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Category from '../Category';
+import { useProducts } from '../../hooks/api/useProducts';
 
 vi.mock('../../hooks/api/useProducts', () => ({
   useProducts: vi.fn(() => ({
@@ -172,5 +173,62 @@ describe('Category', () => {
     expect(document.querySelector('a[href="/category/timepieces/"]')).toBeInTheDocument();
     expect(document.querySelector('a[href="/category/collectibles/"]')).toBeInTheDocument();
     expect(document.querySelector('a[href="/category/toys-and-pop-culture/"]')).toBeInTheDocument();
+  });
+});
+
+// A rejected products query used to be indistinguishable from an empty
+// catalogue: react-query hands back `data === undefined`, the page defaults
+// `products` to [], `isLoading` is false, and the shopper was told the shop
+// had nothing in it. On Indian mobile data that is a routine outcome, not an
+// edge case.
+describe('Category — failed products query', () => {
+  const defaultUseProducts = vi.mocked(useProducts).getMockImplementation();
+
+  afterEach(() => {
+    vi.mocked(useProducts).mockImplementation(defaultUseProducts);
+  });
+
+  const failQuery = (overrides = {}) => {
+    const refetch = vi.fn();
+    vi.mocked(useProducts).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      isFetching: false,
+      refetch,
+      ...overrides,
+    });
+    return refetch;
+  };
+
+  it('shows a retryable error instead of the empty state', () => {
+    failQuery();
+    renderCategory();
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText(/we couldn't load these listings/i)).toBeInTheDocument();
+    expect(screen.queryByText(/no items found in this collection/i)).not.toBeInTheDocument();
+  });
+
+  it('refetches when the shopper presses Try again', () => {
+    const refetch = failQuery();
+    renderCategory();
+
+    fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('still shows the plain empty state when the query succeeds with nothing', () => {
+    vi.mocked(useProducts).mockReturnValue({
+      data: { products: [] },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+    renderCategory();
+
+    expect(screen.getByText(/no items found in this collection/i)).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
